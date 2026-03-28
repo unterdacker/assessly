@@ -3,7 +3,10 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-export async function updateAiSettings(prevState: any, formData: FormData) {
+export async function updateAiSettings(
+  _prevState: unknown,
+  formData: FormData,
+) {
   const companyId = formData.get("companyId") as string;
   const aiProvider = formData.get("aiProvider") as string;
   const mistralApiKey = formData.get("mistralApiKey") as string | null;

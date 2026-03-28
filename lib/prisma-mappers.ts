@@ -1,4 +1,4 @@
-import type { AssessmentStatus, RiskLevel as PrismaRiskLevel } from "@prisma/client";
+import type { RiskLevel as PrismaRiskLevel } from "@prisma/client";
 import type {
   VendorAssessment,
   VendorStatus,
@@ -48,14 +48,8 @@ export function toVendorAssessment(
 ): VendorAssessment {
   const derivedStatus = deriveVendorStatus(answerCount, totalQuestions);
 
-  // NIS2 strict rule: only count compliant answers against total catalogue size.
-  // Pending / unanswered questions score 0 — so pending/incomplete vendors
-  // always show complianceScore from DB (which reflects this) but we clamp to
-  // what the DB says; new vendors seeded at 0 naturally show 0.
+  /** Caller passes reconciled complianceScore and riskLevel from strict answer scoring. */
   const complianceScore = assessment.complianceScore ?? 0;
-
-  // Risk is always derived mathematically from score — never hidden.
-  // This ensures pending vendors (score 0) display as HIGH risk in the table.
   const riskLevel = riskLevelFromPrisma(assessment.riskLevel);
 
   return {
@@ -69,10 +63,22 @@ export function toVendorAssessment(
     riskLevel,
     status: derivedStatus,
     complianceScore,
-    documentUrl: (assessment as any).documentUrl ?? null,
-    documentFilename: (assessment as any).documentFilename ?? null,
+    documentUrl: assessment.documentUrl ?? null,
+    documentFilename: assessment.documentFilename ?? null,
     createdAt: vendor.createdAt.toISOString(),
     updatedAt: vendor.updatedAt.toISOString(),
     createdBy: vendor.createdBy,
+    vendor: {
+      officialName: vendor.officialName,
+      registrationId: vendor.registrationId,
+      vendorServiceType: vendor.vendorServiceType,
+      vendorServiceTypeCustom: vendor.vendorServiceTypeCustom,
+      securityOfficerName: vendor.securityOfficerName,
+      securityOfficerEmail: vendor.securityOfficerEmail,
+      dpoName: vendor.dpoName,
+      dpoEmail: vendor.dpoEmail,
+      headquartersLocation: vendor.headquartersLocation,
+      sizeClassification: vendor.sizeClassification,
+    },
   };
 }

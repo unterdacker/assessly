@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Search, FileText } from "lucide-react";
+import { Search, FileText, ChevronUp, ChevronDown } from "lucide-react";
 import { AddVendorModal } from "@/components/add-vendor-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,8 @@ import type { VendorAssessment } from "@/lib/vendor-assessment";
 export type VendorsTableSectionProps = {
   vendorAssessments: VendorAssessment[];
 };
+
+type SortKey = 'name' | 'serviceType' | 'status' | 'lastAssessmentDate' | 'complianceScore' | 'riskLevel';
 
 function formatDate(value: string | null) {
   if (!value) return "—";
@@ -84,6 +86,8 @@ export function VendorsTableSection({
   vendorAssessments,
 }: VendorsTableSectionProps) {
   const [q, setQ] = React.useState("");
+  const [sortKey, setSortKey] = React.useState<SortKey>('name');
+  const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
 
   const filtered = React.useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -95,6 +99,53 @@ export function VendorsTableSection({
         v.email.toLowerCase().includes(needle),
     );
   }, [vendorAssessments, q]);
+
+  const sorted = React.useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      let aVal: any, bVal: any;
+      switch (sortKey) {
+        case 'name':
+          aVal = a.name.toLowerCase();
+          bVal = b.name.toLowerCase();
+          break;
+        case 'serviceType':
+          aVal = a.serviceType.toLowerCase();
+          bVal = b.serviceType.toLowerCase();
+          break;
+        case 'status':
+          aVal = a.status;
+          bVal = b.status;
+          break;
+        case 'lastAssessmentDate':
+          aVal = a.lastAssessmentDate ? new Date(a.lastAssessmentDate).getTime() : 0;
+          bVal = b.lastAssessmentDate ? new Date(b.lastAssessmentDate).getTime() : 0;
+          break;
+        case 'complianceScore':
+          aVal = a.complianceScore;
+          bVal = b.complianceScore;
+          break;
+        case 'riskLevel':
+          const riskOrder = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+          aVal = riskOrder[a.riskLevel as keyof typeof riskOrder] || 0;
+          bVal = riskOrder[b.riskLevel as keyof typeof riskOrder] || 0;
+          break;
+        default:
+          return 0;
+      }
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filtered, sortKey, sortDirection]);
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -137,12 +188,42 @@ export function VendorsTableSection({
           </caption>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Service type</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Last assessment</TableHead>
-              <TableHead>Compliance score</TableHead>
-              <TableHead>Risk level</TableHead>
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort('name')} className="h-auto p-0 font-semibold">
+                  Name
+                  {sortKey === 'name' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort('serviceType')} className="h-auto p-0 font-semibold">
+                  Service type
+                  {sortKey === 'serviceType' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort('status')} className="h-auto p-0 font-semibold">
+                  Status
+                  {sortKey === 'status' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort('lastAssessmentDate')} className="h-auto p-0 font-semibold">
+                  Last assessment
+                  {sortKey === 'lastAssessmentDate' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort('complianceScore')} className="h-auto p-0 font-semibold">
+                  Compliance score
+                  {sortKey === 'complianceScore' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button variant="ghost" onClick={() => handleSort('riskLevel')} className="h-auto p-0 font-semibold">
+                  Risk level
+                  {sortKey === 'riskLevel' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
+                </Button>
+              </TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -157,7 +238,7 @@ export function VendorsTableSection({
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((v) => (
+              sorted.map((v) => (
                 <TableRow key={v.id}>
                   <TableCell className="font-medium">{v.name}</TableCell>
                   <TableCell className="text-muted-foreground">

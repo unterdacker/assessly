@@ -6,7 +6,7 @@ import {
   groupQuestionsByCategory,
   nis2Questions,
 } from "@/lib/nis2-questions";
-import type { Nis2QuestionAnalysis } from "@/lib/nis2-question-analysis";
+import type { AssessmentAnswer } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,7 @@ const groupedByCategory = groupQuestionsByCategory(nis2Questions);
 const categories = Object.keys(groupedByCategory);
 
 export type VendorAssessmentQuestionnairePanelProps = {
-  answers: any[];
+  answers: AssessmentAnswer[];
   selectedQuestionId: string | null;
   onSelectQuestion: (id: string) => void;
 };

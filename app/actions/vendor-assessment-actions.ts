@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { calculateRiskLevel } from "@/lib/risk-level";
+import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance";
 
 export async function saveAssessmentAnswer({
   assessmentId,
@@ -57,22 +57,18 @@ export async function saveAssessmentAnswer({
       });
     }
 
-    // 3. Recalculate global score
     const allAnswers = await prisma.assessmentAnswer.findMany({
       where: { assessmentId },
+      select: { status: true },
     });
-    
-    // Total questions in catalogue
     const totalQuestions = await prisma.question.count();
-    const compliantCount = allAnswers.filter((a) => a.status === "COMPLIANT").length;
-    
-    const newScore = totalQuestions > 0 ? Math.round((compliantCount / totalQuestions) * 100) : 0;
-    const riskLevel = calculateRiskLevel(newScore);
-
-    await prisma.assessment.update({
-      where: { id: assessmentId },
-      data: { complianceScore: newScore, riskLevel },
-    });
+    const { score: newScore } = await syncAssessmentComplianceToDatabase(
+      assessmentId,
+      allAnswers,
+      totalQuestions,
+      assessment.complianceScore,
+      assessment.riskLevel,
+    );
 
     // 4. Create Audit Log
     await prisma.auditLog.create({
@@ -92,8 +88,7 @@ export async function saveAssessmentAnswer({
     revalidatePath(`/vendors/${assessment.vendorId}/assessment`);
 
     return { success: true, data: answer };
-  } catch (error) {
-    console.error("Failed to save AssessmentAnswer:", error);
+  } catch {
     return { success: false, error: "Failed to save answer" };
   }
 }
