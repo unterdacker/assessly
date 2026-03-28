@@ -1,13 +1,22 @@
-import { ShieldCheck, Server, Globe } from "lucide-react";
+import { ShieldCheck, Server, Globe, Sparkles } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AiSettingsForm } from "@/components/ai-settings-form";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export default function SettingsPage() {
-  const provider = process.env.AI_PROVIDER || "local";
-  const isLocal = provider === "local";
-  
+export default async function SettingsPage() {
+  const company = await prisma.company.findUnique({
+    where: { slug: "default" },
+  });
+
+  if (!company) {
+    return <div>Company not found</div>; // Or redirect
+  }
+
+  const isLocal = company.aiProvider === "local";
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div>
@@ -16,11 +25,13 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-6">
+        <AiSettingsForm company={company} companyId={company.id} />
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-              Compliance Rules & Data Residency
+              Current Data Residency
             </CardTitle>
             <CardDescription>
               Verify where your vendor data is actively processed during AI assessments.
@@ -34,7 +45,7 @@ export default function SettingsPage() {
                   Current environment routing for inference telemetry.
                 </p>
               </div>
-              
+
               <div className="flex flex-col items-end gap-2">
                 {isLocal ? (
                   <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800">
@@ -48,17 +59,16 @@ export default function SettingsPage() {
                   </Badge>
                 )}
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-                  Provider: {provider}
+                  Provider: {company.aiProvider}
                 </span>
               </div>
             </div>
-            
+
             <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
-              Your active workspace is configured to route vendor evidence strictly to the designated endpoint above. 
-              {isLocal 
-                ? " Air-gapped internal telemetry guarantees zero EU-egress." 
+              Your active workspace is configured to route vendor evidence strictly to the designated endpoint above.
+              {isLocal
+                ? " Air-gapped internal telemetry guarantees zero EU-egress."
                 : " Enterprise agreements ensure strict EU data residency alignment via Mistral platforms."}
-              To modify this, adjust the `AI_PROVIDER` infrastructure variable.
             </p>
           </CardContent>
         </Card>
