@@ -14,10 +14,17 @@ function logMistralError(error: unknown) {
   }
 }
 
+export type Nis2QuestionPromptItem = {
+  id: string;
+  category: string;
+  text: string;
+  guidance?: string;
+};
+
 export async function runNis2Analysis(
   companyId: string,
-  questions: any[],
-  documentExcerpt: string
+  questions: Nis2QuestionPromptItem[],
+  documentExcerpt: string,
 ): Promise<Nis2QuestionAnalysis[]> {
   const config = await prisma.company.findUnique({
     where: { id: companyId },
@@ -59,9 +66,10 @@ export async function runNis2Analysis(
       const parsed = JSON.parse(cleanContent);
       return Array.isArray(parsed) ? parsed : (parsed.results || parsed);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       logMistralError(error);
-      throw new Error(`Mistral inference failed: ${error?.message ?? "Unknown error"}`);
+      const msg = error instanceof Error ? error.message : "Unknown error";
+      throw new Error(`Mistral inference failed: ${msg}`);
     }
   } 
   
@@ -97,10 +105,18 @@ export async function runNis2Analysis(
     const parsed = JSON.parse(cleanContent);
     return Array.isArray(parsed) ? parsed : (parsed.results || parsed);
 
-  } catch (error: any) {
-    if (error.cause?.code === 'ECONNREFUSED' || error.message.includes('fetch failed')) {
+  } catch (error: unknown) {
+    const maybe = error as {
+      cause?: { code?: string };
+      message?: string;
+    };
+    if (
+      maybe.cause?.code === "ECONNREFUSED" ||
+      (typeof maybe.message === "string" && maybe.message.includes("fetch failed"))
+    ) {
       throw new Error("On-premise AI offline");
     }
-    throw new Error(`Local inference failed: ${error.message}`);
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    throw new Error(`Local inference failed: ${msg}`);
   }
 }

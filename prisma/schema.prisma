@@ -33,9 +33,10 @@ model Company {
   updatedAt DateTime @updatedAt
   createdBy String
 
-  vendors     Vendor[]
-  assessments Assessment[]
-  auditLogs   AuditLog[]
+  vendors                    Vendor[]
+  assessments                Assessment[]
+  auditLogs                  AuditLog[]
+  customVendorServiceTypes   CustomVendorServiceType[]
 }
 
 model Vendor {
@@ -45,6 +46,17 @@ model Vendor {
   name        String
   email       String
   serviceType String
+  // NIS2-relevant metadata
+  officialName String?
+  registrationId String?
+  vendorServiceType String?
+  vendorServiceTypeCustom String?
+  securityOfficerName String?
+  securityOfficerEmail String?
+  dpoName String?
+  dpoEmail String?
+  headquartersLocation String?
+  sizeClassification String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdBy   String
@@ -125,4 +137,17 @@ model AssessmentAnswer {
   createdBy       String
 
   @@index([assessmentId, questionId])
+}
+
+/// Custom vendor service types created by users for their company.
+model CustomVendorServiceType {
+  id        String   @id @default(cuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+  createdBy String
+
+  @@unique([companyId, name])
+  @@index([companyId])
 }

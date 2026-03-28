@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { overrideAssessmentAnswer } from "@/app/actions/update-answer-override";
 import { nis2Questions } from "@/lib/nis2-questions";
 import { cn } from "@/lib/utils";
+import type { AssessmentAnswer } from "@prisma/client";
 
 /* ─── Inline Evidence Form ────────────────────────────────────────────────── */
 
@@ -172,7 +173,7 @@ function EvidenceForm({ targetStatus, onSave, onCancel, isSaving }: EvidenceForm
 type AiInsightCardProps = {
   assessmentId: string;
   selectedQuestion: (typeof nis2Questions)[number] | undefined;
-  selectedAnswer: any;
+  selectedAnswer: AssessmentAnswer | undefined;
 };
 
 function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer }: AiInsightCardProps) {
@@ -361,7 +362,7 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer }: AiIns
 type VendorAssessmentSidePanelsProps = {
   insightLines: string[];
   assessmentId: string;
-  answers: any[];
+  answers: AssessmentAnswer[];
   selectedQuestionId: string | null;
 };
 
@@ -384,8 +385,8 @@ export function VendorAssessmentSidePanels({
       {selectedQuestionId ? (
         <AiInsightCard
           assessmentId={assessmentId}
-          selectedQuestion={selectedQuestion}
-          selectedAnswer={selectedAnswer}
+          selectedQuestion={selectedQuestion ?? undefined}
+          selectedAnswer={selectedAnswer ?? undefined}
         />
       ) : (
         <Card>

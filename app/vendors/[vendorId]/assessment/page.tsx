@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { AssessmentWorkspace } from "@/components/assessment-workspace";
 import { Button } from "@/components/ui/button";
-import { getVendorAssessmentByVendorId } from "@/lib/queries/vendor-assessments";
-import { prisma } from "@/lib/prisma";
+import { getVendorAssessmentDetail } from "@/lib/queries/vendor-assessments";
 
 export const dynamic = "force-dynamic";
 
@@ -10,11 +9,16 @@ type PageProps = {
   params: Promise<{ vendorId: string }>;
 };
 
+/**
+ * Workspace data uses strict catalogue-based scoring: only COMPLIANT answers earn points;
+ * missing or pending rows score 0. `getVendorAssessmentDetail` reconciles `complianceScore` and
+ * `riskLevel` in the database before rendering so the header matches the vendor list.
+ */
 export default async function AssessmentPage({ params }: PageProps) {
   const { vendorId } = await params;
-  const vendorAssessment = await getVendorAssessmentByVendorId(vendorId);
+  const detail = await getVendorAssessmentDetail(vendorId);
 
-  if (!vendorAssessment) {
+  if (!detail) {
     return (
       <div className="mx-auto max-w-md space-y-4 rounded-lg border border-slate-200 bg-card p-8 text-center dark:border-slate-800">
         <h1 className="text-lg font-semibold">Vendor not found</h1>
@@ -28,18 +32,14 @@ export default async function AssessmentPage({ params }: PageProps) {
     );
   }
 
-  const assessmentRecord = await prisma.assessment.findUnique({
-    where: { vendorId },
-    select: { id: true, answers: true, documentUrl: true, documentFilename: true },
-  });
-
   return (
     <AssessmentWorkspace
-      vendorAssessment={vendorAssessment}
-      assessmentId={assessmentRecord?.id!}
-      initialAnswers={assessmentRecord?.answers ?? []}
-      documentUrl={assessmentRecord?.documentUrl ?? null}
-      documentFilename={assessmentRecord?.documentFilename ?? null}
+      vendorAssessment={detail.vendorAssessment}
+      assessmentId={detail.assessmentId}
+      initialAnswers={detail.answers}
+      documentUrl={detail.documentUrl}
+      documentFilename={detail.documentFilename}
+      companyId={detail.companyId}
     />
   );
 }

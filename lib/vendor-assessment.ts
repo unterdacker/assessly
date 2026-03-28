@@ -24,6 +24,19 @@ export type VendorAssessment = {
   updatedAt: string;
   /** Opaque user/service id when authenticated; placeholder in this prototype. */
   createdBy: string;
+  /** Full vendor object for profile editing */
+  vendor?: {
+    officialName?: string | null;
+    registrationId?: string | null;
+    vendorServiceType?: string | null;
+    vendorServiceTypeCustom?: string | null;
+    securityOfficerName?: string | null;
+    securityOfficerEmail?: string | null;
+    dpoName?: string | null;
+    dpoEmail?: string | null;
+    headquartersLocation?: string | null;
+    sizeClassification?: string | null;
+  };
 };
 
 export function riskLevelFromScore(score: number): RiskLevel {

@@ -9,7 +9,10 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { runNis2Analysis } from "@/lib/ai/provider";
 import { logErrorReport } from "@/lib/logger";
-import { calculateRiskLevel } from "@/lib/risk-level";
+import {
+  countStrictlyCompliantAnswers,
+  syncAssessmentComplianceToDatabase,
+} from "@/lib/assessment-compliance";
 
 /** Absolute directory where vendor evidence PDFs are stored off the public web root. */
 const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
@@ -32,9 +35,20 @@ async function saveEvidencePdf(
   return `/api/documents/${encodeURIComponent(assessmentId)}?filename=${encodeURIComponent(safeName)}`;
 }
 
-const ANALYSIS_LATENCY_MS = 1_800;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_TEXT_LENGTH = 20_000;
+
+function textItemToString(item: unknown): string {
+  if (
+    typeof item === "object" &&
+    item !== null &&
+    "str" in item &&
+    typeof (item as { str: unknown }).str === "string"
+  ) {
+    return (item as { str: string }).str;
+  }
+  return "";
+}
 
 function sanitizeExtractedText(text: string): string {
   // Strip null bytes
@@ -87,8 +101,6 @@ export async function analyzeDocument(
     return { ok: false, error: "Assessment not found for the given vendor." };
   }
 
-  const { company } = assessment;
-
   // --- Persist the PDF to protected storage ---
   try {
     const documentUrl = await saveEvidencePdf(assessment.id, file.name, buffer);
@@ -120,14 +132,11 @@ export async function analyzeDocument(
     for (let i = 1; i <= pdfDocument.numPages; i++) {
       const page = await pdfDocument.getPage(i);
       const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item: any) => item.str)
-        .join(" ");
+      const pageText = textContent.items.map(textItemToString).join(" ");
       fullText += pageText + "\n";
     }
 
     extractedText = fullText;
-    console.log("Successfully extracted text. Length:", extractedText.length);
   } catch (err: unknown) {
     logErrorReport("PDF Extraction Phase", err);
     const errorMessage = err instanceof Error ? err.message : String(err);
@@ -152,19 +161,16 @@ export async function analyzeDocument(
   let results;
   try {
     results = await runNis2Analysis(assessment.companyId, questionPayload, extractedText);
-  } catch (error: any) {
+  } catch (error: unknown) {
     logErrorReport("AI Evaluation Phase", error);
-    return { ok: false, error: error.message || "Unknown AI error" };
+    const message =
+      error instanceof Error ? error.message : "Unknown AI error";
+    return { ok: false, error: message };
   }
 
-  // 3. Database Write
-  // Create an AssessmentAnswer record for each AI result
-  let compliantCount = 0;
-
+  // 3. Database Write — one row per AI result; strict scoring uses full catalogue denominator.
   for (const res of results) {
     const isCompliant = res.status === "compliant";
-    if (isCompliant) compliantCount++;
-
     const dbStatus = isCompliant ? "COMPLIANT" : "NON_COMPLIANT";
 
     const existing = await prisma.assessmentAnswer.findFirst({
@@ -192,16 +198,19 @@ export async function analyzeDocument(
     }
   }
 
-  // NIS2 strict rule: denominator is always the full catalogue size (totalQuestions),
-  // not just the questions the AI returned — unanswered questions score 0.
-  const totalQuestions = questions.length;
-  const newScore = totalQuestions > 0 ? Math.round((compliantCount / totalQuestions) * 100) : 0;
-  const riskLevel = calculateRiskLevel(newScore);
-
-  await prisma.assessment.update({
-    where: { id: assessment.id },
-    data: { complianceScore: newScore, riskLevel }
+  const persistedAnswers = await prisma.assessmentAnswer.findMany({
+    where: { assessmentId: assessment.id },
+    select: { status: true },
   });
+  const totalQuestions = questions.length;
+  const { score: newScore } = await syncAssessmentComplianceToDatabase(
+    assessment.id,
+    persistedAnswers,
+    totalQuestions,
+    assessment.complianceScore,
+    assessment.riskLevel,
+  );
+  const compliantCount = countStrictlyCompliantAnswers(persistedAnswers);
 
   // 4. Audit Trail
   await prisma.auditLog.create({
@@ -212,7 +221,7 @@ export async function analyzeDocument(
       entityId: assessment.id,
       actorId: "ai-system",
       createdBy: "ai-system",
-      metadata: { newScore, compliantCount, total: results.length }
+      metadata: { newScore, compliantCount, totalQuestions },
     }
   });
 

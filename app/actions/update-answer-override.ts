@@ -5,7 +5,7 @@ import path from "path";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { logErrorReport } from "@/lib/logger";
-import { calculateRiskLevel } from "@/lib/risk-level";
+import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance";
 
 const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
 
@@ -117,20 +117,22 @@ export async function overrideAssessmentAnswer(
       }
     }
 
-    // Recalculate compliance score
     const [allAnswers, totalQuestions] = await Promise.all([
-      prisma.assessmentAnswer.findMany({ where: { assessmentId }, select: { status: true } }),
+      prisma.assessmentAnswer.findMany({
+        where: { assessmentId },
+        select: { status: true },
+      }),
       prisma.question.count(),
     ]);
-    const compliantCount = allAnswers.filter((a) => a.status === "COMPLIANT").length;
-    const newScore = totalQuestions > 0 ? Math.round((compliantCount / totalQuestions) * 100) : 0;
-    const riskLevel = calculateRiskLevel(newScore);
+    const { score: newScore } = await syncAssessmentComplianceToDatabase(
+      assessmentId,
+      allAnswers,
+      totalQuestions,
+      assessment.complianceScore,
+      assessment.riskLevel,
+    );
 
     await Promise.all([
-      prisma.assessment.update({
-        where: { id: assessmentId },
-        data: { complianceScore: newScore, riskLevel },
-      }),
       prisma.auditLog.create({
         data: {
           companyId: assessment.companyId,

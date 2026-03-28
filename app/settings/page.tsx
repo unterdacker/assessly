@@ -1,4 +1,4 @@
-import { ShieldCheck, Server, Globe, Sparkles } from "lucide-react";
+import { ShieldCheck, Server, Globe } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AiSettingsForm } from "@/components/ai-settings-form";

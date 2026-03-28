@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getDefaultCompanyId } from "@/lib/queries/vendor-assessments";
-import { riskLevelToPrisma } from "@/lib/prisma-mappers";
-import { riskLevelFromScore } from "@/lib/vendor-assessment";
+import { calculateRiskLevel } from "@/lib/risk-level";
 
 const ANON_ACTOR = "anonymous:prototype";
 
@@ -33,8 +32,9 @@ export async function createVendorAction(
     return { ok: false, error: "Security contact email is required." };
   }
 
-  const complianceScore = 50;
-  const riskLevel = riskLevelToPrisma(riskLevelFromScore(complianceScore));
+  /** No compliant answers yet — strict score is 0 and risk is HIGH. */
+  const complianceScore = 0;
+  const riskLevel = calculateRiskLevel(complianceScore);
 
   try {
     await prisma.$transaction(async (tx) => {

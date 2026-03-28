@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import type { AssessmentAnswer } from "@prisma/client";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
-import type { Nis2QuestionAnalysis } from "@/lib/nis2-question-analysis";
 import { Button } from "@/components/ui/button";
 import { PdfUploadZone } from "@/components/pdf-upload-zone";
 import { RiskBadge } from "@/components/risk-badge";
@@ -13,12 +13,13 @@ import { cn } from "@/lib/utils";
 import { buildVendorAssessmentInsightLines } from "@/lib/vendor-assessment-insights";
 import { VendorAssessmentQuestionnairePanel } from "@/components/vendor-assessment-questionnaire-panel";
 import { VendorAssessmentSidePanels } from "@/components/vendor-assessment-side-panels";
-import { Progress } from "@/components/ui/progress";
+import { EditVendorProfileModal } from "@/components/edit-vendor-profile-modal";
 
 type AssessmentWorkspaceProps = {
   vendorAssessment: VendorAssessment;
   assessmentId: string;
-  initialAnswers: any[];
+  companyId: string;
+  initialAnswers: AssessmentAnswer[];
   documentUrl: string | null;
   documentFilename: string | null;
 };
@@ -26,6 +27,7 @@ type AssessmentWorkspaceProps = {
 export function AssessmentWorkspace({
   vendorAssessment,
   assessmentId,
+  companyId,
   initialAnswers,
   documentUrl,
   documentFilename,
@@ -65,6 +67,27 @@ export function AssessmentWorkspace({
           >
             Score {vendorAssessment.complianceScore}/100
           </span>
+          <EditVendorProfileModal
+            vendorId={vendorAssessment.id}
+            companyId={companyId}
+            initialData={{
+              officialName: vendorAssessment.vendor?.officialName,
+              registrationId: vendorAssessment.vendor?.registrationId,
+              vendorServiceType: vendorAssessment.vendor?.vendorServiceType,
+              vendorServiceTypeCustom: vendorAssessment.vendor?.vendorServiceTypeCustom,
+              securityOfficerName: vendorAssessment.vendor?.securityOfficerName,
+              securityOfficerEmail: vendorAssessment.vendor?.securityOfficerEmail,
+              dpoName: vendorAssessment.vendor?.dpoName,
+              dpoEmail: vendorAssessment.vendor?.dpoEmail,
+              headquartersLocation: vendorAssessment.vendor?.headquartersLocation,
+              sizeClassification: vendorAssessment.vendor?.sizeClassification,
+            }}
+            trigger={
+              <Button variant="outline" size="sm">
+                Edit Vendor Info
+              </Button>
+            }
+          />
         </div>
       </header>
 

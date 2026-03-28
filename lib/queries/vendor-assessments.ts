@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { toVendorAssessment } from "@/lib/prisma-mappers";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
+import type { AssessmentAnswer } from "@prisma/client";
+import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance";
 
 export const DEFAULT_COMPANY_SLUG = "default";
 
@@ -20,21 +22,85 @@ export async function listVendorAssessments(): Promise<VendorAssessment[]> {
 
   const rows = await prisma.assessment.findMany({
     where: { companyId },
-    include: { vendor: true, _count: { select: { answers: true } } },
+    include: {
+      vendor: true,
+      answers: { select: { status: true } },
+    },
     orderBy: { updatedAt: "desc" },
   });
 
-  return rows.map((r) => toVendorAssessment(r.vendor, r, r._count?.answers || 0, totalQuestions));
+  return Promise.all(
+    rows.map(async (r) => {
+      const { score, riskLevel } = await syncAssessmentComplianceToDatabase(
+        r.id,
+        r.answers,
+        totalQuestions,
+        r.complianceScore,
+        r.riskLevel,
+      );
+      const { vendor, answers, ...assessmentFields } = r;
+      return toVendorAssessment(
+        vendor,
+        { ...assessmentFields, complianceScore: score, riskLevel },
+        answers.length,
+        totalQuestions,
+      );
+    }),
+  );
+}
+
+export type VendorAssessmentDetail = {
+  vendorAssessment: VendorAssessment;
+  assessmentId: string;
+  companyId: string;
+  answers: AssessmentAnswer[];
+  documentUrl: string | null;
+  documentFilename: string | null;
+};
+
+/** Loads vendor assessment, reconciles strict score/risk to DB, returns full detail for workspace. */
+export async function getVendorAssessmentDetail(
+  vendorId: string,
+): Promise<VendorAssessmentDetail | null> {
+  const totalQuestions = await prisma.question.count();
+
+  const row = await prisma.assessment.findFirst({
+    where: { vendorId },
+    include: { vendor: true, answers: true },
+  });
+
+  if (!row) return null;
+
+  const { score, riskLevel } = await syncAssessmentComplianceToDatabase(
+    row.id,
+    row.answers,
+    totalQuestions,
+    row.complianceScore,
+    row.riskLevel,
+  );
+
+  const { vendor, answers, ...assessmentFields } = row;
+
+  const vendorAssessment = toVendorAssessment(
+    vendor,
+    { ...assessmentFields, complianceScore: score, riskLevel },
+    answers.length,
+    totalQuestions,
+  );
+
+  return {
+    vendorAssessment,
+    assessmentId: row.id,
+    companyId: row.companyId,
+    answers,
+    documentUrl: row.documentUrl ?? null,
+    documentFilename: row.documentFilename ?? null,
+  };
 }
 
 export async function getVendorAssessmentByVendorId(
   vendorId: string,
 ): Promise<VendorAssessment | null> {
-  const totalQuestions = await prisma.question.count();
-  const row = await prisma.assessment.findFirst({
-    where: { vendorId },
-    include: { vendor: true, _count: { select: { answers: true } } },
-  });
-  if (!row) return null;
-  return toVendorAssessment(row.vendor, row, row._count?.answers || 0, totalQuestions);
+  const detail = await getVendorAssessmentDetail(vendorId);
+  return detail?.vendorAssessment ?? null;
 }
