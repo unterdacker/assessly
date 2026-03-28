@@ -41,12 +41,23 @@ export function riskLevelToPrisma(level: RiskLevel): PrismaRiskLevel {
 
 /** Join row for list/detail views: one Assessment per Vendor. */
 export function toVendorAssessment(
-  vendor: Vendor, 
+  vendor: Vendor,
   assessment: Assessment,
   answerCount: number = 0,
   totalQuestions: number = 20
 ): VendorAssessment {
   const derivedStatus = deriveVendorStatus(answerCount, totalQuestions);
+
+  // NIS2 strict rule: only count compliant answers against total catalogue size.
+  // Pending / unanswered questions score 0 — so pending/incomplete vendors
+  // always show complianceScore from DB (which reflects this) but we clamp to
+  // what the DB says; new vendors seeded at 0 naturally show 0.
+  const complianceScore = assessment.complianceScore ?? 0;
+
+  // Risk is always derived mathematically from score — never hidden.
+  // This ensures pending vendors (score 0) display as HIGH risk in the table.
+  const riskLevel = riskLevelFromPrisma(assessment.riskLevel);
+
   return {
     id: vendor.id,
     name: vendor.name,
@@ -55,9 +66,9 @@ export function toVendorAssessment(
     lastAssessmentDate: assessment.lastAssessmentDate
       ? assessment.lastAssessmentDate.toISOString().slice(0, 10)
       : null,
-    riskLevel: derivedStatus === "completed" ? riskLevelFromPrisma(assessment.riskLevel) : "not_calculated",
+    riskLevel,
     status: derivedStatus,
-    complianceScore: assessment.complianceScore,
+    complianceScore,
     documentUrl: (assessment as any).documentUrl ?? null,
     documentFilename: (assessment as any).documentFilename ?? null,
     createdAt: vendor.createdAt.toISOString(),

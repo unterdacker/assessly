@@ -192,8 +192,10 @@ export async function analyzeDocument(
     }
   }
 
-  // Update complianceScore and derived riskLevel atomically
-  const newScore = Math.round((compliantCount / results.length) * 100);
+  // NIS2 strict rule: denominator is always the full catalogue size (totalQuestions),
+  // not just the questions the AI returned — unanswered questions score 0.
+  const totalQuestions = questions.length;
+  const newScore = totalQuestions > 0 ? Math.round((compliantCount / totalQuestions) * 100) : 0;
   const riskLevel = calculateRiskLevel(newScore);
 
   await prisma.assessment.update({

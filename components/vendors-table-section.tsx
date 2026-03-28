@@ -34,6 +34,28 @@ function formatDate(value: string | null) {
   }
 }
 
+/** Colour-coded compliance score pill. */
+function ScorePill({ score, status }: { score: number; status: string }) {
+  // Pending/incomplete vendors are always treated as 0% for display
+  const displayScore = status === "pending" ? 0 : score;
+
+  const colorCls =
+    displayScore >= 70
+      ? "text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-900/20 dark:border-emerald-800"
+      : displayScore >= 40
+      ? "text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-900/20 dark:border-amber-800"
+      : "text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/20 dark:border-red-800";
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold tabular-nums ${colorCls}`}
+      title={`NIS2 compliance score: ${displayScore}/100`}
+    >
+      {displayScore}%
+    </span>
+  );
+}
+
 function VendorActions({
   vendorAssessment,
 }: {
@@ -111,13 +133,15 @@ export function VendorsTableSection({
       <div className="overflow-x-auto">
         <Table>
           <caption className="sr-only">
-            Vendor assessments with service type, last assessment date, risk level, and actions
+            Vendor assessments with status, compliance score, risk level, and actions
           </caption>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Service type</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Last assessment</TableHead>
+              <TableHead>Compliance score</TableHead>
               <TableHead>Risk level</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -126,7 +150,7 @@ export function VendorsTableSection({
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={7}
                   className="h-24 text-center text-muted-foreground"
                 >
                   No vendors match your search.
@@ -139,8 +163,22 @@ export function VendorsTableSection({
                   <TableCell className="text-muted-foreground">
                     {v.serviceType}
                   </TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
+                      ${ v.status === "completed"
+                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                          : v.status === "incomplete"
+                          ? "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+                          : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                      }`}>
+                      {v.status === "completed" ? "Completed" : v.status === "incomplete" ? "Incomplete" : "Pending"}
+                    </span>
+                  </TableCell>
                   <TableCell className="tabular-nums text-muted-foreground">
                     {formatDate(v.lastAssessmentDate)}
+                  </TableCell>
+                  <TableCell>
+                    <ScorePill score={v.complianceScore} status={v.status} />
                   </TableCell>
                   <TableCell>
                     <RiskBadge level={v.riskLevel} />
