@@ -9,12 +9,15 @@ export async function saveAssessmentAnswer({
   status,
   findings,
   evidenceSnippet,
+  overrideReason,
 }: {
   assessmentId: string;
   questionId: string;
   status: string;
   findings?: string | null;
   evidenceSnippet?: string | null;
+  /** Required when updating an existing answer; must be non-empty. */
+  overrideReason?: string | null;
 }) {
   try {
     // 1. Fetch related assessment to get companyId and vendor info
@@ -32,9 +35,13 @@ export async function saveAssessmentAnswer({
 
     let answer;
     if (existing) {
+      if (!overrideReason?.trim()) {
+        return { success: false, error: "A reason is required to change an existing answer." };
+      }
+      const auditedFindings = `[Override reason: ${overrideReason.trim()}]\n\n${findings ?? existing.findings ?? ""}`.trim();
       answer = await prisma.assessmentAnswer.update({
         where: { id: existing.id },
-        data: { status, findings, evidenceSnippet },
+        data: { status, findings: auditedFindings, evidenceSnippet },
       });
     } else {
       answer = await prisma.assessmentAnswer.create({

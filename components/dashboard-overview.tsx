@@ -21,19 +21,19 @@ export function DashboardOverview({
   vendorAssessments,
 }: DashboardOverviewProps) {
   const score = supplyChainRiskScore(vendorAssessments);
-  const invited = countByStatus(vendorAssessments, "invited");
-  const inProgress = countByStatus(vendorAssessments, "in_progress");
+  const pending = countByStatus(vendorAssessments, "pending");
+  const inProgress = countByStatus(vendorAssessments, "incomplete");
   const completed = countByStatus(vendorAssessments, "completed");
 
   const tiles = [
     {
-      label: "Invited",
-      value: invited,
+      label: "Pending",
+      value: pending,
       icon: Mail,
       hint: "Awaiting vendor response",
     },
     {
-      label: "In progress",
+      label: "Incomplete",
       value: inProgress,
       icon: ClipboardList,
       hint: "Questionnaire underway",

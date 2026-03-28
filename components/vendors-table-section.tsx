@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, FileText } from "lucide-react";
 import { AddVendorModal } from "@/components/add-vendor-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,11 +40,21 @@ function VendorActions({
   vendorAssessment: VendorAssessment;
 }) {
   return (
-    <Button variant="outline" size="sm" className="h-8" asChild>
-      <Link href={`/vendors/${vendorAssessment.id}/assessment`}>
-        Open assessment
-      </Link>
-    </Button>
+    <div className="flex justify-end gap-2">
+      {vendorAssessment.documentUrl && (
+        <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground" asChild>
+          <a href={vendorAssessment.documentUrl} target="_blank" rel="noopener noreferrer" aria-label={`View evidence PDF for ${vendorAssessment.name}`}>
+            <FileText className="h-3.5 w-3.5" aria-hidden />
+            View PDF
+          </a>
+        </Button>
+      )}
+      <Button variant="outline" size="sm" className="h-8" asChild>
+        <Link href={`/vendors/${vendorAssessment.id}/assessment`}>
+          Open assessment
+        </Link>
+      </Button>
+    </div>
   );
 }
 

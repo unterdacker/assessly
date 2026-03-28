@@ -3,8 +3,8 @@
  * PII (e.g. security contact email) is shown in UI only — do not log raw values.
  */
 
-export type VendorStatus = "invited" | "in_progress" | "completed";
-export type RiskLevel = "low" | "medium" | "high";
+export type VendorStatus = "pending" | "incomplete" | "completed";
+export type RiskLevel = "low" | "medium" | "high" | "not_calculated";
 
 export type VendorAssessment = {
   id: string;
@@ -17,6 +17,9 @@ export type VendorAssessment = {
   status: VendorStatus;
   /** 0–100; used for workspace placeholder insights */
   complianceScore: number;
+  /** API URL to retrieve the stored evidence PDF, if uploaded. */
+  documentUrl: string | null;
+  documentFilename: string | null;
   createdAt: string;
   updatedAt: string;
   /** Opaque user/service id when authenticated; placeholder in this prototype. */

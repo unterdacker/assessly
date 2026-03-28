@@ -30,7 +30,7 @@ export default async function AssessmentPage({ params }: PageProps) {
 
   const assessmentRecord = await prisma.assessment.findUnique({
     where: { vendorId },
-    select: { id: true, answers: true },
+    select: { id: true, answers: true, documentUrl: true, documentFilename: true },
   });
 
   return (
@@ -38,6 +38,8 @@ export default async function AssessmentPage({ params }: PageProps) {
       vendorAssessment={vendorAssessment}
       assessmentId={assessmentRecord?.id!}
       initialAnswers={assessmentRecord?.answers ?? []}
+      documentUrl={assessmentRecord?.documentUrl ?? null}
+      documentFilename={assessmentRecord?.documentFilename ?? null}
     />
   );
 }
