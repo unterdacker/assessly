@@ -1,0 +1,102 @@
+// AVRA — EU-oriented multi-tenant core. Use PostgreSQL in production (EU regions);
+// SQLite is the default for local development.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum AssessmentStatus {
+  PENDING
+  IN_REVIEW
+  COMPLETED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+
+  vendors     Vendor[]
+  assessments Assessment[]
+  auditLogs   AuditLog[]
+}
+
+model Vendor {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name        String
+  email       String
+  serviceType String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String
+
+  assessment Assessment?
+
+  @@index([companyId])
+}
+
+/// One current assessment row per vendor (latest lifecycle).
+model Assessment {
+  id                 String             @id @default(cuid())
+  companyId          String
+  company            Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  vendorId           String             @unique
+  vendor             Vendor             @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  status             AssessmentStatus   @default(PENDING)
+  riskLevel          RiskLevel
+  complianceScore    Int
+  lastAssessmentDate DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  createdBy          String
+
+  @@index([companyId])
+  @@index([vendorId])
+}
+
+/// Global NIS2 question catalogue (seeded; version via NIS2_QUESTIONNAIRE_VERSION in app).
+model Question {
+  id        String   @id
+  category  String
+  text      String
+  guidance  String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String
+
+  @@index([category])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  action     String
+  entityType String
+  entityId   String
+  actorId    String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  createdBy  String
+
+  @@index([companyId])
+  @@index([entityType, entityId])
+}
