@@ -26,12 +26,14 @@ export async function analyzeDocument(
   // Fetch the Assessment and Company context
   const assessment = await prisma.assessment.findUnique({
     where: { vendorId },
-    include: { vendor: true }
+    include: { vendor: true, company: true }
   });
 
   if (!assessment) {
     return { ok: false, error: "Assessment not found for the given vendor." };
   }
+
+  const { company } = assessment;
 
   // 1. Fetch the 20 NIS2 questions from the DB
   const questions = await prisma.question.findMany({
@@ -50,7 +52,7 @@ export async function analyzeDocument(
 
   let results;
   try {
-    results = await runNis2Analysis(questionPayload, excerpt);
+    results = await runNis2Analysis(assessment.companyId, questionPayload, excerpt);
   } catch (error: any) {
     return { ok: false, error: error.message };
   }

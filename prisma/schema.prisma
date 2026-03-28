@@ -26,6 +26,9 @@ model Company {
   id        String   @id @default(cuid())
   name      String
   slug      String   @unique
+  aiProvider String @default("mistral")
+  mistralApiKey String?
+  localAiEndpoint String? @default("http://localhost:11434/v1")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   createdBy String
