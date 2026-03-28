@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { calculateRiskLevel } from "@/lib/risk-level";
 
 export async function saveAssessmentAnswer({
   assessmentId,
@@ -66,10 +67,11 @@ export async function saveAssessmentAnswer({
     const compliantCount = allAnswers.filter((a) => a.status === "COMPLIANT").length;
     
     const newScore = totalQuestions > 0 ? Math.round((compliantCount / totalQuestions) * 100) : 0;
+    const riskLevel = calculateRiskLevel(newScore);
 
     await prisma.assessment.update({
       where: { id: assessmentId },
-      data: { complianceScore: newScore },
+      data: { complianceScore: newScore, riskLevel },
     });
 
     // 4. Create Audit Log

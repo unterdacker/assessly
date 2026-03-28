@@ -5,6 +5,7 @@ import path from "path";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { logErrorReport } from "@/lib/logger";
+import { calculateRiskLevel } from "@/lib/risk-level";
 
 const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
 
@@ -123,11 +124,12 @@ export async function overrideAssessmentAnswer(
     ]);
     const compliantCount = allAnswers.filter((a) => a.status === "COMPLIANT").length;
     const newScore = totalQuestions > 0 ? Math.round((compliantCount / totalQuestions) * 100) : 0;
+    const riskLevel = calculateRiskLevel(newScore);
 
     await Promise.all([
       prisma.assessment.update({
         where: { id: assessmentId },
-        data: { complianceScore: newScore },
+        data: { complianceScore: newScore, riskLevel },
       }),
       prisma.auditLog.create({
         data: {
