@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AssessmentWorkspace } from "@/components/assessment-workspace";
 import { Button } from "@/components/ui/button";
 import { getVendorAssessmentByVendorId } from "@/lib/queries/vendor-assessments";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -27,5 +28,16 @@ export default async function AssessmentPage({ params }: PageProps) {
     );
   }
 
-  return <AssessmentWorkspace vendorAssessment={vendorAssessment} />;
+  const assessmentRecord = await prisma.assessment.findUnique({
+    where: { vendorId },
+    select: { id: true, answers: true },
+  });
+
+  return (
+    <AssessmentWorkspace
+      vendorAssessment={vendorAssessment}
+      assessmentId={assessmentRecord?.id!}
+      initialAnswers={assessmentRecord?.answers ?? []}
+    />
+  );
 }

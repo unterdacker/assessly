@@ -17,15 +17,22 @@ import { Progress } from "@/components/ui/progress";
 
 type AssessmentWorkspaceProps = {
   vendorAssessment: VendorAssessment;
+  assessmentId: string;
+  initialAnswers: any[]; // Using any[] temporarily until prisma generate solves the type locally
 };
 
 export function AssessmentWorkspace({
   vendorAssessment,
+  assessmentId,
+  initialAnswers,
 }: AssessmentWorkspaceProps) {
   const insightLines = buildVendorAssessmentInsightLines(vendorAssessment);
-  const [analysisByQuestionId, setAnalysisByQuestionId] = React.useState<
-    Record<string, Nis2QuestionAnalysis> | null
-  >(null);
+  
+  // Track selected question for side-by-side view
+  const [selectedQuestionId, setSelectedQuestionId] = React.useState<string | null>(null);
+
+  // We rely purely on the DB answers passed in, which are refreshed via Server Action revalidation.
+  // We no longer need the local simulation-based analysisByQuestionId state for the panels.
   const [auditRunning, setAuditRunning] = React.useState(false);
   const [auditError, setAuditError] = React.useState<string | null>(null);
   const [progress, setProgress] = React.useState(0);
@@ -55,17 +62,11 @@ export function AssessmentWorkspace({
     try {
       const outcome = await analyzeDocument(formData);
       if (!outcome.ok) {
-        setAnalysisByQuestionId(null);
         setAuditError(outcome.error);
         return;
       }
-      const next: Record<string, Nis2QuestionAnalysis> = {};
-      for (const row of outcome.results) {
-        next[row.questionId] = row;
-      }
-      setAnalysisByQuestionId(next);
+      // Success. revalidatePath inside analyzeDocument will refresh initialAnswers automatically.
     } catch {
-      setAnalysisByQuestionId(null);
       setAuditError("Analysis could not be completed. Try again in a moment.");
     } finally {
       setProgress(100);
@@ -169,9 +170,16 @@ export function AssessmentWorkspace({
 
       <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
         <VendorAssessmentQuestionnairePanel
-          analysisByQuestionId={analysisByQuestionId}
+          answers={initialAnswers}
+          selectedQuestionId={selectedQuestionId}
+          onSelectQuestion={setSelectedQuestionId}
         />
-        <VendorAssessmentSidePanels insightLines={insightLines} />
+        <VendorAssessmentSidePanels 
+          insightLines={insightLines}
+          assessmentId={assessmentId}
+          answers={initialAnswers}
+          selectedQuestionId={selectedQuestionId}
+        />
       </div>
     </div>
   );
