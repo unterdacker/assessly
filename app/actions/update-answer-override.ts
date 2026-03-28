@@ -1,0 +1,158 @@
+"use server";
+
+import fs from "fs/promises";
+import path from "path";
+import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+import { logErrorReport } from "@/lib/logger";
+
+const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
+
+/** Persist a supplemental evidence PDF for a specific AssessmentAnswer. */
+async function saveAnswerEvidencePdf(
+  answerId: string,
+  originalFilename: string,
+  buffer: Buffer,
+): Promise<string> {
+  await fs.mkdir(STORAGE_DIR, { recursive: true });
+  const safeName = originalFilename.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const storedName = `answer__${answerId}__${safeName}`;
+  await fs.writeFile(path.join(STORAGE_DIR, storedName), buffer);
+  return `/api/documents/answer/${encodeURIComponent(answerId)}?filename=${encodeURIComponent(safeName)}`;
+}
+
+export type OverrideAnswerInput = {
+  assessmentId: string;
+  questionId: string;
+  /** New status to record. */
+  status: "COMPLIANT" | "NON_COMPLIANT";
+  /** Mandatory justification text — enforced here on the server. */
+  manualNotes: string;
+  /** Optional supplemental PDF as a Base64 string (sent from the client). */
+  evidencePdfBase64?: string | null;
+  evidencePdfFilename?: string | null;
+};
+
+export type OverrideAnswerResult =
+  | { success: true; newScore: number }
+  | { success: false; error: string };
+
+/**
+ * Dedicated server action for ISB manual overrides.
+ * Validates the mandatory justification, persists the answer with a full
+ * audit trail, and revalidates the relevant pages.
+ */
+export async function overrideAssessmentAnswer(
+  input: OverrideAnswerInput,
+): Promise<OverrideAnswerResult> {
+  const { assessmentId, questionId, status, manualNotes, evidencePdfBase64, evidencePdfFilename } =
+    input;
+
+  // Server-side guard: justification is mandatory
+  if (!manualNotes.trim()) {
+    return { success: false, error: "Justification is required to override an answer." };
+  }
+
+  try {
+    const assessment = await prisma.assessment.findUnique({
+      where: { id: assessmentId },
+      include: { vendor: true },
+    });
+    if (!assessment) return { success: false, error: "Assessment not found." };
+
+    // Upsert the answer
+    const existing = await prisma.assessmentAnswer.findFirst({
+      where: { assessmentId, questionId },
+    });
+
+    let evidenceUrl: string | null = null;
+
+    // Build the audited findings line that appends to any existing AI reasoning
+    const auditPrefix = `[ISB Override — ${new Date().toISOString()}]\nReason: ${manualNotes.trim()}`;
+    const auditedFindings = existing?.findings
+      ? `${auditPrefix}\n\n--- Previous AI reasoning ---\n${existing.findings}`
+      : auditPrefix;
+
+    let answerId: string;
+
+    if (existing) {
+      const updated = await prisma.assessmentAnswer.update({
+        where: { id: existing.id },
+        data: {
+          status,
+          findings: auditedFindings,
+          manualNotes: manualNotes.trim(),
+        },
+        select: { id: true },
+      });
+      answerId = updated.id;
+    } else {
+      const created = await prisma.assessmentAnswer.create({
+        data: {
+          assessmentId,
+          questionId,
+          status,
+          findings: auditedFindings,
+          manualNotes: manualNotes.trim(),
+          createdBy: "isb-user",
+        },
+        select: { id: true },
+      });
+      answerId = created.id;
+    }
+
+    // Persist optional supplemental PDF
+    if (evidencePdfBase64 && evidencePdfFilename) {
+      try {
+        const buffer = Buffer.from(evidencePdfBase64, "base64");
+        evidenceUrl = await saveAnswerEvidencePdf(answerId, evidencePdfFilename, buffer);
+        await prisma.assessmentAnswer.update({
+          where: { id: answerId },
+          data: { evidenceUrl },
+        });
+      } catch (pdfErr) {
+        logErrorReport("Answer Evidence PDF Persistence", pdfErr);
+        // Non-fatal: answer is already saved
+      }
+    }
+
+    // Recalculate compliance score
+    const [allAnswers, totalQuestions] = await Promise.all([
+      prisma.assessmentAnswer.findMany({ where: { assessmentId }, select: { status: true } }),
+      prisma.question.count(),
+    ]);
+    const compliantCount = allAnswers.filter((a) => a.status === "COMPLIANT").length;
+    const newScore = totalQuestions > 0 ? Math.round((compliantCount / totalQuestions) * 100) : 0;
+
+    await Promise.all([
+      prisma.assessment.update({
+        where: { id: assessmentId },
+        data: { complianceScore: newScore },
+      }),
+      prisma.auditLog.create({
+        data: {
+          companyId: assessment.companyId,
+          action: `ISB override: Q${questionId} → ${status}`,
+          entityType: "assessment_answer",
+          entityId: answerId,
+          actorId: "isb-user",
+          createdBy: "isb-user",
+          metadata: {
+            questionId,
+            status,
+            newScore,
+            hasSupplementalEvidence: !!evidenceUrl,
+          },
+        },
+      }),
+    ]);
+
+    revalidatePath("/vendors");
+    revalidatePath(`/vendors/${assessment.vendorId}/assessment`);
+
+    return { success: true, newScore };
+  } catch (err) {
+    logErrorReport("overrideAssessmentAnswer", err);
+    return { success: false, error: "Failed to save override. Please try again." };
+  }
+}

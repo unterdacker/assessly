@@ -1,14 +1,55 @@
 "use server";
 
 import type { AnalyzeDocumentResponse } from "@/lib/nis2-question-analysis";
-import { SIMULATED_VENDOR_DOCUMENT_SNIPPET } from "@/lib/nis2-document-analysis-prompt";
-import { simulateNis2DocumentAnalysis } from "@/lib/simulate-nis2-document-analysis";
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import fs from "fs/promises";
+import path from "path";
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { runNis2Analysis } from "@/lib/ai-client";
+import { runNis2Analysis } from "@/lib/ai/provider";
+import { logErrorReport } from "@/lib/logger";
+
+/** Absolute directory where vendor evidence PDFs are stored off the public web root. */
+const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
+
+/**
+ * Persists a PDF buffer to disk and returns the API URL that can retrieve it.
+ * Directory is created on first use.
+ */
+async function saveEvidencePdf(
+  assessmentId: string,
+  originalFilename: string,
+  buffer: Buffer,
+): Promise<string> {
+  await fs.mkdir(STORAGE_DIR, { recursive: true });
+  // Sanitize the original filename — only keep safe characters
+  const safeName = originalFilename.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const storedName = `${assessmentId}__${safeName}`;
+  const filePath = path.join(STORAGE_DIR, storedName);
+  await fs.writeFile(filePath, buffer);
+  return `/api/documents/${encodeURIComponent(assessmentId)}?filename=${encodeURIComponent(safeName)}`;
+}
 
 const ANALYSIS_LATENCY_MS = 1_800;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_TEXT_LENGTH = 20_000;
+
+function sanitizeExtractedText(text: string): string {
+  // Strip null bytes
+  let sanitized = text.replace(/\0/g, '');
+  // Strip control characters except \n, \r, \t
+  sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  // Strip zero-width spaces and similar
+  sanitized = sanitized.replace(/[\u200B-\u200D\uFEFF]/g, '');
+  // Truncate to max length
+  sanitized = sanitized.substring(0, MAX_TEXT_LENGTH);
+  // Strip excessive consecutive newlines (more than 2)
+  sanitized = sanitized.replace(/\n{3,}/g, '\n\n');
+  // Strip excessive consecutive spaces
+  sanitized = sanitized.replace(/ {2,}/g, ' ');
+  return sanitized.trim();
+}
 
 export async function analyzeDocument(
   formData: FormData,
@@ -19,8 +60,20 @@ export async function analyzeDocument(
   }
 
   const file = formData.get("file");
-  if (file instanceof File && file.size > 15 * 1024 * 1024) {
-    return { ok: false, error: "File exceeds maximum size for this prototype." };
+  if (!(file instanceof File)) {
+    return { ok: false, error: "Please upload a PDF file for analysis." };
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    return { ok: false, error: "File exceeds maximum allowed size." };
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  // Magic Bytes Check for PDF (%PDF-)
+  const signature = buffer.subarray(0, 5).toString('ascii');
+  if (signature !== '%PDF-') {
+    return { ok: false, error: "Security Check Failed: File is not a valid PDF document." };
   }
 
   // Fetch the Assessment and Company context
@@ -35,12 +88,57 @@ export async function analyzeDocument(
 
   const { company } = assessment;
 
+  // --- Persist the PDF to protected storage ---
+  try {
+    const documentUrl = await saveEvidencePdf(assessment.id, file.name, buffer);
+    await prisma.assessment.update({
+      where: { id: assessment.id },
+      data: { documentUrl, documentFilename: file.name },
+    });
+  } catch (err: unknown) {
+    // Non-fatal: log but don't abort — analysis can still proceed
+    logErrorReport("PDF Persistence Phase", err);
+  }
+
   // 1. Fetch the 20 NIS2 questions from the DB
   const questions = await prisma.question.findMany({
     orderBy: { sortOrder: 'asc' }
   });
 
-  const excerpt = SIMULATED_VENDOR_DOCUMENT_SNIPPET;
+  let extractedText = "";
+  try {
+    const loadingTask = pdfjsLib.getDocument({
+      data: new Uint8Array(buffer),
+      useWorkerFetch: false,
+      stopAtErrors: true,
+    });
+
+    const pdfDocument = await loadingTask.promise;
+    let fullText = "";
+
+    for (let i = 1; i <= pdfDocument.numPages; i++) {
+      const page = await pdfDocument.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(" ");
+      fullText += pageText + "\n";
+    }
+
+    extractedText = fullText;
+    console.log("Successfully extracted text. Length:", extractedText.length);
+  } catch (err: unknown) {
+    logErrorReport("PDF Extraction Phase", err);
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    return { ok: false, error: `AI Audit failed: The PDF structure could not be parsed. Details: ${errorMessage}` };
+  }
+
+  if (!extractedText) {
+    return { ok: false, error: "Uploaded PDF contains no extractable text." };
+  }
+
+  // Sanitize the extracted text
+  extractedText = sanitizeExtractedText(extractedText);
 
   // 2. Call an LLM (Abstracted Provider Logic)
   const questionPayload = questions.map(q => ({
@@ -52,9 +150,10 @@ export async function analyzeDocument(
 
   let results;
   try {
-    results = await runNis2Analysis(assessment.companyId, questionPayload, excerpt);
+    results = await runNis2Analysis(assessment.companyId, questionPayload, extractedText);
   } catch (error: any) {
-    return { ok: false, error: error.message };
+    logErrorReport("AI Evaluation Phase", error);
+    return { ok: false, error: error.message || "Unknown AI error" };
   }
 
   // 3. Database Write

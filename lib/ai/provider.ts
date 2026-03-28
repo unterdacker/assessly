@@ -1,7 +1,18 @@
 import { Mistral } from '@mistralai/mistralai';
-import { buildNis2DocumentAnalysisSystemPrompt, buildNis2DocumentAnalysisUserPayload } from "./nis2-document-analysis-prompt";
-import type { Nis2QuestionAnalysis } from "./nis2-question-analysis";
-import { prisma } from "./prisma";
+import { buildNis2DocumentAnalysisSystemPrompt, buildNis2DocumentAnalysisUserPayload } from "../nis2-document-analysis-prompt";
+import type { Nis2QuestionAnalysis } from "../nis2-question-analysis";
+import { prisma } from "../prisma";
+
+function logMistralError(error: unknown) {
+  if (error instanceof Error) {
+    console.error("MISTRAL ERROR:", {
+      message: error.message,
+      stack: error.stack,
+    });
+  } else {
+    console.error("MISTRAL ERROR (non-Error):", error);
+  }
+}
 
 export async function runNis2Analysis(
   companyId: string,
@@ -16,30 +27,18 @@ export async function runNis2Analysis(
     throw new Error("Company configuration not found.");
   }
 
-  const provider = config.aiProvider;
+  // Requirement: toggle between 'Mistral' and 'Local LLM' via process.env.AI_PROVIDER
+  // This satisfies Step 3 of Sovereign Compliance Engine Global Rule
+  const provider = (process.env.AI_PROVIDER || config.aiProvider).toLowerCase();
   
   const systemPrompt = buildNis2DocumentAnalysisSystemPrompt();
   const userPayload = buildNis2DocumentAnalysisUserPayload({ questions, documentExcerpt });
 
-function logMistralError(error: unknown) {
-  if (error instanceof Error) {
-    console.error("MISTRAL ERROR:", {
-      message: error.message,
-      stack: error.stack,
-    });
-  } else {
-    console.error("MISTRAL ERROR (non-Error):", error);
-  }
-}
-
-
   if (provider === "mistral") {
-    const cleanKey = config.mistralApiKey?.trim();
+    const cleanKey = (process.env.MISTRAL_API_KEY || config.mistralApiKey)?.trim();
     if (!cleanKey) {
-      throw new Error("Mistral API key not found in database for this workspace.");
+      throw new Error("Mistral API key not found in environment or database for this workspace.");
     }
-
-    console.log("MISTRAL KEY PRE-FLIGHT CHECK:", cleanKey ? "Key exists (Length: " + cleanKey.length + ")" : "KEY IS EMPTY");
 
     const client = new Mistral({ apiKey: cleanKey });
     
@@ -55,11 +54,8 @@ function logMistralError(error: unknown) {
       const content = response.choices?.[0]?.message?.content;
       if (!content) throw new Error("Received empty content from Mistral API");
 
-      const cleanContent = content.replace(/```json/gi, "").replace(/```/g, "").trim();
-
-      // We expect the LLM to return an array of Analysis objects (or a `{ "results": [...] }` hash since we forced json_object)
-      // Mistral's JSON mode usually requires an object. Our prompt asks for an array.
-      // Mistral JSON mode might wrap it in markdown fences, so we clean and parse.
+      const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
+      const cleanContent = contentStr.replace(/```json/gi, "").replace(/```/g, "").trim();
       const parsed = JSON.parse(cleanContent);
       return Array.isArray(parsed) ? parsed : (parsed.results || parsed);
 
@@ -69,11 +65,9 @@ function logMistralError(error: unknown) {
     }
   } 
   
-  // Local Provider Context
-  const endpoint = config.localAiEndpoint?.trim();
-  if (!endpoint) {
-    throw new Error("AI URI missing. Please configure your local endpoint in the web console settings.");
-  }
+  // Local Provider Context (Ollama / vLLM)
+  const endpoint = (process.env.LOCAL_AI_ENDPOINT || config.localAiEndpoint)?.trim() || "http://localhost:11434/v1";
+  
   try {
     const response = await fetch(`${endpoint}/chat/completions`, {
       method: "POST",
@@ -81,7 +75,8 @@ function logMistralError(error: unknown) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "local-model-placeholder", // Ollama doesn't typically enforce this if single model is loaded, or requires it
+        // For Local LLMs, we typically pass the model string, or Ollama handles it if single model loaded
+        model: process.env.LOCAL_AI_MODEL || "mistral", 
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPayload }

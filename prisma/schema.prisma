@@ -65,6 +65,8 @@ model Assessment {
   riskLevel          RiskLevel
   complianceScore    Int
   lastAssessmentDate DateTime?
+  documentFilename   String?
+  documentUrl        String?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   createdBy          String
@@ -107,16 +109,20 @@ model AuditLog {
 }
 
 model AssessmentAnswer {
-  id           String     @id @default(cuid())
-  assessmentId String
-  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  questionId   String
-  status       String
-  findings     String?
+  id              String     @id @default(cuid())
+  assessmentId    String
+  assessment      Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  questionId      String
+  status          String
+  findings        String?
   evidenceSnippet String?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  createdBy    String
+  /// Free-text justification written by ISB when manually overriding an AI answer.
+  manualNotes     String?
+  /// URL of supplemental evidence PDF uploaded alongside a manual override.
+  evidenceUrl     String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  createdBy       String
 
   @@index([assessmentId, questionId])
 }

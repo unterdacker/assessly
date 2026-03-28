@@ -6,17 +6,13 @@ import type {
 } from "@/lib/vendor-assessment";
 import type { Vendor, Assessment } from "@prisma/client";
 
-export function vendorStatusFromAssessmentStatus(
-  status: AssessmentStatus,
+export function deriveVendorStatus(
+  answerCount: number,
+  totalQuestions: number
 ): VendorStatus {
-  switch (status) {
-    case "PENDING":
-      return "invited";
-    case "IN_REVIEW":
-      return "in_progress";
-    case "COMPLETED":
-      return "completed";
-  }
+  if (answerCount === 0) return "pending";
+  if (answerCount >= totalQuestions && totalQuestions > 0) return "completed";
+  return "incomplete";
 }
 
 export function riskLevelFromPrisma(level: PrismaRiskLevel): RiskLevel {
@@ -27,6 +23,8 @@ export function riskLevelFromPrisma(level: PrismaRiskLevel): RiskLevel {
       return "medium";
     case "HIGH":
       return "high";
+    default:
+      return "not_calculated";
   }
 }
 
@@ -34,15 +32,21 @@ export function riskLevelToPrisma(level: RiskLevel): PrismaRiskLevel {
   switch (level) {
     case "low":
       return "LOW";
-    case "medium":
-      return "MEDIUM";
     case "high":
       return "HIGH";
+    default:
+      return "MEDIUM";
   }
 }
 
 /** Join row for list/detail views: one Assessment per Vendor. */
-export function toVendorAssessment(vendor: Vendor, assessment: Assessment): VendorAssessment {
+export function toVendorAssessment(
+  vendor: Vendor, 
+  assessment: Assessment,
+  answerCount: number = 0,
+  totalQuestions: number = 20
+): VendorAssessment {
+  const derivedStatus = deriveVendorStatus(answerCount, totalQuestions);
   return {
     id: vendor.id,
     name: vendor.name,
@@ -51,9 +55,11 @@ export function toVendorAssessment(vendor: Vendor, assessment: Assessment): Vend
     lastAssessmentDate: assessment.lastAssessmentDate
       ? assessment.lastAssessmentDate.toISOString().slice(0, 10)
       : null,
-    riskLevel: riskLevelFromPrisma(assessment.riskLevel),
-    status: vendorStatusFromAssessmentStatus(assessment.status),
+    riskLevel: derivedStatus === "completed" ? riskLevelFromPrisma(assessment.riskLevel) : "not_calculated",
+    status: derivedStatus,
     complianceScore: assessment.complianceScore,
+    documentUrl: (assessment as any).documentUrl ?? null,
+    documentFilename: (assessment as any).documentFilename ?? null,
     createdAt: vendor.createdAt.toISOString(),
     updatedAt: vendor.updatedAt.toISOString(),
     createdBy: vendor.createdBy,
