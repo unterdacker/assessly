@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { runNis2Analysis } from "@/lib/ai/provider";
 import { logErrorReport } from "@/lib/logger";
+import { calculateRiskLevel } from "@/lib/risk-level";
 
 /** Absolute directory where vendor evidence PDFs are stored off the public web root. */
 const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
@@ -191,12 +192,13 @@ export async function analyzeDocument(
     }
   }
 
-  // Update the complianceScore of the Assessment
+  // Update complianceScore and derived riskLevel atomically
   const newScore = Math.round((compliantCount / results.length) * 100);
-  
+  const riskLevel = calculateRiskLevel(newScore);
+
   await prisma.assessment.update({
     where: { id: assessment.id },
-    data: { complianceScore: newScore }
+    data: { complianceScore: newScore, riskLevel }
   });
 
   // 4. Audit Trail
