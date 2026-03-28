@@ -15,11 +15,15 @@ const groupedByCategory = groupQuestionsByCategory(nis2Questions);
 const categories = Object.keys(groupedByCategory);
 
 export type VendorAssessmentQuestionnairePanelProps = {
-  analysisByQuestionId: Record<string, Nis2QuestionAnalysis> | null;
+  answers: any[];
+  selectedQuestionId: string | null;
+  onSelectQuestion: (id: string) => void;
 };
 
 export function VendorAssessmentQuestionnairePanel({
-  analysisByQuestionId,
+  answers,
+  selectedQuestionId,
+  onSelectQuestion,
 }: VendorAssessmentQuestionnairePanelProps) {
   const numberById = React.useMemo(() => {
     const m: Record<string, number> = {};
@@ -49,56 +53,45 @@ export function VendorAssessmentQuestionnairePanel({
             </h2>
             <ol className="space-y-3">
               {groupedByCategory[cat].map((q) => {
-                const analysis = analysisByQuestionId?.[q.id];
+                const answer = answers.find((a) => a.questionId === q.id);
+                const isSelected = selectedQuestionId === q.id;
+
                 return (
                   <li
                     key={q.id}
-                    className="rounded-lg border border-slate-200/80 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-900/30"
+                    onClick={() => onSelectQuestion(q.id)}
+                    className={cn(
+                      "cursor-pointer rounded-lg border p-3 transition-colors",
+                      isSelected
+                        ? "border-indigo-300 bg-indigo-50/60 dark:border-indigo-700 dark:bg-indigo-900/30"
+                        : "border-slate-200/80 bg-slate-50/50 hover:bg-slate-100/50 dark:border-slate-800 dark:bg-slate-900/30 dark:hover:bg-slate-800/50",
+                    )}
                   >
-                    <div
-                      className={cn(
-                        "grid gap-3",
-                        analysis ? "lg:grid-cols-2 lg:gap-4" : "",
-                      )}
-                    >
+                    <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0 text-sm">
-                        <span className="font-medium text-muted-foreground">
+                        <span className="font-medium text-muted-foreground pr-1">
                           {numberById[q.id]}.
-                        </span>{" "}
+                        </span>
                         {q.text}
-                        {q.guidance ? (
-                          <p className="mt-1.5 text-xs text-muted-foreground">
-                            {q.guidance}
-                          </p>
-                        ) : null}
                       </div>
-                      {analysis ? (
-                        <aside
-                          className="flex min-w-0 flex-col gap-2 rounded-md border border-slate-200/90 bg-white/80 p-3 text-sm dark:border-slate-700 dark:bg-slate-950/40"
-                          aria-label={`AI analysis for question ${numberById[q.id]}`}
+                      <div className="shrink-0 pt-0.5">
+                        <Badge
+                          variant={
+                            answer?.status === "COMPLIANT"
+                              ? "compliant"
+                              : answer?.status === "NON_COMPLIANT"
+                              ? "nonCompliant"
+                              : "secondary"
+                          }
+                          className="font-normal"
                         >
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-xs font-medium text-muted-foreground">
-                              AI review
-                            </span>
-                            <Badge
-                              variant={
-                                analysis.status === "compliant"
-                                  ? "compliant"
-                                  : "nonCompliant"
-                              }
-                              className="font-normal"
-                            >
-                              {analysis.status === "compliant"
-                                ? "Compliant"
-                                : "Non-compliant"}
-                            </Badge>
-                          </div>
-                          <p className="text-xs leading-relaxed text-muted-foreground">
-                            {analysis.reasoning}
-                          </p>
-                        </aside>
-                      ) : null}
+                          {answer?.status === "COMPLIANT"
+                            ? "Compliant"
+                            : answer?.status === "NON_COMPLIANT"
+                            ? "Non-compliant"
+                            : "Pending"}
+                        </Badge>
+                      </div>
                     </div>
                   </li>
                 );

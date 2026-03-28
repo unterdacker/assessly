@@ -3,7 +3,7 @@ import { nis2Questions } from "../lib/nis2-questions";
 
 const prisma = new PrismaClient();
 
-const SEED_ACTOR = "seed:system";
+const SEED_ACTOR = "system-seed";
 const COMPANY_SLUG = "default";
 
 type DemoVendor = {
@@ -93,8 +93,16 @@ async function main() {
 
   for (let i = 0; i < nis2Questions.length; i++) {
     const q = nis2Questions[i];
-    await prisma.question.create({
-      data: {
+    await prisma.question.upsert({
+      where: { id: q.id },
+      update: {
+        category: q.category,
+        text: q.text,
+        guidance: q.guidance ?? null,
+        sortOrder: i,
+        createdBy: SEED_ACTOR,
+      },
+      create: {
         id: q.id,
         category: q.category,
         text: q.text,

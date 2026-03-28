@@ -4,14 +4,12 @@ import type { AnalyzeDocumentResponse } from "@/lib/nis2-question-analysis";
 import { SIMULATED_VENDOR_DOCUMENT_SNIPPET } from "@/lib/nis2-document-analysis-prompt";
 import { simulateNis2DocumentAnalysis } from "@/lib/simulate-nis2-document-analysis";
 
+import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+import { runNis2Analysis } from "@/lib/ai-client";
+
 const ANALYSIS_LATENCY_MS = 1_800;
 
-/**
- * Analyzes vendor document evidence against all NIS2 catalogue questions.
- * Today: extracts no text from uploads (mock); uses a fixed policy excerpt and deterministic simulation.
- * Production: stream text from secure storage, call EU-region inference with
- * `buildNis2DocumentAnalysisSystemPrompt` / `buildNis2DocumentAnalysisUserPayload`, validate JSON.
- */
 export async function analyzeDocument(
   formData: FormData,
 ): Promise<AnalyzeDocumentResponse> {
@@ -25,13 +23,97 @@ export async function analyzeDocument(
     return { ok: false, error: "File exceeds maximum size for this prototype." };
   }
 
-  void vendorId;
-  void file;
+  // Fetch the Assessment and Company context
+  const assessment = await prisma.assessment.findUnique({
+    where: { vendorId },
+    include: { vendor: true }
+  });
 
-  await new Promise((resolve) => setTimeout(resolve, ANALYSIS_LATENCY_MS));
+  if (!assessment) {
+    return { ok: false, error: "Assessment not found for the given vendor." };
+  }
+
+  // 1. Fetch the 20 NIS2 questions from the DB
+  const questions = await prisma.question.findMany({
+    orderBy: { sortOrder: 'asc' }
+  });
 
   const excerpt = SIMULATED_VENDOR_DOCUMENT_SNIPPET;
-  const results = simulateNis2DocumentAnalysis(excerpt);
+
+  // 2. Call an LLM (Abstracted Provider Logic)
+  const questionPayload = questions.map(q => ({
+    id: q.id,
+    category: q.category,
+    text: q.text,
+    guidance: q.guidance ?? undefined
+  }));
+
+  let results;
+  try {
+    results = await runNis2Analysis(questionPayload, excerpt);
+  } catch (error: any) {
+    return { ok: false, error: error.message };
+  }
+
+  // 3. Database Write
+  // Create an AssessmentAnswer record for each AI result
+  let compliantCount = 0;
+
+  for (const res of results) {
+    const isCompliant = res.status === "compliant";
+    if (isCompliant) compliantCount++;
+
+    const dbStatus = isCompliant ? "COMPLIANT" : "NON_COMPLIANT";
+
+    const existing = await prisma.assessmentAnswer.findFirst({
+      where: { assessmentId: assessment.id, questionId: res.questionId }
+    });
+
+    if (existing) {
+      await prisma.assessmentAnswer.update({
+        where: { id: existing.id },
+        data: {
+          status: dbStatus,
+          findings: res.reasoning
+        }
+      });
+    } else {
+      await prisma.assessmentAnswer.create({
+        data: {
+          assessmentId: assessment.id,
+          questionId: res.questionId,
+          status: dbStatus,
+          findings: res.reasoning,
+          createdBy: "ai-analysis-system"
+        }
+      });
+    }
+  }
+
+  // Update the complianceScore of the Assessment
+  const newScore = Math.round((compliantCount / results.length) * 100);
+  
+  await prisma.assessment.update({
+    where: { id: assessment.id },
+    data: { complianceScore: newScore }
+  });
+
+  // 4. Audit Trail
+  await prisma.auditLog.create({
+    data: {
+      companyId: assessment.companyId,
+      action: `AI-Assessment performed for ${assessment.vendor.name}`, 
+      entityType: "vendor_assessment",
+      entityId: assessment.id,
+      actorId: "ai-system",
+      createdBy: "ai-system",
+      metadata: { newScore, compliantCount, total: results.length }
+    }
+  });
+
+  // Ensure UI refreshes
+  revalidatePath("/vendors");
+  revalidatePath(`/vendors/${vendorId}/assessment`);
 
   return { ok: true, results };
 }
