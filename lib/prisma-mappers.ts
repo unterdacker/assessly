@@ -56,6 +56,9 @@ export function toVendorAssessment(
   return {
     id: vendor.id,
     name: vendor.name,
+    accessCode: (vendor as any).accessCode ?? null,
+    codeExpiresAt: (vendor as any).codeExpiresAt ? new Date((vendor as any).codeExpiresAt).toISOString() : null,
+    isCodeActive: Boolean((vendor as any).isCodeActive),
     email: vendor.email,
     serviceType: vendor.serviceType,
     lastAssessmentDate: assessment.lastAssessmentDate

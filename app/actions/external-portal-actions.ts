@@ -16,10 +16,12 @@ function normalizeOptional(value?: string | null): string | null {
 async function getExternalVendorByToken(token: string) {
   if (!token || !token.trim()) return null;
 
-  return prisma.vendor.findFirst({
+  return (prisma.vendor as any).findFirst({
     where: {
       inviteToken: token,
       inviteTokenExpires: { gt: new Date() },
+      isCodeActive: true,
+      codeExpiresAt: { gt: new Date() },
     },
     include: {
       assessment: true,

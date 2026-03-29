@@ -9,6 +9,9 @@ export type RiskLevel = "low" | "medium" | "high" | "not_calculated";
 export type VendorAssessment = {
   id: string;
   name: string;
+  accessCode: string | null;
+  codeExpiresAt: string | null;
+  isCodeActive: boolean;
   /** Business security contact — minimize exposure in logs and exports. */
   email: string;
   serviceType: string;

@@ -10,7 +10,7 @@ import {
   Edit3,
   CheckCircle2,
   AlertCircle,
-  Link2,
+  Copy,
   Check
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,7 +20,6 @@ import { EditVendorProfileModal } from "@/components/edit-vendor-profile-modal";
 import { cn } from "@/lib/utils";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
 import { calculateDossierCompletion } from "@/lib/vendor-assessment";
-import { generateInviteToken } from "@/app/actions/generate-invite-token";
 
 interface VendorDetailsCardProps {
   vendorAssessment: VendorAssessment;
@@ -34,26 +33,56 @@ interface VendorDetailsCardProps {
  */
 export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetailsCardProps) {
   const v = vendorAssessment.vendor;
-  const [isInviting, setIsInviting] = React.useState(false);
   const [hasCopied, setHasCopied] = React.useState(false);
+  const [hasCopiedCode, setHasCopiedCode] = React.useState(false);
 
   const progressPercent = calculateDossierCompletion(v);
   const isComplete = progressPercent === 100;
+  const hasActiveCode = Boolean(vendorAssessment.isCodeActive && vendorAssessment.accessCode);
+
+  const formatAccessCodeExpiry = (value: string | null) => {
+    if (!value) return "No active code";
+    const expiresAt = new Date(value);
+    if (!Number.isFinite(expiresAt.getTime())) return "No active code";
+    if (expiresAt.getTime() <= Date.now()) return "Expired";
+
+    const formatted = new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(expiresAt);
+
+    return `Expires: ${formatted}`;
+  };
 
   const handleInvite = async () => {
-    setIsInviting(true);
+    if (!hasActiveCode || !vendorAssessment.accessCode) {
+      window.alert("Generate an access code first.");
+      return;
+    }
+
     try {
-      const result = await generateInviteToken(vendorAssessment.id);
-      if (result.ok && result.token) {
-        const url = `${window.location.origin}/external/assessment/${result.token}`;
-        await navigator.clipboard.writeText(url);
-        setHasCopied(true);
-        setTimeout(() => setHasCopied(false), 3000);
-      }
+      const message = `Please complete your security assessment here: ${window.location.origin}/portal. Your secure Access Code is: ${vendorAssessment.accessCode}`;
+      await navigator.clipboard.writeText(message);
+      setHasCopied(true);
+      window.setTimeout(() => setHasCopied(false), 2500);
     } catch (err) {
       console.error("Invite error:", err);
-    } finally {
-      setIsInviting(false);
+      window.alert("Copy failed. Please copy the access code manually.");
+    }
+  };
+
+  const handleCopyCodeOnly = async () => {
+    if (!vendorAssessment.accessCode) return;
+    try {
+      await navigator.clipboard.writeText(vendorAssessment.accessCode);
+      setHasCopiedCode(true);
+      window.setTimeout(() => setHasCopiedCode(false), 1200);
+    } catch {
+      window.alert("Copy failed. Please copy the code manually.");
     }
   };
 
@@ -146,25 +175,55 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col items-start gap-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+              {hasActiveCode ? (
+                <>
+                  <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-900 dark:text-slate-100">
+                    <span>{vendorAssessment.accessCode}</span>
+                    <button
+                      type="button"
+                      aria-label={`Copy access code for ${vendorAssessment.name}`}
+                      onClick={handleCopyCodeOnly}
+                      className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </button>
+                    {hasCopiedCode && (
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Copied</span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    {formatAccessCodeExpiry(vendorAssessment.codeExpiresAt)}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <span className="text-xs text-muted-foreground">No active code</span>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Generate a code to invite this vendor.</p>
+                </>
+              )}
+            </div>
+
             <Button
               variant="outline"
               size="sm"
               onClick={handleInvite}
-              disabled={isInviting}
+              disabled={!hasActiveCode}
               className={cn(
                 "h-9 px-4 transition-all",
                 hasCopied ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "text-slate-600"
               )}
+              title={hasActiveCode ? "Copy portal invite message" : "Generate an access code first"}
             >
               {hasCopied ? (
                 <>
                   <Check className="mr-2 h-3.5 w-3.5" />
-                  Link Copied
+                  Invite Copied
                 </>
               ) : (
                 <>
-                  <Link2 className="mr-2 h-3.5 w-3.5" />
-                  {isInviting ? "Generating..." : "Invite Vendor"}
+                  <Copy className="mr-2 h-3.5 w-3.5" />
+                  Invite Vendor
                 </>
               )}
             </Button>

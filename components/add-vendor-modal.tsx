@@ -14,8 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, Copy } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { CheckCircle2 } from "lucide-react";
 import { createVendorAction } from "@/app/actions/vendor-actions";
 
 type AddVendorModalProps = {
@@ -29,8 +28,7 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
   const [email, setEmail] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState(false);
-  const [successToken, setSuccessToken] = React.useState<string | null>(null);
-  const [copied, setCopied] = React.useState(false);
+  const [isSuccess, setIsSuccess] = React.useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -46,26 +44,16 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
       setError(result.error);
       return;
     }
-    setSuccessToken(result.token || null);
+    setIsSuccess(true);
     router.refresh();
   }
-
-  const inviteUrl = successToken ? `${window.location.origin}/external/assessment/${successToken}` : "";
-
-  const handleCopy = async () => {
-    if (inviteUrl) {
-      await navigator.clipboard.writeText(inviteUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 3000);
-    }
-  };
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
     if (!isOpen) {
       // Clear states on close
       setTimeout(() => {
-        setSuccessToken(null);
+        setIsSuccess(false);
         setName("");
         setEmail("");
         setError(null);
@@ -79,7 +67,7 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
         {trigger ?? <Button type="button">Invite vendor</Button>}
       </DialogTrigger>
       <DialogContent>
-        {successToken ? (
+        {isSuccess ? (
           <div className="space-y-6 py-4">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
@@ -87,30 +75,12 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
                 Invitation Sent
               </DialogTitle>
               <DialogDescription>
-                A secure assessment link has been generated for <strong>{name}</strong>.
-                You can copy this link and send it to their security contact.
+                Vendor <strong>{name}</strong> has been created.
+                Generate a temporary access code in the Vendors list and share:
+                <br />
+                <span className="font-semibold">avra.app/portal</span>
               </DialogDescription>
             </DialogHeader>
-
-            <div className="space-y-3">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Unique Assessment Link</Label>
-              <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-950">
-                <code className="flex-1 truncate text-xs font-mono text-slate-600 dark:text-slate-400">
-                  {inviteUrl}
-                </code>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={handleCopy}
-                  className={cn("h-8 shrink-0", copied && "text-emerald-600")}
-                >
-                  {copied ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-              <p className="text-[10px] italic text-slate-400">
-                Link expires in 14 days. This link grants exclusive access to this vendor's assessment.
-              </p>
-            </div>
 
             <DialogFooter>
               <Button onClick={() => handleOpenChange(false)} className="w-full">

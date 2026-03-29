@@ -60,6 +60,9 @@ model Vendor {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdBy   String
+  accessCode  String?  @unique
+  codeExpiresAt DateTime?
+  isCodeActive Boolean @default(false)
   inviteToken String?  @unique
   inviteTokenExpires DateTime?
 

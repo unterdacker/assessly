@@ -14,7 +14,7 @@ export default function ExternalExitPage() {
           Your external assessment session has been closed. You can now safely close this tab.
         </p>
         <Button asChild className="w-full">
-          <Link href="/">Return to AVRA Home</Link>
+          <Link href="/external/portal">Return to Access Portal</Link>
         </Button>
       </div>
     </main>
