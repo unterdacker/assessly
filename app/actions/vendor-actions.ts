@@ -1,6 +1,7 @@
 "use server";
 
 import crypto from "crypto";
+import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getDefaultCompanyId } from "@/lib/queries/vendor-assessments";
@@ -9,6 +10,7 @@ import { calculateRiskLevel } from "@/lib/risk-level";
 const ANON_ACTOR = "anonymous:prototype";
 const ACCESS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const ACCESS_CODE_SCHEMA_NOT_READY = "ACCESS_CODE_SCHEMA_NOT_READY";
+const TEMP_PASSWORD_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#%";
 
 function isAccessCodeSchemaMismatch(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
@@ -33,6 +35,11 @@ function generateAccessCode(): string {
   return `${picked.slice(0, 4).join("")}-${picked.slice(4, 8).join("")}`;
 }
 
+function generateTempPassword(): string {
+  const bytes = crypto.randomBytes(12);
+  return Array.from(bytes, (b) => TEMP_PASSWORD_ALPHABET[b % TEMP_PASSWORD_ALPHABET.length]).join("");
+}
+
 export type CreateVendorResult =
   | { ok: true }
   | { ok: false; error: string };
@@ -48,7 +55,7 @@ export type DeleteVendorsResult =
 export type AccessCodeDuration = "1h" | "24h" | "7d" | "30d";
 
 export type GenerateAccessCodeResult =
-  | { ok: true; accessCode: string; codeExpiresAt: string }
+  | { ok: true; accessCode: string; tempPassword: string; codeExpiresAt: string }
   | { ok: false; error: string };
 
 export type VoidAccessCodeResult =
@@ -184,6 +191,9 @@ export async function generateVendorAccessCodeAction(
   }
 
   try {
+    const tempPassword = generateTempPassword();
+    const passwordHash = await bcrypt.hash(tempPassword, 12);
+
     let accessCode = "";
     const codeExpiresAt = resolveCodeExpiry(duration);
     const inviteToken = crypto.randomUUID().replace(/-/g, "");
@@ -210,6 +220,8 @@ export async function generateVendorAccessCodeAction(
               isCodeActive: true,
               inviteToken,
               inviteTokenExpires: codeExpiresAt,
+              passwordHash,
+              isFirstLogin: true,
             },
           });
           updated = true;
@@ -249,7 +261,7 @@ export async function generateVendorAccessCodeAction(
     });
 
     revalidatePath("/vendors");
-    return { ok: true, accessCode, codeExpiresAt: codeExpiresAt.toISOString() };
+    return { ok: true, accessCode, tempPassword, codeExpiresAt: codeExpiresAt.toISOString() };
   } catch (err) {
     console.error("Access code generation failed:", err);
     if (
@@ -298,6 +310,8 @@ export async function voidVendorAccessCodeAction(vendorId: string): Promise<Void
           accessCode: null,
           inviteToken: null,
           inviteTokenExpires: null,
+          passwordHash: null,
+          isFirstLogin: true,
         },
       });
 

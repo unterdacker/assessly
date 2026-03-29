@@ -1,12 +1,13 @@
 "use server";
 
 import crypto from "crypto";
+import bcrypt from "bcryptjs";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import type { PortalActionState } from "@/lib/types/vendor-auth";
 
-const MAX_CONSECUTIVE_FAILURES = 5;
+const MAX_CONSECUTIVE_FAILURES = 3;
 const BLOCK_MS = 15 * 60 * 1000;
 const FAIL_DELAY_MS = 3_000;
 
@@ -61,7 +62,7 @@ function resetFailures(key: string): void {
 
 async function failWithDelay(): Promise<PortalActionState> {
   await new Promise((resolve) => setTimeout(resolve, FAIL_DELAY_MS));
-  return { error: "Invalid access code provided." };
+  return { error: "Invalid credentials." };
 }
 
 export async function authenticateVendorAccessCode(
@@ -94,7 +95,10 @@ export async function authenticateVendorAccessCode(
   const normalized = sanitizeAccessCode(formData.get("accessCode"));
   const formatted = formatAccessCode(normalized);
 
-  if (!formatted) {
+  const rawPassword = formData.get("password");
+  const password = typeof rawPassword === "string" ? rawPassword : "";
+
+  if (!formatted || !password) {
     registerFailure(key);
     return failWithDelay();
   }
@@ -109,6 +113,8 @@ export async function authenticateVendorAccessCode(
       inviteToken: true,
       inviteTokenExpires: true,
       codeExpiresAt: true,
+      passwordHash: true,
+      isFirstLogin: true,
     },
   });
 
@@ -125,6 +131,8 @@ export async function authenticateVendorAccessCode(
         accessCode: null,
         codeExpiresAt: null,
         isCodeActive: false,
+        passwordHash: null,
+        isFirstLogin: true,
       },
     });
 
@@ -132,7 +140,40 @@ export async function authenticateVendorAccessCode(
     return failWithDelay();
   }
 
+  // Verify password — must have a hash (requires code regeneration after MFA upgrade)
+  const passwordHash = vendor.passwordHash as string | null;
+  if (!passwordHash) {
+    registerFailure(key);
+    return failWithDelay();
+  }
+
+  const passwordOk = await bcrypt.compare(password, passwordHash);
+  if (!passwordOk) {
+    registerFailure(key);
+    return failWithDelay();
+  }
+
   resetFailures(key);
+
+  // If this is the vendor's first login, redirect to force-change-password flow
+  const isFirstLogin = vendor.isFirstLogin as boolean;
+  if (isFirstLogin) {
+    cookieStore.set("avra-vendor-setup", crypto.randomUUID(), {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: true,
+      path: "/",
+      maxAge: 60 * 30, // 30 minutes
+    });
+    cookieStore.set("avra-vendor-id", vendor.id, {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: true,
+      path: "/",
+      maxAge: 60 * 30,
+    });
+    redirect("/external/force-password-change");
+  }
 
   const now = new Date();
   let inviteToken = vendor.inviteToken as string | null;
