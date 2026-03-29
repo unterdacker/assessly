@@ -1,6 +1,7 @@
 {
     "workbench.colorTheme": "Light+",
     "chat.tools.terminal.autoApprove": {
-        "npx tsx": true
+        "npx tsx": true,
+        "npm install": true
     }
 }

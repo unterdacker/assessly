@@ -43,8 +43,8 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      // Inline display in browser; change to attachment to force download
-      "Content-Disposition": `inline; filename="${safeName}"`,
+      "Content-Disposition": `attachment; filename="${safeName}"`,
+      "X-Content-Type-Options": "nosniff",
       "Content-Length": String(buffer.byteLength),
       // Prevent caching of sensitive evidence documents
       "Cache-Control": "no-store",

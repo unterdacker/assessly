@@ -9,6 +9,6 @@ export async function GET() {
   const cookieStore = await cookies();
   cookieStore.delete("avra-vendor-token");
   
-  // Redirect back to the main AVRA dashboard/home
-  return NextResponse.redirect(new URL("/", process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"));
+  // Redirect to a neutral external exit page, not the internal admin console.
+  return NextResponse.redirect(new URL("/external/exit", process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"));
 }

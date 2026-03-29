@@ -14,6 +14,123 @@ function logMistralError(error: unknown) {
   }
 }
 
+function toModelContentString(content: unknown): string {
+  if (typeof content === "string") {
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    return content
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object" && "text" in item) {
+          const text = (item as { text?: unknown }).text;
+          return typeof text === "string" ? text : "";
+        }
+        return JSON.stringify(item);
+      })
+      .join("");
+  }
+
+  if (content && typeof content === "object" && "text" in content) {
+    const text = (content as { text?: unknown }).text;
+    if (typeof text === "string") return text;
+  }
+
+  return JSON.stringify(content);
+}
+
+function stripCodeFences(input: string): string {
+  return input.replace(/```json/gi, "").replace(/```/g, "").trim();
+}
+
+function stripTrailingCommas(input: string): string {
+  return input.replace(/,\s*([}\]])/g, "$1");
+}
+
+function extractBalancedJson(input: string): string | null {
+  const starts = [input.indexOf("["), input.indexOf("{")]
+    .filter((i) => i >= 0)
+    .sort((a, b) => a - b);
+
+  if (!starts.length) return null;
+
+  const start = starts[0];
+  const open = input[start];
+  const close = open === "[" ? "]" : "}";
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < input.length; i++) {
+    const ch = input[i];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === "\\") {
+        escaped = true;
+      } else if (ch === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (ch === open) depth++;
+    if (ch === close) depth--;
+
+    if (depth === 0) {
+      return input.slice(start, i + 1).trim();
+    }
+  }
+
+  return null;
+}
+
+function parseLlmJson(rawContent: unknown): unknown {
+  const normalized = stripCodeFences(toModelContentString(rawContent));
+
+  const candidates = [normalized];
+  const balanced = extractBalancedJson(normalized);
+  if (balanced && balanced !== normalized) {
+    candidates.push(balanced);
+  }
+
+  for (const candidate of candidates) {
+    const variants = [candidate, stripTrailingCommas(candidate)];
+    for (const variant of variants) {
+      try {
+        return JSON.parse(variant);
+      } catch {
+        // continue trying fallback variants
+      }
+    }
+  }
+
+  throw new SyntaxError("Unable to parse model response as valid JSON.");
+}
+
+function normalizeAnalysisResult(parsed: unknown): Nis2QuestionAnalysis[] {
+  if (Array.isArray(parsed)) {
+    return parsed as Nis2QuestionAnalysis[];
+  }
+
+  if (parsed && typeof parsed === "object") {
+    const maybeResults = (parsed as { results?: unknown }).results;
+    if (Array.isArray(maybeResults)) {
+      return maybeResults as Nis2QuestionAnalysis[];
+    }
+  }
+
+  throw new Error("Model response was not an analysis array.");
+}
+
 export type Nis2QuestionPromptItem = {
   id: string;
   category: string;
@@ -61,10 +178,8 @@ export async function runNis2Analysis(
       const content = response.choices?.[0]?.message?.content;
       if (!content) throw new Error("Received empty content from Mistral API");
 
-      const contentStr = typeof content === 'string' ? content : JSON.stringify(content);
-      const cleanContent = contentStr.replace(/```json/gi, "").replace(/```/g, "").trim();
-      const parsed = JSON.parse(cleanContent);
-      return Array.isArray(parsed) ? parsed : (parsed.results || parsed);
+      const parsed = parseLlmJson(content);
+      return normalizeAnalysisResult(parsed);
 
     } catch (error: unknown) {
       logMistralError(error);
@@ -101,9 +216,8 @@ export async function runNis2Analysis(
     const content = data.choices?.[0]?.message?.content;
     if (!content) throw new Error("Received empty content from local AI");
 
-    const cleanContent = content.replace(/```json/gi, "").replace(/```/g, "").trim();
-    const parsed = JSON.parse(cleanContent);
-    return Array.isArray(parsed) ? parsed : (parsed.results || parsed);
+    const parsed = parseLlmJson(content);
+    return normalizeAnalysisResult(parsed);
 
   } catch (error: unknown) {
     const maybe = error as {

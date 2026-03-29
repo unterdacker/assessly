@@ -140,6 +140,7 @@ export async function analyzeDocument(
       verified: false,
       aiSuggestedStatus: aiCalculatedStatus,
       aiReasoning: res.reasoning,
+      justificationText: res.reasoning,
       aiConfidence: 0.95,
       findings: res.reasoning,
       evidenceSnippet: res.evidenceSnippet,

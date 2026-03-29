@@ -9,7 +9,8 @@ import {
   CheckCircle2, 
   ChevronDown, 
   ChevronUp,
-  ArrowRight
+  AlertCircle,
+  Upload
 } from "lucide-react";
 import type { AssessmentAnswer, Question } from "@prisma/client";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { updateExternalAnswer } from "@/app/actions/update-external-answer";
+import { deleteExternalAnswerEvidence } from "@/app/actions/external-portal-actions";
 
 // Local extension to AssessmentAnswer until prisma generate takes full effect
 type ExtendedAssessmentAnswer = AssessmentAnswer & {
@@ -26,12 +28,17 @@ type ExtendedAssessmentAnswer = AssessmentAnswer & {
   aiConfidence?: number | null;
   aiReasoning?: string | null;
   evidenceSnippet?: string | null;
+  justificationText?: string | null;
+  evidenceFileUrl?: string | null;
+  evidenceFileName?: string | null;
 };
 
 type VendorQuestionnaireWizardProps = {
   questions: Question[];
   initialAnswers: ExtendedAssessmentAnswer[];
   assessmentId: string;
+  token: string;
+  onAnswerSaved?: (answer: ExtendedAssessmentAnswer) => void;
 };
 
 /**
@@ -42,37 +49,165 @@ export function VendorQuestionnaireWizard({
   questions,
   initialAnswers,
   assessmentId,
+  token,
+  onAnswerSaved,
 }: VendorQuestionnaireWizardProps) {
   const [answers, setAnswers] = React.useState<Record<string, Partial<ExtendedAssessmentAnswer>>>(
     initialAnswers.reduce((acc, a) => ({ ...acc, [a.questionId]: a }), {})
   );
+  const [draftStatusByQuestion, setDraftStatusByQuestion] = React.useState<Record<string, string>>({});
+  const [draftJustificationByQuestion, setDraftJustificationByQuestion] = React.useState<Record<string, string>>({});
+  const [draftEvidenceByQuestion, setDraftEvidenceByQuestion] = React.useState<Record<string, File | null>>({});
+  const [draftEvidenceLabelByQuestion, setDraftEvidenceLabelByQuestion] = React.useState<Record<string, string>>({});
 
   // Sync state if initialAnswers prop changes (e.g. after a router.refresh())
   React.useEffect(() => {
-    setAnswers(initialAnswers.reduce((acc, a) => ({ ...acc, [a.questionId]: a }), {}));
+    const nextAnswers = initialAnswers.reduce((acc, a) => ({ ...acc, [a.questionId]: a }), {} as Record<string, Partial<ExtendedAssessmentAnswer>>);
+    setAnswers(nextAnswers);
+    setDraftStatusByQuestion(
+      initialAnswers.reduce((acc, a) => {
+        acc[a.questionId] = a.status || "";
+        return acc;
+      }, {} as Record<string, string>)
+    );
+    setDraftJustificationByQuestion(
+      initialAnswers.reduce((acc, a) => {
+        acc[a.questionId] = a.justificationText || a.aiReasoning || a.findings || "";
+        return acc;
+      }, {} as Record<string, string>)
+    );
+    setDraftEvidenceLabelByQuestion(
+      initialAnswers.reduce((acc, a) => {
+        if (a.evidenceFileName) {
+          acc[a.questionId] = a.evidenceFileName;
+        }
+        return acc;
+      }, {} as Record<string, string>)
+    );
   }, [initialAnswers]);
 
   const [openQuestionId, setOpenQuestionId] = React.useState<string | null>(questions[0]?.id || null);
-  const [isUpdating, setIsUpdating] = React.useState<string | null>(null);
+  const [isSaving, setIsSaving] = React.useState<string | null>(null);
+  const [saveErrorByQuestion, setSaveErrorByQuestion] = React.useState<Record<string, string>>({});
 
-  const handleUpdateStatus = async (questionId: string, status: string) => {
-    setIsUpdating(questionId);
+  const handleDeleteEvidence = async (questionId: string, answerId: string) => {
+    const confirmed = window.confirm("Delete this uploaded evidence file?");
+    if (!confirmed) return;
+
+    setSaveErrorByQuestion((prev) => ({ ...prev, [questionId]: "" }));
+    const result = await deleteExternalAnswerEvidence({ token, answerId });
+
+    if (!result.ok || !result.answer) {
+      setSaveErrorByQuestion((prev) => ({
+        ...prev,
+        [questionId]: result.error || "Failed to delete evidence.",
+      }));
+      return;
+    }
+
+    setAnswers((prev) => {
+      const previous = prev[questionId] || { questionId };
+      const updated = {
+        ...previous,
+        ...result.answer,
+      } as ExtendedAssessmentAnswer;
+
+      onAnswerSaved?.(updated);
+      return {
+        ...prev,
+        [questionId]: updated,
+      };
+    });
+
+    setDraftEvidenceLabelByQuestion((prev) => {
+      const next = { ...prev };
+      delete next[questionId];
+      return next;
+    });
+  };
+
+  const handleSaveAndConfirm = async (questionId: string) => {
+    const status = draftStatusByQuestion[questionId] as
+      | "COMPLIANT"
+      | "NON_COMPLIANT"
+      | "NOT_APPLICABLE"
+      | undefined;
+    const justificationText = (draftJustificationByQuestion[questionId] || "").trim();
+
+    if (!status) {
+      setSaveErrorByQuestion((prev) => ({ ...prev, [questionId]: "Select a status before saving." }));
+      return;
+    }
+
+    if (!justificationText) {
+      setSaveErrorByQuestion((prev) => ({ ...prev, [questionId]: "Add a justification before saving." }));
+      return;
+    }
+
+    setIsSaving(questionId);
+    setSaveErrorByQuestion((prev) => ({ ...prev, [questionId]: "" }));
+
     try {
-      const result = await updateExternalAnswer(
-        assessmentId, 
-        questionId, 
-        status as any
-      );
-      if (result.ok) {
-        setAnswers(prev => ({
+      const formData = new FormData();
+      formData.append("assessmentId", assessmentId);
+      formData.append("questionId", questionId);
+      formData.append("status", status);
+      formData.append("justificationText", justificationText);
+
+      const evidenceFile = draftEvidenceByQuestion[questionId];
+      if (evidenceFile) {
+        formData.append("evidenceFile", evidenceFile);
+      }
+
+      const result = await updateExternalAnswer(formData);
+
+      if (result.ok && result.answer) {
+        const previousAnswer = answers[questionId] || { questionId };
+        const updatedAnswer = {
+          ...previousAnswer,
+          ...result.answer,
+          questionId,
+          status,
+          verified: true,
+          justificationText,
+        } as ExtendedAssessmentAnswer;
+
+        setAnswers((prev) => ({
           ...prev,
-          [questionId]: { ...prev[questionId], status, verified: true, questionId }
+          [questionId]: updatedAnswer,
+        }));
+
+        if (result.answer.evidenceFileName) {
+          setDraftEvidenceLabelByQuestion((prev) => ({
+            ...prev,
+            [questionId]: result.answer.evidenceFileName as string,
+          }));
+        }
+
+        setDraftEvidenceByQuestion((prev) => ({
+          ...prev,
+          [questionId]: null,
+        }));
+
+        onAnswerSaved?.(updatedAnswer);
+
+        const currentIndex = questions.findIndex((q) => q.id === questionId);
+        const nextQuestion = questions[currentIndex + 1];
+        setOpenQuestionId(nextQuestion ? nextQuestion.id : null);
+      } else {
+        setSaveErrorByQuestion((prev) => ({
+          ...prev,
+          [questionId]: result.error || "Failed to save answer.",
         }));
       }
     } catch (err) {
       console.error("Failed to update answer:", err);
+      setSaveErrorByQuestion((prev) => ({
+        ...prev,
+        [questionId]: "Unexpected error while saving. Please retry.",
+      }));
     } finally {
-      setIsUpdating(null);
+      setIsSaving(null);
     }
   };
 
@@ -82,6 +217,9 @@ export function VendorQuestionnaireWizard({
         const answer = answers[q.id];
         const isOpen = openQuestionId === q.id;
         const isFilled = !!answer?.verified;
+        const draftStatus = draftStatusByQuestion[q.id] || "";
+        const draftJustification = draftJustificationByQuestion[q.id] || "";
+        const isCurrentQuestionSaving = isSaving === q.id;
         
         // AI-Suggested logic: Use new DB fields for explicit suggestion state
         const isAiPending = answer?.isAiSuggested && !answer?.verified;
@@ -149,7 +287,7 @@ export function VendorQuestionnaireWizard({
                   )}
 
                   {/* AI Suggestion Box */}
-                  {isAiSuggested && (
+                  {isAiPending && (
                     <div className={cn(
                       "space-y-4 rounded-xl border p-4 transition-all",
                       isAiPending 
@@ -172,22 +310,45 @@ export function VendorQuestionnaireWizard({
                           <Button 
                             size="sm" 
                             className="h-8 gap-1.5 bg-amber-600 px-4 text-[10px] font-bold text-white shadow-md hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600"
-                            onClick={() => handleUpdateStatus(q.id, answer!.aiSuggestedStatus!)}
-                            disabled={isUpdating === q.id}
+                            onClick={() => {
+                              const aiReasoning = (answer?.findings || answer?.aiReasoning || "").trim();
+                              const aiEvidence = (answer?.evidenceSnippet || "").trim();
+                              const suggestedJustification = [
+                                aiReasoning,
+                                aiEvidence ? `Evidence: "${aiEvidence}"` : "",
+                              ]
+                                .filter(Boolean)
+                                .join("\n\n");
+
+                              if (answer?.aiSuggestedStatus) {
+                                setDraftStatusByQuestion((prev) => ({
+                                  ...prev,
+                                  [q.id]: answer.aiSuggestedStatus as string,
+                                }));
+                              }
+
+                              if (suggestedJustification) {
+                                setDraftJustificationByQuestion((prev) => ({
+                                  ...prev,
+                                  [q.id]: suggestedJustification,
+                                }));
+                              }
+                            }}
+                            disabled={isCurrentQuestionSaving}
                           >
                             <ShieldCheck className="h-3.5 w-3.5" />
-                            Confirm AI Suggestion
+                            Use AI Suggestion
                           </Button>
                         )}
                       </div>
                       <div className="space-y-3">
                         <p className="text-xs italic leading-relaxed text-slate-600 dark:text-slate-400">
-                          "{answer?.findings || "Based on your documents, this requirement appears to be met."}"
+                          &quot;{answer?.findings || "Based on your documents, this requirement appears to be met."}&quot;
                         </p>
                         {answer?.evidenceSnippet && (
-                          <div className="mt-2 rounded-lg border-l-2 border-indigo-200 bg-white/50 p-3 text-[11px] leading-relaxed text-slate-600 dark:border-indigo-800 dark:bg-slate-950/50 dark:text-slate-400 shadow-sm">
+                          <div className="mt-2 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3 text-[11px] leading-relaxed text-slate-700 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-slate-300 shadow-sm">
                             <strong className="block mb-1 text-slate-900 dark:text-white uppercase tracking-tighter text-[9px]">Evidence from your document:</strong> 
-                            "{answer.evidenceSnippet}"
+                            &quot;{answer.evidenceSnippet}&quot;
                           </div>
                         )}
                       </div>
@@ -196,8 +357,13 @@ export function VendorQuestionnaireWizard({
 
                   {/* Options */}
                   <RadioGroup 
-                    value={answer?.status || ""} 
-                    onValueChange={(val) => handleUpdateStatus(q.id, val)}
+                    value={draftStatus} 
+                    onValueChange={(val) =>
+                      setDraftStatusByQuestion((prev) => ({
+                        ...prev,
+                        [q.id]: val,
+                      }))
+                    }
                     className="grid grid-cols-1 gap-3 sm:grid-cols-3"
                   >
                     {[
@@ -214,8 +380,8 @@ export function VendorQuestionnaireWizard({
                             className={cn(
                               "flex cursor-pointer flex-col items-center gap-2 rounded-lg border p-4 text-center transition-all",
                               opt.color,
-                              answer?.status === opt.id ? opt.active : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950",
-                              isUpdating === q.id && "opacity-50 pointer-events-none",
+                              draftStatus === opt.id ? opt.active : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950",
+                              isCurrentQuestionSaving && "opacity-60 pointer-events-none",
                               isSuggested && "ring-2 ring-amber-500 ring-offset-2 dark:ring-offset-slate-900 border-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.1)]"
                             )}
                           >
@@ -230,21 +396,103 @@ export function VendorQuestionnaireWizard({
                     })}
                   </RadioGroup>
 
-                  <div className="flex justify-end pt-2">
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => {
-                        const nextIndex = questions.findIndex(quest => quest.id === q.id) + 1;
-                        if (nextIndex < questions.length) {
-                          setOpenQuestionId(questions[nextIndex].id);
-                        } else {
-                          setOpenQuestionId(null);
+                  <div className="space-y-2">
+                    <Label htmlFor={`${q.id}-justification`} className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Justification
+                    </Label>
+                    <textarea
+                      id={`${q.id}-justification`}
+                      value={draftJustification}
+                      onChange={(event) =>
+                        setDraftJustificationByQuestion((prev) => ({
+                          ...prev,
+                          [q.id]: event.target.value,
+                        }))
+                      }
+                      placeholder="Explain why this status applies. You can edit AI-generated reasoning before saving."
+                      rows={4}
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-indigo-900/40"
+                      disabled={isCurrentQuestionSaving}
+                    />
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      This text is editable and will be sanitized on save.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/30">
+                    <Label htmlFor={`${q.id}-evidence`} className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Upload Evidence Document
+                    </Label>
+                    <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                      <Upload className="h-3.5 w-3.5" />
+                      Accepted: PDF, JPG, PNG. Max 10MB.
+                    </div>
+                    <input
+                      id={`${q.id}-evidence`}
+                      type="file"
+                      accept="application/pdf,image/jpeg,image/png"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] || null;
+                        setDraftEvidenceByQuestion((prev) => ({
+                          ...prev,
+                          [q.id]: file,
+                        }));
+                        if (file) {
+                          setDraftEvidenceLabelByQuestion((prev) => ({
+                            ...prev,
+                            [q.id]: file.name,
+                          }));
                         }
                       }}
-                      className="group/btn text-xs"
+                      disabled={isCurrentQuestionSaving}
+                      className="block w-full text-xs file:mr-3 file:rounded-md file:border-0 file:bg-indigo-600 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:file:bg-indigo-700"
+                    />
+                    {draftEvidenceLabelByQuestion[q.id] && (
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                        Selected evidence: <span className="font-medium">{draftEvidenceLabelByQuestion[q.id]}</span>
+                      </p>
+                    )}
+                    {answer?.id && answer?.evidenceFileUrl && (
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`/api/documents/answer/${answer.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline dark:text-indigo-400"
+                        >
+                          Open current saved evidence
+                        </a>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 border-red-200 px-2 text-[10px] text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+                          onClick={() => handleDeleteEvidence(q.id, answer.id)}
+                          disabled={isCurrentQuestionSaving}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {saveErrorByQuestion[q.id] && (
+                    <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+                      {saveErrorByQuestion[q.id]}
+                    </div>
+                  )}
+
+                  <div className="flex justify-end pt-2">
+                    <Button
+                      onClick={() => handleSaveAndConfirm(q.id)}
+                      disabled={
+                        isCurrentQuestionSaving ||
+                        !draftStatus ||
+                        !draftJustification.trim()
+                      }
+                      className="h-9 bg-indigo-600 text-xs font-semibold hover:bg-indigo-700"
                     >
-                      Next Question
-                      <ArrowRight className="ml-2 h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
+                      {isCurrentQuestionSaving ? "Saving..." : "Save & Confirm"}
                     </Button>
                   </div>
                 </div>

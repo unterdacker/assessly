@@ -129,7 +129,13 @@ model AssessmentAnswer {
   questionId      String
   status          String
   findings        String?
+  /// Vendor- or AI-provided justification text shown in the questionnaire textarea.
+  justificationText String?
   evidenceSnippet String?
+  /// Internal storage key/URL for per-question uploaded evidence.
+  evidenceFileUrl  String?
+  /// Sanitized original filename shown back to the user.
+  evidenceFileName String?
   /// Whether this answer was auto-populated by AI (requires confirmation).
   isAiSuggested   Boolean    @default(false)
   /// Whether the AI suggestion has been verified by a human auditor.
