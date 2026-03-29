@@ -24,6 +24,12 @@ export type VendorAssessment = {
   updatedAt: string;
   /** Opaque user/service id when authenticated; placeholder in this prototype. */
   createdBy: string;
+  /** Completeness of the vendor profile master data (0–100). */
+  dossierCompletion: number;
+  /** Progress of the NIS2 security questionnaire (0–100). */
+  questionnaireProgress: number;
+  /** Absolute number of questions filled (0–20). */
+  questionsFilled: number;
   /** Full vendor object for profile editing */
   vendor?: {
     officialName?: string | null;
@@ -60,4 +66,22 @@ export function countByStatus(
   status: VendorStatus,
 ): number {
   return vendorAssessments.filter((v) => v.status === status).length;
+}
+
+/**
+ * Calculates the completion percentage (0-100) of a vendor's master data dossier.
+ * Based on 6 specific audit-relevant fields.
+ */
+export function calculateDossierCompletion(vendor?: VendorAssessment["vendor"]): number {
+  if (!vendor) return 0;
+  const fields = [
+    vendor.registrationId,
+    vendor.headquartersLocation,
+    vendor.securityOfficerName,
+    vendor.securityOfficerEmail,
+    vendor.dpoName,
+    vendor.dpoEmail,
+  ];
+  const filled = fields.filter(Boolean).length;
+  return Math.round((filled / 6) * 100);
 }

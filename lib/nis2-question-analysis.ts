@@ -9,6 +9,7 @@ export type Nis2QuestionAnalysis = {
   questionId: string;
   status: Nis2QuestionAnalysisStatus;
   reasoning: string;
+  evidenceSnippet: string;
 };
 
 export type AnalyzeDocumentResponse =

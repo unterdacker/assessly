@@ -1,9 +1,10 @@
 import type { RiskLevel as PrismaRiskLevel } from "@prisma/client";
-import type {
+import {
   VendorAssessment,
   VendorStatus,
   RiskLevel,
 } from "@/lib/vendor-assessment";
+import { calculateDossierCompletion } from "@/lib/vendor-assessment";
 import type { Vendor, Assessment } from "@prisma/client";
 
 export function deriveVendorStatus(
@@ -63,11 +64,21 @@ export function toVendorAssessment(
     riskLevel,
     status: derivedStatus,
     complianceScore,
+    questionnaireProgress: Math.round((answerCount / totalQuestions) * 100),
+    questionsFilled: answerCount,
     documentUrl: assessment.documentUrl ?? null,
     documentFilename: assessment.documentFilename ?? null,
     createdAt: vendor.createdAt.toISOString(),
     updatedAt: vendor.updatedAt.toISOString(),
     createdBy: vendor.createdBy,
+    dossierCompletion: calculateDossierCompletion({
+      registrationId: vendor.registrationId,
+      headquartersLocation: vendor.headquartersLocation,
+      securityOfficerName: vendor.securityOfficerName,
+      securityOfficerEmail: vendor.securityOfficerEmail,
+      dpoName: vendor.dpoName,
+      dpoEmail: vendor.dpoEmail,
+    }),
     vendor: {
       officialName: vendor.officialName,
       registrationId: vendor.registrationId,

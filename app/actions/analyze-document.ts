@@ -2,9 +2,6 @@
 
 import type { AnalyzeDocumentResponse } from "@/lib/nis2-question-analysis";
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
-import fs from "fs/promises";
-import path from "path";
-
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { runNis2Analysis } from "@/lib/ai/provider";
@@ -13,27 +10,6 @@ import {
   countStrictlyCompliantAnswers,
   syncAssessmentComplianceToDatabase,
 } from "@/lib/assessment-compliance";
-
-/** Absolute directory where vendor evidence PDFs are stored off the public web root. */
-const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
-
-/**
- * Persists a PDF buffer to disk and returns the API URL that can retrieve it.
- * Directory is created on first use.
- */
-async function saveEvidencePdf(
-  assessmentId: string,
-  originalFilename: string,
-  buffer: Buffer,
-): Promise<string> {
-  await fs.mkdir(STORAGE_DIR, { recursive: true });
-  // Sanitize the original filename — only keep safe characters
-  const safeName = originalFilename.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const storedName = `${assessmentId}__${safeName}`;
-  const filePath = path.join(STORAGE_DIR, storedName);
-  await fs.writeFile(filePath, buffer);
-  return `/api/documents/${encodeURIComponent(assessmentId)}?filename=${encodeURIComponent(safeName)}`;
-}
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_TEXT_LENGTH = 20_000;
@@ -51,21 +27,19 @@ function textItemToString(item: unknown): string {
 }
 
 function sanitizeExtractedText(text: string): string {
-  // Strip null bytes
   let sanitized = text.replace(/\0/g, '');
-  // Strip control characters except \n, \r, \t
   sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-  // Strip zero-width spaces and similar
   sanitized = sanitized.replace(/[\u200B-\u200D\uFEFF]/g, '');
-  // Truncate to max length
   sanitized = sanitized.substring(0, MAX_TEXT_LENGTH);
-  // Strip excessive consecutive newlines (more than 2)
   sanitized = sanitized.replace(/\n{3,}/g, '\n\n');
-  // Strip excessive consecutive spaces
   sanitized = sanitized.replace(/ {2,}/g, ' ');
   return sanitized.trim();
 }
 
+/**
+ * AI-powered document analysis action.
+ * Processed STATELESSLY: No PDF files are stored permanently for privacy compliance.
+ */
 export async function analyzeDocument(
   formData: FormData,
 ): Promise<AnalyzeDocumentResponse> {
@@ -85,13 +59,11 @@ export async function analyzeDocument(
 
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  // Magic Bytes Check for PDF (%PDF-)
   const signature = buffer.subarray(0, 5).toString('ascii');
   if (signature !== '%PDF-') {
     return { ok: false, error: "Security Check Failed: File is not a valid PDF document." };
   }
 
-  // Fetch the Assessment and Company context
   const assessment = await prisma.assessment.findUnique({
     where: { vendorId },
     include: { vendor: true, company: true }
@@ -99,18 +71,6 @@ export async function analyzeDocument(
 
   if (!assessment) {
     return { ok: false, error: "Assessment not found for the given vendor." };
-  }
-
-  // --- Persist the PDF to protected storage ---
-  try {
-    const documentUrl = await saveEvidencePdf(assessment.id, file.name, buffer);
-    await prisma.assessment.update({
-      where: { id: assessment.id },
-      data: { documentUrl, documentFilename: file.name },
-    });
-  } catch (err: unknown) {
-    // Non-fatal: log but don't abort — analysis can still proceed
-    logErrorReport("PDF Persistence Phase", err);
   }
 
   // 1. Fetch the 20 NIS2 questions from the DB
@@ -147,7 +107,6 @@ export async function analyzeDocument(
     return { ok: false, error: "Uploaded PDF contains no extractable text." };
   }
 
-  // Sanitize the extracted text
   extractedText = sanitizeExtractedText(extractedText);
 
   // 2. Call an LLM (Abstracted Provider Logic)
@@ -163,38 +122,68 @@ export async function analyzeDocument(
     results = await runNis2Analysis(assessment.companyId, questionPayload, extractedText);
   } catch (error: unknown) {
     logErrorReport("AI Evaluation Phase", error);
-    const message =
-      error instanceof Error ? error.message : "Unknown AI error";
+    const message = error instanceof Error ? error.message : "Unknown AI error";
     return { ok: false, error: message };
   }
 
-  // 3. Database Write — one row per AI result; strict scoring uses full catalogue denominator.
+  // 3. Database Write — AI pre-fills suggestions but leaves status PENDING for vendor review.
   for (const res of results) {
-    const isCompliant = res.status === "compliant";
-    const dbStatus = isCompliant ? "COMPLIANT" : "NON_COMPLIANT";
+    const aiCalculatedStatus = res.status === "compliant" ? "COMPLIANT" : "NON_COMPLIANT";
 
     const existing = await prisma.assessmentAnswer.findFirst({
       where: { assessmentId: assessment.id, questionId: res.questionId }
     });
 
-    if (existing) {
-      await prisma.assessmentAnswer.update({
-        where: { id: existing.id },
-        data: {
-          status: dbStatus,
-          findings: res.reasoning
-        }
+    const data: any = {
+      status: aiCalculatedStatus, 
+      isAiSuggested: true,
+      verified: false,
+      aiSuggestedStatus: aiCalculatedStatus,
+      aiReasoning: res.reasoning,
+      aiConfidence: 0.95,
+      findings: res.reasoning,
+      evidenceSnippet: res.evidenceSnippet,
+      createdBy: "ai-analysis-system"
+    };
+
+    try {
+      if (existing) {
+        const { id, ...updateData } = data;
+        await prisma.assessmentAnswer.update({
+          where: { id: existing.id },
+          data: updateData
+        });
+      } else {
+        await prisma.assessmentAnswer.create({
+          data: {
+            assessmentId: assessment.id,
+            questionId: res.questionId,
+            ...data
+          }
+        });
+      }
+    } catch (error: any) {
+      console.error(`[Prisma Error] Failed updating question ${res.questionId}:`, {
+        message: error.message,
+        code: error.code,
+        dataSent: data
       });
-    } else {
-      await prisma.assessmentAnswer.create({
-        data: {
-          assessmentId: assessment.id,
-          questionId: res.questionId,
-          status: dbStatus,
+      
+      try {
+        const fallbackData = { 
+          status: "PENDING", 
           findings: res.reasoning,
-          createdBy: "ai-analysis-system"
+          evidenceSnippet: res.evidenceSnippet 
+        };
+        if (existing) {
+          await prisma.assessmentAnswer.update({
+            where: { id: existing.id },
+            data: fallbackData
+          });
         }
-      });
+      } catch (fallbackError) {
+        console.error("Critical Fallback Failure:", fallbackError);
+      }
     }
   }
 
@@ -212,20 +201,18 @@ export async function analyzeDocument(
   );
   const compliantCount = countStrictlyCompliantAnswers(persistedAnswers);
 
-  // 4. Audit Trail
   await prisma.auditLog.create({
     data: {
       companyId: assessment.companyId,
-      action: `AI-Assessment performed for ${assessment.vendor.name}`, 
+      action: `AI-Assessment performed for ${assessment.vendor.name} (Stateless)`, 
       entityType: "vendor_assessment",
       entityId: assessment.id,
       actorId: "ai-system",
       createdBy: "ai-system",
-      metadata: { newScore, compliantCount, totalQuestions },
+      metadata: { newScore, compliantCount, totalQuestions, mode: "stateless" },
     }
   });
 
-  // Ensure UI refreshes
   revalidatePath("/vendors");
   revalidatePath(`/vendors/${vendorId}/assessment`);
 

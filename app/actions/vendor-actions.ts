@@ -4,13 +4,18 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getDefaultCompanyId } from "@/lib/queries/vendor-assessments";
 import { calculateRiskLevel } from "@/lib/risk-level";
+import crypto from "crypto";
 
 const ANON_ACTOR = "anonymous:prototype";
 
 export type CreateVendorResult =
-  | { ok: true }
+  | { ok: true; token?: string }
   | { ok: false; error: string };
 
+/**
+ * Creates a new vendor and their initial security assessment.
+ * Generates a secure invite token for external third-party access.
+ */
 export async function createVendorAction(
   formData: FormData,
 ): Promise<CreateVendorResult> {
@@ -36,18 +41,27 @@ export async function createVendorAction(
   const complianceScore = 0;
   const riskLevel = calculateRiskLevel(complianceScore);
 
+  // Generate a secure token for the external portal
+  const inviteToken = crypto.randomUUID().replace(/-/g, "");
+  const inviteTokenExpires = new Date();
+  inviteTokenExpires.setDate(inviteTokenExpires.getDate() + 14);
+
   try {
     await prisma.$transaction(async (tx) => {
-      const vendor = await tx.vendor.create({
+      // 1. Create the Vendor record
+      const vendor = await (tx.vendor as any).create({
         data: {
           companyId,
           name: name.trim(),
           email: email.trim().toLowerCase(),
           serviceType: "Pending classification",
           createdBy: ANON_ACTOR,
+          inviteToken,
+          inviteTokenExpires,
         },
       });
 
+      // 2. Create the Assessment record
       await tx.assessment.create({
         data: {
           companyId,
@@ -60,6 +74,7 @@ export async function createVendorAction(
         },
       });
 
+      // 3. Create the Audit Log entry
       await tx.auditLog.create({
         data: {
           companyId,
@@ -71,11 +86,18 @@ export async function createVendorAction(
         },
       });
     });
-  } catch {
+
+    /** Simulation: Email Notification Service */
+    console.log(`[SIMULATED EMAIL] Assessment Invitation for ${name}`);
+    console.log(`[LINK] https://avra.app/external/assessment/${inviteToken}`);
+    console.log(`[EXPIRY] ${inviteTokenExpires.toISOString()}`);
+    
+    revalidatePath("/dashboard");
+    revalidatePath("/vendors");
+    
+    return { ok: true, token: inviteToken };
+  } catch (err) {
+    console.error("Vendor creation failed:", err);
     return { ok: false, error: "Could not save vendor. Try again." };
   }
-
-  revalidatePath("/dashboard");
-  revalidatePath("/vendors");
-  return { ok: true };
 }

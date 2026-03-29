@@ -38,11 +38,15 @@ export async function listVendorAssessments(): Promise<VendorAssessment[]> {
         r.complianceScore,
         r.riskLevel,
       );
+      const filledCount = r.answers.filter(
+        (a) => a.status === "COMPLIANT" || a.status === "NON_COMPLIANT"
+      ).length;
+
       const { vendor, answers, ...assessmentFields } = r;
       return toVendorAssessment(
         vendor,
         { ...assessmentFields, complianceScore: score, riskLevel },
-        answers.length,
+        filledCount,
         totalQuestions,
       );
     }),
@@ -81,10 +85,14 @@ export async function getVendorAssessmentDetail(
 
   const { vendor, answers, ...assessmentFields } = row;
 
+  const filledCount = answers.filter(
+    (a: any) => a.status === "COMPLIANT" || a.status === "NON_COMPLIANT"
+  ).length;
+
   const vendorAssessment = toVendorAssessment(
     vendor,
     { ...assessmentFields, complianceScore: score, riskLevel },
-    answers.length,
+    filledCount,
     totalQuestions,
   );
 

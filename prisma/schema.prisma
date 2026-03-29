@@ -60,6 +60,8 @@ model Vendor {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdBy   String
+  inviteToken String?  @unique
+  inviteTokenExpires DateTime?
 
   assessment Assessment?
 
@@ -128,6 +130,16 @@ model AssessmentAnswer {
   status          String
   findings        String?
   evidenceSnippet String?
+  /// Whether this answer was auto-populated by AI (requires confirmation).
+  isAiSuggested   Boolean    @default(false)
+  /// Whether the AI suggestion has been verified by a human auditor.
+  verified        Boolean    @default(false)
+  /// The status string suggested by AI ("COMPLIANT" or "NON_COMPLIANT").
+  aiSuggestedStatus String?
+  /// The internal confidence score assigned by the AI (0.0 to 1.0).
+  aiConfidence    Float?
+  /// The AI's internal reasoning or evidence trace (for audit purposes).
+  aiReasoning     String?
   /// Free-text justification written by ISB when manually overriding an AI answer.
   manualNotes     String?
   /// URL of supplemental evidence PDF uploaded alongside a manual override.

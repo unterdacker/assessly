@@ -48,6 +48,7 @@ export function buildNis2DocumentAnalysisSystemPrompt(): string {
     '- "questionId" (string, must match an input id e.g. "q1")',
     '- "status" (either "compliant" or "non-compliant")',
     '- "reasoning" (short string citing what the excerpt states or omits; no PII; English)',
+    '- "evidenceSnippet" (exact quote from the document text that supports this finding; max 200 chars)',
     "If the excerpt is silent or ambiguous on a topic, use status non-compliant and explain the gap.",
   ].join(" ");
 }

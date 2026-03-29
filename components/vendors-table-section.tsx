@@ -21,7 +21,7 @@ export type VendorsTableSectionProps = {
   vendorAssessments: VendorAssessment[];
 };
 
-type SortKey = 'name' | 'serviceType' | 'status' | 'lastAssessmentDate' | 'complianceScore' | 'riskLevel';
+type SortKey = 'name' | 'serviceType' | 'status' | 'lastAssessmentDate' | 'complianceScore' | 'riskLevel' | 'questionnaireProgress';
 
 function formatDate(value: string | null) {
   if (!value) return "—";
@@ -54,6 +54,31 @@ function ScorePill({ score, status }: { score: number; status: string }) {
       title={`NIS2 compliance score: ${displayScore}/100`}
     >
       {displayScore}%
+    </span>
+  );
+}
+
+/** Visual tracker for security questionnaire progress (COMPLIANT/NON_COMPLIANT count). */
+function ProgressPill({ progress, filled }: { progress: number; filled: number }) {
+  if (progress === 100) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800">
+        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+        </svg>
+        Completed
+      </span>
+    );
+  }
+
+  const colorCls = progress > 0 
+    ? "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800"
+    : "bg-slate-50 text-slate-400 border-slate-200 dark:bg-slate-900/50 dark:text-slate-600 dark:border-slate-800";
+
+  return (
+    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold tabular-nums gap-1.5 ${colorCls}`}>
+      {progress}% 
+      <span className="opacity-60 font-normal">({filled}/20)</span>
     </span>
   );
 }
@@ -128,6 +153,10 @@ export function VendorsTableSection({
           const riskOrder = { HIGH: 3, MEDIUM: 2, LOW: 1 };
           aVal = riskOrder[a.riskLevel as keyof typeof riskOrder] || 0;
           bVal = riskOrder[b.riskLevel as keyof typeof riskOrder] || 0;
+          break;
+        case 'questionnaireProgress':
+          aVal = a.questionnaireProgress;
+          bVal = b.questionnaireProgress;
           break;
         default:
           return 0;
@@ -213,6 +242,12 @@ export function VendorsTableSection({
                 </Button>
               </TableHead>
               <TableHead>
+                <Button variant="ghost" onClick={() => handleSort('questionnaireProgress')} className="h-auto p-0 font-semibold">
+                  Questions filled
+                  {sortKey === 'questionnaireProgress' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
+                </Button>
+              </TableHead>
+              <TableHead>
                 <Button variant="ghost" onClick={() => handleSort('complianceScore')} className="h-auto p-0 font-semibold">
                   Compliance score
                   {sortKey === 'complianceScore' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
@@ -257,6 +292,9 @@ export function VendorsTableSection({
                   </TableCell>
                   <TableCell className="tabular-nums text-muted-foreground">
                     {formatDate(v.lastAssessmentDate)}
+                  </TableCell>
+                  <TableCell>
+                    <ProgressPill progress={v.questionnaireProgress} filled={v.questionsFilled} />
                   </TableCell>
                   <TableCell>
                     <ScorePill score={v.complianceScore} status={v.status} />
