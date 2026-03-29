@@ -6,6 +6,56 @@ import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance"
 
 export const DEFAULT_COMPANY_SLUG = "default";
 
+async function cleanupExpiredVendorCodes(where?: { companyId?: string; vendorId?: string }) {
+  const now = new Date();
+
+  await prisma.$transaction([
+    (prisma.vendor as any).updateMany({
+      where: {
+        isCodeActive: true,
+        codeExpiresAt: { lt: now },
+        isFirstLogin: true,
+        ...(where?.companyId ? { companyId: where.companyId } : {}),
+        ...(where?.vendorId ? { id: where.vendorId } : {}),
+      },
+      data: {
+        accessCode: null,
+        codeExpiresAt: null,
+        isCodeActive: false,
+        inviteSentAt: null,
+        passwordHash: null,
+      },
+    }),
+    (prisma.vendor as any).updateMany({
+      where: {
+        isCodeActive: true,
+        codeExpiresAt: { lt: now },
+        isFirstLogin: false,
+        ...(where?.companyId ? { companyId: where.companyId } : {}),
+        ...(where?.vendorId ? { id: where.vendorId } : {}),
+      },
+      data: {
+        accessCode: null,
+        codeExpiresAt: null,
+        isCodeActive: false,
+      },
+    }),
+    (prisma.vendor as any).updateMany({
+      where: {
+        isCodeActive: false,
+        isFirstLogin: true,
+        inviteSentAt: { not: null },
+        ...(where?.companyId ? { companyId: where.companyId } : {}),
+        ...(where?.vendorId ? { id: where.vendorId } : {}),
+      },
+      data: {
+        inviteSentAt: null,
+        passwordHash: null,
+      },
+    }),
+  ]);
+}
+
 export async function getDefaultCompanyId(): Promise<string | null> {
   const row = await prisma.company.findUnique({
     where: { slug: DEFAULT_COMPANY_SLUG },
@@ -17,6 +67,8 @@ export async function getDefaultCompanyId(): Promise<string | null> {
 export async function listVendorAssessments(): Promise<VendorAssessment[]> {
   const companyId = await getDefaultCompanyId();
   if (!companyId) return [];
+
+  await cleanupExpiredVendorCodes({ companyId });
 
   const totalQuestions = await prisma.question.count();
 
@@ -66,6 +118,8 @@ export type VendorAssessmentDetail = {
 export async function getVendorAssessmentDetail(
   vendorId: string,
 ): Promise<VendorAssessmentDetail | null> {
+  await cleanupExpiredVendorCodes({ vendorId });
+
   const totalQuestions = await prisma.question.count();
 
   const row = await prisma.assessment.findFirst({

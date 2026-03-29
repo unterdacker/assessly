@@ -125,14 +125,20 @@ export async function authenticateVendorAccessCode(
 
   const codeExpiresAt = vendor.codeExpiresAt ? new Date(vendor.codeExpiresAt as Date) : null;
   if (!codeExpiresAt || codeExpiresAt <= new Date()) {
+    const resetPendingInviteState = Boolean(vendor.isFirstLogin);
+
     await (prisma.vendor as any).update({
       where: { id: vendor.id },
       data: {
         accessCode: null,
         codeExpiresAt: null,
         isCodeActive: false,
-        passwordHash: null,
-        isFirstLogin: true,
+        ...(resetPendingInviteState
+          ? {
+              inviteSentAt: null,
+              passwordHash: null,
+            }
+          : {}),
       },
     });
 

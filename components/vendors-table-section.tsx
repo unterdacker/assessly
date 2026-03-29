@@ -3,8 +3,9 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, FileText, ChevronUp, ChevronDown, Copy } from "lucide-react";
+import { Search, FileText, ChevronUp, ChevronDown, Copy, SendHorizonal, ShieldAlert, ShieldCheck } from "lucide-react";
 import { AddVendorModal } from "@/components/add-vendor-modal";
+import { InviteVendorModal } from "@/components/admin/invite-vendor-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -131,6 +132,17 @@ function VendorActions({
           </a>
         </Button>
       )}
+      <InviteVendorModal
+        vendorId={vendorAssessment.id}
+        vendorName={vendorAssessment.name}
+        prefillEmail={vendorAssessment.email}
+        trigger={
+          <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground">
+            <SendHorizonal className="h-3.5 w-3.5" aria-hidden />
+            Send invite
+          </Button>
+        }
+      />
       <Button variant="outline" size="sm" className="h-8" asChild>
         <Link href={`/vendors/${vendorAssessment.id}/assessment`}>
           Open assessment
@@ -505,6 +517,18 @@ export function VendorsTableSection({
                         <span className="text-xs text-muted-foreground">No active code</span>
                       )}
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">{formatAccessCodeExpiry(v.codeExpiresAt)}</p>
+                      {v.isCodeActive && v.isFirstLogin && (
+                        <p className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400">
+                          <ShieldAlert className="h-3 w-3" aria-hidden />
+                          Password: Pending change
+                        </p>
+                      )}
+                      {v.isCodeActive && !v.isFirstLogin && (
+                        <p className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
+                          <ShieldCheck className="h-3 w-3" aria-hidden />
+                          Password: Secured
+                        </p>
+                      )}
                       <div className="flex items-center gap-2">
                         <Button
                           type="button"

@@ -17,21 +17,51 @@ export async function GET(request: NextRequest) {
   const now = new Date();
 
   try {
-    const result = await (prisma.vendor as any).updateMany({
-      where: {
-        isCodeActive: true,
-        codeExpiresAt: { lt: now },
-      },
-      data: {
-        accessCode: null,
-        codeExpiresAt: null,
-        isCodeActive: false,
-      },
-    });
+    const [pendingResult, securedResult, stalePendingResult] = await prisma.$transaction([
+      (prisma.vendor as any).updateMany({
+        where: {
+          isCodeActive: true,
+          codeExpiresAt: { lt: now },
+          isFirstLogin: true,
+        },
+        data: {
+          accessCode: null,
+          codeExpiresAt: null,
+          isCodeActive: false,
+          inviteSentAt: null,
+          passwordHash: null,
+        },
+      }),
+      (prisma.vendor as any).updateMany({
+        where: {
+          isCodeActive: true,
+          codeExpiresAt: { lt: now },
+          isFirstLogin: false,
+        },
+        data: {
+          accessCode: null,
+          codeExpiresAt: null,
+          isCodeActive: false,
+        },
+      }),
+      (prisma.vendor as any).updateMany({
+        where: {
+          isCodeActive: false,
+          isFirstLogin: true,
+          inviteSentAt: { not: null },
+        },
+        data: {
+          inviteSentAt: null,
+          passwordHash: null,
+        },
+      }),
+    ]);
+
+    const cleanedCount = pendingResult.count + securedResult.count + stalePendingResult.count;
 
     return NextResponse.json({
       ok: true,
-      cleanedCount: result.count,
+      cleanedCount,
       cleanedAt: now.toISOString(),
     });
   } catch (error) {
