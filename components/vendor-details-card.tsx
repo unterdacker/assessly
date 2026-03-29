@@ -8,13 +8,19 @@ import {
   Fingerprint, 
   Mail, 
   Edit3,
-  AlertCircle
+  CheckCircle2,
+  AlertCircle,
+  Link2,
+  Check
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EditVendorProfileModal } from "@/components/edit-vendor-profile-modal";
+import { cn } from "@/lib/utils";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
+import { calculateDossierCompletion } from "@/lib/vendor-assessment";
+import { generateInviteToken } from "@/app/actions/generate-invite-token";
 
 interface VendorDetailsCardProps {
   vendorAssessment: VendorAssessment;
@@ -22,20 +28,34 @@ interface VendorDetailsCardProps {
 }
 
 /**
- * A persistent "Vendor Dossier" overview for the Assessment Workspace.
- * Displayed at the top of the page, providing instant context on the vendor's identity.
- * Includes a "Profile Incomplete" CTA state for vendors with missing metadata.
+ * A "Hybrid Information Card" for the Assessment Workspace.
+ * Dynamically calculates dossier completeness based on 6 specific audit-relevant fields.
+ * Provides granular "Missing Data" warnings (red/yellow indicators) for auditors.
  */
 export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetailsCardProps) {
   const v = vendorAssessment.vendor;
+  const [isInviting, setIsInviting] = React.useState(false);
+  const [hasCopied, setHasCopied] = React.useState(false);
 
-  // Check if any major detail is filled to decide on "Dossier" vs "Incomplete CTA" view.
-  const isProfilePartiallyFilled = 
-    Boolean(v?.officialName && v.officialName !== vendorAssessment.name) ||
-    Boolean(v?.headquartersLocation) ||
-    Boolean(v?.securityOfficerName) ||
-    Boolean(v?.dpoName) ||
-    Boolean(v?.registrationId);
+  const progressPercent = calculateDossierCompletion(v);
+  const isComplete = progressPercent === 100;
+
+  const handleInvite = async () => {
+    setIsInviting(true);
+    try {
+      const result = await generateInviteToken(vendorAssessment.id);
+      if (result.ok && result.token) {
+        const url = `${window.location.origin}/external/assessment/${result.token}`;
+        await navigator.clipboard.writeText(url);
+        setHasCopied(true);
+        setTimeout(() => setHasCopied(false), 3000);
+      }
+    } catch (err) {
+      console.error("Invite error:", err);
+    } finally {
+      setIsInviting(false);
+    }
+  };
 
   // Common modal initial data
   const modalInitialData = {
@@ -49,143 +69,182 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
     headquartersLocation: v?.headquartersLocation,
   };
 
-  /**
-   * CTA BOX: For incomplete profiles, show an engaging box rather than empty fields.
-   */
-  if (!isProfilePartiallyFilled) {
-    return (
-      <Card className="border-indigo-200 bg-indigo-50/50 dark:border-indigo-950 dark:bg-indigo-950/20">
-        <CardContent className="flex flex-col items-center justify-between gap-4 p-6 sm:flex-row">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-400">
-              <AlertCircle className="h-6 w-6" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="font-semibold text-indigo-900 dark:text-indigo-100">
-                Vendor profile incomplete
-              </h3>
-              <p className="text-sm text-indigo-700/80 dark:text-indigo-300/60">
-                Add headquarters, registration, and contact details to complete the vendor dossier.
-              </p>
-            </div>
-          </div>
-          <EditVendorProfileModal
-            vendorId={vendorAssessment.id}
-            companyId={companyId}
-            initialData={modalInitialData}
-            trigger={
-              <Button variant="default" className="w-full sm:w-auto">
-                <Edit3 className="mr-2 h-4 w-4" />
-                Fill Vendor Dossier
-              </Button>
-            }
-          />
-        </CardContent>
-      </Card>
-    );
-  }
+  /** Helper for combined Contact Name (Email) logic with individual missing warnings. */
+  const renderContact = (name: string | undefined, email: string | undefined, label: string) => {
+    if (!name && !email) {
+      return (
+        <div className="flex items-center gap-2 text-sm italic text-red-500/70 dark:text-red-400/50">
+          <AlertCircle className="h-3 w-3 fill-red-500/20" />
+          Missing {label} Contact
+        </div>
+      );
+    }
 
-  /**
-   * DOSSIER CARD: The full read-only information grid.
-   */
+    return (
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-slate-700 dark:text-slate-200">
+        <span>{name || <span className="text-amber-500/70 dark:text-amber-400/50">Missing Name ⚠️</span>}</span>
+        {email ? (
+          <a 
+            href={`mailto:${email}`}
+            className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:underline dark:text-indigo-400"
+          >
+            <Mail className="h-3 w-3" />
+            ({email})
+          </a>
+        ) : (
+          <span className="text-xs text-amber-500/70 dark:text-amber-400/50 italic underline decoration-dotted">
+            Missing Email ⚠️
+          </span>
+        )}
+      </div>
+    );
+  };
+
   return (
     <Card className="relative overflow-hidden border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
+      {/* Dossier Progress Bar */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-800">
+        <div 
+          className={cn(
+            "h-full transition-all duration-700 ease-out",
+            isComplete ? "bg-emerald-500" : "bg-indigo-500"
+          )}
+          style={{ width: `${progressPercent}%` }}
+        />
+      </div>
+
       <CardContent className="p-6">
-        {/* Header Section */}
-        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-          <div className="min-w-0 space-y-1">
-            <h2 className="truncate text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              {v?.officialName || vendorAssessment.name}
-            </h2>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground mr-1">
+        {/* Header: Company Name & Completeness Badge */}
+        <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+          <div className="min-w-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="truncate text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                {v?.officialName || vendorAssessment.name}
+              </h2>
+              <Badge variant="secondary" className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                 {vendorAssessment.serviceType}
-              </span>
-              {v?.registrationId && (
-                <Badge variant="outline" className="h-5 px-1.5 font-mono text-[10px] text-slate-500">
-                  <Fingerprint className="mr-1 h-3 w-3" />
-                  {v.registrationId}
-                </Badge>
+              </Badge>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              {isComplete ? (
+                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Dossier Fully Verified
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                    Dossier {progressPercent}% complete
+                  </span>
+                  <div className="h-1 w-24 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div className="h-full bg-indigo-500" style={{ width: `${progressPercent}%` }} />
+                  </div>
+                </div>
               )}
             </div>
           </div>
 
-          <EditVendorProfileModal
-            vendorId={vendorAssessment.id}
-            companyId={companyId}
-            initialData={modalInitialData}
-            trigger={
-              <Button variant="outline" size="sm" className="shrink-0 h-9">
-                <Edit3 className="mr-2 h-3.5 w-3.5" />
-                Edit Profile
-              </Button>
-            }
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleInvite}
+              disabled={isInviting}
+              className={cn(
+                "h-9 px-4 transition-all",
+                hasCopied ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "text-slate-600"
+              )}
+            >
+              {hasCopied ? (
+                <>
+                  <Check className="mr-2 h-3.5 w-3.5" />
+                  Link Copied
+                </>
+              ) : (
+                <>
+                  <Link2 className="mr-2 h-3.5 w-3.5" />
+                  {isInviting ? "Generating..." : "Invite Vendor"}
+                </>
+              )}
+            </Button>
+
+            <EditVendorProfileModal
+              vendorId={vendorAssessment.id}
+              companyId={companyId}
+              initialData={modalInitialData}
+              trigger={
+                <Button 
+                  variant={isComplete ? "outline" : "default"} 
+                  size="sm" 
+                  className={cn("shrink-0 h-9 px-4", !isComplete && "bg-indigo-600 hover:bg-indigo-700")}
+                >
+                  <Edit3 className="mr-2 h-3.5 w-3.5" />
+                  {isComplete ? "Edit Profile" : "Complete Profile"}
+                </Button>
+              }
+            />
+          </div>
         </div>
 
-        {/* Info Grid */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {/* Geography */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              <MapPin className="h-3 w-3" />
-              Geography
+        {/* 2-Column Info Grid */}
+        <div className="grid grid-cols-1 gap-x-12 gap-y-8 md:grid-cols-2">
+          {/* Row 1: Location & Registration */}
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <MapPin className="h-3 w-3" />
+                Headquarters Location
+              </div>
+              {v?.headquartersLocation ? (
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{v.headquartersLocation}</p>
+              ) : (
+                <div className="flex items-center gap-2 text-sm italic text-amber-500/70 dark:text-amber-400/50">
+                  <AlertCircle className="h-3 w-3 fill-amber-500/20" />
+                  Missing Location
+                </div>
+              )}
             </div>
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              {v?.headquartersLocation || <span className="text-slate-300 dark:text-slate-700">—</span>}
-            </p>
           </div>
 
-          {/* Security Contact */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              <ShieldCheck className="h-3 w-3" />
-              Security Contact
-            </div>
-            {v?.securityOfficerName ? (
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {v.securityOfficerName}
-                </p>
-                {v.securityOfficerEmail && (
-                  <a 
-                    href={`mailto:${v.securityOfficerEmail}`}
-                    className="flex items-center gap-1.5 text-xs text-indigo-600 hover:underline dark:text-indigo-400"
-                  >
-                    <Mail className="h-3 w-3" />
-                    {v.securityOfficerEmail}
-                  </a>
-                )}
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <Fingerprint className="h-3 w-3" />
+                Registration (VAT/ID)
               </div>
-            ) : (
-              <p className="text-sm italic text-slate-300 dark:text-slate-700">Not provided</p>
-            )}
+              {v?.registrationId ? (
+                <Badge variant="outline" className="h-6 font-mono text-xs text-slate-700 dark:text-slate-300">
+                  {v.registrationId}
+                </Badge>
+              ) : (
+                <div className="flex items-center gap-2 text-sm italic text-red-500/70 dark:text-red-400/50">
+                  <AlertCircle className="h-3 w-3 fill-red-500/20" />
+                  Missing ID
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* DPO */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-              <UserRoundCheck className="h-3 w-3" />
-              Privacy / DPO
-            </div>
-            {v?.dpoName ? (
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {v.dpoName}
-                </p>
-                {v.dpoEmail && (
-                  <a 
-                    href={`mailto:${v.dpoEmail}`}
-                    className="flex items-center gap-1.5 text-xs text-indigo-600 hover:underline dark:text-indigo-400"
-                  >
-                    <Mail className="h-3 w-3" />
-                    {v.dpoEmail}
-                  </a>
-                )}
+          {/* Row 2: Security & Privacy */}
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <ShieldCheck className="h-3 w-3" />
+                Security Contact
               </div>
-            ) : (
-              <p className="text-sm italic text-slate-300 dark:text-slate-700">Not assigned</p>
-            )}
+              {renderContact(v?.securityOfficerName || undefined, v?.securityOfficerEmail || undefined, "Security")}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <UserRoundCheck className="h-3 w-3" />
+                Privacy / DPO
+              </div>
+              {renderContact(v?.dpoName || undefined, v?.dpoEmail || undefined, "DPO")}
+            </div>
           </div>
         </div>
       </CardContent>

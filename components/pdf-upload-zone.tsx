@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { UploadCloud, FileText, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { analyzeDocument } from "@/app/actions/analyze-document";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,7 @@ type PdfUploadZoneProps = {
 };
 
 export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
+  const router = useRouter();
   const [fileName, setFileName] = React.useState<string | null>(null);
   const [fileSize, setFileSize] = React.useState<number | null>(null);
   const [dragOver, setDragOver] = React.useState(false);
@@ -18,6 +20,7 @@ export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
   const [isPending, startTransition] = React.useTransition();
   const [statusMessage, setStatusMessage] = React.useState<string | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [hasConsent, setHasConsent] = React.useState(false);
 
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -25,6 +28,9 @@ export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
     event.preventDefault();
     event.stopPropagation();
     setDragOver(false);
+
+    if (!hasConsent) return;
+
     const dropped = event.dataTransfer.files?.[0];
     if (!dropped) return;
     if (dropped.type !== "application/pdf") {
@@ -44,6 +50,7 @@ export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
   };
 
   const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!hasConsent) return;
     const file = event.target.files?.[0];
     if (!file) return;
     if (file.type !== "application/pdf") return;
@@ -54,6 +61,11 @@ export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (!hasConsent) {
+      setErrorMessage("Privacy consent is required.");
+      return;
+    }
 
     if (!selectedFile) {
       setErrorMessage("Please select a PDF file before submitting.");
@@ -73,24 +85,38 @@ export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
         setErrorMessage(response.error || "AI audit failed.");
       } else {
         setStatusMessage("Analysis complete. Results saved.");
+        router.refresh();
       }
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <input type="hidden" name="vendorId" value={vendorId} />
+
+      <div className="flex items-start gap-3 rounded-xl border border-indigo-100 bg-indigo-50/30 p-4 dark:border-indigo-900/10 dark:bg-indigo-900/5">
+        <input 
+          type="checkbox" 
+          id="privacy-consent"
+          checked={hasConsent}
+          onChange={(e) => setHasConsent(e.target.checked)}
+          className="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+        />
+        <label htmlFor="privacy-consent" className="text-xs leading-relaxed text-slate-600 dark:text-slate-400 cursor-pointer select-none">
+          I understand that this document will be analyzed <strong>statelessly</strong> by AVRA's private AI engine for audit purposes only. 
+          The PDF itself is NOT stored permanently.
+        </label>
+      </div>
 
       <div
         className={cn(
-          "rounded-lg border-2 p-6 text-center transition-colors",
-          "border-slate-300 bg-slate-50 hover:border-indigo-400 hover:bg-slate-100",
-          "dark:border-slate-700 dark:bg-slate-900 dark:hover:border-indigo-500 dark:hover:bg-slate-800",
-          dragOver ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-900/40" : "",
+          "relative rounded-lg border-2 p-6 text-center transition-all",
+          hasConsent ? "border-slate-300 bg-slate-50 hover:border-indigo-400 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-indigo-500 dark:hover:bg-slate-800" : "border-slate-200 bg-slate-50 opacity-50 cursor-not-allowed dark:border-slate-800 dark:bg-slate-900",
+          dragOver && hasConsent ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-900/40" : "",
         )}
         onDragOver={(e) => {
           e.preventDefault();
-          setDragOver(true);
+          if (hasConsent) setDragOver(true);
         }}
         onDragLeave={(e) => {
           e.preventDefault();
@@ -98,7 +124,7 @@ export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
         }}
         onDrop={onDrop}
       >
-        <UploadCloud className="mx-auto mb-2 h-8 w-8 text-indigo-600" />
+        <UploadCloud className={cn("mx-auto mb-2 h-8 w-8", hasConsent ? "text-indigo-600" : "text-slate-300")} />
         <p className="text-sm font-semibold">Drag and drop a PDF file here</p>
         <p className="text-xs text-muted-foreground">or click to select</p>
         <input
@@ -106,13 +132,16 @@ export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
           type="file"
           name="file"
           accept="application/pdf"
+          disabled={!hasConsent}
           className="sr-only"
           onChange={onFileChange}
         />
         <Button
           type="button"
           variant="secondary"
+          size="sm"
           className="mt-3"
+          disabled={!hasConsent}
           onClick={() => fileInputRef.current?.click()}
         >
           Choose PDF
@@ -120,26 +149,29 @@ export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
       </div>
 
       {fileName ? (
-        <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-left dark:border-slate-700 dark:bg-slate-950/60">
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-left dark:border-slate-700 dark:bg-slate-950/60 transition-all animate-in fade-in slide-in-from-top-1">
           <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            <span className="text-sm font-medium">{fileName}</span>
+            <FileText className="h-4 w-4 text-indigo-500" />
+            <span className="text-sm font-medium truncate">{fileName}</span>
           </div>
           <p className="text-xs text-muted-foreground">{(fileSize || 0).toLocaleString()} bytes</p>
         </div>
-      ) : (
-        <p className="text-sm text-muted-foreground">No file selected</p>
-      )}
+      ) : null}
 
       {errorMessage ? (
-        <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+        <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/10 p-2 rounded">{errorMessage}</p>
       ) : null}
+      
       {statusMessage ? (
-        <p className="text-sm text-emerald-600 dark:text-emerald-400">{statusMessage}</p>
+        <p className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/10 p-2 rounded">{statusMessage}</p>
       ) : null}
 
-      <Button type="submit" disabled={!selectedFile || isPending}>
-        {isPending ? (<><Loader2 className="mr-1 h-4 w-4 animate-spin" />Running audit…</>) : "Run AI Audit"}
+      <Button 
+        type="submit" 
+        className="w-full shadow-md"
+        disabled={!selectedFile || isPending || !hasConsent}
+      >
+        {isPending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Running analysis…</>) : "Run AI Audit"}
       </Button>
     </form>
   );

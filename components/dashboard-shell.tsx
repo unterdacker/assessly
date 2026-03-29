@@ -15,6 +15,22 @@ const nav = [
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
+  const isExternal = pathname?.startsWith("/external/");
+
+  if (isExternal) {
+    return (
+      <div className="min-h-screen bg-slate-50/80 dark:bg-background">
+        <main
+          id="main-content"
+          className="flex-1"
+          tabIndex={-1}
+        >
+          {children}
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50/80 dark:bg-background">
       <div className="flex min-h-screen">
