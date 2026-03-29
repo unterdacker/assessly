@@ -9,9 +9,14 @@ export type RiskLevel = "low" | "medium" | "high" | "not_calculated";
 export type VendorAssessment = {
   id: string;
   name: string;
+  /** Access portal fields */
   accessCode: string | null;
   codeExpiresAt: string | null;
   isCodeActive: boolean;
+  /** ISO timestamp of the last out-of-band invite send, or null if never sent. */
+  inviteSentAt: string | null;
+  /** True until the vendor completes the forced password-change on first login. */
+  isFirstLogin: boolean;
   /** Business security contact — minimize exposure in logs and exports. */
   email: string;
   serviceType: string;

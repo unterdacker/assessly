@@ -59,6 +59,8 @@ export function toVendorAssessment(
     accessCode: (vendor as any).accessCode ?? null,
     codeExpiresAt: (vendor as any).codeExpiresAt ? new Date((vendor as any).codeExpiresAt).toISOString() : null,
     isCodeActive: Boolean((vendor as any).isCodeActive),
+    inviteSentAt: (vendor as any).inviteSentAt ? new Date((vendor as any).inviteSentAt).toISOString() : null,
+    isFirstLogin: Boolean((vendor as any).isFirstLogin ?? true),
     email: vendor.email,
     serviceType: vendor.serviceType,
     lastAssessmentDate: assessment.lastAssessmentDate

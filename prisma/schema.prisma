@@ -65,6 +65,7 @@ model Vendor {
   isCodeActive Boolean @default(false)
   passwordHash  String?
   isFirstLogin  Boolean  @default(true)
+  inviteSentAt  DateTime?
   inviteToken String?  @unique
   inviteTokenExpires DateTime?
 

@@ -11,12 +11,16 @@ import {
   CheckCircle2,
   AlertCircle,
   Copy,
-  Check
+  Check,
+  SendHorizonal,
+  Clock,
+  ShieldAlert,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EditVendorProfileModal } from "@/components/edit-vendor-profile-modal";
+import { InviteVendorModal } from "@/components/admin/invite-vendor-modal";
 import { cn } from "@/lib/utils";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
 import { calculateDossierCompletion } from "@/lib/vendor-assessment";
@@ -33,7 +37,6 @@ interface VendorDetailsCardProps {
  */
 export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetailsCardProps) {
   const v = vendorAssessment.vendor;
-  const [hasCopied, setHasCopied] = React.useState(false);
   const [hasCopiedCode, setHasCopiedCode] = React.useState(false);
 
   const progressPercent = calculateDossierCompletion(v);
@@ -56,23 +59,6 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
     }).format(expiresAt);
 
     return `Expires: ${formatted}`;
-  };
-
-  const handleInvite = async () => {
-    if (!hasActiveCode || !vendorAssessment.accessCode) {
-      window.alert("Generate an access code first.");
-      return;
-    }
-
-    try {
-      const message = `Please complete your security assessment here: ${window.location.origin}/portal. Your secure Access Code is: ${vendorAssessment.accessCode}`;
-      await navigator.clipboard.writeText(message);
-      setHasCopied(true);
-      window.setTimeout(() => setHasCopied(false), 2500);
-    } catch (err) {
-      console.error("Invite error:", err);
-      window.alert("Copy failed. Please copy the access code manually.");
-    }
   };
 
   const handleCopyCodeOnly = async () => {
@@ -174,59 +160,78 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex flex-col items-start gap-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
-              {hasActiveCode ? (
-                <>
-                  <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-900 dark:text-slate-100">
-                    <span>{vendorAssessment.accessCode}</span>
-                    <button
-                      type="button"
-                      aria-label={`Copy access code for ${vendorAssessment.name}`}
-                      onClick={handleCopyCodeOnly}
-                      className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
-                    >
-                      <Copy className="h-3.5 w-3.5" />
-                    </button>
-                    {hasCopiedCode && (
-                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Copied</span>
-                    )}
+          <div className="flex flex-wrap items-start gap-2">
+            {/* Access code block + status badges */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col items-start gap-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+                {hasActiveCode ? (
+                  <>
+                    <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-900 dark:text-slate-100">
+                      <span>{vendorAssessment.accessCode}</span>
+                      <button
+                        type="button"
+                        aria-label={`Copy access code for ${vendorAssessment.name}`}
+                        onClick={handleCopyCodeOnly}
+                        className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
+                      {hasCopiedCode && (
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Copied</span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {formatAccessCodeExpiry(vendorAssessment.codeExpiresAt)}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs text-muted-foreground">No active code</span>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Generate a code to invite this vendor.</p>
+                  </>
+                )}
+              </div>
+
+              {/* Invite status */}
+              {vendorAssessment.inviteSentAt ? (
+                <div className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+                  <Mail className="h-3 w-3 shrink-0" />
+                  Invite sent {new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(vendorAssessment.inviteSentAt))}
+                </div>
+              ) : null}
+
+              {/* Password status — only meaningful once an invite has been sent */}
+              {vendorAssessment.inviteSentAt && (
+                vendorAssessment.isFirstLogin ? (
+                  <div className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:border-amber-800/40 dark:bg-amber-900/20 dark:text-amber-400">
+                    <ShieldAlert className="h-3 w-3 shrink-0" />
+                    Password: Pending change
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {formatAccessCodeExpiry(vendorAssessment.codeExpiresAt)}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <span className="text-xs text-muted-foreground">No active code</span>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Generate a code to invite this vendor.</p>
-                </>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-900/20 dark:text-emerald-400">
+                    <ShieldCheck className="h-3 w-3 shrink-0" />
+                    Password: Secured
+                  </div>
+                )
               )}
             </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleInvite}
-              disabled={!hasActiveCode}
-              className={cn(
-                "h-9 px-4 transition-all",
-                hasCopied ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "text-slate-600"
-              )}
-              title={hasActiveCode ? "Copy portal invite message" : "Generate an access code first"}
-            >
-              {hasCopied ? (
-                <>
-                  <Check className="mr-2 h-3.5 w-3.5" />
-                  Invite Copied
-                </>
-              ) : (
-                <>
-                  <Copy className="mr-2 h-3.5 w-3.5" />
-                  Invite Vendor
-                </>
-              )}
-            </Button>
+            {/* Send Secure Invite */}
+            <InviteVendorModal
+              vendorId={vendorAssessment.id}
+              vendorName={vendorAssessment.name}
+              prefillEmail={v?.securityOfficerEmail || vendorAssessment.email}
+              trigger={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 px-4 gap-1.5"
+                >
+                  <SendHorizonal className="h-3.5 w-3.5" />
+                  Send Secure Invite
+                </Button>
+              }
+            />
 
             <EditVendorProfileModal
               vendorId={vendorAssessment.id}

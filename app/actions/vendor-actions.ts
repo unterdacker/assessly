@@ -222,6 +222,7 @@ export async function generateVendorAccessCodeAction(
               inviteTokenExpires: codeExpiresAt,
               passwordHash,
               isFirstLogin: true,
+              inviteSentAt: new Date(),
             },
           });
           updated = true;
@@ -295,12 +296,14 @@ export async function voidVendorAccessCodeAction(vendorId: string): Promise<Void
     await prisma.$transaction(async (tx) => {
       const vendor = await tx.vendor.findFirst({
         where: { id: vendorId, companyId },
-        select: { id: true },
+        select: { id: true, isFirstLogin: true },
       });
 
       if (!vendor) {
         throw new Error("Vendor not found.");
       }
+
+      const resetPendingInviteState = Boolean(vendor.isFirstLogin);
 
       await (tx.vendor as any).update({
         where: { id: vendor.id },
@@ -310,8 +313,12 @@ export async function voidVendorAccessCodeAction(vendorId: string): Promise<Void
           accessCode: null,
           inviteToken: null,
           inviteTokenExpires: null,
-          passwordHash: null,
-          isFirstLogin: true,
+          ...(resetPendingInviteState
+            ? {
+                inviteSentAt: null,
+                passwordHash: null,
+              }
+            : {}),
         },
       });
 
