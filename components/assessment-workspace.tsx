@@ -14,6 +14,7 @@ import { buildVendorAssessmentInsightLines } from "@/lib/vendor-assessment-insig
 import { VendorAssessmentQuestionnairePanel } from "@/components/vendor-assessment-questionnaire-panel";
 import { VendorAssessmentSidePanels } from "@/components/vendor-assessment-side-panels";
 import { EditVendorProfileModal } from "@/components/edit-vendor-profile-modal";
+import { VendorDetailsCard } from "@/components/vendor-details-card";
 
 type AssessmentWorkspaceProps = {
   vendorAssessment: VendorAssessment;
@@ -71,16 +72,14 @@ export function AssessmentWorkspace({
             vendorId={vendorAssessment.id}
             companyId={companyId}
             initialData={{
-              officialName: vendorAssessment.vendor?.officialName,
+              officialName: vendorAssessment.vendor?.officialName || vendorAssessment.name,
               registrationId: vendorAssessment.vendor?.registrationId,
-              vendorServiceType: vendorAssessment.vendor?.vendorServiceType,
-              vendorServiceTypeCustom: vendorAssessment.vendor?.vendorServiceTypeCustom,
+              vendorServiceType: vendorAssessment.vendor?.vendorServiceType || vendorAssessment.serviceType,
               securityOfficerName: vendorAssessment.vendor?.securityOfficerName,
               securityOfficerEmail: vendorAssessment.vendor?.securityOfficerEmail,
               dpoName: vendorAssessment.vendor?.dpoName,
               dpoEmail: vendorAssessment.vendor?.dpoEmail,
               headquartersLocation: vendorAssessment.vendor?.headquartersLocation,
-              sizeClassification: vendorAssessment.vendor?.sizeClassification,
             }}
             trigger={
               <Button variant="outline" size="sm">
@@ -90,6 +89,12 @@ export function AssessmentWorkspace({
           />
         </div>
       </header>
+
+      {/* Persistent Vendor Dossier: Heading and detailed info grid */}
+      <VendorDetailsCard 
+        vendorAssessment={vendorAssessment} 
+        companyId={companyId} 
+      />
 
       <section className="rounded-lg border border-slate-200 bg-card p-4 dark:border-slate-800">
         <h2 className="text-sm font-semibold mb-3">AI document audit (PDF upload)</h2>

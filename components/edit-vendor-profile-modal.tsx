@@ -23,37 +23,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useRouter } from "next/navigation";
+import { ServiceTypeCombobox } from "@/components/ui/service-type-combobox";
 import { updateVendorProfile } from "@/app/actions/update-vendor-profile";
-import {
-  getCustomVendorServiceTypes,
-  saveCustomVendorServiceType,
-} from "@/app/actions/custom-vendor-service-types";
+import { getUniqueServiceTypes } from "@/app/actions/get-unique-service-types";
 import { toast } from "sonner";
 
+// ---------------------------------------------------------------------------
+// Schema — vendorServiceType is now a plain string; no separate "custom" field
+// ---------------------------------------------------------------------------
 const vendorProfileSchema = z.object({
   officialName: z.string().optional(),
   registrationId: z.string().optional(),
   vendorServiceType: z.string().optional(),
-  vendorServiceTypeCustom: z.string().optional(),
   securityOfficerName: z.string().optional(),
   securityOfficerEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   dpoName: z.string().optional(),
   dpoEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   headquartersLocation: z.string().optional(),
-  sizeClassification: z.string().optional(),
 });
 
 type VendorProfileForm = z.infer<typeof vendorProfileSchema>;
-
-const PREDEFINED_VENDOR_SERVICE_TYPES = [
-  "Cloud Service Provider (SaaS/PaaS/IaaS)",
-  "Managed Security Service Provider (MSSP)",
-  "IT-Infrastructure & Maintenance",
-  "Software / Application Development",
-  "Data Processing & Analytics",
-  "Professional Services (Legal/HR)",
-  "Other (Custom)",
-];
 
 type EditVendorProfileModalProps = {
   vendorId: string;
@@ -62,13 +52,11 @@ type EditVendorProfileModalProps = {
     officialName?: string | null;
     registrationId?: string | null;
     vendorServiceType?: string | null;
-    vendorServiceTypeCustom?: string | null;
     securityOfficerName?: string | null;
     securityOfficerEmail?: string | null;
     dpoName?: string | null;
     dpoEmail?: string | null;
     headquartersLocation?: string | null;
-    sizeClassification?: string | null;
   };
   trigger: React.ReactNode;
 };
@@ -79,9 +67,11 @@ export function EditVendorProfileModal({
   initialData,
   trigger,
 }: EditVendorProfileModalProps) {
+  const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [customServiceTypes, setCustomServiceTypes] = React.useState<string[]>([]);
+  /** Unique service types collected from existing vendor records in the DB. */
+  const [existingServiceTypes, setExistingServiceTypes] = React.useState<string[]>([]);
 
   const {
     register,
@@ -96,70 +86,31 @@ export function EditVendorProfileModal({
       officialName: initialData.officialName || "",
       registrationId: initialData.registrationId || "",
       vendorServiceType: initialData.vendorServiceType || "",
-      vendorServiceTypeCustom: initialData.vendorServiceTypeCustom || "",
       securityOfficerName: initialData.securityOfficerName || "",
       securityOfficerEmail: initialData.securityOfficerEmail || "",
       dpoName: initialData.dpoName || "",
       dpoEmail: initialData.dpoEmail || "",
       headquartersLocation: initialData.headquartersLocation || "",
-      sizeClassification: initialData.sizeClassification || "",
     },
   });
 
   const vendorServiceType = watch("vendorServiceType");
-  const vendorServiceTypeCustom = watch("vendorServiceTypeCustom");
-  const isOtherSelected = vendorServiceType === "Other (Custom)";
-
-  // Merge predefined and custom service types
-  const allServiceTypes = React.useMemo(() => {
-    const predefinedList = PREDEFINED_VENDOR_SERVICE_TYPES.filter(
-      (t) => t !== "Other (Custom)"
-    );
-    return [...predefinedList, ...customServiceTypes, "Other (Custom)"];
-  }, [customServiceTypes]);
 
   const onSubmit = async (data: VendorProfileForm) => {
     setIsSubmitting(true);
     try {
-      // Validate that custom input is provided if "Other" is selected
-      if (isOtherSelected && !data.vendorServiceTypeCustom?.trim()) {
-        toast.error("Please provide a custom service type when selecting 'Other'.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // If a custom type was entered, save it to the database
-      if (isOtherSelected && data.vendorServiceTypeCustom?.trim()) {
-        const customTypeResult = await saveCustomVendorServiceType({
-          companyId,
-          name: data.vendorServiceTypeCustom.trim(),
-        });
-
-        if (customTypeResult.success && customTypeResult.created) {
-          // Add to local state so it appears in dropdown for future use
-          setCustomServiceTypes((prev) => {
-            if (!prev.includes(data.vendorServiceTypeCustom!.trim())) {
-              return [...prev, data.vendorServiceTypeCustom!.trim()];
-            }
-            return prev;
-          });
-          toast.success(
-            `Custom service type "${data.vendorServiceTypeCustom}" saved for future use!`
-          );
-        }
-      }
-
       const result = await updateVendorProfile({
         vendorId,
         ...data,
       });
       if (result.success) {
         toast.success("Vendor profile updated successfully.");
+        router.refresh();
         setOpen(false);
       } else {
         toast.error(result.error);
       }
-    } catch (error) {
+    } catch {
       toast.error("An unexpected error occurred.");
     } finally {
       setIsSubmitting(false);
@@ -168,22 +119,19 @@ export function EditVendorProfileModal({
 
   React.useEffect(() => {
     if (open) {
-      // Fetch custom service types when modal opens
-      getCustomVendorServiceTypes(companyId).then((types) => {
-        setCustomServiceTypes(types);
-      });
+      // Pull every unique type already used across this company's vendors.
+      // This is the "learn-as-you-go" read: no hardcoded list needed.
+      getUniqueServiceTypes(companyId).then(setExistingServiceTypes);
 
       reset({
         officialName: initialData.officialName || "",
         registrationId: initialData.registrationId || "",
         vendorServiceType: initialData.vendorServiceType || "",
-        vendorServiceTypeCustom: initialData.vendorServiceTypeCustom || "",
         securityOfficerName: initialData.securityOfficerName || "",
         securityOfficerEmail: initialData.securityOfficerEmail || "",
         dpoName: initialData.dpoName || "",
         dpoEmail: initialData.dpoEmail || "",
         headquartersLocation: initialData.headquartersLocation || "",
-        sizeClassification: initialData.sizeClassification || "",
       });
     }
   }, [open, initialData, reset, companyId]);
@@ -225,69 +173,16 @@ export function EditVendorProfileModal({
           {/* Supply Chain Classification */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Supply Chain Classification</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="vendorServiceType">Vendor Service Type</Label>
-                <Select
-                  value={vendorServiceType}
-                  onValueChange={(value) => {
-                    setValue("vendorServiceType", value);
-                    // Clear custom input if not "Other"
-                    if (value !== "Other (Custom)") {
-                      setValue("vendorServiceTypeCustom", "");
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select service type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allServiceTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {isOtherSelected && (
-                <div className="space-y-2">
-                  <Label htmlFor="vendorServiceTypeCustom">Custom Service Type</Label>
-                  <Input
-                    id="vendorServiceTypeCustom"
-                    {...register("vendorServiceTypeCustom")}
-                    placeholder="e.g., AI Model Provider"
-                  />
-                  {errors.vendorServiceTypeCustom && (
-                    <p className="text-sm text-red-600">{errors.vendorServiceTypeCustom.message}</p>
-                  )}
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="sizeClassification">Size Classification</Label>
-                  <div className="group relative">
-                    <HelpCircle className="h-4 w-4 text-slate-400 cursor-help" />
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                      Helps determine the vendor's own regulatory obligations under NIS2 Article 2.
-                    </div>
-                  </div>
-                </div>
-                <Select
-                  value={watch("sizeClassification")}
-                  onValueChange={(value) => setValue("sizeClassification", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="SME">SME (Small/Medium Enterprise)</SelectItem>
-                    <SelectItem value="Large Enterprise">Large Enterprise</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="vendorServiceType">Vendor Service Type</Label>
+              {/* Learn-as-you-go combobox: options come from existing vendor records.
+                  Typing an unknown value shows a "Create new: …" option. */}
+              <ServiceTypeCombobox
+                id="vendorServiceType"
+                value={vendorServiceType || ""}
+                onChange={(value) => setValue("vendorServiceType", value)}
+                options={existingServiceTypes}
+              />
             </div>
           </div>
 

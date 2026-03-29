@@ -9,13 +9,11 @@ export type UpdateVendorProfileInput = {
   officialName?: string;
   registrationId?: string;
   vendorServiceType?: string;
-  vendorServiceTypeCustom?: string;
   securityOfficerName?: string;
   securityOfficerEmail?: string;
   dpoName?: string;
   dpoEmail?: string;
   headquartersLocation?: string;
-  sizeClassification?: string;
 };
 
 export type UpdateVendorProfileResult =
@@ -33,13 +31,11 @@ export async function updateVendorProfile(
     officialName,
     registrationId,
     vendorServiceType,
-    vendorServiceTypeCustom,
     securityOfficerName,
     securityOfficerEmail,
     dpoName,
     dpoEmail,
     headquartersLocation,
-    sizeClassification,
   } = input;
 
   // Basic validation
@@ -56,19 +52,19 @@ export async function updateVendorProfile(
     });
     if (!vendor) return { success: false, error: "Vendor not found." };
 
+    // Update both the display name (name) and officialName to ensure global sync
     await prisma.vendor.update({
       where: { id: vendorId },
       data: {
+        name: officialName?.trim() || vendor.name,
         officialName: officialName || null,
         registrationId: registrationId || null,
         vendorServiceType: vendorServiceType || null,
-        vendorServiceTypeCustom: vendorServiceTypeCustom || null,
         securityOfficerName: securityOfficerName || null,
         securityOfficerEmail: securityOfficerEmail || null,
         dpoName: dpoName || null,
         dpoEmail: dpoEmail || null,
         headquartersLocation: headquartersLocation || null,
-        sizeClassification: sizeClassification || null,
       },
     });
 
@@ -76,7 +72,7 @@ export async function updateVendorProfile(
     await prisma.auditLog.create({
       data: {
         companyId: vendor.companyId,
-        action: `Updated vendor profile for ${vendor.name}`,
+        action: `Updated vendor profile for ${officialName?.trim() || vendor.name}`,
         entityType: "vendor",
         entityId: vendorId,
         actorId: "user",
@@ -87,6 +83,7 @@ export async function updateVendorProfile(
 
     revalidatePath("/vendors");
     revalidatePath(`/vendors/${vendorId}/assessment`);
+    revalidatePath(`/vendors/${vendorId}/assessment`, "page");
 
     return { success: true };
   } catch (err) {

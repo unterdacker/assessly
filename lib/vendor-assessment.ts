@@ -28,8 +28,8 @@ export type VendorAssessment = {
   vendor?: {
     officialName?: string | null;
     registrationId?: string | null;
+    /** Plain string; user-typed value from the learn-as-you-go combobox. */
     vendorServiceType?: string | null;
-    vendorServiceTypeCustom?: string | null;
     securityOfficerName?: string | null;
     securityOfficerEmail?: string | null;
     dpoName?: string | null;
