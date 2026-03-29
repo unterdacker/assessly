@@ -8,7 +8,17 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const response = NextResponse.next();
 
-  // 1. Identify External Assessment Portal
+  // 1a. Protect force-password-change: requires the setup cookie issued after first login
+  if (pathname.startsWith("/external/force-password-change")) {
+    const setupToken = request.cookies.get("avra-vendor-setup")?.value;
+    if (!setupToken) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/external/portal";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // 1b. Identify External Assessment Portal
   if (pathname.startsWith("/external/assessment/")) {
     const parts = pathname.split("/");
     const token = parts[parts.length - 1]; // Assume token is the last segment

@@ -154,6 +154,12 @@ export function VendorsTableSection({
   const [codeDialogVendorId, setCodeDialogVendorId] = React.useState<string | null>(null);
   const [selectedDuration, setSelectedDuration] = React.useState<AccessCodeDuration>("24h");
   const [codeActionVendorId, setCodeActionVendorId] = React.useState<string | null>(null);
+  const [generatedCredentials, setGeneratedCredentials] = React.useState<{
+    accessCode: string;
+    tempPassword: string;
+    codeExpiresAt: string;
+  } | null>(null);
+  const [copiedCredField, setCopiedCredField] = React.useState<string | null>(null);
 
   const filtered = React.useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -298,6 +304,16 @@ export function VendorsTableSection({
     }
   };
 
+  const handleCopyCredField = async (field: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedCredField(field);
+      window.setTimeout(() => setCopiedCredField((prev) => (prev === field ? null : prev)), 1500);
+    } catch {
+      window.alert("Copy failed. Please copy the value manually.");
+    }
+  };
+
   const handleGenerateCode = async () => {
     if (!codeDialogVendorId) return;
     setCodeActionVendorId(codeDialogVendorId);
@@ -310,7 +326,11 @@ export function VendorsTableSection({
 
     setCodeActionVendorId(null);
     setCodeDialogVendorId(null);
-    router.refresh();
+    setGeneratedCredentials({
+      accessCode: result.accessCode,
+      tempPassword: result.tempPassword,
+      codeExpiresAt: result.codeExpiresAt,
+    });
   };
 
   const handleVoidCode = async (vendor: VendorAssessment) => {
@@ -548,6 +568,84 @@ export function VendorsTableSection({
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={Boolean(generatedCredentials)} onOpenChange={(open) => {
+        if (!open) {
+          setGeneratedCredentials(null);
+          router.refresh();
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              <span className="text-amber-500 mr-1" aria-hidden>&#9888;</span>
+              Credentials Generated — Save Now
+            </DialogTitle>
+            <DialogDescription>
+              Copy both credentials before closing. The temporary password cannot be recovered after this dialog is dismissed.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-800 dark:border-amber-800/40 dark:bg-amber-900/20 dark:text-amber-300">
+              This password is hashed immediately. If it is lost, you must regenerate the access code to issue a new one.
+            </div>
+
+            {generatedCredentials && (
+              <>
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Access Code</p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-sm tracking-widest dark:border-slate-700 dark:bg-slate-800">
+                      {generatedCredentials.accessCode}
+                    </code>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCopyCredField("accessCode", generatedCredentials.accessCode)}
+                    >
+                      {copiedCredField === "accessCode" ? "Copied!" : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Temporary Password</p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-sm dark:border-slate-700 dark:bg-slate-800 break-all">
+                      {generatedCredentials.tempPassword}
+                    </code>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCopyCredField("tempPassword", generatedCredentials.tempPassword)}
+                    >
+                      {copiedCredField === "tempPassword" ? "Copied!" : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-500">
+                  {formatAccessCodeExpiry(generatedCredentials.codeExpiresAt)}
+                </p>
+              </>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                setGeneratedCredentials(null);
+                router.refresh();
+              }}
+            >
+              I&apos;ve saved these credentials
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(codeDialogVendorId)} onOpenChange={(open) => !open && setCodeDialogVendorId(null)}>
         <DialogContent>
