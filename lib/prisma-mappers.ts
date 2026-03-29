@@ -72,7 +72,6 @@ export function toVendorAssessment(
       officialName: vendor.officialName,
       registrationId: vendor.registrationId,
       vendorServiceType: vendor.vendorServiceType,
-      vendorServiceTypeCustom: vendor.vendorServiceTypeCustom,
       securityOfficerName: vendor.securityOfficerName,
       securityOfficerEmail: vendor.securityOfficerEmail,
       dpoName: vendor.dpoName,
