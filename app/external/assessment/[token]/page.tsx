@@ -46,6 +46,7 @@ export default async function ExternalAssessmentPage({ params }: ExternalAssessm
           initialAnswers={detail.answers}
           documentUrl={detail.documentUrl}
           documentFilename={detail.documentFilename}
+          sessionExpiresAt={detail.sessionExpiresAt}
           token={token}
         />
       </div>

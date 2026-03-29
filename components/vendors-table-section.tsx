@@ -3,11 +3,24 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, FileText, ChevronUp, ChevronDown } from "lucide-react";
+import { Search, FileText, ChevronUp, ChevronDown, Copy } from "lucide-react";
 import { AddVendorModal } from "@/components/add-vendor-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { deleteVendorsAction } from "@/app/actions/vendor-actions";
+import {
+  deleteVendorsAction,
+  generateVendorAccessCodeAction,
+  voidVendorAccessCodeAction,
+  type AccessCodeDuration,
+} from "@/app/actions/vendor-actions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -36,6 +49,24 @@ function formatDate(value: string | null) {
   } catch {
     return value;
   }
+}
+
+function formatAccessCodeExpiry(value: string | null) {
+  if (!value) return "No active code";
+  const expiresAt = new Date(value);
+  if (!Number.isFinite(expiresAt.getTime())) return "No active code";
+  if (expiresAt.getTime() <= Date.now()) return "Expired";
+
+  const formatted = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(expiresAt);
+
+  return `Expires: ${formatted}`;
 }
 
 /** Colour-coded compliance score pill. */
@@ -119,6 +150,10 @@ export function VendorsTableSection({
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
   const [selectedVendorIds, setSelectedVendorIds] = React.useState<Set<string>>(new Set());
   const [isBulkDeleting, setIsBulkDeleting] = React.useState(false);
+  const [copiedVendorId, setCopiedVendorId] = React.useState<string | null>(null);
+  const [codeDialogVendorId, setCodeDialogVendorId] = React.useState<string | null>(null);
+  const [selectedDuration, setSelectedDuration] = React.useState<AccessCodeDuration>("24h");
+  const [codeActionVendorId, setCodeActionVendorId] = React.useState<string | null>(null);
 
   const filtered = React.useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -251,6 +286,49 @@ export function VendorsTableSection({
     setIsBulkDeleting(false);
   };
 
+  const handleCopyAccessCode = async (vendorId: string, accessCode: string | null) => {
+    if (!accessCode) return;
+
+    try {
+      await navigator.clipboard.writeText(accessCode);
+      setCopiedVendorId(vendorId);
+      window.setTimeout(() => setCopiedVendorId((prev) => (prev === vendorId ? null : prev)), 1200);
+    } catch {
+      window.alert("Copy failed. Please copy the code manually.");
+    }
+  };
+
+  const handleGenerateCode = async () => {
+    if (!codeDialogVendorId) return;
+    setCodeActionVendorId(codeDialogVendorId);
+    const result = await generateVendorAccessCodeAction(codeDialogVendorId, selectedDuration);
+    if (!result.ok) {
+      window.alert(result.error);
+      setCodeActionVendorId(null);
+      return;
+    }
+
+    setCodeActionVendorId(null);
+    setCodeDialogVendorId(null);
+    router.refresh();
+  };
+
+  const handleVoidCode = async (vendor: VendorAssessment) => {
+    const confirmed = window.confirm(`Void active access code for ${vendor.name}?`);
+    if (!confirmed) return;
+
+    setCodeActionVendorId(vendor.id);
+    const result = await voidVendorAccessCodeAction(vendor.id);
+    if (!result.ok) {
+      window.alert(result.error);
+      setCodeActionVendorId(null);
+      return;
+    }
+
+    setCodeActionVendorId(null);
+    router.refresh();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -322,6 +400,7 @@ export function VendorsTableSection({
                   {sortKey === 'name' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
                 </Button>
               </TableHead>
+              <TableHead>Access code</TableHead>
               <TableHead>
                 <Button variant="ghost" onClick={() => handleSort('serviceType')} className="h-auto p-0 font-semibold">
                   Service type
@@ -365,7 +444,7 @@ export function VendorsTableSection({
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={9}
+                  colSpan={10}
                   className="h-24 text-center text-muted-foreground"
                 >
                   No vendors match your search.
@@ -385,6 +464,53 @@ export function VendorsTableSection({
                     />
                   </TableCell>
                   <TableCell className="font-medium">{v.name}</TableCell>
+                  <TableCell>
+                    <div className="space-y-2">
+                      {v.isCodeActive && v.accessCode ? (
+                        <div className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold tracking-wider dark:border-slate-700 dark:bg-slate-900">
+                          <span>{v.accessCode}</span>
+                          <button
+                            type="button"
+                            aria-label={`Copy access code for ${v.name}`}
+                            onClick={() => handleCopyAccessCode(v.id, v.accessCode)}
+                            className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </button>
+                          {copiedVendorId === v.id && (
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Copied</span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No active code</span>
+                      )}
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{formatAccessCodeExpiry(v.codeExpiresAt)}</p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 px-2 text-[10px]"
+                          onClick={() => setCodeDialogVendorId(v.id)}
+                          disabled={Boolean(codeActionVendorId)}
+                        >
+                          Generate Access Code
+                        </Button>
+                        {v.isCodeActive && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-7 border-red-200 px-2 text-[10px] text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+                            onClick={() => handleVoidCode(v)}
+                            disabled={Boolean(codeActionVendorId)}
+                          >
+                            {codeActionVendorId === v.id ? "Voiding..." : "Void Code"}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {v.serviceType}
                   </TableCell>
@@ -422,6 +548,43 @@ export function VendorsTableSection({
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={Boolean(codeDialogVendorId)} onOpenChange={(open) => !open && setCodeDialogVendorId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Generate Access Code</DialogTitle>
+            <DialogDescription>
+              Choose how long this temporary access code should stay active.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <label htmlFor="code-duration" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Validity
+            </label>
+            <select
+              id="code-duration"
+              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+              value={selectedDuration}
+              onChange={(e) => setSelectedDuration(e.target.value as AccessCodeDuration)}
+            >
+              <option value="1h">1 hour</option>
+              <option value="24h">24 hours</option>
+              <option value="7d">7 days</option>
+              <option value="30d">30 days</option>
+            </select>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCodeDialogVendorId(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleGenerateCode} disabled={Boolean(codeActionVendorId)}>
+              {codeActionVendorId ? "Generating..." : "Generate"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

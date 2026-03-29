@@ -1,15 +1,40 @@
 "use server";
 
+import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getDefaultCompanyId } from "@/lib/queries/vendor-assessments";
 import { calculateRiskLevel } from "@/lib/risk-level";
-import crypto from "crypto";
 
 const ANON_ACTOR = "anonymous:prototype";
+const ACCESS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const ACCESS_CODE_SCHEMA_NOT_READY = "ACCESS_CODE_SCHEMA_NOT_READY";
+
+function isAccessCodeSchemaMismatch(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = error.message;
+  return (
+    message.includes("Unknown argument `accessCode`") ||
+    message.includes("Unknown argument `codeExpiresAt`") ||
+    message.includes("Unknown argument `isCodeActive`") ||
+    (message.includes("column") && message.includes("accessCode"))
+  );
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const maybe = error as { code?: string };
+  return maybe.code === "P2002";
+}
+
+function generateAccessCode(): string {
+  const chars = crypto.randomBytes(8);
+  const picked = Array.from(chars, (b) => ACCESS_CODE_ALPHABET[b % ACCESS_CODE_ALPHABET.length]);
+  return `${picked.slice(0, 4).join("")}-${picked.slice(4, 8).join("")}`;
+}
 
 export type CreateVendorResult =
-  | { ok: true; token?: string }
+  | { ok: true }
   | { ok: false; error: string };
 
 export type DeleteVendorResult =
@@ -20,10 +45,32 @@ export type DeleteVendorsResult =
   | { ok: true; deletedCount: number }
   | { ok: false; error: string };
 
-/**
- * Creates a new vendor and their initial security assessment.
- * Generates a secure invite token for external third-party access.
- */
+export type AccessCodeDuration = "1h" | "24h" | "7d" | "30d";
+
+export type GenerateAccessCodeResult =
+  | { ok: true; accessCode: string; codeExpiresAt: string }
+  | { ok: false; error: string };
+
+export type VoidAccessCodeResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
+function resolveCodeExpiry(duration: AccessCodeDuration): Date {
+  const now = new Date();
+  switch (duration) {
+    case "1h":
+      return new Date(now.getTime() + 60 * 60 * 1000);
+    case "24h":
+      return new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    case "7d":
+      return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    case "30d":
+      return new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    default:
+      return new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  }
+}
+
 export async function createVendorAction(
   formData: FormData,
 ): Promise<CreateVendorResult> {
@@ -45,31 +92,42 @@ export async function createVendorAction(
     return { ok: false, error: "Security contact email is required." };
   }
 
-  /** No compliant answers yet — strict score is 0 and risk is HIGH. */
   const complianceScore = 0;
   const riskLevel = calculateRiskLevel(complianceScore);
 
-  // Generate a secure token for the external portal
-  const inviteToken = crypto.randomUUID().replace(/-/g, "");
-  const inviteTokenExpires = new Date();
-  inviteTokenExpires.setDate(inviteTokenExpires.getDate() + 14);
-
   try {
     await prisma.$transaction(async (tx) => {
-      // 1. Create the Vendor record
-      const vendor = await (tx.vendor as any).create({
-        data: {
-          companyId,
-          name: name.trim(),
-          email: email.trim().toLowerCase(),
-          serviceType: "Pending classification",
-          createdBy: ANON_ACTOR,
-          inviteToken,
-          inviteTokenExpires,
-        },
-      });
+      let vendor;
+      try {
+        vendor = await (tx.vendor as any).create({
+          data: {
+            companyId,
+            name: name.trim(),
+            email: email.trim().toLowerCase(),
+            serviceType: "Pending classification",
+            createdBy: ANON_ACTOR,
+            accessCode: null,
+            codeExpiresAt: null,
+            isCodeActive: false,
+            inviteToken: null,
+            inviteTokenExpires: null,
+          },
+        });
+      } catch (error) {
+        if (!isAccessCodeSchemaMismatch(error)) throw error;
+        vendor = await tx.vendor.create({
+          data: {
+            companyId,
+            name: name.trim(),
+            email: email.trim().toLowerCase(),
+            serviceType: "Pending classification",
+            createdBy: ANON_ACTOR,
+            inviteToken: null,
+            inviteTokenExpires: null,
+          },
+        });
+      }
 
-      // 2. Create the Assessment record
       await tx.assessment.create({
         data: {
           companyId,
@@ -82,7 +140,6 @@ export async function createVendorAction(
         },
       });
 
-      // 3. Create the Audit Log entry
       await tx.auditLog.create({
         data: {
           companyId,
@@ -95,18 +152,179 @@ export async function createVendorAction(
       });
     });
 
-    /** Simulation: Email Notification Service */
     console.log(`[SIMULATED EMAIL] Assessment Invitation for ${name}`);
-    console.log(`[LINK] https://avra.app/external/assessment/${inviteToken}`);
-    console.log(`[EXPIRY] ${inviteTokenExpires.toISOString()}`);
-    
+    console.log(
+      "[TEMPLATE] You have been invited to an assessment. Visit avra.app/portal and use your temporary access code: [CODE].",
+    );
+
     revalidatePath("/dashboard");
     revalidatePath("/vendors");
-    
-    return { ok: true, token: inviteToken };
+
+    return { ok: true };
   } catch (err) {
     console.error("Vendor creation failed:", err);
     return { ok: false, error: "Could not save vendor. Try again." };
+  }
+}
+
+export async function generateVendorAccessCodeAction(
+  vendorId: string,
+  duration: AccessCodeDuration,
+): Promise<GenerateAccessCodeResult> {
+  if (!vendorId || !vendorId.trim()) {
+    return { ok: false, error: "Invalid vendor identifier." };
+  }
+
+  const companyId = await getDefaultCompanyId();
+  if (!companyId) {
+    return {
+      ok: false,
+      error: "Database is empty. Run: npx prisma migrate dev && npx prisma db seed",
+    };
+  }
+
+  try {
+    let accessCode = "";
+    const codeExpiresAt = resolveCodeExpiry(duration);
+    const inviteToken = crypto.randomUUID().replace(/-/g, "");
+
+    await prisma.$transaction(async (tx) => {
+      const vendor = await tx.vendor.findFirst({
+        where: { id: vendorId, companyId },
+        select: { id: true, name: true },
+      });
+
+      if (!vendor) {
+        throw new Error("Vendor not found.");
+      }
+
+      let updated = false;
+      for (let i = 0; i < 10; i++) {
+        accessCode = generateAccessCode();
+        try {
+          await (tx.vendor as any).update({
+            where: { id: vendor.id },
+            data: {
+              accessCode,
+              codeExpiresAt,
+              isCodeActive: true,
+              inviteToken,
+              inviteTokenExpires: codeExpiresAt,
+            },
+          });
+          updated = true;
+          break;
+        } catch (error) {
+          if (isUniqueConstraintError(error)) {
+            continue;
+          }
+          if (isAccessCodeSchemaMismatch(error)) {
+            throw new Error(ACCESS_CODE_SCHEMA_NOT_READY);
+          }
+          throw error;
+        }
+      }
+
+      if (!updated) {
+        throw new Error("Failed to generate a unique access code.");
+      }
+
+      await tx.auditLog.create({
+        data: {
+          companyId,
+          action: "vendor.access_code.generated",
+          entityType: "vendor",
+          entityId: vendor.id,
+          actorId: ANON_ACTOR,
+          createdBy: ANON_ACTOR,
+          metadata: { expiresAt: codeExpiresAt.toISOString(), duration, accessCode },
+        },
+      });
+
+      console.log(`[SIMULATED EMAIL] Assessment Invitation for ${vendor.name}`);
+      console.log(
+        `[TEMPLATE] You have been invited to an assessment. Visit avra.app/portal and use your temporary access code: ${accessCode}.`,
+      );
+      console.log(`[EXPIRY] ${codeExpiresAt.toISOString()}`);
+    });
+
+    revalidatePath("/vendors");
+    return { ok: true, accessCode, codeExpiresAt: codeExpiresAt.toISOString() };
+  } catch (err) {
+    console.error("Access code generation failed:", err);
+    if (
+      (err instanceof Error && err.message === ACCESS_CODE_SCHEMA_NOT_READY) ||
+      isAccessCodeSchemaMismatch(err)
+    ) {
+      return {
+        ok: false,
+        error:
+          "Access code feature is not ready yet. Run: npx prisma migrate dev && npx prisma generate",
+      };
+    }
+    return { ok: false, error: "Could not generate access code. Try again." };
+  }
+}
+
+export async function voidVendorAccessCodeAction(vendorId: string): Promise<VoidAccessCodeResult> {
+  if (!vendorId || !vendorId.trim()) {
+    return { ok: false, error: "Invalid vendor identifier." };
+  }
+
+  const companyId = await getDefaultCompanyId();
+  if (!companyId) {
+    return {
+      ok: false,
+      error: "Database is empty. Run: npx prisma migrate dev && npx prisma db seed",
+    };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const vendor = await tx.vendor.findFirst({
+        where: { id: vendorId, companyId },
+        select: { id: true },
+      });
+
+      if (!vendor) {
+        throw new Error("Vendor not found.");
+      }
+
+      await (tx.vendor as any).update({
+        where: { id: vendor.id },
+        data: {
+          isCodeActive: false,
+          codeExpiresAt: null,
+          accessCode: null,
+          inviteToken: null,
+          inviteTokenExpires: null,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          companyId,
+          action: "vendor.access_code.voided",
+          entityType: "vendor",
+          entityId: vendor.id,
+          actorId: ANON_ACTOR,
+          createdBy: ANON_ACTOR,
+        },
+      });
+    });
+
+    revalidatePath("/vendors");
+    return { ok: true };
+  } catch (err) {
+    console.error("Void access code failed:", err);
+    if (isAccessCodeSchemaMismatch(err)) {
+      return {
+        ok: false,
+        error:
+          "Access code feature is not ready yet. Run: npx prisma migrate dev && npx prisma generate",
+      };
+    }
+    return { ok: false, error: "Could not void access code. Try again." };
   }
 }
 

@@ -12,6 +12,7 @@ export type ExternalAssessmentDetail = {
   answers: AssessmentAnswer[];
   documentUrl: string | null;
   documentFilename: string | null;
+  sessionExpiresAt: string | null;
   isValid: boolean;
   error?: string;
 };
@@ -29,7 +30,9 @@ export async function getExternalAssessment(
     const vendor = await (prisma.vendor as any).findFirst({
       where: { 
         inviteToken: token,
-        inviteTokenExpires: { gt: new Date() }
+        inviteTokenExpires: { gt: new Date() },
+        isCodeActive: true,
+        codeExpiresAt: { gt: new Date() },
       },
       include: {
         assessment: {
@@ -49,7 +52,8 @@ export async function getExternalAssessment(
         questions: [], 
         answers: [], 
         documentUrl: null, 
-        documentFilename: null 
+        documentFilename: null,
+        sessionExpiresAt: null,
       };
     }
 
@@ -80,6 +84,7 @@ export async function getExternalAssessment(
       answers: vendor.assessment.answers,
       documentUrl: vendor.assessment.documentUrl || null,
       documentFilename: vendor.assessment.documentFilename || null,
+      sessionExpiresAt: (vendor as any).codeExpiresAt ? new Date((vendor as any).codeExpiresAt).toISOString() : null,
     };
   } catch (err) {
     console.error("Token validation error:", err);

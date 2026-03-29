@@ -44,6 +44,7 @@ type ExternalAssessmentWorkspaceProps = {
   initialAnswers: AssessmentAnswer[];
   documentUrl: string | null;
   documentFilename: string | null;
+  sessionExpiresAt: string | null;
   token: string;
 };
 
@@ -63,6 +64,7 @@ export function ExternalAssessmentWorkspace({
   initialAnswers,
   documentUrl,
   documentFilename,
+  sessionExpiresAt,
   token,
 }: ExternalAssessmentWorkspaceProps) {
   const router = useRouter();
@@ -95,6 +97,20 @@ export function ExternalAssessmentWorkspace({
     setLocalDocumentFilename(documentFilename);
     setLocalDocumentUrl(documentUrl);
   }, [documentFilename, documentUrl]);
+
+  const sessionExpiresMs = sessionExpiresAt ? new Date(sessionExpiresAt).getTime() : 0;
+  const sessionExpired = Boolean(sessionExpiresMs) && Date.now() >= sessionExpiresMs;
+
+  const sessionExpiryLabel = sessionExpiresAt
+    ? new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).format(new Date(sessionExpiresAt))
+    : null;
 
   // Calculate progress using our standard 20-question logic
   const filledCount = answers.filter(
@@ -272,6 +288,16 @@ export function ExternalAssessmentWorkspace({
               <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
 
               <div className="flex items-center gap-2">
+                {sessionExpiryLabel && (
+                  <span className={cn(
+                    "hidden rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wider lg:inline-flex",
+                    sessionExpired
+                      ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                      : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                  )}>
+                    {sessionExpired ? "⚠ Session expired" : `⚠ Expires: ${sessionExpiryLabel}`}
+                  </span>
+                )}
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -534,6 +560,20 @@ export function ExternalAssessmentWorkspace({
           />
         </div>
       </div>
+
+      {sessionExpired && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/70 p-4">
+          <div className="w-full max-w-md space-y-4 rounded-xl border border-red-200 bg-white p-6 text-center shadow-xl dark:border-red-900/40 dark:bg-slate-900">
+            <h2 className="text-xl font-semibold text-red-700 dark:text-red-300">Session Expired</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Your temporary access window has ended. Please contact your admin to request a new access code.
+            </p>
+            <Button asChild className="w-full">
+              <Link href="/external/portal">Return to Access Portal</Link>
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
