@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   Building2, 
   ShieldCheck, 
@@ -19,6 +20,10 @@ import { PdfUploadZone } from "@/components/pdf-upload-zone";
 import { VendorQuestionnaireWizard } from "./vendor-questionnaire-wizard";
 import { Progress } from "@/components/ui/progress";
 import { submitExternalAssessment } from "@/app/actions/submit-vendor-assessment";
+import {
+  deleteExternalAssessmentDocument,
+  updateExternalVendorProfileByToken,
+} from "@/app/actions/external-portal-actions";
 import { 
   Dialog,
   DialogContent,
@@ -29,6 +34,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type ExternalAssessmentWorkspaceProps = {
   vendorAssessment: VendorAssessment;
@@ -38,6 +45,10 @@ type ExternalAssessmentWorkspaceProps = {
   documentUrl: string | null;
   documentFilename: string | null;
   token: string;
+};
+
+type WorkspaceAnswer = AssessmentAnswer & {
+  verified?: boolean;
 };
 
 /**
@@ -54,16 +65,45 @@ export function ExternalAssessmentWorkspace({
   documentFilename,
   token,
 }: ExternalAssessmentWorkspaceProps) {
+  const router = useRouter();
   const [view, setView] = React.useState<"welcome" | "workspace">("welcome");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSubmitted, setIsSubmitted] = React.useState(false);
+  const [answers, setAnswers] = React.useState<WorkspaceAnswer[]>(initialAnswers);
+  const [profileSaving, setProfileSaving] = React.useState(false);
+  const [profileMessage, setProfileMessage] = React.useState<string | null>(null);
+  const [deletingAssessmentEvidence, setDeletingAssessmentEvidence] = React.useState(false);
+  const [profileForm, setProfileForm] = React.useState({
+    officialName: vendorAssessment.vendor?.officialName || vendorAssessment.name || "",
+    registrationId: vendorAssessment.vendor?.registrationId || "",
+    vendorServiceType: vendorAssessment.vendor?.vendorServiceType || vendorAssessment.serviceType || "",
+    headquartersLocation: vendorAssessment.vendor?.headquartersLocation || "",
+    securityOfficerName: vendorAssessment.vendor?.securityOfficerName || "",
+    securityOfficerEmail: vendorAssessment.vendor?.securityOfficerEmail || "",
+    dpoName: vendorAssessment.vendor?.dpoName || "",
+    dpoEmail: vendorAssessment.vendor?.dpoEmail || "",
+  });
+
+  const [localDocumentFilename, setLocalDocumentFilename] = React.useState<string | null>(documentFilename);
+  const [localDocumentUrl, setLocalDocumentUrl] = React.useState<string | null>(documentUrl);
+
+  React.useEffect(() => {
+    setAnswers(initialAnswers);
+  }, [initialAnswers]);
+
+  React.useEffect(() => {
+    setLocalDocumentFilename(documentFilename);
+    setLocalDocumentUrl(documentUrl);
+  }, [documentFilename, documentUrl]);
 
   // Calculate progress using our standard 20-question logic
-  const filledCount = initialAnswers.filter(
-    (a) => a.status === "COMPLIANT" || a.status === "NON_COMPLIANT"
+  const filledCount = answers.filter(
+    (a) =>
+      (a.status === "COMPLIANT" || a.status === "NON_COMPLIANT" || a.status === "NOT_APPLICABLE") &&
+      a.verified
   ).length;
-  const progressPercent = Math.round((filledCount / 20) * 100);
-  const isComplete = filledCount === 20;
+  const progressPercent = Math.round((filledCount / questions.length) * 100);
+  const isComplete = filledCount === questions.length;
 
   const handleSubmit = async () => {
     if (!isComplete) return;
@@ -79,6 +119,47 @@ export function ExternalAssessmentWorkspace({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleProfileSave = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setProfileSaving(true);
+    setProfileMessage(null);
+
+    const result = await updateExternalVendorProfileByToken({
+      token,
+      ...profileForm,
+    });
+
+    if (!result.ok) {
+      setProfileMessage(result.error || "Failed to update profile.");
+      setProfileSaving(false);
+      return;
+    }
+
+    setProfileMessage("Profile updated.");
+    setProfileSaving(false);
+    router.refresh();
+  };
+
+  const handleDeleteAssessmentEvidence = async () => {
+    const confirmed = window.confirm("Delete the uploaded evidence document?");
+    if (!confirmed) return;
+
+    setDeletingAssessmentEvidence(true);
+    const result = await deleteExternalAssessmentDocument(token);
+
+    if (!result.ok) {
+      setProfileMessage(result.error || "Failed to delete evidence document.");
+      setDeletingAssessmentEvidence(false);
+      return;
+    }
+
+    setLocalDocumentFilename(null);
+    setLocalDocumentUrl(null);
+    setProfileMessage("Evidence document deleted.");
+    setDeletingAssessmentEvidence(false);
+    router.refresh();
   };
 
   if (isSubmitted) {
@@ -185,7 +266,7 @@ export function ExternalAssessmentWorkspace({
                 <span className="text-xs font-bold text-slate-900 dark:text-white">
                   {progressPercent}% Complete
                 </span>
-                <span className="text-[10px] text-slate-400">{filledCount} of 20 verified</span>
+                <span className="text-[10px] text-slate-400">{filledCount} of {questions.length} verified</span>
               </div>
               
               <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
@@ -301,14 +382,114 @@ export function ExternalAssessmentWorkspace({
             
             <PdfUploadZone vendorId={vendorAssessment.id} />
             
-            {documentUrl && (
+            {localDocumentUrl && (
               <div className="mt-4 flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950">
                 <ShieldCheck className="h-4 w-4 text-emerald-500" />
                 <span className="text-xs text-slate-500 truncate flex-1">
-                  Evidence: <span className="font-medium text-slate-700 dark:text-slate-300">{documentFilename}</span>
+                  Evidence: <span className="font-medium text-slate-700 dark:text-slate-300">{localDocumentFilename}</span>
                 </span>
+                <Button variant="outline" size="sm" asChild>
+                  <a href={`/api/documents/${assessmentId}`} target="_blank" rel="noopener noreferrer">
+                    Open
+                  </a>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+                  onClick={handleDeleteAssessmentEvidence}
+                  disabled={deletingAssessmentEvidence}
+                >
+                  {deletingAssessmentEvidence ? "Deleting..." : "Delete"}
+                </Button>
               </div>
             )}
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="mb-4 flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                Company Profile
+              </h3>
+            </div>
+
+            <form className="space-y-3" onSubmit={handleProfileSave}>
+              <div className="space-y-1">
+                <Label htmlFor="officialName" className="text-xs">Official Name</Label>
+                <Input
+                  id="officialName"
+                  value={profileForm.officialName}
+                  onChange={(e) => setProfileForm((p) => ({ ...p, officialName: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="registrationId" className="text-xs">Registration ID</Label>
+                <Input
+                  id="registrationId"
+                  value={profileForm.registrationId}
+                  onChange={(e) => setProfileForm((p) => ({ ...p, registrationId: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="vendorServiceType" className="text-xs">Service Type</Label>
+                <Input
+                  id="vendorServiceType"
+                  value={profileForm.vendorServiceType}
+                  onChange={(e) => setProfileForm((p) => ({ ...p, vendorServiceType: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="headquartersLocation" className="text-xs">Headquarters Location</Label>
+                <Input
+                  id="headquartersLocation"
+                  value={profileForm.headquartersLocation}
+                  onChange={(e) => setProfileForm((p) => ({ ...p, headquartersLocation: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="securityOfficerName" className="text-xs">Security Officer Name</Label>
+                <Input
+                  id="securityOfficerName"
+                  value={profileForm.securityOfficerName}
+                  onChange={(e) => setProfileForm((p) => ({ ...p, securityOfficerName: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="securityOfficerEmail" className="text-xs">Security Officer Email</Label>
+                <Input
+                  id="securityOfficerEmail"
+                  type="email"
+                  value={profileForm.securityOfficerEmail}
+                  onChange={(e) => setProfileForm((p) => ({ ...p, securityOfficerEmail: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="dpoName" className="text-xs">DPO Name</Label>
+                <Input
+                  id="dpoName"
+                  value={profileForm.dpoName}
+                  onChange={(e) => setProfileForm((p) => ({ ...p, dpoName: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="dpoEmail" className="text-xs">DPO Email</Label>
+                <Input
+                  id="dpoEmail"
+                  type="email"
+                  value={profileForm.dpoEmail}
+                  onChange={(e) => setProfileForm((p) => ({ ...p, dpoEmail: e.target.value }))}
+                />
+              </div>
+
+              {profileMessage && (
+                <p className="text-xs text-slate-500 dark:text-slate-400">{profileMessage}</p>
+              )}
+
+              <Button type="submit" className="w-full" disabled={profileSaving}>
+                {profileSaving ? "Saving..." : "Save Profile"}
+              </Button>
+            </form>
           </div>
 
           <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4 dark:border-amber-900/20 dark:bg-amber-900/10">
@@ -332,8 +513,24 @@ export function ExternalAssessmentWorkspace({
 
           <VendorQuestionnaireWizard 
             questions={questions}
-            initialAnswers={initialAnswers}
+            initialAnswers={answers}
             assessmentId={assessmentId}
+            token={token}
+            onAnswerSaved={(updatedAnswer) => {
+              setAnswers((prev) => {
+                const existingIndex = prev.findIndex((a) => a.questionId === updatedAnswer.questionId);
+                if (existingIndex === -1) {
+                  return [...prev, updatedAnswer as WorkspaceAnswer];
+                }
+
+                const clone = [...prev];
+                clone[existingIndex] = {
+                  ...clone[existingIndex],
+                  ...updatedAnswer,
+                } as WorkspaceAnswer;
+                return clone;
+              });
+            }}
           />
         </div>
       </div>

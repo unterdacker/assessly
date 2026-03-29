@@ -2,10 +2,12 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Search, FileText, ChevronUp, ChevronDown } from "lucide-react";
 import { AddVendorModal } from "@/components/add-vendor-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { deleteVendorsAction } from "@/app/actions/vendor-actions";
 import {
   Table,
   TableBody,
@@ -110,9 +112,13 @@ function VendorActions({
 export function VendorsTableSection({
   vendorAssessments,
 }: VendorsTableSectionProps) {
+  const router = useRouter();
+  const selectAllRef = React.useRef<HTMLInputElement | null>(null);
   const [q, setQ] = React.useState("");
   const [sortKey, setSortKey] = React.useState<SortKey>('name');
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
+  const [selectedVendorIds, setSelectedVendorIds] = React.useState<Set<string>>(new Set());
+  const [isBulkDeleting, setIsBulkDeleting] = React.useState(false);
 
   const filtered = React.useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -176,6 +182,75 @@ export function VendorsTableSection({
     }
   };
 
+  const visibleIds = React.useMemo(() => sorted.map((v) => v.id), [sorted]);
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => selectedVendorIds.has(id));
+  const someVisibleSelected =
+    visibleIds.some((id) => selectedVendorIds.has(id)) && !allVisibleSelected;
+
+  React.useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someVisibleSelected;
+    }
+  }, [someVisibleSelected]);
+
+  React.useEffect(() => {
+    setSelectedVendorIds((prev) => {
+      const valid = new Set(vendorAssessments.map((v) => v.id));
+      const next = new Set<string>();
+      prev.forEach((id) => {
+        if (valid.has(id)) next.add(id);
+      });
+      return next;
+    });
+  }, [vendorAssessments]);
+
+  const handleToggleVendor = (vendorId: string, checked: boolean) => {
+    setSelectedVendorIds((prev) => {
+      const next = new Set(prev);
+      if (checked) {
+        next.add(vendorId);
+      } else {
+        next.delete(vendorId);
+      }
+      return next;
+    });
+  };
+
+  const handleToggleAllVisible = (checked: boolean) => {
+    setSelectedVendorIds((prev) => {
+      const next = new Set(prev);
+      if (checked) {
+        visibleIds.forEach((id) => next.add(id));
+      } else {
+        visibleIds.forEach((id) => next.delete(id));
+      }
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedVendorIds.size === 0) return;
+
+    const confirmed = window.confirm(
+      `Delete ${selectedVendorIds.size} selected vendors? This will remove linked assessments and answers.`
+    );
+    if (!confirmed) return;
+
+    setIsBulkDeleting(true);
+    const result = await deleteVendorsAction(Array.from(selectedVendorIds));
+
+    if (!result.ok) {
+      window.alert(result.error);
+      setIsBulkDeleting(false);
+      return;
+    }
+
+    setSelectedVendorIds(new Set());
+    router.refresh();
+    setIsBulkDeleting(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -187,13 +262,26 @@ export function VendorsTableSection({
             Search, invite, and open NIS2 assessment workspaces.
           </p>
         </div>
-        <AddVendorModal
-          trigger={
-            <Button type="button" className="w-full sm:w-auto">
-              Invite vendor
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          {selectedVendorIds.size > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full border-red-200 text-red-700 hover:bg-red-50 sm:w-auto dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+            >
+              {isBulkDeleting ? "Deleting selected..." : `Delete selected (${selectedVendorIds.size})`}
             </Button>
-          }
-        />
+          )}
+          <AddVendorModal
+            trigger={
+              <Button type="button" className="w-full sm:w-auto" disabled={isBulkDeleting}>
+                Invite vendor
+              </Button>
+            }
+          />
+        </div>
       </div>
 
       <div className="relative max-w-md">
@@ -217,6 +305,17 @@ export function VendorsTableSection({
           </caption>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">
+                <input
+                  ref={selectAllRef}
+                  type="checkbox"
+                  aria-label="Select all visible vendors"
+                  checked={allVisibleSelected}
+                  onChange={(e) => handleToggleAllVisible(e.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300"
+                  disabled={visibleIds.length === 0 || isBulkDeleting}
+                />
+              </TableHead>
               <TableHead>
                 <Button variant="ghost" onClick={() => handleSort('name')} className="h-auto p-0 font-semibold">
                   Name
@@ -266,7 +365,7 @@ export function VendorsTableSection({
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={9}
                   className="h-24 text-center text-muted-foreground"
                 >
                   No vendors match your search.
@@ -275,6 +374,16 @@ export function VendorsTableSection({
             ) : (
               sorted.map((v) => (
                 <TableRow key={v.id}>
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      aria-label={`Select vendor ${v.name}`}
+                      checked={selectedVendorIds.has(v.id)}
+                      onChange={(e) => handleToggleVendor(v.id, e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-300"
+                      disabled={isBulkDeleting}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{v.name}</TableCell>
                   <TableCell className="text-muted-foreground">
                     {v.serviceType}
@@ -303,7 +412,9 @@ export function VendorsTableSection({
                     <RiskBadge level={v.riskLevel} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <VendorActions vendorAssessment={v} />
+                    <VendorActions
+                      vendorAssessment={v}
+                    />
                   </TableCell>
                 </TableRow>
               ))

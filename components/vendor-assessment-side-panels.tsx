@@ -188,6 +188,7 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer }: AiIns
   );
 
   const isAnswered = !!selectedAnswer;
+  const evidenceSnippet = (selectedAnswer as { evidenceSnippet?: string | null } | undefined)?.evidenceSnippet;
 
   async function handleSaveOverride(
     notes: string,
@@ -276,6 +277,15 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer }: AiIns
             </p>
           )}
         </div>
+
+        {evidenceSnippet && (
+          <div className="rounded-md border border-indigo-200 bg-indigo-50/70 p-3 text-xs leading-relaxed text-slate-700 shadow-sm dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-slate-300">
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Evidence from document
+            </p>
+            <p className="italic">&quot;{evidenceSnippet}&quot;</p>
+          </div>
+        )}
 
         {/* Link to supplemental evidence if present */}
         {selectedAnswer?.evidenceUrl && (
