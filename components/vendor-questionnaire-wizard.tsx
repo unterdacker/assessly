@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { 
   ShieldCheck, 
   XCircle, 
@@ -52,6 +53,21 @@ export function VendorQuestionnaireWizard({
   token,
   onAnswerSaved,
 }: VendorQuestionnaireWizardProps) {
+  const t = useTranslations();
+  const tw = React.useCallback(
+    (key: string, fallback: string, values?: Record<string, string | number>) => {
+      const fullKey = `externalAssessment.questionnaireWizard.${key}`;
+      return t.has(fullKey) ? t(fullKey, values) : fallback;
+    },
+    [t],
+  );
+  const tq = React.useCallback(
+    (questionId: string, field: "text" | "guidance", fallback: string) => {
+      const fullKey = `externalAssessment.questions.${questionId}.${field}`;
+      return t.has(fullKey) ? t(fullKey) : fallback;
+    },
+    [t],
+  );
   const [answers, setAnswers] = React.useState<Record<string, Partial<ExtendedAssessmentAnswer>>>(
     initialAnswers.reduce((acc, a) => ({ ...acc, [a.questionId]: a }), {})
   );
@@ -91,7 +107,7 @@ export function VendorQuestionnaireWizard({
   const [saveErrorByQuestion, setSaveErrorByQuestion] = React.useState<Record<string, string>>({});
 
   const handleDeleteEvidence = async (questionId: string, answerId: string) => {
-    const confirmed = window.confirm("Delete this uploaded evidence file?");
+    const confirmed = window.confirm(tw("confirmDeleteEvidence", "Delete this uploaded evidence file?"));
     if (!confirmed) return;
 
     setSaveErrorByQuestion((prev) => ({ ...prev, [questionId]: "" }));
@@ -100,7 +116,7 @@ export function VendorQuestionnaireWizard({
     if (!result.ok || !result.answer) {
       setSaveErrorByQuestion((prev) => ({
         ...prev,
-        [questionId]: result.error || "Failed to delete evidence.",
+        [questionId]: result.error || tw("errors.deleteEvidenceFailed", "Failed to delete evidence."),
       }));
       return;
     }
@@ -135,12 +151,12 @@ export function VendorQuestionnaireWizard({
     const justificationText = (draftJustificationByQuestion[questionId] || "").trim();
 
     if (!status) {
-      setSaveErrorByQuestion((prev) => ({ ...prev, [questionId]: "Select a status before saving." }));
+      setSaveErrorByQuestion((prev) => ({ ...prev, [questionId]: tw("errors.selectStatus", "Select a status before saving.") }));
       return;
     }
 
     if (!justificationText) {
-      setSaveErrorByQuestion((prev) => ({ ...prev, [questionId]: "Add a justification before saving." }));
+      setSaveErrorByQuestion((prev) => ({ ...prev, [questionId]: tw("errors.addJustification", "Add a justification before saving.") }));
       return;
     }
 
@@ -197,14 +213,14 @@ export function VendorQuestionnaireWizard({
       } else {
         setSaveErrorByQuestion((prev) => ({
           ...prev,
-          [questionId]: result.error || "Failed to save answer.",
+          [questionId]: result.error || tw("errors.saveAnswerFailed", "Failed to save answer."),
         }));
       }
     } catch (err) {
       console.error("Failed to update answer:", err);
       setSaveErrorByQuestion((prev) => ({
         ...prev,
-        [questionId]: "Unexpected error while saving. Please retry.",
+        [questionId]: tw("errors.unexpectedSave", "Unexpected error while saving. Please retry."),
       }));
     } finally {
       setIsSaving(null);
@@ -215,6 +231,8 @@ export function VendorQuestionnaireWizard({
     <div className="space-y-4">
       {questions.map((q, index) => {
         const answer = answers[q.id];
+        const questionText = tq(q.id, "text", q.text);
+        const questionGuidance = q.guidance ? tq(q.id, "guidance", q.guidance) : q.guidance;
         const isOpen = openQuestionId === q.id;
         const isFilled = !!answer?.verified;
         const draftStatus = draftStatusByQuestion[q.id] || "";
@@ -250,22 +268,22 @@ export function VendorQuestionnaireWizard({
                     isOpen ? "text-indigo-600 dark:text-indigo-400" : "text-slate-700 dark:text-slate-300",
                     isFilled && "text-slate-900 dark:text-white"
                   )}>
-                    {q.text}
+                    {questionText}
                   </h3>
                   <div className="mt-1 flex items-center gap-2">
                     {isFilled ? (
                       <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                         <CheckCircle2 className="h-3 w-3" />
-                        Verified
+                        {tw("status.verified", "Verified")}
                       </span>
                     ) : isAiPending ? (
                       <span className="flex items-center gap-1.5 animate-pulse text-[10px] font-bold uppercase tracking-wider text-indigo-500">
                         <Sparkles className="h-3 w-3" />
-                        AI Preview Available
+                        {tw("status.aiPreviewAvailable", "AI preview available")}
                       </span>
                     ) : (
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        Awaiting Response
+                        {tw("status.awaitingResponse", "Awaiting response")}
                       </span>
                     )}
                   </div>
@@ -279,10 +297,10 @@ export function VendorQuestionnaireWizard({
               <div className="border-t border-slate-100 px-6 py-6 transition-all dark:border-slate-800">
                 <div className="space-y-6">
                   {/* Guidance */}
-                  {q.guidance && (
+                  {questionGuidance && (
                     <div className="flex gap-3 rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-600 dark:bg-slate-950 dark:text-slate-400">
                       <Info className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" />
-                      {q.guidance}
+                      {questionGuidance}
                     </div>
                   )}
 
@@ -297,14 +315,14 @@ export function VendorQuestionnaireWizard({
                       {isAiPending && (
                         <div className="flex items-center gap-2 rounded-lg bg-amber-100/50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
                           <AlertCircle className="h-3 w-3" />
-                          ⚠️ AI Suggestion — Please Review
+                          {tw("aiBanner", "AI suggestion - please review")}
                         </div>
                       )}
                       
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <Sparkles className="h-4 w-4 text-indigo-500" />
-                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">AI Audit Insight</span>
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{tw("aiInsightTitle", "AI audit insight")}</span>
                         </div>
                         {isAiPending && (
                           <Button 
@@ -337,17 +355,17 @@ export function VendorQuestionnaireWizard({
                             disabled={isCurrentQuestionSaving}
                           >
                             <ShieldCheck className="h-3.5 w-3.5" />
-                            Use AI Suggestion
+                            {tw("useAiSuggestion", "Use AI suggestion")}
                           </Button>
                         )}
                       </div>
                       <div className="space-y-3">
                         <p className="text-xs italic leading-relaxed text-slate-600 dark:text-slate-400">
-                          &quot;{answer?.findings || "Based on your documents, this requirement appears to be met."}&quot;
+                          &quot;{answer?.findings || tw("fallbackFindings", "Based on your documents, this requirement appears to be met.")}&quot;
                         </p>
                         {answer?.evidenceSnippet && (
                           <div className="mt-2 rounded-lg border border-indigo-200 bg-indigo-50/60 p-3 text-[11px] leading-relaxed text-slate-700 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-slate-300 shadow-sm">
-                            <strong className="block mb-1 text-slate-900 dark:text-white uppercase tracking-tighter text-[9px]">Evidence from your document:</strong> 
+                            <strong className="block mb-1 text-slate-900 dark:text-white uppercase tracking-tighter text-[9px]">{tw("evidenceFromDocument", "Evidence from your document:")}</strong> 
                             &quot;{answer.evidenceSnippet}&quot;
                           </div>
                         )}
@@ -367,9 +385,9 @@ export function VendorQuestionnaireWizard({
                     className="grid grid-cols-1 gap-3 sm:grid-cols-3"
                   >
                     {[
-                      { id: "COMPLIANT", label: "Compliant", icon: ShieldCheck, color: "hover:border-emerald-400 hover:bg-emerald-50 text-emerald-700", active: "border-emerald-500 bg-emerald-50/50" },
-                      { id: "NON_COMPLIANT", label: "Non-Compliant", icon: XCircle, color: "hover:border-red-400 hover:bg-red-50 text-red-700", active: "border-red-500 bg-red-50/50" },
-                      { id: "NOT_APPLICABLE", label: "Not Applicable", icon: Info, color: "hover:border-slate-400 hover:bg-slate-50 text-slate-700", active: "border-slate-500 bg-slate-50/50" }
+                      { id: "COMPLIANT", label: tw("option.compliant", "Compliant"), icon: ShieldCheck, color: "hover:border-emerald-400 hover:bg-emerald-50 text-emerald-700", active: "border-emerald-500 bg-emerald-50/50" },
+                      { id: "NON_COMPLIANT", label: tw("option.nonCompliant", "Non-compliant"), icon: XCircle, color: "hover:border-red-400 hover:bg-red-50 text-red-700", active: "border-red-500 bg-red-50/50" },
+                      { id: "NOT_APPLICABLE", label: tw("option.notApplicable", "Not applicable"), icon: Info, color: "hover:border-slate-400 hover:bg-slate-50 text-slate-700", active: "border-slate-500 bg-slate-50/50" }
                     ].map((opt) => {
                       const isSuggested = isAiPending && answer?.aiSuggestedStatus === opt.id;
                       return (
@@ -398,7 +416,7 @@ export function VendorQuestionnaireWizard({
 
                   <div className="space-y-2">
                     <Label htmlFor={`${q.id}-justification`} className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Justification
+                      {tw("justificationLabel", "Justification")}
                     </Label>
                     <textarea
                       id={`${q.id}-justification`}
@@ -409,23 +427,23 @@ export function VendorQuestionnaireWizard({
                           [q.id]: event.target.value,
                         }))
                       }
-                      placeholder="Explain why this status applies. You can edit AI-generated reasoning before saving."
+                      placeholder={tw("justificationPlaceholder", "Explain why this status applies. You can edit AI-generated reasoning before saving.")}
                       rows={4}
                       className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-indigo-900/40"
                       disabled={isCurrentQuestionSaving}
                     />
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      This text is editable and will be sanitized on save.
+                      {tw("justificationHint", "This text is editable and will be sanitized on save.")}
                     </p>
                   </div>
 
                   <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/30">
                     <Label htmlFor={`${q.id}-evidence`} className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Upload Evidence Document
+                      {tw("uploadEvidenceLabel", "Upload evidence document")}
                     </Label>
                     <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
                       <Upload className="h-3.5 w-3.5" />
-                      Accepted: PDF, JPG, PNG. Max 10MB.
+                      {tw("uploadAccepted", "Accepted: PDF, JPG, PNG. Max 10MB.")}
                     </div>
                     <input
                       id={`${q.id}-evidence`}
@@ -449,7 +467,7 @@ export function VendorQuestionnaireWizard({
                     />
                     {draftEvidenceLabelByQuestion[q.id] && (
                       <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                        Selected evidence: <span className="font-medium">{draftEvidenceLabelByQuestion[q.id]}</span>
+                        {tw("selectedEvidence", "Selected evidence:")} <span className="font-medium">{draftEvidenceLabelByQuestion[q.id]}</span>
                       </p>
                     )}
                     {answer?.id && answer?.evidenceFileUrl && (
@@ -460,7 +478,7 @@ export function VendorQuestionnaireWizard({
                           rel="noopener noreferrer"
                           className="text-[11px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline dark:text-indigo-400"
                         >
-                          Open current saved evidence
+                          {tw("openSavedEvidence", "Open current saved evidence")}
                         </a>
                         <Button
                           type="button"
@@ -470,7 +488,7 @@ export function VendorQuestionnaireWizard({
                           onClick={() => handleDeleteEvidence(q.id, answer.id)}
                           disabled={isCurrentQuestionSaving}
                         >
-                          Delete
+                          {tw("delete", "Delete")}
                         </Button>
                       </div>
                     )}
@@ -492,7 +510,7 @@ export function VendorQuestionnaireWizard({
                       }
                       className="h-9 bg-indigo-600 text-xs font-semibold hover:bg-indigo-700"
                     >
-                      {isCurrentQuestionSaving ? "Saving..." : "Save & Confirm"}
+                      {isCurrentQuestionSaving ? tw("saving", "Saving...") : tw("saveAndConfirm", "Save and confirm")}
                     </Button>
                   </div>
                 </div>

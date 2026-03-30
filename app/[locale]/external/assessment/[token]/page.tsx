@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getExternalAssessment } from "@/app/actions/get-external-assessment";
 import { ExternalAssessmentWorkspace } from "@/components/external-assessment-workspace";
+import { LanguageToggle } from "@/components/language-toggle";
 
 interface ExternalAssessmentPageProps {
   params: Promise<{
@@ -27,7 +28,10 @@ export default async function ExternalAssessmentPage({ params }: ExternalAssessm
 
   if (!detail.isValid) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="relative flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="fixed right-4 top-4 z-50">
+          <LanguageToggle />
+        </div>
         <div className="mx-auto max-w-md space-y-4 rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h1 className="text-xl font-bold text-red-600 dark:text-red-400">{t("LinkInactive")}</h1>
           <p className="text-sm text-slate-600 dark:text-slate-400">

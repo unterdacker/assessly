@@ -368,6 +368,12 @@ export function VendorsTableSection({
           <p className="text-sm text-muted-foreground">
             {t("pageDesc")}
           </p>
+          <p className="mt-2 text-sm">
+            <Link href="/external/portal" className="font-medium text-primary underline-offset-4 hover:underline">
+              {t("vendorPortalLinkLabel")}
+            </Link>
+            <span className="ml-2 text-muted-foreground">{t("vendorPortalLinkHint")}</span>
+          </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           {selectedVendorIds.size > 0 && (

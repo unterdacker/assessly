@@ -98,6 +98,7 @@
   "SecureAssessmentAccess": "Secure Assessment Access",
   "ExternalPortalDesc": "Enter your access code and temporary password to open your isolated NIS2 assessment workspace.",
   "EnterAccessCode": "Enter your 8-character Access Code",
+  "Password": "Password",
   "EnterYourPassword": "Enter your password",
   "Checking": "Checking...",
   "SecureAccess": "Secure Access",
@@ -113,6 +114,158 @@
   "PasswordsDoNotMatch": "Passwords do not match.",
   "Securing": "Securing...",
   "SetPasswordContinue": "Set Password & Continue",
+  "externalAssessment": {
+    "submitted": {
+      "title": "Assessment submitted",
+      "description": "Thank you for providing your compliance data. Your responses for <strong>{vendorName}</strong> have been securely shared with your buyer.",
+      "closeHint": "You can now close this window."
+    },
+    "welcome": {
+      "title": "Welcome to the AVRA Assessment Portal",
+      "subtitle": "Securing the supply chain for <strong>Adventure Huso</strong>.",
+      "purposeTitle": "Purpose and NIS2 compliance",
+      "purposeBody1": "The European Union's <strong>NIS2 Directive</strong> requires organizations to ensure the security of their supply chains. As a valued partner of <strong>Adventure Huso</strong>, we invite you to complete this security assessment.",
+      "purposeBody2": "This process helps us maintain a high security standard and fulfill our regulatory obligations. You can either upload existing security documentation for AI-assisted analysis or complete the questionnaire manually.",
+      "fastPathTitle": "The fast path",
+      "fastPathBody": "Upload your ISO 27001, SOC2, or policy PDF and let AI suggest your answers.",
+      "directPathTitle": "The direct path",
+      "directPathBody": "Answer 20 targeted security questions directly in our interactive wizard.",
+      "beginButton": "Begin assessment",
+      "footer": "Secure isolated environment - Powered by AVRA Sovereign Compliance Engine"
+    },
+    "header": {
+      "portalTag": "AVRA Portal",
+      "title": "NIS2 supply chain security assessment",
+      "progressComplete": "{progress}% complete",
+      "progressVerified": "{filled} of {total} verified",
+      "sessionExpiredBadge": "Session expired",
+      "expiresBadge": "Expires: {expiry}",
+      "exitPortal": "Exit portal",
+      "submitting": "Submitting...",
+      "submit": "Submit assessment"
+    },
+    "fastPath": {
+      "title": "The fast way",
+      "description": "Upload your security policy or certification (ISO 27001, SOC2). Our AI will analyze your documents to <strong>pre-fill</strong> the questionnaire."
+    },
+    "privacy": {
+      "badge": "Privacy verified",
+      "title": "Security and privacy commitment",
+      "items": {
+        "noAiTraining": {
+          "title": "No AI training",
+          "body": "Your documents are never used to train or improve the underlying AI models."
+        },
+        "euHosted": {
+          "title": "EU-hosted (Germany)",
+          "body": "All analysis is processed on isolated, sovereign servers in Frankfurt (eu-central-1)."
+        },
+        "stateless": {
+          "title": "Stateless analysis",
+          "body": "Documents exist only in memory during analysis. Nothing is stored permanently; files are discarded immediately after."
+        },
+        "tls": {
+          "title": "TLS 1.3 encryption",
+          "body": "Your data is encrypted in transit using high industry standards."
+        }
+      }
+    },
+    "evidence": {
+      "label": "Evidence:",
+      "open": "Open",
+      "deleting": "Deleting...",
+      "delete": "Delete",
+      "confirmDelete": "Delete the uploaded evidence document?",
+      "deleteFailed": "Failed to delete evidence document.",
+      "deleted": "Evidence document deleted."
+    },
+    "profile": {
+      "title": "Company profile",
+      "fields": {
+        "officialName": "Official name",
+        "registrationId": "Registration ID",
+        "serviceType": "Service type",
+        "headquartersLocation": "Headquarters location",
+        "securityOfficerName": "Security officer name",
+        "securityOfficerEmail": "Security officer email",
+        "dpoName": "DPO name",
+        "dpoEmail": "DPO email"
+      },
+      "saving": "Saving...",
+      "save": "Save profile",
+      "messages": {
+        "updateFailed": "Failed to update profile.",
+        "updated": "Profile updated."
+      }
+    },
+    "importantMessage": "<strong>Important:</strong> AI-suggested answers appear as highlights. You must verify and confirm them in the questionnaire to complete your submission.",
+    "questionnaire": "Questionnaire",
+    "questionnaireWizard": {
+      "confirmDeleteEvidence": "Delete this uploaded evidence file?",
+      "errors": {
+        "deleteEvidenceFailed": "Failed to delete evidence.",
+        "selectStatus": "Select a status before saving.",
+        "addJustification": "Add a justification before saving.",
+        "saveAnswerFailed": "Failed to save answer.",
+        "unexpectedSave": "Unexpected error while saving. Please retry."
+      },
+      "status": {
+        "verified": "Verified",
+        "aiPreviewAvailable": "AI preview available",
+        "awaitingResponse": "Awaiting response"
+      },
+      "aiBanner": "AI suggestion - please review",
+      "aiInsightTitle": "AI audit insight",
+      "useAiSuggestion": "Use AI suggestion",
+      "fallbackFindings": "Based on your documents, this requirement appears to be met.",
+      "evidenceFromDocument": "Evidence from your document:",
+      "option": {
+        "compliant": "Compliant",
+        "nonCompliant": "Non-compliant",
+        "notApplicable": "Not applicable"
+      },
+      "justificationLabel": "Justification",
+      "justificationPlaceholder": "Explain why this status applies. You can edit AI-generated reasoning before saving.",
+      "justificationHint": "This text is editable and will be sanitized on save.",
+      "uploadEvidenceLabel": "Upload evidence document",
+      "uploadAccepted": "Accepted: PDF, JPG, PNG. Max 10MB.",
+      "selectedEvidence": "Selected evidence:",
+      "openSavedEvidence": "Open current saved evidence",
+      "delete": "Delete",
+      "saving": "Saving...",
+      "saveAndConfirm": "Save and confirm"
+    },
+    "questions": {
+      "q1": {
+        "text": "Does the vendor maintain a documented information security policy approved by management?",
+        "guidance": "Policy should cover roles, acceptable use, and review cadence."
+      },
+      "q2": { "text": "Is there a designated security officer or equivalent accountable for cybersecurity?" },
+      "q3": { "text": "Are cybersecurity risks assessed at least annually and after major changes?" },
+      "q4": { "text": "Is multi-factor authentication enforced for all administrative and remote access?" },
+      "q5": { "text": "Are least-privilege and role-based access controls applied to production systems?" },
+      "q6": { "text": "Is access reviewed periodically and revoked promptly on role change or offboarding?" },
+      "q7": { "text": "Is personal and sensitive data classified, with handling rules documented?" },
+      "q8": { "text": "Are data processing agreements and subprocessors documented and kept current?" },
+      "q9": { "text": "Is data encrypted in transit and at rest using industry-accepted algorithms?" },
+      "q10": { "text": "Are cryptographic keys generated, stored, and rotated according to a defined process?" },
+      "q11": { "text": "Is use of customer-managed keys or HSMs supported where required?" },
+      "q12": { "text": "Are security logs collected centrally with retention aligned to regulatory needs?" },
+      "q13": { "text": "Is 24/7 monitoring in place for critical services with defined escalation paths?" },
+      "q14": { "text": "Are vulnerability management and patch SLAs defined and evidenced?" },
+      "q15": { "text": "Does the vendor maintain an incident response plan with customer notification clauses?" },
+      "q16": { "text": "Are incident exercises or tabletop tests performed and improvements tracked?" },
+      "q17": { "text": "Are business continuity and disaster recovery plans tested with defined RTO/RPO?" },
+      "q18": { "text": "Is secure SDLC practiced (threat modeling, code review, dependency scanning)?" },
+      "q19": { "text": "Are third-party components and open-source licenses tracked and monitored?" },
+      "q20": { "text": "Are penetration tests or independent security assessments performed regularly?" }
+    },
+    "sessionExpired": {
+      "title": "Session expired",
+      "description": "Your temporary access window has ended. Please contact your admin to request a new access code.",
+      "returnToPortal": "Return to access portal"
+    }
+  },
   "assessment": {
     "page": {
       "notFound": {
@@ -278,6 +431,8 @@
     "pageDesc": "Search, invite, and open NIS2 assessment workspaces.",
     "metaTitle": "Vendors",
     "metaDesc": "Vendor assessments and NIS2-aligned workspaces. Data is served from the AVRA database.",
+    "vendorPortalLinkLabel": "Open vendor assessment portal",
+    "vendorPortalLinkHint": "Vendors enter their access code and password there.",
     "search": "Search vendors",
     "noActiveCode": "No active code",
     "expired": "Expired",

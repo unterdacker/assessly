@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authenticateVendorAccessCode } from "@/app/actions/vendor-auth";
 import { initialPortalActionState } from "@/lib/types/vendor-auth";
+import { LanguageToggle } from "@/components/language-toggle";
 
 export default function ExternalPortalPage() {
   const t = useTranslations();
@@ -17,6 +18,9 @@ export default function ExternalPortalPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-950">
+      <div className="fixed right-4 top-4 z-50">
+        <LanguageToggle />
+      </div>
       <div className="w-full max-w-md space-y-6 rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white">
           <ShieldCheck className="h-7 w-7" />
@@ -55,7 +59,7 @@ export default function ExternalPortalPage() {
 
           <div className="space-y-2">
             <label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Password
+              {t("Password")}
             </label>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
