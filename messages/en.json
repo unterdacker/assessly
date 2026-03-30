@@ -71,6 +71,7 @@
   "AssessmentLinkInvalid": "This assessment link does not match a vendor in your workspace.",
   "ReturnToVendors": "Return to vendor list",
   "LinkInactive": "Link Inactive",
+  "LinkExpiredAt": "This assessment link is no longer active. It expired on {expiry}.",
   "LinkExpiredMessage": "This assessment link has expired or is no longer valid. Please contact your buyer to request a new invitation.",
   "BackToVendors": "Back to vendors",
   "EditVendorInfo": "Edit Vendor Info",
@@ -90,6 +91,30 @@
   "SubmitAssessment": "Submit assessment",
   "Progress": "Progress",
   "Complete": "Complete",
+  "pdfUpload": {
+    "title": "Sovereign Document Audit",
+    "placeholder": "Drop security document here or click (Max. 20MB, PDF)",
+    "privacyNote": "🛡️ Privacy Guarantee: Analysis via Mistral AI (EU) or local LLM. No training, no data transfer to the USA.",
+    "consentLabel": "I confirm that this document is stored as confidential evidence and processed GDPR-compliant.",
+    "aiTooltip": "Analysis is performed in an isolated environment according to NIS2 standards.",
+    "privacyConsentRequired": "Privacy consent is required.",
+    "selectPdfBeforeSubmitting": "Please select a PDF file before submitting.",
+    "aiAuditFailed": "AI audit failed.",
+    "analysisComplete": "Analysis complete. Results saved.",
+    "choosePdf": "Choose PDF",
+    "runningAnalysis": "Running analysis...",
+    "runAiAudit": "Run AI Audit",
+    "rerunAudit": "Re-run AI Audit",
+    "viewStoredPdf": "View PDF",
+    "auditTrailLabel": "Audit trail",
+    "lastAuditedAt": "Last audited at: {timestamp}",
+    "notAuditedYet": "No AI audit has been run yet.",
+    "evidenceStoredBadge": "Stored",
+    "evidenceReadyBadge": "Ready",
+    "sizeUnavailable": "Size unavailable",
+    "pdfOnly": "Only PDF files are allowed.",
+    "fileTooLarge": "File is too large. Maximum allowed size is 20MB."
+  },
   "LocaleLandingReady": "AVRA is ready in your selected language.",
   "ExternalExitTitle": "You have exited the vendor portal",
   "ExternalExitDesc": "Your external assessment session has been closed. You can now safely close this tab.",
@@ -118,6 +143,7 @@
     "submitted": {
       "title": "Assessment submitted",
       "description": "Thank you for providing your compliance data. Your responses for <strong>{vendorName}</strong> have been securely shared with your buyer.",
+      "validUntil": "You can access this link until {expiry}.",
       "closeHint": "You can now close this window."
     },
     "welcome": {
@@ -139,6 +165,7 @@
       "progressComplete": "{progress}% complete",
       "progressVerified": "{filled} of {total} verified",
       "sessionExpiredBadge": "Session expired",
+      "linkExpiresAt": "Valid until: {expiry}",
       "expiresBadge": "Expires: {expiry}",
       "exitPortal": "Exit portal",
       "submitting": "Submitting...",
@@ -231,6 +258,12 @@
       "uploadAccepted": "Accepted: PDF, JPG, PNG. Max 10MB.",
       "selectedEvidence": "Selected evidence:",
       "openSavedEvidence": "Open current saved evidence",
+      "evidenceMeta": {
+        "uploadedAt": "Uploaded at",
+        "uploadedBy": "Uploaded by",
+        "size": "Size",
+        "unknown": "Unknown"
+      },
       "delete": "Delete",
       "saving": "Saving...",
       "saveAndConfirm": "Save and confirm"
@@ -264,6 +297,10 @@
       "title": "Session expired",
       "description": "Your temporary access window has ended. Please contact your admin to request a new access code.",
       "returnToPortal": "Return to access portal"
+    },
+    "submission": {
+      "deadlinePassed": "Submission deadline passed at {expiry}. Request a new link from your administrator.",
+      "genericFailed": "Submission failed. Please try again."
     }
   },
   "assessment": {
@@ -357,7 +394,17 @@
         "saving": "Saving...",
         "noReasoning": "No AI reasoning recorded for this question yet.",
         "evidenceFromDocument": "Evidence from document",
-        "viewSupplementalEvidencePdf": "View supplemental evidence PDF"
+        "viewSupplementalEvidencePdf": "View supplemental evidence PDF",
+        "answerEvidenceTitle": "Requirement Evidence",
+        "noEvidenceUploaded": "No evidence attached to this requirement yet.",
+        "uploadEvidence": "Upload Evidence",
+        "uploadingEvidence": "Uploading...",
+        "uploadFailed": "Failed to upload evidence.",
+        "viewEvidence": "Download / View",
+        "uploadedAt": "Uploaded at",
+        "uploadedBy": "Uploaded by",
+        "fileSize": "Size",
+        "unknown": "Unknown"
       },
       "emptyState": {
         "vendorEvidencePdf": "Vendor evidence (PDF)",
@@ -374,7 +421,17 @@
       "selectPdfBeforeSubmitting": "Please select a PDF file before submitting.",
       "aiAuditFailed": "AI audit failed.",
       "analysisComplete": "Analysis complete. Results saved.",
-      "privacyConsentLabel": "I understand that this document will be analyzed <strong>statelessly</strong> by AVRA's private AI engine for audit purposes only. The PDF itself is NOT stored permanently.",
+      "privacyConsentLabel": "I understand that this document will be analyzed by AVRA's private AI engine and stored with its audit record for <strong>long-term compliance traceability</strong>.",
+      "uploadEvidenceTitle": "Upload evidence",
+      "uploadEvidenceDescription": "Use one audit-ready PDF as the single source of truth for AI analysis and later verification.",
+      "uploadEvidenceEmptyTitle": "Upload Evidence",
+      "evidenceStoredBadge": "Stored",
+      "evidenceReadyBadge": "Ready",
+      "auditTrailLabel": "Audit trail",
+      "lastAuditedAt": "Last audited at: {timestamp}",
+      "notAuditedYet": "No AI audit has been run yet.",
+      "viewStoredPdf": "View PDF",
+      "rerunAudit": "Re-run AI Audit",
       "dragAndDropTitle": "Drag and drop a PDF file here",
       "orClickToSelect": "or click to select",
       "choosePdf": "Choose PDF",

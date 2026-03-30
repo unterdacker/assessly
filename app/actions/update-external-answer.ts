@@ -76,6 +76,32 @@ async function persistEvidenceFile(file: File): Promise<{ storageKey: string; di
   return { storageKey, displayName };
 }
 
+async function createEvidenceDocument(
+  assessmentId: string,
+  file: File,
+  storageKey: string,
+  displayName: string,
+  uploadedBy: string,
+) {
+  return (prisma as any).document.create({
+    data: {
+      assessmentId,
+      filename: displayName,
+      storagePath: path.join("question-evidence", storageKey).replace(/\\/g, "/"),
+      mimeType: file.type,
+      fileSize: file.size,
+      uploadedBy,
+    },
+    select: {
+      id: true,
+      filename: true,
+      fileSize: true,
+      uploadedAt: true,
+      uploadedBy: true,
+    },
+  });
+}
+
 /**
  * Explicit save endpoint for one external vendor answer.
  * Enforces server-side sanitization and secure evidence upload controls.
@@ -115,11 +141,20 @@ export async function updateExternalAnswer(formData: FormData) {
 
     let evidenceFileUrl: string | undefined;
     let evidenceFileName: string | undefined;
+    let evidenceDocumentId: string | undefined;
 
     if (maybeFile instanceof File && maybeFile.size > 0) {
       const persisted = await persistEvidenceFile(maybeFile);
       evidenceFileUrl = persisted.storageKey;
       evidenceFileName = persisted.displayName;
+      const evidenceDocument = await createEvidenceDocument(
+        assessment.id,
+        maybeFile,
+        persisted.storageKey,
+        persisted.displayName,
+        "external-vendor",
+      );
+      evidenceDocumentId = evidenceDocument.id;
     }
 
     const existing = await prisma.assessmentAnswer.findFirst({
@@ -137,6 +172,7 @@ export async function updateExternalAnswer(formData: FormData) {
             ? {
                 evidenceFileUrl,
                 evidenceFileName,
+                documentId: evidenceDocumentId,
               }
             : {}),
           verified: true,
@@ -151,6 +187,15 @@ export async function updateExternalAnswer(formData: FormData) {
           justificationText: true,
           evidenceFileName: true,
           evidenceFileUrl: true,
+          document: {
+            select: {
+              id: true,
+              filename: true,
+              fileSize: true,
+              uploadedAt: true,
+              uploadedBy: true,
+            },
+          },
         },
       });
 
@@ -160,6 +205,7 @@ export async function updateExternalAnswer(formData: FormData) {
           justificationText: existing.justificationText || null,
           evidenceFileName: existing.evidenceFileName || null,
           evidenceFileUrl: existing.evidenceFileUrl || null,
+          documentId: existing.documentId || null,
           verified: existing.verified ?? false,
         };
 
@@ -168,6 +214,7 @@ export async function updateExternalAnswer(formData: FormData) {
           justificationText: updated.justificationText || null,
           evidenceFileName: updated.evidenceFileName || null,
           evidenceFileUrl: updated.evidenceFileUrl || null,
+          documentId: updated.document?.id || null,
           verified: updated.verified ?? false,
         };
 
@@ -200,6 +247,7 @@ export async function updateExternalAnswer(formData: FormData) {
           justificationText,
           evidenceFileUrl,
           evidenceFileName,
+          documentId: evidenceDocumentId,
           verified: true,
           createdBy: "external-vendor"
         },
@@ -210,6 +258,15 @@ export async function updateExternalAnswer(formData: FormData) {
           justificationText: true,
           evidenceFileName: true,
           evidenceFileUrl: true,
+          document: {
+            select: {
+              id: true,
+              filename: true,
+              fileSize: true,
+              uploadedAt: true,
+              uploadedBy: true,
+            },
+          },
         },
       });
 
@@ -219,6 +276,7 @@ export async function updateExternalAnswer(formData: FormData) {
           justificationText: created.justificationText || null,
           evidenceFileName: created.evidenceFileName || null,
           evidenceFileUrl: created.evidenceFileUrl || null,
+          documentId: created.document?.id || null,
           verified: created.verified ?? false,
         };
 

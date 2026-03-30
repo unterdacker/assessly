@@ -41,6 +41,8 @@ export default async function AssessmentPage({ params }: PageProps) {
       initialAnswers={detail.answers}
       documentUrl={detail.documentUrl}
       documentFilename={detail.documentFilename}
+      documentFileSize={detail.documentFileSize}
+      lastAuditedAt={detail.lastAuditedAt}
       companyId={detail.companyId}
     />
   );

@@ -33,7 +33,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +41,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 type ExternalAssessmentWorkspaceProps = {
   vendorAssessment: VendorAssessment;
   assessmentId: string;
+  isSubmittedInitially?: boolean;
   questions: Question[];
   initialAnswers: AssessmentAnswer[];
   documentUrl: string | null;
@@ -63,6 +63,7 @@ type WorkspaceAnswer = AssessmentAnswer & {
 export function ExternalAssessmentWorkspace({
   vendorAssessment,
   assessmentId,
+  isSubmittedInitially = false,
   questions,
   initialAnswers,
   documentUrl,
@@ -78,7 +79,8 @@ export function ExternalAssessmentWorkspace({
     searchParams.get("view") === "workspace" ? "workspace" : "welcome"
   );
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isSubmitted, setIsSubmitted] = React.useState(false);
+  const [isSubmitted, setIsSubmitted] = React.useState(isSubmittedInitially);
+  const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [answers, setAnswers] = React.useState<WorkspaceAnswer[]>(initialAnswers);
   const [profileSaving, setProfileSaving] = React.useState(false);
   const [profileMessage, setProfileMessage] = React.useState<string | null>(null);
@@ -111,6 +113,10 @@ export function ExternalAssessmentWorkspace({
     setView(nextView);
   }, [searchParams]);
 
+  React.useEffect(() => {
+    setIsSubmitted(isSubmittedInitially);
+  }, [isSubmittedInitially]);
+
   const setViewWithUrl = React.useCallback((nextView: "welcome" | "workspace") => {
     setView(nextView);
     const params = new URLSearchParams(searchParams.toString());
@@ -124,16 +130,19 @@ export function ExternalAssessmentWorkspace({
   }, [pathname, router, searchParams]);
 
   const sessionExpiresMs = sessionExpiresAt ? new Date(sessionExpiresAt).getTime() : 0;
-  const sessionExpired = Boolean(sessionExpiresMs) && Date.now() >= sessionExpiresMs;
+  const nowMs = Date.now();
+  const msUntilExpiry = sessionExpiresMs ? sessionExpiresMs - nowMs : null;
+  const sessionExpired = msUntilExpiry !== null ? msUntilExpiry <= 0 : false;
+  const expiryWithinOneHour = msUntilExpiry !== null && msUntilExpiry > 0 && msUntilExpiry <= 60 * 60 * 1000;
+  const expiryWithinTenMinutes = msUntilExpiry !== null && msUntilExpiry > 0 && msUntilExpiry <= 10 * 60 * 1000;
 
   const sessionExpiryLabel = sessionExpiresAt
-    ? new Intl.DateTimeFormat("en-GB", {
+    ? new Intl.DateTimeFormat(undefined, {
         day: "2-digit",
         month: "short",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
-        hour12: false,
       }).format(new Date(sessionExpiresAt))
     : null;
 
@@ -150,13 +159,30 @@ export function ExternalAssessmentWorkspace({
     if (!isComplete) return;
     
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
-      const result = await submitExternalAssessment(vendorAssessment.id, assessmentId);
+      const result = await submitExternalAssessment({
+        vendorId: vendorAssessment.id,
+        assessmentId,
+        token,
+      });
       if (result.ok) {
         setIsSubmitted(true);
+      } else if (result.code === "DEADLINE_PASSED" && result.expiresAt) {
+        const exactExpiry = new Intl.DateTimeFormat(undefined, {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }).format(new Date(result.expiresAt));
+        setSubmitError(t("submission.deadlinePassed", { expiry: exactExpiry }));
+      } else {
+        setSubmitError(result.error || t("submission.genericFailed"));
       }
     } catch (err) {
       console.error("Submission error:", err);
+      setSubmitError(t("submission.genericFailed"));
     } finally {
       setIsSubmitting(false);
     }
@@ -221,6 +247,11 @@ export function ExternalAssessmentWorkspace({
                 strong: (chunks) => <span className="font-semibold text-indigo-600 dark:text-indigo-400">{chunks}</span>,
               })}
             </p>
+            {sessionExpiryLabel && (
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {t("submitted.validUntil", { expiry: sessionExpiryLabel })}
+              </p>
+            )}
           </div>
           <div className="pt-4">
             <p className="text-xs text-slate-400">{t("submitted.closeHint")}</p>
@@ -334,11 +365,15 @@ export function ExternalAssessmentWorkspace({
                     "hidden rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wider lg:inline-flex",
                     sessionExpired
                       ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-                      : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                      : expiryWithinTenMinutes
+                        ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                        : expiryWithinOneHour
+                          ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                          : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                   )}>
                     {sessionExpired
                       ? t("header.sessionExpiredBadge")
-                      : t("header.expiresBadge", { expiry: sessionExpiryLabel })}
+                      : t("header.linkExpiresAt", { expiry: sessionExpiryLabel })}
                   </span>
                 )}
                 <Button 
@@ -370,6 +405,11 @@ export function ExternalAssessmentWorkspace({
           
           <div className="mt-3">
             <Progress value={progressPercent} className="h-1 w-full bg-slate-100 dark:bg-slate-800" />
+            {submitError && (
+              <p className="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+                {submitError}
+              </p>
+            )}
           </div>
         </div>
       </header>
@@ -451,7 +491,14 @@ export function ExternalAssessmentWorkspace({
               })}
             </p>
             
-            <PdfUploadZone vendorId={vendorAssessment.id} isAdminView={false} />
+            <PdfUploadZone
+              vendorId={vendorAssessment.id}
+              isAdminView={false}
+              assessmentId={assessmentId}
+              storedDocumentFilename={localDocumentFilename}
+              documentUrl={localDocumentUrl}
+              lastAuditedAt={vendorAssessment.updatedAt}
+            />
             
             {localDocumentUrl && (
               <div className="mt-4 flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950">

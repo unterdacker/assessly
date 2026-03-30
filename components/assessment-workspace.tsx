@@ -24,6 +24,8 @@ type AssessmentWorkspaceProps = {
   initialAnswers: AssessmentAnswer[];
   documentUrl: string | null;
   documentFilename: string | null;
+  documentFileSize: number | null;
+  lastAuditedAt: string | null;
 };
 
 export function AssessmentWorkspace({
@@ -33,6 +35,8 @@ export function AssessmentWorkspace({
   initialAnswers,
   documentUrl,
   documentFilename,
+  documentFileSize,
+  lastAuditedAt,
 }: AssessmentWorkspaceProps) {
   const t = useTranslations("assessment.workspace");
   const insightLines = buildVendorAssessmentInsightLines(vendorAssessment);
@@ -108,22 +112,17 @@ export function AssessmentWorkspace({
         </div>
 
         <div className="space-y-4 lg:col-span-5">
-          <section className="max-h-[600px] overflow-y-auto rounded-lg border border-slate-200 bg-card p-3 dark:border-slate-800">
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("aiDocumentAudit")}</h2>
-            <PdfUploadZone vendorId={vendorAssessment.id} isAdminView />
-            {documentUrl && (
-              <div className="mt-2 flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 dark:border-slate-700 dark:bg-slate-900">
-                <span className="flex-1 truncate text-[11px] text-muted-foreground">
-                  {t("evidenceOnFile")} <span className="font-medium text-foreground">{documentFilename}</span>
-                </span>
-                <Button variant="outline" size="sm" className="h-7 shrink-0" asChild>
-                  <a href={documentUrl} target="_blank" rel="noopener noreferrer">
-                    {t("viewPdf")}
-                  </a>
-                </Button>
-              </div>
-            )}
-          </section>
+          <div className="max-h-[600px] overflow-y-auto">
+            <PdfUploadZone
+              vendorId={vendorAssessment.id}
+              isAdminView
+              assessmentId={assessmentId}
+              storedDocumentFilename={documentFilename}
+              documentUrl={documentUrl}
+              storedDocumentSize={documentFileSize}
+              lastAuditedAt={lastAuditedAt}
+            />
+          </div>
 
           <VendorAssessmentSidePanels
             insightLines={insightLines}

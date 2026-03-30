@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useOptimistic, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   FileText,
@@ -21,9 +22,11 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { overrideAssessmentAnswer } from "@/app/actions/update-answer-override";
+import { uploadInternalAnswerEvidence } from "@/app/actions/upload-answer-evidence";
 import { nis2Questions } from "@/lib/nis2-questions";
 import { cn } from "@/lib/utils";
 import type { AssessmentAnswer } from "@prisma/client";
+import { EvidenceViewer } from "@/components/evidence-viewer";
 
 /* ─── Inline Evidence Form ────────────────────────────────────────────────── */
 
@@ -178,14 +181,28 @@ type AiInsightCardProps = {
   assessmentId: string;
   selectedQuestion: (typeof nis2Questions)[number] | undefined;
   selectedQuestionText: string | undefined;
-  selectedAnswer: AssessmentAnswer | undefined;
+  selectedAnswer:
+    | (AssessmentAnswer & {
+        document?: {
+          id: string;
+          filename: string;
+          fileSize: number;
+          uploadedAt: string | Date;
+          uploadedBy: string;
+        } | null;
+      })
+    | undefined;
   t: ReturnType<typeof useTranslations>;
 };
 
 function AiInsightCard({ assessmentId, selectedQuestion, selectedQuestionText, selectedAnswer, t }: AiInsightCardProps) {
+  const router = useRouter();
   // Which override button was clicked ("COMPLIANT" | "NON_COMPLIANT" | null)
   const [activeOverride, setActiveOverride] = useState<"COMPLIANT" | "NON_COMPLIANT" | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isUploadingEvidence, setIsUploadingEvidence] = useState(false);
+  const evidenceInputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
 
   // Optimistic status — shown instantly before server confirms
@@ -195,6 +212,37 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedQuestionText, s
 
   const isAnswered = !!selectedAnswer;
   const evidenceSnippet = (selectedAnswer as { evidenceSnippet?: string | null } | undefined)?.evidenceSnippet;
+
+  async function handleUploadEvidenceFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    if (!file || !selectedQuestion) return;
+
+    setUploadError(null);
+    setIsUploadingEvidence(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("assessmentId", assessmentId);
+      formData.append("questionId", selectedQuestion.id);
+      formData.append("evidenceFile", file);
+
+      const result = await uploadInternalAnswerEvidence(formData);
+      if (!result.ok) {
+        setUploadError(result.error || t("aiInsight.uploadFailed"));
+        return;
+      }
+
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t("aiInsight.uploadFailed");
+      setUploadError(message);
+    } finally {
+      setIsUploadingEvidence(false);
+      if (evidenceInputRef.current) {
+        evidenceInputRef.current.value = "";
+      }
+    }
+  }
 
   async function handleSaveOverride(
     notes: string,
@@ -292,6 +340,56 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedQuestionText, s
             <p className="italic">&quot;{evidenceSnippet}&quot;</p>
           </div>
         )}
+
+        {/* Shared evidence viewer/upload for the currently selected requirement */}
+        <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/40">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            {t("aiInsight.answerEvidenceTitle")}
+          </p>
+
+          {selectedAnswer?.id && selectedAnswer?.evidenceFileUrl ? (
+            <EvidenceViewer
+              answerId={selectedAnswer.id}
+              filename={selectedAnswer.evidenceFileName || selectedAnswer.document?.filename || "evidence-file"}
+              fileSize={selectedAnswer.document?.fileSize ?? null}
+              uploadedAt={selectedAnswer.document?.uploadedAt ?? null}
+              uploadedBy={selectedAnswer.document?.uploadedBy ?? null}
+              viewLabel={t("aiInsight.viewEvidence")}
+              uploadedAtLabel={t("aiInsight.uploadedAt")}
+              uploadedByLabel={t("aiInsight.uploadedBy")}
+              sizeLabel={t("aiInsight.fileSize")}
+              unknownLabel={t("aiInsight.unknown")}
+            />
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              {t("aiInsight.noEvidenceUploaded")}
+            </p>
+          )}
+
+          <div className="flex items-center gap-2">
+            <input
+              ref={evidenceInputRef}
+              type="file"
+              accept="application/pdf,image/jpeg,image/png"
+              className="hidden"
+              onChange={handleUploadEvidenceFile}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              disabled={isUploadingEvidence || !selectedQuestion}
+              onClick={() => evidenceInputRef.current?.click()}
+            >
+              {isUploadingEvidence ? t("aiInsight.uploadingEvidence") : t("aiInsight.uploadEvidence")}
+            </Button>
+          </div>
+
+          {uploadError && (
+            <p className="text-xs text-red-500">{uploadError}</p>
+          )}
+        </div>
 
         {/* Link to supplemental evidence if present */}
         {selectedAnswer?.evidenceUrl && (
