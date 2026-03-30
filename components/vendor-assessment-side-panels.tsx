@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useOptimistic, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import {
   FileText,
   Sparkles,
@@ -31,9 +32,10 @@ type EvidenceFormProps = {
   onSave: (notes: string, pdfBase64: string | null, pdfFilename: string | null) => Promise<void>;
   onCancel: () => void;
   isSaving: boolean;
+  t: ReturnType<typeof useTranslations>;
 };
 
-function EvidenceForm({ targetStatus, onSave, onCancel, isSaving }: EvidenceFormProps) {
+function EvidenceForm({ targetStatus, onSave, onCancel, isSaving, t }: EvidenceFormProps) {
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -54,7 +56,7 @@ function EvidenceForm({ targetStatus, onSave, onCancel, isSaving }: EvidenceForm
     const f = e.target.files?.[0] ?? null;
     setFileError(null);
     if (f && f.type !== "application/pdf") {
-      setFileError("Only PDF files are accepted.");
+      setFileError(t("manualOverride.fileOnlyPdf"));
       return;
     }
     setFile(f);
@@ -64,7 +66,7 @@ function EvidenceForm({ targetStatus, onSave, onCancel, isSaving }: EvidenceForm
     <form
       onSubmit={handleSave}
       className="mt-3 space-y-3 rounded-lg border border-slate-700 bg-slate-900 p-4"
-      aria-label="Manual override evidence form"
+      aria-label={t("manualOverride.formAria")}
     >
       {/* Status badge */}
       <div className="flex items-center gap-2">
@@ -74,21 +76,23 @@ function EvidenceForm({ targetStatus, onSave, onCancel, isSaving }: EvidenceForm
           <XCircle className="h-4 w-4 shrink-0 text-red-400" aria-hidden />
         )}
         <span className={cn("text-xs font-semibold", isCompliant ? "text-emerald-400" : "text-red-400")}>
-          Marking as {isCompliant ? "Compliant" : "Non-compliant"}
+          {t("manualOverride.markingAs", {
+            status: isCompliant ? t("status.compliant") : t("status.nonCompliant"),
+          })}
         </span>
       </div>
 
       {/* Justification — required */}
       <div className="space-y-1">
         <label htmlFor="override-notes" className="text-xs font-medium text-slate-300">
-          Justification / Reasoning{" "}
+          {t("manualOverride.justificationLabel")}{" "}
           <span className="text-red-400" aria-hidden="true">*</span>
         </label>
         <textarea
           id="override-notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Explain why you are overriding this answer…"
+          placeholder={t("manualOverride.justificationPlaceholder")}
           rows={4}
           required
           className={cn(
@@ -99,15 +103,15 @@ function EvidenceForm({ targetStatus, onSave, onCancel, isSaving }: EvidenceForm
           )}
         />
         <p className="text-xs text-slate-500">
-          Required. Stored permanently in the audit trail.
+          {t("manualOverride.justificationHelp")}
         </p>
       </div>
 
       {/* Supplemental evidence PDF — optional */}
       <div className="space-y-1">
         <p className="text-xs font-medium text-slate-300">
-          Supplemental Evidence PDF{" "}
-          <span className="text-slate-500 font-normal">(optional)</span>
+          {t("manualOverride.supplementalEvidenceLabel")}{" "}
+          <span className="text-slate-500 font-normal">({t("manualOverride.optional")})</span>
         </p>
         <button
           type="button"
@@ -118,11 +122,11 @@ function EvidenceForm({ targetStatus, onSave, onCancel, isSaving }: EvidenceForm
             "hover:border-slate-500 hover:bg-slate-900 transition-colors",
             fileError && "border-red-700",
           )}
-          aria-label="Attach supplemental evidence PDF"
+          aria-label={t("manualOverride.attachPdfAria")}
         >
           <Upload className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
           <span className="text-xs text-slate-400 truncate">
-            {file ? file.name : "Click to attach a PDF…"}
+            {file ? file.name : t("manualOverride.attachPdfPlaceholder")}
           </span>
           <input
             ref={fileRef}
@@ -147,7 +151,7 @@ function EvidenceForm({ targetStatus, onSave, onCancel, isSaving }: EvidenceForm
           onClick={onCancel}
           disabled={isSaving}
         >
-          Cancel
+          {t("manualOverride.cancel")}
         </Button>
         <Button
           type="submit"
@@ -161,7 +165,7 @@ function EvidenceForm({ targetStatus, onSave, onCancel, isSaving }: EvidenceForm
           )}
         >
           {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />}
-          {isSaving ? "Saving…" : `Save Override`}
+          {isSaving ? t("manualOverride.saving") : t("manualOverride.saveOverride")}
         </Button>
       </div>
     </form>
@@ -174,9 +178,10 @@ type AiInsightCardProps = {
   assessmentId: string;
   selectedQuestion: (typeof nis2Questions)[number] | undefined;
   selectedAnswer: AssessmentAnswer | undefined;
+  t: ReturnType<typeof useTranslations>;
 };
 
-function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer }: AiInsightCardProps) {
+function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer, t }: AiInsightCardProps) {
   // Which override button was clicked ("COMPLIANT" | "NON_COMPLIANT" | null)
   const [activeOverride, setActiveOverride] = useState<"COMPLIANT" | "NON_COMPLIANT" | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -233,10 +238,10 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer }: AiIns
       <CardHeader className="border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/40">
         <CardTitle className="flex items-center gap-2 text-base">
           <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" aria-hidden />
-          AI Insight
+          {t("aiInsight.title")}
         </CardTitle>
         <p className="text-sm font-normal text-muted-foreground">
-          Reviewing: {selectedQuestion?.text}
+          {t("aiInsight.reviewing", { question: selectedQuestion?.text ?? "" })}
         </p>
       </CardHeader>
 
@@ -260,10 +265,10 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer }: AiIns
               <XCircle className="h-3.5 w-3.5" aria-hidden />
             )}
             {isPending
-              ? "Saving…"
+              ? t("aiInsight.saving")
               : displayStatus === "COMPLIANT"
-              ? "Compliant"
-              : "Non-compliant"}
+              ? t("status.compliant")
+              : t("status.nonCompliant")}
           </div>
         )}
 
@@ -273,7 +278,7 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer }: AiIns
             <p className="whitespace-pre-wrap leading-relaxed">{selectedAnswer.findings}</p>
           ) : (
             <p className="text-muted-foreground italic">
-              No AI reasoning recorded for this question yet.
+              {t("aiInsight.noReasoning")}
             </p>
           )}
         </div>
@@ -281,7 +286,7 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer }: AiIns
         {evidenceSnippet && (
           <div className="rounded-md border border-indigo-200 bg-indigo-50/70 p-3 text-xs leading-relaxed text-slate-700 shadow-sm dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-slate-300">
             <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Evidence from document
+              {t("aiInsight.evidenceFromDocument")}
             </p>
             <p className="italic">&quot;{evidenceSnippet}&quot;</p>
           </div>
@@ -296,7 +301,7 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer }: AiIns
             className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:underline"
           >
             <FileText className="h-3.5 w-3.5" aria-hidden />
-            View supplemental evidence PDF
+            {t("aiInsight.viewSupplementalEvidencePdf")}
             <ExternalLink className="h-3 w-3" aria-hidden />
           </a>
         )}
@@ -308,6 +313,7 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer }: AiIns
             onSave={handleSaveOverride}
             onCancel={() => { setActiveOverride(null); setSaveError(null); }}
             isSaving={isPending}
+            t={t}
           />
         )}
 
@@ -321,10 +327,10 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer }: AiIns
 
       <CardFooter className="flex flex-col gap-2 border-t border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/40">
         <p className="text-xs font-semibold text-slate-500 tracking-wider uppercase w-full">
-          Manual Override
+          {t("manualOverride.title")}
           {isAnswered && (
             <span className="ml-1 normal-case font-normal text-amber-600 dark:text-amber-400">
-              — justification required
+              {t("manualOverride.justificationRequired")}
             </span>
           )}
         </p>
@@ -343,7 +349,7 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer }: AiIns
             disabled={isPending}
           >
             <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-            Mark Compliant
+            {t("manualOverride.markCompliant")}
           </Button>
           <Button
             variant="outline"
@@ -359,7 +365,7 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer }: AiIns
             disabled={isPending}
           >
             <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
-            Mark Non-compliant
+            {t("manualOverride.markNonCompliant")}
           </Button>
         </div>
       </CardFooter>
@@ -382,6 +388,7 @@ export function VendorAssessmentSidePanels({
   answers,
   selectedQuestionId,
 }: VendorAssessmentSidePanelsProps) {
+  const t = useTranslations("assessment.sidePanels");
   const selectedAnswer = selectedQuestionId
     ? answers.find((a) => a.questionId === selectedQuestionId)
     : null;
@@ -397,23 +404,24 @@ export function VendorAssessmentSidePanels({
           assessmentId={assessmentId}
           selectedQuestion={selectedQuestion ?? undefined}
           selectedAnswer={selectedAnswer ?? undefined}
+          t={t}
         />
       ) : (
         <Card>
           <CardHeader className="border-b border-slate-100 dark:border-slate-800">
             <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="h-4 w-4 text-indigo-600 dark:text-indigo-400" aria-hidden />
-              Vendor evidence (PDF)
+              {t("emptyState.vendorEvidencePdf")}
             </CardTitle>
             <p className="text-sm font-normal text-muted-foreground">
-              Select a question from the questionnaire to view AI insights.
+              {t("emptyState.selectQuestion")}
             </p>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="flex aspect-[4/3] flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50/80 text-center dark:border-slate-700 dark:bg-slate-900/40">
               <FileText className="mb-2 h-10 w-10 text-slate-400" aria-hidden />
               <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Awaiting Selection
+                {t("emptyState.awaitingSelection")}
               </p>
             </div>
           </CardContent>
@@ -424,11 +432,11 @@ export function VendorAssessmentSidePanels({
         <CardHeader className="border-b border-slate-100 dark:border-slate-800">
           <CardTitle className="flex items-center gap-2 text-base">
             <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" aria-hidden />
-            Workspace Summary
+            {t("summary.title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 pt-6">
-          <ul className="m-0 list-none space-y-3 p-0" aria-label="Assessment insights">
+          <ul className="m-0 list-none space-y-3 p-0" aria-label={t("summary.ariaLabel")}>
             {insightLines.map((line, i) => (
               <li
                 key={i}

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { 
   MapPin, 
   ShieldCheck, 
@@ -11,9 +12,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Copy,
-  Check,
   SendHorizonal,
-  Clock,
   ShieldAlert,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,6 +35,8 @@ interface VendorDetailsCardProps {
  * Provides granular "Missing Data" warnings (red/yellow indicators) for auditors.
  */
 export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetailsCardProps) {
+  const t = useTranslations("assessment.details");
+
   const v = vendorAssessment.vendor;
   const [hasCopiedCode, setHasCopiedCode] = React.useState(false);
 
@@ -44,10 +45,10 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
   const hasActiveCode = Boolean(vendorAssessment.isCodeActive && vendorAssessment.accessCode);
 
   const formatAccessCodeExpiry = (value: string | null) => {
-    if (!value) return "No active code";
+    if (!value) return t("noActiveCode");
     const expiresAt = new Date(value);
-    if (!Number.isFinite(expiresAt.getTime())) return "No active code";
-    if (expiresAt.getTime() <= Date.now()) return "Expired";
+    if (!Number.isFinite(expiresAt.getTime())) return t("noActiveCode");
+    if (expiresAt.getTime() <= Date.now()) return t("expired");
 
     const formatted = new Intl.DateTimeFormat("en-GB", {
       day: "2-digit",
@@ -58,7 +59,7 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
       hour12: false,
     }).format(expiresAt);
 
-    return `Expires: ${formatted}`;
+    return `${t("expires")}: ${formatted}`;
   };
 
   const handleCopyCodeOnly = async () => {
@@ -68,7 +69,7 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
       setHasCopiedCode(true);
       window.setTimeout(() => setHasCopiedCode(false), 1200);
     } catch {
-      window.alert("Copy failed. Please copy the code manually.");
+      window.alert(t("copyFailed"));
     }
   };
 
@@ -90,14 +91,14 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
       return (
         <div className="flex items-center gap-2 text-sm italic text-red-500/70 dark:text-red-400/50">
           <AlertCircle className="h-3 w-3 fill-red-500/20" />
-          Missing {label} Contact
+          {t("missingContact", { label: label.toLowerCase() })}
         </div>
       );
     }
 
     return (
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-slate-700 dark:text-slate-200">
-        <span>{name || <span className="text-amber-500/70 dark:text-amber-400/50">Missing Name ⚠️</span>}</span>
+        <span>{name || <span className="text-amber-500/70 dark:text-amber-400/50">{t("missingName")} ⚠️</span>}</span>
         {email ? (
           <a 
             href={`mailto:${email}`}
@@ -108,7 +109,7 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
           </a>
         ) : (
           <span className="text-xs text-amber-500/70 dark:text-amber-400/50 italic underline decoration-dotted">
-            Missing Email ⚠️
+            {t("missingEmail")} ⚠️
           </span>
         )}
       </div>
@@ -145,12 +146,12 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
               {isComplete ? (
                 <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  Dossier Fully Verified
+                  {t("dossierVerified")}
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                    Dossier {progressPercent}% complete
+                    {t("dossierComplete", { progress: progressPercent })}
                   </span>
                   <div className="h-1 w-24 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                     <div className="h-full bg-indigo-500" style={{ width: `${progressPercent}%` }} />
@@ -170,14 +171,14 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
                       <span>{vendorAssessment.accessCode}</span>
                       <button
                         type="button"
-                        aria-label={`Copy access code for ${vendorAssessment.name}`}
+                        aria-label={t("copyAccessCodeAria", { vendorName: vendorAssessment.name })}
                         onClick={handleCopyCodeOnly}
                         className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
                       >
                         <Copy className="h-3.5 w-3.5" />
                       </button>
                       {hasCopiedCode && (
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Copied</span>
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400">{t("copied")}</span>
                       )}
                     </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -186,8 +187,8 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
                   </>
                 ) : (
                   <>
-                    <span className="text-xs text-muted-foreground">No active code</span>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Generate a code to invite this vendor.</p>
+                    <span className="text-xs text-muted-foreground">{t("noActiveCode")}</span>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("generateCodeInvite")}</p>
                   </>
                 )}
               </div>
@@ -196,7 +197,7 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
               {vendorAssessment.inviteSentAt ? (
                 <div className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
                   <Mail className="h-3 w-3 shrink-0" />
-                  Invite sent {new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(vendorAssessment.inviteSentAt))}
+                  {t("inviteSent")} {new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(vendorAssessment.inviteSentAt))}
                 </div>
               ) : null}
 
@@ -205,12 +206,12 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
                 vendorAssessment.isFirstLogin ? (
                   <div className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:border-amber-800/40 dark:bg-amber-900/20 dark:text-amber-400">
                     <ShieldAlert className="h-3 w-3 shrink-0" />
-                    Password: Pending change
+                    {t("passwordPending")}
                   </div>
                 ) : (
                   <div className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-900/20 dark:text-emerald-400">
                     <ShieldCheck className="h-3 w-3 shrink-0" />
-                    Password: Secured
+                    {t("passwordSecured")}
                   </div>
                 )
               )}
@@ -228,7 +229,7 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
                   className="h-9 px-4 gap-1.5"
                 >
                   <SendHorizonal className="h-3.5 w-3.5" />
-                  Send Secure Invite
+                  {t("sendSecureInvite")}
                 </Button>
               }
             />
@@ -244,7 +245,7 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
                   className={cn("shrink-0 h-9 px-4", !isComplete && "bg-indigo-600 hover:bg-indigo-700")}
                 >
                   <Edit3 className="mr-2 h-3.5 w-3.5" />
-                  {isComplete ? "Edit Profile" : "Complete Profile"}
+                  {isComplete ? t("editProfile") : t("completeProfile")}
                 </Button>
               }
             />
@@ -258,14 +259,14 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 <MapPin className="h-3 w-3" />
-                Headquarters Location
+                {t("headquartersLocation")}
               </div>
               {v?.headquartersLocation ? (
                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{v.headquartersLocation}</p>
               ) : (
                 <div className="flex items-center gap-2 text-sm italic text-amber-500/70 dark:text-amber-400/50">
                   <AlertCircle className="h-3 w-3 fill-amber-500/20" />
-                  Missing Location
+                  {t("missingLocation")}
                 </div>
               )}
             </div>
@@ -275,7 +276,7 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 <Fingerprint className="h-3 w-3" />
-                Registration (VAT/ID)
+                {t("registration")}
               </div>
               {v?.registrationId ? (
                 <Badge variant="outline" className="h-6 font-mono text-xs text-slate-700 dark:text-slate-300">
@@ -284,7 +285,7 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
               ) : (
                 <div className="flex items-center gap-2 text-sm italic text-red-500/70 dark:text-red-400/50">
                   <AlertCircle className="h-3 w-3 fill-red-500/20" />
-                  Missing ID
+                  {t("missingId")}
                 </div>
               )}
             </div>
@@ -295,9 +296,9 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 <ShieldCheck className="h-3 w-3" />
-                Security Contact
+                {t("securityContact")}
               </div>
-              {renderContact(v?.securityOfficerName || undefined, v?.securityOfficerEmail || undefined, "Security")}
+              {renderContact(v?.securityOfficerName || undefined, v?.securityOfficerEmail || undefined, t("securityContact"))}
             </div>
           </div>
 
@@ -305,9 +306,9 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 <UserRoundCheck className="h-3 w-3" />
-                Privacy / DPO
+                {t("privacyDpo")}
               </div>
-              {renderContact(v?.dpoName || undefined, v?.dpoEmail || undefined, "DPO")}
+              {renderContact(v?.dpoName || undefined, v?.dpoEmail || undefined, t("privacyDpo"))}
             </div>
           </div>
         </div>

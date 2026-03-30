@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { ShieldCheck, KeyRound, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { authenticateVendorAccessCode } from "@/app/actions/vendor-auth";
 import { initialPortalActionState } from "@/lib/types/vendor-auth";
 
 export default function ExternalPortalPage() {
+  const t = useTranslations();
   const [state, formAction, isPending] = React.useActionState(
     authenticateVendorAccessCode,
     initialPortalActionState,
@@ -22,18 +24,18 @@ export default function ExternalPortalPage() {
 
         <div className="space-y-2 text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
-            AVRA Vendor Portal
+            {t("AvraVendorPortal")}
           </p>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Secure Assessment Access</h1>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">{t("SecureAssessmentAccess")}</h1>
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            Enter your access code and temporary password to open your isolated NIS2 assessment workspace.
+            {t("ExternalPortalDesc")}
           </p>
         </div>
 
         <form action={formAction} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="accessCode" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Enter your 8-character Access Code
+              {t("EnterAccessCode")}
             </label>
             <div className="relative">
               <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -62,7 +64,7 @@ export default function ExternalPortalPage() {
                 name="password"
                 type="password"
                 autoComplete="current-password"
-                placeholder="Enter your password"
+                placeholder={t("EnterYourPassword")}
                 className="pl-9"
                 required
               />
@@ -76,7 +78,7 @@ export default function ExternalPortalPage() {
           )}
 
           <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? "Checking..." : "Secure Access"}
+            {isPending ? t("Checking") : t("SecureAccess")}
           </Button>
         </form>
       </div>

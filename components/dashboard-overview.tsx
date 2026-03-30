@@ -15,10 +15,32 @@ import { cn } from "@/lib/utils";
 
 export type DashboardOverviewProps = {
   vendorAssessments: VendorAssessment[];
+  translations: {
+    Dashboard: string;
+    DashboardDesc: string;
+    SupplyChainRiskScore: string;
+    SupplyChainRiskScoreDesc: string;
+    Pending: string;
+    AwaitingVendorResponse: string;
+    Incomplete: string;
+    QuestionnaireUnderway: string;
+    Completed: string;
+    AssessmentsClosed: string;
+    ManageVendors: string;
+    ElevatedAttentionRecommended: string;
+    MonitorAndRemediateGaps: string;
+    WithinAcceptableBand: string;
+    TrustAndCompliance: string;
+    TrustComplianceDesc: string;
+    RiskColoring: string;
+    AssessmentWorkspace: string;
+    InviteNewVendors: string;
+  };
 };
 
 export function DashboardOverview({
   vendorAssessments,
+  translations,
 }: DashboardOverviewProps) {
   const score = supplyChainRiskScore(vendorAssessments);
   const pending = countByStatus(vendorAssessments, "pending");
@@ -27,22 +49,22 @@ export function DashboardOverview({
 
   const tiles = [
     {
-      label: "Pending",
+      label: translations.Pending,
       value: pending,
       icon: Mail,
-      hint: "Awaiting vendor response",
+      hint: translations.AwaitingVendorResponse,
     },
     {
-      label: "Incomplete",
+      label: translations.Incomplete,
       value: inProgress,
       icon: ClipboardList,
-      hint: "Questionnaire underway",
+      hint: translations.QuestionnaireUnderway,
     },
     {
-      label: "Completed",
+      label: translations.Completed,
       value: completed,
       icon: UserCheck,
-      hint: "Assessments closed",
+      hint: translations.AssessmentsClosed,
     },
   ] as const;
 
@@ -51,24 +73,23 @@ export function DashboardOverview({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
-            Dashboard
+            {translations.Dashboard}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Third-party risk posture overview for NIS2-aligned oversight.
+            {translations.DashboardDesc}
           </p>
         </div>
         <Button variant="secondary" asChild className="w-full sm:w-auto">
-          <Link href="/vendors">Manage vendors</Link>
+          <Link href="/vendors">{translations.ManageVendors}</Link>
         </Button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-1">
           <CardHeader>
-            <CardTitle className="text-base">Supply chain risk score</CardTitle>
+            <CardTitle className="text-base">{translations.SupplyChainRiskScore}</CardTitle>
             <p className="text-sm font-normal text-muted-foreground">
-              Aggregated from vendor compliance scores (0–100). Higher reflects
-              stronger collective posture.
+              {translations.SupplyChainRiskScoreDesc}
             </p>
           </CardHeader>
           <CardContent className="flex flex-col items-center pb-8">
@@ -79,9 +100,9 @@ export function DashboardOverview({
                 scoreGaugeColor(score),
               )}
             >
-              {score < 40 && "Elevated attention recommended"}
-              {score >= 40 && score <= 70 && "Monitor and remediate gaps"}
-              {score > 70 && "Within acceptable band — maintain reviews"}
+              {score < 40 && translations.ElevatedAttentionRecommended}
+              {score >= 40 && score <= 70 && translations.MonitorAndRemediateGaps}
+              {score > 70 && translations.WithinAcceptableBand}
             </p>
           </CardContent>
         </Card>
@@ -106,17 +127,16 @@ export function DashboardOverview({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Trust & compliance</CardTitle>
+          <CardTitle className="text-base">{translations.TrustAndCompliance}</CardTitle>
           <p className="text-sm font-normal text-muted-foreground">
-            AVRA helps security officers evidence due diligence across the digital
-            supply chain. Figures on this page are read from your AVRA database.
+            {translations.TrustComplianceDesc}
           </p>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           <ul className="list-inside list-disc space-y-1">
-            <li>Risk coloring: red below 40, amber 40–70, green above 70.</li>
-            <li>Assessment workspace pairs the NIS2 questionnaire with evidence review.</li>
-            <li>Invite new vendors from the vendor list; changes persist to the database.</li>
+            <li>{translations.RiskColoring}</li>
+            <li>{translations.AssessmentWorkspace}</li>
+            <li>{translations.InviteNewVendors}</li>
           </ul>
         </CardContent>
       </Card>

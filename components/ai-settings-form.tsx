@@ -17,7 +17,20 @@ interface Company {
   localAiEndpoint: string | null;
 }
 
-export function AiSettingsForm({ company, companyId }: { company: Company; companyId: string }) {
+interface Translations {
+  AIProviderConfiguration: string;
+  SelectAIProvider: string;
+  MistralAI: string;
+  LocalServer: string;
+  MistralAPIKey: string;
+  EnterMistralAPIKey: string;
+  LocalAIEndpoint: string;
+  LocalAIEndpointPlaceholder: string;
+  SaveConfiguration: string;
+  SettingsUpdatedSuccess: string;
+}
+
+export function AiSettingsForm({ company, companyId, translations }: { company: Company; companyId: string; translations: Translations }) {
   const [aiProvider, setAiProvider] = useState(company.aiProvider);
 
   const [state, formAction] = useActionState(updateAiSettings, null);
@@ -27,10 +40,10 @@ export function AiSettingsForm({ company, companyId }: { company: Company; compa
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-          AI Provider Configuration
+          {translations.AIProviderConfiguration}
         </CardTitle>
         <CardDescription>
-          Select your preferred AI provider for NIS2 assessments. Data processing location affects compliance.
+          {translations.SelectAIProvider}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -42,26 +55,26 @@ export function AiSettingsForm({ company, companyId }: { company: Company; compa
               <RadioGroupItem value="mistral" id="mistral" />
               <Label htmlFor="mistral" className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
-                Mistral AI (EU Cloud)
+                {translations.MistralAI}
               </Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="local" id="local" />
               <Label htmlFor="local" className="flex items-center gap-2">
                 <Server className="h-4 w-4" />
-                Local Server (On-Premise)
+                {translations.LocalServer}
               </Label>
             </div>
           </RadioGroup>
 
           {aiProvider === "mistral" && (
             <div className="space-y-2">
-              <Label htmlFor="mistralApiKey">Mistral API Key</Label>
+              <Label htmlFor="mistralApiKey">{translations.MistralAPIKey}</Label>
               <Input
                 id="mistralApiKey"
                 name="mistralApiKey"
                 type="password"
-                placeholder="Enter your Mistral API Key"
+                placeholder={translations.EnterMistralAPIKey}
                 defaultValue={company.mistralApiKey || ""}
               />
             </div>
@@ -69,21 +82,21 @@ export function AiSettingsForm({ company, companyId }: { company: Company; compa
 
           {aiProvider === "local" && (
             <div className="space-y-2">
-              <Label htmlFor="localAiEndpoint">Local AI Endpoint</Label>
+              <Label htmlFor="localAiEndpoint">{translations.LocalAIEndpoint}</Label>
               <Input
                 id="localAiEndpoint"
                 name="localAiEndpoint"
-                placeholder="http://localhost:11434/v1"
+                placeholder={translations.LocalAIEndpointPlaceholder}
                 defaultValue={company.localAiEndpoint || ""}
               />
             </div>
           )}
 
           {state?.error && <p className="text-red-600 text-sm">{state.error}</p>}
-          {state?.success && <p className="text-green-600 text-sm">Settings updated successfully!</p>}
+          {state?.success && <p className="text-green-600 text-sm">{translations.SettingsUpdatedSuccess}</p>}
 
           <Button type="submit">
-            Save Configuration
+            {translations.SaveConfiguration}
           </Button>
         </form>
       </CardContent>
