@@ -98,6 +98,7 @@
   "SecureAssessmentAccess": "Sicherer Bewertungszugang",
   "ExternalPortalDesc": "Geben Sie Ihren Zugangscode und Ihr temporaeres Passwort ein, um Ihren isolierten NIS2-Bewertungsarbeitsbereich zu oeffnen.",
   "EnterAccessCode": "Geben Sie Ihren 8-stelligen Zugangscode ein",
+  "Password": "Passwort",
   "EnterYourPassword": "Geben Sie Ihr Passwort ein",
   "Checking": "Pruefung...",
   "SecureAccess": "Sicherer Zugang",
@@ -113,6 +114,158 @@
   "PasswordsDoNotMatch": "Passwoerter stimmen nicht ueberein.",
   "Securing": "Sichern...",
   "SetPasswordContinue": "Passwort festlegen und fortfahren",
+  "externalAssessment": {
+    "submitted": {
+      "title": "Bewertung eingereicht",
+      "description": "Vielen Dank fuer Ihre Compliance-Daten. Ihre Antworten fuer <strong>{vendorName}</strong> wurden sicher mit Ihrem Auftraggeber geteilt.",
+      "closeHint": "Sie koennen dieses Fenster jetzt schliessen."
+    },
+    "welcome": {
+      "title": "Willkommen im AVRA-Bewertungsportal",
+      "subtitle": "Sicherung der Lieferkette fuer <strong>Adventure Huso</strong>.",
+      "purposeTitle": "Zweck und NIS2-Compliance",
+      "purposeBody1": "Die EU-<strong>NIS2-Richtlinie</strong> verpflichtet Organisationen, die Sicherheit ihrer Lieferketten sicherzustellen. Als geschaetzter Partner von <strong>Adventure Huso</strong> laden wir Sie ein, diese Sicherheitsbewertung abzuschliessen.",
+      "purposeBody2": "Dieser Prozess hilft uns, hohe Sicherheitsstandards einzuhalten und regulatorische Pflichten zu erfuellen. Sie koennen entweder bestehende Sicherheitsdokumentation fuer eine KI-gestuetzte Analyse hochladen oder den Fragebogen manuell ausfuellen.",
+      "fastPathTitle": "Der schnelle Weg",
+      "fastPathBody": "Laden Sie Ihr ISO-27001-, SOC2- oder Richtlinien-PDF hoch und lassen Sie sich Antworten von der KI vorschlagen.",
+      "directPathTitle": "Der direkte Weg",
+      "directPathBody": "Beantworten Sie 20 gezielte Sicherheitsfragen direkt im interaktiven Assistenten.",
+      "beginButton": "Bewertung starten",
+      "footer": "Sichere isolierte Umgebung - Powered by AVRA Sovereign Compliance Engine"
+    },
+    "header": {
+      "portalTag": "AVRA-Portal",
+      "title": "NIS2-Lieferketten-Sicherheitsbewertung",
+      "progressComplete": "{progress}% abgeschlossen",
+      "progressVerified": "{filled} von {total} verifiziert",
+      "sessionExpiredBadge": "Sitzung abgelaufen",
+      "expiresBadge": "Laeuft ab: {expiry}",
+      "exitPortal": "Portal verlassen",
+      "submitting": "Wird eingereicht...",
+      "submit": "Bewertung einreichen"
+    },
+    "fastPath": {
+      "title": "Der schnelle Weg",
+      "description": "Laden Sie Ihre Sicherheitsrichtlinie oder Zertifizierung (ISO 27001, SOC2) hoch. Unsere KI analysiert Ihre Dokumente, um den Fragebogen <strong>vorzubefuellen</strong>."
+    },
+    "privacy": {
+      "badge": "Datenschutz verifiziert",
+      "title": "Sicherheits- und Datenschutzversprechen",
+      "items": {
+        "noAiTraining": {
+          "title": "Kein KI-Training",
+          "body": "Ihre Dokumente werden niemals verwendet, um zugrunde liegende KI-Modelle zu trainieren oder zu verbessern."
+        },
+        "euHosted": {
+          "title": "EU-gehostet (Deutschland)",
+          "body": "Alle Analysen werden auf isolierten, souveraenen Servern in Frankfurt (eu-central-1) verarbeitet."
+        },
+        "stateless": {
+          "title": "Zustandslose Analyse",
+          "body": "Dokumente existieren waehrend der Analyse nur im Speicher. Es wird nichts dauerhaft gespeichert; Dateien werden sofort verworfen."
+        },
+        "tls": {
+          "title": "TLS-1.3-Verschluesselung",
+          "body": "Ihre Daten werden waehrend der Uebertragung mit hohen Industriestandards verschluesselt."
+        }
+      }
+    },
+    "evidence": {
+      "label": "Nachweis:",
+      "open": "Oeffnen",
+      "deleting": "Wird geloescht...",
+      "delete": "Loeschen",
+      "confirmDelete": "Hochgeladenes Nachweisdokument loeschen?",
+      "deleteFailed": "Nachweisdokument konnte nicht geloescht werden.",
+      "deleted": "Nachweisdokument geloescht."
+    },
+    "profile": {
+      "title": "Unternehmensprofil",
+      "fields": {
+        "officialName": "Offizieller Name",
+        "registrationId": "Registrierungs-ID",
+        "serviceType": "Servicetyp",
+        "headquartersLocation": "Standort der Zentrale",
+        "securityOfficerName": "Name Sicherheitsverantwortlicher",
+        "securityOfficerEmail": "E-Mail Sicherheitsverantwortlicher",
+        "dpoName": "Name DSB",
+        "dpoEmail": "E-Mail DSB"
+      },
+      "saving": "Speichern...",
+      "save": "Profil speichern",
+      "messages": {
+        "updateFailed": "Profil konnte nicht aktualisiert werden.",
+        "updated": "Profil aktualisiert."
+      }
+    },
+    "importantMessage": "<strong>Wichtig:</strong> KI-vorgeschlagene Antworten erscheinen als Hervorhebungen. Sie muessen diese im Fragebogen pruefen und bestaetigen, um die Einreichung abzuschliessen.",
+    "questionnaire": "Fragebogen",
+    "questionnaireWizard": {
+      "confirmDeleteEvidence": "Diese hochgeladene Nachweisdatei loeschen?",
+      "errors": {
+        "deleteEvidenceFailed": "Nachweis konnte nicht geloescht werden.",
+        "selectStatus": "Waehlen Sie vor dem Speichern einen Status.",
+        "addJustification": "Fuegen Sie vor dem Speichern eine Begruendung hinzu.",
+        "saveAnswerFailed": "Antwort konnte nicht gespeichert werden.",
+        "unexpectedSave": "Unerwarteter Fehler beim Speichern. Bitte erneut versuchen."
+      },
+      "status": {
+        "verified": "Verifiziert",
+        "aiPreviewAvailable": "KI-Vorschau verfuegbar",
+        "awaitingResponse": "Antwort ausstehend"
+      },
+      "aiBanner": "KI-Vorschlag - bitte pruefen",
+      "aiInsightTitle": "KI-Audit-Einblick",
+      "useAiSuggestion": "KI-Vorschlag verwenden",
+      "fallbackFindings": "Basierend auf Ihren Dokumenten scheint diese Anforderung erfuellt zu sein.",
+      "evidenceFromDocument": "Nachweis aus Ihrem Dokument:",
+      "option": {
+        "compliant": "Konform",
+        "nonCompliant": "Nicht konform",
+        "notApplicable": "Nicht anwendbar"
+      },
+      "justificationLabel": "Begruendung",
+      "justificationPlaceholder": "Erklaeren Sie, warum dieser Status zutrifft. Sie koennen KI-generierte Begruendungen vor dem Speichern bearbeiten.",
+      "justificationHint": "Dieser Text ist bearbeitbar und wird beim Speichern bereinigt.",
+      "uploadEvidenceLabel": "Nachweisdokument hochladen",
+      "uploadAccepted": "Akzeptiert: PDF, JPG, PNG. Max 10MB.",
+      "selectedEvidence": "Ausgewaehlter Nachweis:",
+      "openSavedEvidence": "Aktuell gespeicherten Nachweis oeffnen",
+      "delete": "Loeschen",
+      "saving": "Speichern...",
+      "saveAndConfirm": "Speichern und bestaetigen"
+    },
+    "questions": {
+      "q1": {
+        "text": "Verfuegt der Anbieter ueber eine dokumentierte und vom Management genehmigte Informationssicherheitsrichtlinie?",
+        "guidance": "Die Richtlinie sollte Rollen, zulaessige Nutzung und den Pruefungsrhythmus abdecken."
+      },
+      "q2": { "text": "Gibt es einen benannten Sicherheitsverantwortlichen oder eine gleichwertige Rolle mit Verantwortung fuer Cybersicherheit?" },
+      "q3": { "text": "Werden Cybersicherheitsrisiken mindestens jaehrlich und nach wesentlichen Aenderungen bewertet?" },
+      "q4": { "text": "Ist Multi-Faktor-Authentifizierung fuer alle administrativen und Remote-Zugaenge verpflichtend?" },
+      "q5": { "text": "Werden Least-Privilege- und rollenbasierte Zugriffskontrollen auf Produktionssysteme angewendet?" },
+      "q6": { "text": "Werden Zugriffe regelmaessig ueberprueft und bei Rollenwechsel oder Offboarding zeitnah entzogen?" },
+      "q7": { "text": "Werden personenbezogene und sensible Daten klassifiziert und sind Handhabungsregeln dokumentiert?" },
+      "q8": { "text": "Sind Auftragsverarbeitungsvertraege und Unterauftragsverarbeiter dokumentiert und aktuell gehalten?" },
+      "q9": { "text": "Werden Daten bei der Uebertragung und im Ruhezustand mit branchenueblichen Algorithmen verschluesselt?" },
+      "q10": { "text": "Werden kryptographische Schluessel gemaess einem definierten Prozess erzeugt, gespeichert und rotiert?" },
+      "q11": { "text": "Wird die Nutzung kundenseitig verwalteter Schluessel oder HSMs bei Bedarf unterstuetzt?" },
+      "q12": { "text": "Werden Sicherheitsprotokolle zentral erfasst und mit regulatorisch passender Aufbewahrungsdauer gespeichert?" },
+      "q13": { "text": "Gibt es ein 24/7-Monitoring fuer kritische Services mit definierten Eskalationspfaden?" },
+      "q14": { "text": "Sind Schwachstellenmanagement und Patch-SLAs definiert und nachweisbar?" },
+      "q15": { "text": "Verfuegt der Anbieter ueber einen Incident-Response-Plan mit Kundenbenachrichtigungsklauseln?" },
+      "q16": { "text": "Werden Incident-Uebungen oder Tabletop-Tests durchgefuehrt und Verbesserungen nachverfolgt?" },
+      "q17": { "text": "Werden Business-Continuity- und Disaster-Recovery-Plaene mit definierten RTO/RPO getestet?" },
+      "q18": { "text": "Wird ein sicherer SDLC praktiziert (Threat Modeling, Code-Review, Dependency-Scanning)?" },
+      "q19": { "text": "Werden Drittanbieter-Komponenten und Open-Source-Lizenzen erfasst und ueberwacht?" },
+      "q20": { "text": "Werden regelmaessig Penetrationstests oder unabhaengige Sicherheitsbewertungen durchgefuehrt?" }
+    },
+    "sessionExpired": {
+      "title": "Sitzung abgelaufen",
+      "description": "Ihr temporaeres Zugriffsfenster ist beendet. Bitte kontaktieren Sie Ihren Administrator, um einen neuen Zugangscode anzufordern.",
+      "returnToPortal": "Zurueck zum Zugangsportal"
+    }
+  },
   "assessment": {
     "page": {
       "notFound": {
@@ -278,6 +431,8 @@
     "pageDesc": "Anbieter suchen, einladen und NIS2-Bewertungsarbeitsbereiche \u00f6ffnen.",
     "metaTitle": "Anbieter",
     "metaDesc": "Anbieter-Bewertungen und NIS2-konforme Workspaces. Daten werden aus der AVRA-Datenbank bereitgestellt.",
+    "vendorPortalLinkLabel": "Anbieter-Bewertungsportal oeffnen",
+    "vendorPortalLinkHint": "Anbieter geben dort ihren Zugangscode und ihr Passwort ein.",
     "search": "Anbieter suchen",
     "noActiveCode": "Kein aktiver Code",
     "expired": "Abgelaufen",
