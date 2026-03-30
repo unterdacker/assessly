@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, LayoutDashboard, ShieldCheck, Users } from "lucide-react";
+import { Settings, LayoutDashboard, ShieldCheck, Users, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -15,12 +15,14 @@ const NAV_LABELS = {
     overview: "Übersicht",
     vendors: "Anbieter",
     settings: "Einstellungen",
+    auditLogs: "Audit-Trail",
     nis2Label: "NIS2-konforme Bewertungen",
   },
   en: {
     overview: "Overview",
     vendors: "Vendors",
     settings: "Settings",
+    auditLogs: "Audit Trail",
     nis2Label: "NIS2-aligned assessments",
   },
 };
@@ -46,6 +48,7 @@ const getNav = (locale: "de" | "en") => [
   { href: "/dashboard", label: NAV_LABELS[locale].overview, icon: LayoutDashboard },
   { href: "/vendors", label: NAV_LABELS[locale].vendors, icon: Users },
   { href: "/settings", label: NAV_LABELS[locale].settings, icon: Settings },
+  { href: "/admin/audit-logs", label: NAV_LABELS[locale].auditLogs, icon: Activity },
 ];
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {

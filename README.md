@@ -53,6 +53,7 @@ Security officers often manage third-party assessments in fragmented spreadsheet
 - Node.js 20+
 - npm 10+
 - Git
+- Docker Desktop (or Docker Engine + Compose)
 
 #### 2. Clone the Repository
 
@@ -72,8 +73,15 @@ npm install
 Create a `.env` file in the project root:
 
 ```bash
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/avra?schema=public"
 ```
+
+Local Docker defaults used by this repository:
+
+- POSTGRES_USER: `postgres`
+- POSTGRES_PASSWORD: `postgres`
+- POSTGRES_DB: `avra`
+- Port mapping: `5432:5432`
 
 Optional AI/provider settings (only if needed):
 
@@ -86,7 +94,13 @@ NEXT_PUBLIC_APP_URL="http://localhost:3000"
 CRON_SECRET="<optional-secret>"
 ```
 
-#### 5. Initialize the Database
+#### 5. Start PostgreSQL (Docker)
+
+```bash
+docker-compose up -d
+```
+
+#### 6. Initialize the Database
 
 ```bash
 npx prisma generate
@@ -99,7 +113,7 @@ Optional seed data:
 npx prisma db seed
 ```
 
-#### 6. Start the Development Server
+#### 7. Start the Development Server
 
 ```bash
 npm run dev --turbopack
@@ -110,6 +124,42 @@ Open:
 ```text
 http://localhost:3000
 ```
+
+### Database Reset (PostgreSQL Re-Init)
+
+Use this when switching from SQLite migrations or when local DB state is corrupted.
+
+PowerShell:
+
+```powershell
+docker-compose down -v
+docker-compose up -d
+Remove-Item -Path "prisma/migrations" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path "node_modules/.prisma" -Recurse -Force -ErrorAction SilentlyContinue
+npx prisma generate
+npx prisma db push
+```
+
+Bash:
+
+```bash
+docker-compose down -v
+docker-compose up -d
+rm -rf prisma/migrations
+rm -rf node_modules/.prisma
+npx prisma generate
+npx prisma db push
+```
+
+Optional after reset:
+
+```bash
+npx prisma db seed
+```
+
+### Prisma Config Note
+
+This repository no longer uses the deprecated `package.json#prisma` field. This keeps the project compatible with upcoming Prisma 7 behavior.
 
 ### Useful Scripts
 
@@ -219,6 +269,14 @@ npx prisma db push
 ```
 
 - If development startup fails after dependency changes, try:
+
+```bash
+Remove-Item -Path ".next" -Recurse -Force -ErrorAction SilentlyContinue
+npm install
+npm run dev
+```
+
+On Bash, you can use:
 
 ```bash
 rm -rf .next

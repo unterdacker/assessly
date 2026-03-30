@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getDefaultCompanyId } from "@/lib/queries/vendor-assessments";
 import { calculateRiskLevel } from "@/lib/risk-level";
+import { logAuditEvent } from "@/lib/audit-log";
 
 const ANON_ACTOR = "anonymous:prototype";
 const ACCESS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -242,17 +243,28 @@ export async function generateVendorAccessCodeAction(
         throw new Error("Failed to generate a unique access code.");
       }
 
-      await tx.auditLog.create({
-        data: {
+      await logAuditEvent(
+        {
           companyId,
-          action: "vendor.access_code.generated",
-          entityType: "vendor",
+          userId: ANON_ACTOR,
+          action: "ACCESS_CODE_GENERATED",
+          entityType: "vendor_access_code",
           entityId: vendor.id,
-          actorId: ANON_ACTOR,
-          createdBy: ANON_ACTOR,
-          metadata: { expiresAt: codeExpiresAt.toISOString(), duration, accessCode },
+          previousValue: {
+            status: "none",
+            isCodeActive: false,
+            codeExpiresAt: null,
+          },
+          newValue: {
+            status: "active",
+            isCodeActive: true,
+            codeExpiresAt: codeExpiresAt.toISOString(),
+            duration,
+            masked_access_code: accessCode.slice(0, 2) + "****-****",
+          },
         },
-      });
+        { tx, captureHeaders: true },
+      );
 
       console.log(`[SIMULATED EMAIL] Assessment Invitation for ${vendor.name}`);
       console.log(

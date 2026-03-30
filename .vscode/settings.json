@@ -4,6 +4,7 @@
         "npx tsx": true,
         "npm install": true,
         "Set-Content": true,
-        "Get-CimInstance": true
+        "Get-CimInstance": true,
+        "ForEach-Object": true
     }
 }

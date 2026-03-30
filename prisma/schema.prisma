@@ -115,9 +115,14 @@ model AuditLog {
   id         String   @id @default(cuid())
   companyId  String
   company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId     String   @default("system")
   action     String
   entityType String
   entityId   String
+  previousValue Json?
+  newValue   Json?
+  timestamp  DateTime @default(now())
+  // Legacy fields kept temporarily to avoid breaking existing writes.
   actorId    String
   metadata   Json?
   createdAt  DateTime @default(now())
@@ -126,6 +131,8 @@ model AuditLog {
 
   @@index([companyId])
   @@index([entityType, entityId])
+  @@index([userId])
+  @@index([timestamp])
 }
 
 model AssessmentAnswer {
