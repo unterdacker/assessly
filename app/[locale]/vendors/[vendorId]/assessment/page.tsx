@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { AssessmentWorkspace } from "@/components/assessment-workspace";
 import { Button } from "@/components/ui/button";
 import { getVendorAssessmentDetail } from "@/lib/queries/vendor-assessments";
@@ -17,16 +18,17 @@ type PageProps = {
 export default async function AssessmentPage({ params }: PageProps) {
   const { vendorId } = await params;
   const detail = await getVendorAssessmentDetail(vendorId);
+  const t = await getTranslations();
 
   if (!detail) {
     return (
       <div className="mx-auto max-w-md space-y-4 rounded-lg border border-slate-200 bg-card p-8 text-center dark:border-slate-800">
-        <h1 className="text-lg font-semibold">Vendor not found</h1>
+        <h1 className="text-lg font-semibold">{t("assessment.page.notFound.title")}</h1>
         <p className="text-sm text-muted-foreground">
-          This assessment link does not match a vendor in your workspace.
+          {t("assessment.page.notFound.description")}
         </p>
         <Button asChild variant="secondary">
-          <Link href="/vendors">Return to vendor list</Link>
+          <Link href="/vendors">{t("assessment.page.notFound.returnToVendors")}</Link>
         </Button>
       </div>
     );

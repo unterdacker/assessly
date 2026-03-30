@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, FileText, ChevronUp, ChevronDown, Copy, SendHorizonal, ShieldAlert, ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Search, ChevronUp, ChevronDown, Copy, SendHorizonal, ShieldAlert, ShieldCheck } from "lucide-react";
 import { AddVendorModal } from "@/components/add-vendor-modal";
 import { InviteVendorModal } from "@/components/admin/invite-vendor-modal";
 import { Button } from "@/components/ui/button";
@@ -52,11 +53,16 @@ function formatDate(value: string | null) {
   }
 }
 
-function formatAccessCodeExpiry(value: string | null) {
-  if (!value) return "No active code";
+function formatAccessCodeExpiry(
+  value: string | null,
+  noActiveCode = "No active code",
+  expired = "Expired",
+  expires = "Expires",
+) {
+  if (!value) return noActiveCode;
   const expiresAt = new Date(value);
-  if (!Number.isFinite(expiresAt.getTime())) return "No active code";
-  if (expiresAt.getTime() <= Date.now()) return "Expired";
+  if (!Number.isFinite(expiresAt.getTime())) return noActiveCode;
+  if (expiresAt.getTime() <= Date.now()) return expired;
 
   const formatted = new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
@@ -67,7 +73,7 @@ function formatAccessCodeExpiry(value: string | null) {
     hour12: false,
   }).format(expiresAt);
 
-  return `Expires: ${formatted}`;
+  return `${expires}: ${formatted}`;
 }
 
 /** Colour-coded compliance score pill. */
@@ -94,13 +100,14 @@ function ScorePill({ score, status }: { score: number; status: string }) {
 
 /** Visual tracker for security questionnaire progress (COMPLIANT/NON_COMPLIANT count). */
 function ProgressPill({ progress, filled }: { progress: number; filled: number }) {
+  const t = useTranslations("vendors");
   if (progress === 100) {
     return (
       <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800">
         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
         </svg>
-        Completed
+        {t("progressCompleted")}
       </span>
     );
   }
@@ -117,21 +124,10 @@ function ProgressPill({ progress, filled }: { progress: number; filled: number }
   );
 }
 
-function VendorActions({
-  vendorAssessment,
-}: {
-  vendorAssessment: VendorAssessment;
-}) {
+function VendorActions({ vendorAssessment }: { vendorAssessment: VendorAssessment }) {
+  const t = useTranslations("vendors");
   return (
     <div className="flex justify-end gap-2">
-      {vendorAssessment.documentUrl && (
-        <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground" asChild>
-          <a href={vendorAssessment.documentUrl} target="_blank" rel="noopener noreferrer" aria-label={`View evidence PDF for ${vendorAssessment.name}`}>
-            <FileText className="h-3.5 w-3.5" aria-hidden />
-            View PDF
-          </a>
-        </Button>
-      )}
       <InviteVendorModal
         vendorId={vendorAssessment.id}
         vendorName={vendorAssessment.name}
@@ -139,13 +135,13 @@ function VendorActions({
         trigger={
           <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground">
             <SendHorizonal className="h-3.5 w-3.5" aria-hidden />
-            Send invite
+            {t("sendInvite")}
           </Button>
         }
       />
       <Button variant="outline" size="sm" className="h-8" asChild>
         <Link href={`/vendors/${vendorAssessment.id}/assessment`}>
-          Open assessment
+          {t("openAssessment")}
         </Link>
       </Button>
     </div>
@@ -155,6 +151,7 @@ function VendorActions({
 export function VendorsTableSection({
   vendorAssessments,
 }: VendorsTableSectionProps) {
+  const t = useTranslations("vendors");
   const router = useRouter();
   const selectAllRef = React.useRef<HTMLInputElement | null>(null);
   const [q, setQ] = React.useState("");
@@ -286,7 +283,7 @@ export function VendorsTableSection({
     if (selectedVendorIds.size === 0) return;
 
     const confirmed = window.confirm(
-      `Delete ${selectedVendorIds.size} selected vendors? This will remove linked assessments and answers.`
+      t("confirmDeleteVendors", { count: selectedVendorIds.size })
     );
     if (!confirmed) return;
 
@@ -312,7 +309,7 @@ export function VendorsTableSection({
       setCopiedVendorId(vendorId);
       window.setTimeout(() => setCopiedVendorId((prev) => (prev === vendorId ? null : prev)), 1200);
     } catch {
-      window.alert("Copy failed. Please copy the code manually.");
+      window.alert(t("copyFailed"));
     }
   };
 
@@ -322,7 +319,7 @@ export function VendorsTableSection({
       setCopiedCredField(field);
       window.setTimeout(() => setCopiedCredField((prev) => (prev === field ? null : prev)), 1500);
     } catch {
-      window.alert("Copy failed. Please copy the value manually.");
+      window.alert(t("copyCredFailed"));
     }
   };
 
@@ -346,7 +343,7 @@ export function VendorsTableSection({
   };
 
   const handleVoidCode = async (vendor: VendorAssessment) => {
-    const confirmed = window.confirm(`Void active access code for ${vendor.name}?`);
+    const confirmed = window.confirm(t("confirmVoidCode", { vendorName: vendor.name }));
     if (!confirmed) return;
 
     setCodeActionVendorId(vendor.id);
@@ -366,10 +363,10 @@ export function VendorsTableSection({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
-            Vendors
+            {t("pageTitle")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Search, invite, and open NIS2 assessment workspaces.
+            {t("pageDesc")}
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
@@ -381,13 +378,13 @@ export function VendorsTableSection({
               onClick={handleBulkDelete}
               disabled={isBulkDeleting}
             >
-              {isBulkDeleting ? "Deleting selected..." : `Delete selected (${selectedVendorIds.size})`}
+              {isBulkDeleting ? `${t("deleteSelected")}...` : `${t("deleteSelected")} (${selectedVendorIds.size})`}
             </Button>
           )}
           <AddVendorModal
             trigger={
               <Button type="button" className="w-full sm:w-auto" disabled={isBulkDeleting}>
-                Invite vendor
+                {t("inviteVendor")}
               </Button>
             }
           />
@@ -400,18 +397,18 @@ export function VendorsTableSection({
           aria-hidden
         />
         <Input
-          placeholder="Search by name, service, or email…"
+          placeholder={t("search")}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           className="pl-9"
-          aria-label="Search vendors"
+          aria-label={t("search")}
         />
       </div>
 
       <div className="overflow-x-auto">
         <Table>
           <caption className="sr-only">
-            Vendor assessments with status, compliance score, risk level, and actions
+            {t("tableCaption")}
           </caption>
           <TableHeader>
             <TableRow>
@@ -419,7 +416,7 @@ export function VendorsTableSection({
                 <input
                   ref={selectAllRef}
                   type="checkbox"
-                  aria-label="Select all visible vendors"
+                  aria-label={t("selectAllVendors")}
                   checked={allVisibleSelected}
                   onChange={(e) => handleToggleAllVisible(e.target.checked)}
                   className="h-4 w-4 rounded border-slate-300"
@@ -428,48 +425,48 @@ export function VendorsTableSection({
               </TableHead>
               <TableHead>
                 <Button variant="ghost" onClick={() => handleSort('name')} className="h-auto p-0 font-semibold">
-                  Name
+                  {t("columnName")}
                   {sortKey === 'name' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
                 </Button>
               </TableHead>
-              <TableHead>Access code</TableHead>
+              <TableHead>{t("columnAccessCode")}</TableHead>
               <TableHead>
                 <Button variant="ghost" onClick={() => handleSort('serviceType')} className="h-auto p-0 font-semibold">
-                  Service type
+                  {t("columnServiceType")}
                   {sortKey === 'serviceType' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
                 </Button>
               </TableHead>
               <TableHead>
                 <Button variant="ghost" onClick={() => handleSort('status')} className="h-auto p-0 font-semibold">
-                  Status
+                  {t("columnStatus")}
                   {sortKey === 'status' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
                 </Button>
               </TableHead>
               <TableHead>
                 <Button variant="ghost" onClick={() => handleSort('lastAssessmentDate')} className="h-auto p-0 font-semibold">
-                  Last assessment
+                  {t("columnLastAssessment")}
                   {sortKey === 'lastAssessmentDate' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
                 </Button>
               </TableHead>
               <TableHead>
                 <Button variant="ghost" onClick={() => handleSort('questionnaireProgress')} className="h-auto p-0 font-semibold">
-                  Questions filled
+                  {t("columnQuestionsFilled")}
                   {sortKey === 'questionnaireProgress' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
                 </Button>
               </TableHead>
               <TableHead>
                 <Button variant="ghost" onClick={() => handleSort('complianceScore')} className="h-auto p-0 font-semibold">
-                  Compliance score
+                  {t("columnComplianceScore")}
                   {sortKey === 'complianceScore' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
                 </Button>
               </TableHead>
               <TableHead>
                 <Button variant="ghost" onClick={() => handleSort('riskLevel')} className="h-auto p-0 font-semibold">
-                  Risk level
+                  {t("columnRiskLevel")}
                   {sortKey === 'riskLevel' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
                 </Button>
               </TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right">{t("columnActions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -479,7 +476,7 @@ export function VendorsTableSection({
                   colSpan={10}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  No vendors match your search.
+                  {t("noVendorsFound")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -488,7 +485,7 @@ export function VendorsTableSection({
                   <TableCell>
                     <input
                       type="checkbox"
-                      aria-label={`Select vendor ${v.name}`}
+                      aria-label={t("selectVendorAria", { vendorName: v.name })}
                       checked={selectedVendorIds.has(v.id)}
                       onChange={(e) => handleToggleVendor(v.id, e.target.checked)}
                       className="h-4 w-4 rounded border-slate-300"
@@ -503,30 +500,30 @@ export function VendorsTableSection({
                           <span>{v.accessCode}</span>
                           <button
                             type="button"
-                            aria-label={`Copy access code for ${v.name}`}
+                            aria-label={t("copyAccessCodeAria", { vendorName: v.name })}
                             onClick={() => handleCopyAccessCode(v.id, v.accessCode)}
                             className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
                           >
                             <Copy className="h-3.5 w-3.5" />
                           </button>
                           {copiedVendorId === v.id && (
-                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Copied</span>
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400">{t("copied")}</span>
                           )}
                         </div>
                       ) : (
-                        <span className="text-xs text-muted-foreground">No active code</span>
+                        <span className="text-xs text-muted-foreground">{t("noActiveCode")}</span>
                       )}
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{formatAccessCodeExpiry(v.codeExpiresAt)}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{formatAccessCodeExpiry(v.codeExpiresAt, t("noActiveCode"), t("expired"), t("expires"))}</p>
                       {v.isCodeActive && v.isFirstLogin && (
                         <p className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400">
                           <ShieldAlert className="h-3 w-3" aria-hidden />
-                          Password: Pending change
+                          {t("passwordPendingChange")}
                         </p>
                       )}
                       {v.isCodeActive && !v.isFirstLogin && (
                         <p className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
                           <ShieldCheck className="h-3 w-3" aria-hidden />
-                          Password: Secured
+                          {t("passwordSecured")}
                         </p>
                       )}
                       <div className="flex items-center gap-2">
@@ -538,7 +535,7 @@ export function VendorsTableSection({
                           onClick={() => setCodeDialogVendorId(v.id)}
                           disabled={Boolean(codeActionVendorId)}
                         >
-                          Generate Access Code
+                          {t("generateAccessCode")}
                         </Button>
                         {v.isCodeActive && (
                           <Button
@@ -549,7 +546,7 @@ export function VendorsTableSection({
                             onClick={() => handleVoidCode(v)}
                             disabled={Boolean(codeActionVendorId)}
                           >
-                            {codeActionVendorId === v.id ? "Voiding..." : "Void Code"}
+                            {codeActionVendorId === v.id ? t("voiding") : t("voidCode")}
                           </Button>
                         )}
                       </div>
@@ -566,7 +563,7 @@ export function VendorsTableSection({
                           ? "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
                           : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                       }`}>
-                      {v.status === "completed" ? "Completed" : v.status === "incomplete" ? "Incomplete" : "Pending"}
+                      {v.status === "completed" ? t("statusCompleted") : v.status === "incomplete" ? t("statusIncomplete") : t("statusPending")}
                     </span>
                   </TableCell>
                   <TableCell className="tabular-nums text-muted-foreground">
@@ -582,9 +579,7 @@ export function VendorsTableSection({
                     <RiskBadge level={v.riskLevel} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <VendorActions
-                      vendorAssessment={v}
-                    />
+                    <VendorActions vendorAssessment={v} />
                   </TableCell>
                 </TableRow>
               ))
@@ -603,22 +598,22 @@ export function VendorsTableSection({
           <DialogHeader>
             <DialogTitle>
               <span className="text-amber-500 mr-1" aria-hidden>&#9888;</span>
-              Credentials Generated — Save Now
+              {t("credDialogTitle")}
             </DialogTitle>
             <DialogDescription>
-              Copy both credentials before closing. The temporary password cannot be recovered after this dialog is dismissed.
+              {t("credDialogDesc")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3">
             <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-800 dark:border-amber-800/40 dark:bg-amber-900/20 dark:text-amber-300">
-              This password is hashed immediately. If it is lost, you must regenerate the access code to issue a new one.
+              {t("credDialogWarning")}
             </div>
 
             {generatedCredentials && (
               <>
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Access Code</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t("credDialogAccessCodeLabel")}</p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-sm tracking-widest dark:border-slate-700 dark:bg-slate-800">
                       {generatedCredentials.accessCode}
@@ -629,13 +624,13 @@ export function VendorsTableSection({
                       size="sm"
                       onClick={() => handleCopyCredField("accessCode", generatedCredentials.accessCode)}
                     >
-                      {copiedCredField === "accessCode" ? "Copied!" : <Copy className="h-4 w-4" />}
+                      {copiedCredField === "accessCode" ? t("credDialogCopied") : <Copy className="h-4 w-4" />}
                     </Button>
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Temporary Password</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t("credDialogTempPasswordLabel")}</p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-sm dark:border-slate-700 dark:bg-slate-800 break-all">
                       {generatedCredentials.tempPassword}
@@ -646,13 +641,13 @@ export function VendorsTableSection({
                       size="sm"
                       onClick={() => handleCopyCredField("tempPassword", generatedCredentials.tempPassword)}
                     >
-                      {copiedCredField === "tempPassword" ? "Copied!" : <Copy className="h-4 w-4" />}
+                      {copiedCredField === "tempPassword" ? t("credDialogCopied") : <Copy className="h-4 w-4" />}
                     </Button>
                   </div>
                 </div>
 
                 <p className="text-xs text-slate-500">
-                  {formatAccessCodeExpiry(generatedCredentials.codeExpiresAt)}
+                  {formatAccessCodeExpiry(generatedCredentials.codeExpiresAt, t("noActiveCode"), t("expired"), t("expires"))}
                 </p>
               </>
             )}
@@ -665,7 +660,7 @@ export function VendorsTableSection({
                 router.refresh();
               }}
             >
-              I&apos;ve saved these credentials
+              {t("credDialogSaveButton")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -674,15 +669,15 @@ export function VendorsTableSection({
       <Dialog open={Boolean(codeDialogVendorId)} onOpenChange={(open) => !open && setCodeDialogVendorId(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Generate Access Code</DialogTitle>
+            <DialogTitle>{t("genCodeDialogTitle")}</DialogTitle>
             <DialogDescription>
-              Choose how long this temporary access code should stay active.
+              {t("genCodeDialogDesc")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2">
             <label htmlFor="code-duration" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Validity
+              {t("genCodeValidityLabel")}
             </label>
             <select
               id="code-duration"
@@ -690,19 +685,19 @@ export function VendorsTableSection({
               value={selectedDuration}
               onChange={(e) => setSelectedDuration(e.target.value as AccessCodeDuration)}
             >
-              <option value="1h">1 hour</option>
-              <option value="24h">24 hours</option>
-              <option value="7d">7 days</option>
-              <option value="30d">30 days</option>
+              <option value="1h">{t("genCodeOption1h")}</option>
+              <option value="24h">{t("genCodeOption24h")}</option>
+              <option value="7d">{t("genCodeOption7d")}</option>
+              <option value="30d">{t("genCodeOption30d")}</option>
             </select>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setCodeDialogVendorId(null)}>
-              Cancel
+              {t("genCodeCancel")}
             </Button>
             <Button onClick={handleGenerateCode} disabled={Boolean(codeActionVendorId)}>
-              {codeActionVendorId ? "Generating..." : "Generate"}
+              {codeActionVendorId ? t("genCodeGenerating") : t("genCodeGenerate")}
             </Button>
           </DialogFooter>
         </DialogContent>

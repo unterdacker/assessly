@@ -1,26 +1,64 @@
+import createMiddleware from "next-intl/middleware";
+import { hasLocale } from "next-intl";
 import { NextResponse, NextRequest } from "next/server";
+import { routing } from "./i18n";
+
+const handleI18nRouting = createMiddleware(routing);
+
+function getLocaleFromPathname(pathname: string): string | null {
+  const segment = pathname.split("/")[1];
+  return hasLocale(routing.locales, segment) ? segment : null;
+}
+
+function stripLocaleFromPathname(pathname: string): string {
+  const locale = getLocaleFromPathname(pathname);
+  if (!locale) return pathname;
+
+  const stripped = pathname.slice(locale.length + 1);
+  return stripped ? stripped : "/";
+}
+
+function withLocalePath(pathname: string, locale: string): string {
+  return `/${locale}${pathname === "/" ? "" : pathname}`;
+}
 
 /**
  * Middleware to enforce the "Vault" rule for AVRA.
  * Ensures that external vendor requests stay isolated within the /external/ route tree.
  */
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const response = NextResponse.next();
+  const localeFromPath = getLocaleFromPathname(request.nextUrl.pathname);
+  const normalizedPathname = stripLocaleFromPathname(request.nextUrl.pathname);
 
-  // 1a. Protect force-password-change: requires the setup cookie issued after first login
-  if (pathname.startsWith("/external/force-password-change")) {
+  const localeFromCookie = request.cookies.get("NEXT_LOCALE")?.value;
+  const activeLocale = hasLocale(routing.locales, localeFromPath)
+    ? localeFromPath
+    : hasLocale(routing.locales, localeFromCookie)
+      ? localeFromCookie
+      : routing.defaultLocale;
+
+  // Redirect root locale pages to /dashboard
+  if (normalizedPathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = withLocalePath("/dashboard", activeLocale);
+    return NextResponse.redirect(url);
+  }
+
+  // Force-password-change always requires a setup token cookie.
+  if (normalizedPathname.startsWith("/external/force-password-change")) {
     const setupToken = request.cookies.get("avra-vendor-setup")?.value;
     if (!setupToken) {
       const url = request.nextUrl.clone();
-      url.pathname = "/external/portal";
+      url.pathname = withLocalePath("/external/portal", activeLocale);
       return NextResponse.redirect(url);
     }
   }
 
-  // 1b. Identify External Assessment Portal
-  if (pathname.startsWith("/external/assessment/")) {
-    const parts = pathname.split("/");
+  const response = handleI18nRouting(request);
+
+  // External portal token bootstrap.
+  if (normalizedPathname.startsWith("/external/assessment/")) {
+    const parts = normalizedPathname.split("/");
     const token = parts[parts.length - 1]; // Assume token is the last segment
     
     if (token && token.length > 20) {
@@ -29,7 +67,7 @@ export function middleware(request: NextRequest) {
         path: "/",
         maxAge: 60 * 60 * 24, // 24 hours
         sameSite: "strict",
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
         httpOnly: true,
       });
     }
@@ -37,9 +75,9 @@ export function middleware(request: NextRequest) {
 
   // 2. Identify Internal Admin Routes
   const isInternalRoute = 
-    pathname.startsWith("/dashboard") || 
-    pathname.startsWith("/vendors") || 
-    pathname.startsWith("/settings");
+    normalizedPathname.startsWith("/dashboard") || 
+    normalizedPathname.startsWith("/vendors") || 
+    normalizedPathname.startsWith("/settings");
 
   // 3. Enforce "Vault" rule: If an admin route is hit with a vendor token, clear it to prevent lockout
   const vendorToken = request.cookies.get("avra-vendor-token");
@@ -56,10 +94,5 @@ export function middleware(request: NextRequest) {
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: [
-    "/dashboard/:path*",
-    "/vendors/:path*",
-    "/settings/:path*",
-    "/external/:path*",
-  ],
+  matcher: ["/((?!api|_next|.*\\..*).*)"],
 };

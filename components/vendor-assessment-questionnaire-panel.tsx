@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import {
   NIS2_QUESTIONNAIRE_VERSION,
   groupQuestionsByCategory,
@@ -25,6 +26,8 @@ export function VendorAssessmentQuestionnairePanel({
   selectedQuestionId,
   onSelectQuestion,
 }: VendorAssessmentQuestionnairePanelProps) {
+  const t = useTranslations("assessment.questionnaire");
+
   const numberById = React.useMemo(() => {
     const m: Record<string, number> = {};
     nis2Questions.forEach((q, i) => {
@@ -36,10 +39,10 @@ export function VendorAssessmentQuestionnairePanel({
   return (
     <Card>
       <CardHeader className="border-b border-slate-100 dark:border-slate-800">
-        <CardTitle className="text-base">NIS2 security questionnaire</CardTitle>
+        <CardTitle className="text-base">{t("title")}</CardTitle>
         <p className="text-sm font-normal text-muted-foreground">
-          {nis2Questions.length} questions across {categories.length} categories
-          · catalogue {NIS2_QUESTIONNAIRE_VERSION}
+          {nis2Questions.length} {t("questionsAcross")} {categories.length} {t("categories")}
+          · {t("catalogue")} {NIS2_QUESTIONNAIRE_VERSION}
         </p>
       </CardHeader>
       <CardContent className="max-h-[min(70vh,640px)] space-y-6 overflow-y-auto pt-6">
@@ -86,10 +89,10 @@ export function VendorAssessmentQuestionnairePanel({
                           className="font-normal"
                         >
                           {answer?.status === "COMPLIANT"
-                            ? "Compliant"
+                            ? t("compliant")
                             : answer?.status === "NON_COMPLIANT"
-                            ? "Non-compliant"
-                            : "Pending"}
+                            ? t("nonCompliant")
+                            : t("pending")}
                         </Badge>
                       </div>
                     </div>

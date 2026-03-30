@@ -46,6 +46,7 @@ type ExternalAssessmentWorkspaceProps = {
   documentFilename: string | null;
   sessionExpiresAt: string | null;
   token: string;
+  translations?: Record<string, string>;
 };
 
 type WorkspaceAnswer = AssessmentAnswer & {

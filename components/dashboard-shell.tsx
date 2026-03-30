@@ -5,17 +5,56 @@ import { usePathname } from "next/navigation";
 import { Settings, LayoutDashboard, ShieldCheck, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageToggle } from "@/components/language-toggle";
 
-const nav = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/vendors", label: "Vendors", icon: Users },
-  { href: "/settings", label: "Settings", icon: Settings },
+const SUPPORTED_LOCALES = ["de", "en"] as const;
+
+// Navigation label translations
+const NAV_LABELS = {
+  de: {
+    overview: "Übersicht",
+    vendors: "Anbieter",
+    settings: "Einstellungen",
+    nis2Label: "NIS2-konforme Bewertungen",
+  },
+  en: {
+    overview: "Overview",
+    vendors: "Vendors",
+    settings: "Settings",
+    nis2Label: "NIS2-aligned assessments",
+  },
+};
+
+function getLocaleFromPathname(pathname: string): "de" | "en" {
+  const segment = pathname.split("/")[1];
+  return SUPPORTED_LOCALES.includes(segment as "de" | "en")
+    ? (segment as "de" | "en")
+    : "de";
+}
+
+function stripLocale(pathname: string): string {
+  const segment = pathname.split("/")[1];
+  if (!SUPPORTED_LOCALES.includes(segment as "de" | "en")) {
+    return pathname || "/";
+  }
+
+  const stripped = pathname.slice(segment.length + 1);
+  return stripped || "/";
+}
+
+const getNav = (locale: "de" | "en") => [
+  { href: "/dashboard", label: NAV_LABELS[locale].overview, icon: LayoutDashboard },
+  { href: "/vendors", label: NAV_LABELS[locale].vendors, icon: Users },
+  { href: "/settings", label: NAV_LABELS[locale].settings, icon: Settings },
 ];
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "/";
+  const locale = getLocaleFromPathname(pathname);
+  const normalizedPathname = stripLocale(pathname);
+  const nav = getNav(locale);
 
-  const isExternal = pathname?.startsWith("/external/");
+  const isExternal = normalizedPathname.startsWith("/external/");
 
   if (isExternal) {
     return (
@@ -52,12 +91,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             aria-label="Main"
           >
             {nav.map(({ href, label, icon: Icon }) => {
+              const localizedHref = `/${locale}${href}`;
               const active =
-                pathname === href || pathname.startsWith(`${href}/`);
+                normalizedPathname === href || normalizedPathname.startsWith(`${href}/`);
               return (
                 <Link
-                  key={href}
-                  href={href}
+                  key={localizedHref}
+                  href={localizedHref}
                   aria-current={active ? "page" : undefined}
                   className={cn(
                     "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
@@ -74,7 +114,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </nav>
           <div className="border-t border-slate-200 p-3 dark:border-slate-800">
             <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground">
-              NIS2-aligned assessments
+              {NAV_LABELS[locale].nis2Label}
             </p>
           </div>
         </aside>
@@ -91,11 +131,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-2">
               <nav className="flex gap-1 md:hidden" aria-label="Main">
                 {nav.map(({ href, label }) => {
-                  const active = pathname === href || pathname.startsWith(`${href}/`);
+                  const localizedHref = `/${locale}${href}`;
+                  const active =
+                    normalizedPathname === href || normalizedPathname.startsWith(`${href}/`);
                   return (
                     <Link
-                      key={href}
-                      href={href}
+                      key={localizedHref}
+                      href={localizedHref}
                       aria-current={active ? "page" : undefined}
                       className={cn(
                         "rounded-md px-2 py-1 text-xs font-medium",
@@ -109,6 +151,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   );
                 })}
               </nav>
+              <LanguageToggle />
               <ThemeToggle />
             </div>
           </header>

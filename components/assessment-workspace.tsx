@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ArrowLeft } from "lucide-react";
 import type { AssessmentAnswer } from "@prisma/client";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
@@ -33,6 +34,7 @@ export function AssessmentWorkspace({
   documentUrl,
   documentFilename,
 }: AssessmentWorkspaceProps) {
+  const t = useTranslations("assessment.workspace");
   const insightLines = buildVendorAssessmentInsightLines(vendorAssessment);
   
   // Track selected question for side-by-side view
@@ -48,14 +50,14 @@ export function AssessmentWorkspace({
           <Button variant="ghost" size="sm" className="-ml-2 w-fit gap-1" asChild>
             <Link href="/vendors">
               <ArrowLeft className="h-4 w-4" aria-hidden />
-              Back to vendors
+              {t("backToVendors")}
             </Link>
           </Button>
           <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
             {vendorAssessment.name}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Assessment workspace · {vendorAssessment.serviceType}
+            {t("title")} · {vendorAssessment.serviceType}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -66,7 +68,7 @@ export function AssessmentWorkspace({
               scoreGaugeColor(vendorAssessment.complianceScore),
             )}
           >
-            Score {vendorAssessment.complianceScore}/100
+            {t("score")} {vendorAssessment.complianceScore}/100
           </span>
           <EditVendorProfileModal
             vendorId={vendorAssessment.id}
@@ -83,7 +85,7 @@ export function AssessmentWorkspace({
             }}
             trigger={
               <Button variant="outline" size="sm">
-                Edit Vendor Info
+                {t("editVendorInfo")}
               </Button>
             }
           />
@@ -97,16 +99,16 @@ export function AssessmentWorkspace({
       />
 
       <section className="rounded-lg border border-slate-200 bg-card p-4 dark:border-slate-800">
-        <h2 className="text-sm font-semibold mb-3">AI document audit (PDF upload)</h2>
+        <h2 className="text-sm font-semibold mb-3">{t("aiDocumentAudit")}</h2>
         <PdfUploadZone vendorId={vendorAssessment.id} />
         {documentUrl && (
           <div className="mt-3 flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
             <span className="text-xs text-muted-foreground flex-1 truncate">
-              Evidence on file: <span className="font-medium text-foreground">{documentFilename}</span>
+              {t("evidenceOnFile")} <span className="font-medium text-foreground">{documentFilename}</span>
             </span>
             <Button variant="outline" size="sm" className="h-7 shrink-0" asChild>
               <a href={documentUrl} target="_blank" rel="noopener noreferrer">
-                View PDF
+                {t("viewPdf")}
               </a>
             </Button>
           </div>

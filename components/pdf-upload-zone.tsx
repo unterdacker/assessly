@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { UploadCloud, FileText, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { analyzeDocument } from "@/app/actions/analyze-document";
@@ -12,6 +13,7 @@ type PdfUploadZoneProps = {
 };
 
 export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
+  const t = useTranslations("assessment.pdfUpload");
   const router = useRouter();
   const [fileName, setFileName] = React.useState<string | null>(null);
   const [fileSize, setFileSize] = React.useState<number | null>(null);
@@ -63,12 +65,12 @@ export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
     event.preventDefault();
 
     if (!hasConsent) {
-      setErrorMessage("Privacy consent is required.");
+      setErrorMessage(t("privacyConsentRequired"));
       return;
     }
 
     if (!selectedFile) {
-      setErrorMessage("Please select a PDF file before submitting.");
+      setErrorMessage(t("selectPdfBeforeSubmitting"));
       return;
     }
 
@@ -82,9 +84,9 @@ export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
     startTransition(async () => {
       const response = await analyzeDocument(formData);
       if (!response.ok) {
-        setErrorMessage(response.error || "AI audit failed.");
+        setErrorMessage(response.error || t("aiAuditFailed"));
       } else {
-        setStatusMessage("Analysis complete. Results saved.");
+        setStatusMessage(t("analysisComplete"));
         router.refresh();
       }
     });
@@ -103,8 +105,9 @@ export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
           className="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
         />
         <label htmlFor="privacy-consent" className="text-xs leading-relaxed text-slate-600 dark:text-slate-400 cursor-pointer select-none">
-          I understand that this document will be analyzed <strong>statelessly</strong> by AVRA's private AI engine for audit purposes only. 
-          The PDF itself is NOT stored permanently.
+          {t.rich("privacyConsentLabel", {
+            strong: (chunks) => <strong>{chunks}</strong>,
+          })}
         </label>
       </div>
 
@@ -125,8 +128,8 @@ export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
         onDrop={onDrop}
       >
         <UploadCloud className={cn("mx-auto mb-2 h-8 w-8", hasConsent ? "text-indigo-600" : "text-slate-300")} />
-        <p className="text-sm font-semibold">Drag and drop a PDF file here</p>
-        <p className="text-xs text-muted-foreground">or click to select</p>
+        <p className="text-sm font-semibold">{t("dragAndDropTitle")}</p>
+        <p className="text-xs text-muted-foreground">{t("orClickToSelect")}</p>
         <input
           ref={fileInputRef}
           type="file"
@@ -144,7 +147,7 @@ export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
           disabled={!hasConsent}
           onClick={() => fileInputRef.current?.click()}
         >
-          Choose PDF
+          {t("choosePdf")}
         </Button>
       </div>
 
@@ -171,7 +174,7 @@ export function PdfUploadZone({ vendorId }: PdfUploadZoneProps) {
         className="w-full shadow-md"
         disabled={!selectedFile || isPending || !hasConsent}
       >
-        {isPending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Running analysis…</>) : "Run AI Audit"}
+        {isPending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t("runningAnalysis")}</>) : t("runAiAudit")}
       </Button>
     </form>
   );
