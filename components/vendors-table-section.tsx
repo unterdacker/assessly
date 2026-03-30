@@ -486,7 +486,10 @@ export function VendorsTableSection({
                 </TableCell>
               </TableRow>
             ) : (
-              sorted.map((v) => (
+              sorted.map((v) => {
+                const hasAccessCode = Boolean(v.accessCode);
+
+                return (
                 <TableRow key={v.id}>
                   <TableCell>
                     <input
@@ -501,7 +504,7 @@ export function VendorsTableSection({
                   <TableCell className="font-medium">{v.name}</TableCell>
                   <TableCell>
                     <div className="space-y-2">
-                      {v.isCodeActive && v.accessCode ? (
+                      {hasAccessCode ? (
                         <div className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold tracking-wider dark:border-slate-700 dark:bg-slate-900">
                           <span>{v.accessCode}</span>
                           <button
@@ -519,14 +522,16 @@ export function VendorsTableSection({
                       ) : (
                         <span className="text-xs text-muted-foreground">{t("noActiveCode")}</span>
                       )}
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{formatAccessCodeExpiry(v.codeExpiresAt, t("noActiveCode"), t("expired"), t("expires"))}</p>
-                      {v.isCodeActive && v.isFirstLogin && (
+                      {hasAccessCode && (
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">{formatAccessCodeExpiry(v.codeExpiresAt, t("noActiveCode"), t("expired"), t("expires"))}</p>
+                      )}
+                      {hasAccessCode && v.isCodeActive && v.isFirstLogin && (
                         <p className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400">
                           <ShieldAlert className="h-3 w-3" aria-hidden />
                           {t("passwordPendingChange")}
                         </p>
                       )}
-                      {v.isCodeActive && !v.isFirstLogin && (
+                      {hasAccessCode && v.isCodeActive && !v.isFirstLogin && (
                         <p className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
                           <ShieldCheck className="h-3 w-3" aria-hidden />
                           {t("passwordSecured")}
@@ -543,7 +548,7 @@ export function VendorsTableSection({
                         >
                           {t("generateAccessCode")}
                         </Button>
-                        {v.isCodeActive && (
+                        {hasAccessCode && v.isCodeActive && (
                           <Button
                             type="button"
                             size="sm"
@@ -588,7 +593,8 @@ export function VendorsTableSection({
                     <VendorActions vendorAssessment={v} />
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>

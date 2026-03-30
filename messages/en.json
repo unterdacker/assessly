@@ -426,6 +426,35 @@
       }
     }
   },
+  "inviteVendorModal": {
+    "success": {
+      "title": "Invite delivered",
+      "description": "Credentials split across two channels for <strong>{vendorName}</strong>.",
+      "emailStatus": "<strong>Email sent</strong> - portal link and access code delivered.",
+      "smsStatus": "<strong>SMS sent</strong> - temporary password delivered to <mono>{phone}</mono>.",
+      "securityHint": "The vendor must change their password immediately on first login. The temporary password is never stored in plain text and cannot be retrieved."
+    },
+    "form": {
+      "title": "Send Secure Invite",
+      "description": "The access code goes by <strong>email</strong>; the temporary password goes by <strong>SMS</strong>. The two credentials never travel together.",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "security@vendor.com",
+      "mobileLabel": "Mobile Number",
+      "mobilePlaceholder": "+49 151 12345678",
+      "mobileHint": "International format required, e.g. +49 151 12345678",
+      "codeValidityLabel": "Code Validity",
+      "duration1h": "1 hour",
+      "duration24h": "24 hours",
+      "duration7d": "7 days",
+      "duration30d": "30 days"
+    },
+    "actions": {
+      "close": "Close",
+      "cancel": "Cancel",
+      "sending": "Sending...",
+      "sendSecureInvite": "Send Secure Invite"
+    }
+  },
   "vendors": {
     "pageTitle": "Vendors",
     "pageDesc": "Search, invite, and open NIS2 assessment workspaces.",

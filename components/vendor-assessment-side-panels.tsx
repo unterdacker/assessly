@@ -65,7 +65,7 @@ function EvidenceForm({ targetStatus, onSave, onCancel, isSaving, t }: EvidenceF
   return (
     <form
       onSubmit={handleSave}
-      className="mt-3 space-y-3 rounded-lg border border-slate-700 bg-slate-900 p-4"
+      className="mt-3 space-y-3 rounded-lg border border-border bg-card p-4"
       aria-label={t("manualOverride.formAria")}
     >
       {/* Status badge */}
@@ -84,7 +84,7 @@ function EvidenceForm({ targetStatus, onSave, onCancel, isSaving, t }: EvidenceF
 
       {/* Justification — required */}
       <div className="space-y-1">
-        <label htmlFor="override-notes" className="text-xs font-medium text-slate-300">
+        <label htmlFor="override-notes" className="text-xs font-medium text-foreground">
           {t("manualOverride.justificationLabel")}{" "}
           <span className="text-red-400" aria-hidden="true">*</span>
         </label>
@@ -96,36 +96,36 @@ function EvidenceForm({ targetStatus, onSave, onCancel, isSaving, t }: EvidenceF
           rows={4}
           required
           className={cn(
-            "w-full rounded-md border bg-slate-950 px-3 py-2 text-sm text-slate-100",
-            "placeholder:text-slate-500 shadow-sm",
+            "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground",
+            "placeholder:text-muted-foreground shadow-sm",
             "focus:outline-none focus:ring-2 focus:ring-indigo-500",
-            "border-slate-700 hover:border-slate-600 resize-y",
+            "hover:border-slate-400 dark:hover:border-slate-600 resize-y",
           )}
         />
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-muted-foreground">
           {t("manualOverride.justificationHelp")}
         </p>
       </div>
 
       {/* Supplemental evidence PDF — optional */}
       <div className="space-y-1">
-        <p className="text-xs font-medium text-slate-300">
+        <p className="text-xs font-medium text-foreground">
           {t("manualOverride.supplementalEvidenceLabel")}{" "}
-          <span className="text-slate-500 font-normal">({t("manualOverride.optional")})</span>
+          <span className="font-normal text-muted-foreground">({t("manualOverride.optional")})</span>
         </p>
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
           className={cn(
             "flex w-full cursor-pointer items-center gap-2 rounded-md border border-dashed",
-            "border-slate-700 bg-slate-950 px-3 py-2.5 text-left",
-            "hover:border-slate-500 hover:bg-slate-900 transition-colors",
+            "border-border bg-background px-3 py-2.5 text-left",
+            "hover:border-slate-400 hover:bg-muted/40 transition-colors",
             fileError && "border-red-700",
           )}
           aria-label={t("manualOverride.attachPdfAria")}
         >
-          <Upload className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
-          <span className="text-xs text-slate-400 truncate">
+          <Upload className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="truncate text-xs text-muted-foreground">
             {file ? file.name : t("manualOverride.attachPdfPlaceholder")}
           </span>
           <input
@@ -147,7 +147,7 @@ function EvidenceForm({ targetStatus, onSave, onCancel, isSaving, t }: EvidenceF
           type="button"
           variant="ghost"
           size="sm"
-          className="flex-1 text-slate-400 hover:text-slate-200"
+          className="flex-1 text-muted-foreground hover:text-foreground"
           onClick={onCancel}
           disabled={isSaving}
         >
@@ -273,7 +273,7 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer, t }: Ai
         )}
 
         {/* AI findings */}
-        <div className="text-sm rounded-md bg-white p-3 border border-slate-200 shadow-sm dark:bg-slate-950 dark:border-slate-800 text-slate-700 dark:text-slate-300">
+        <div className="rounded-md border border-border bg-card p-3 text-sm text-foreground shadow-sm">
           {selectedAnswer?.findings ? (
             <p className="whitespace-pre-wrap leading-relaxed">{selectedAnswer.findings}</p>
           ) : (
@@ -284,8 +284,8 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer, t }: Ai
         </div>
 
         {evidenceSnippet && (
-          <div className="rounded-md border border-indigo-200 bg-indigo-50/70 p-3 text-xs leading-relaxed text-slate-700 shadow-sm dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-slate-300">
-            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <div className="rounded-md border border-indigo-200 bg-indigo-50/70 p-3 text-xs leading-relaxed text-foreground shadow-sm dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-slate-300">
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-foreground dark:text-slate-300">
               {t("aiInsight.evidenceFromDocument")}
             </p>
             <p className="italic">&quot;{evidenceSnippet}&quot;</p>
@@ -298,7 +298,7 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer, t }: Ai
             href={selectedAnswer.evidenceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:underline"
+            className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-700 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300"
           >
             <FileText className="h-3.5 w-3.5" aria-hidden />
             {t("aiInsight.viewSupplementalEvidencePdf")}
@@ -318,7 +318,7 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer, t }: Ai
         )}
 
         {saveError && (
-          <div className="flex items-center gap-2 rounded-md border border-red-800 bg-red-900/20 px-3 py-2 text-xs text-red-400">
+          <div className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
             {saveError}
           </div>
@@ -398,7 +398,7 @@ export function VendorAssessmentSidePanels({
     : null;
 
   return (
-    <div className="space-y-4 lg:sticky lg:top-20">
+    <div className="space-y-3 lg:sticky lg:top-20">
       {selectedQuestionId ? (
         <AiInsightCard
           assessmentId={assessmentId}
@@ -408,19 +408,19 @@ export function VendorAssessmentSidePanels({
         />
       ) : (
         <Card>
-          <CardHeader className="border-b border-slate-100 dark:border-slate-800">
+          <CardHeader className="border-b border-slate-100 p-4 dark:border-slate-800">
             <CardTitle className="flex items-center gap-2 text-base">
               <FileText className="h-4 w-4 text-indigo-600 dark:text-indigo-400" aria-hidden />
               {t("emptyState.vendorEvidencePdf")}
             </CardTitle>
-            <p className="text-sm font-normal text-muted-foreground">
+            <p className="text-xs font-normal text-muted-foreground">
               {t("emptyState.selectQuestion")}
             </p>
           </CardHeader>
-          <CardContent className="pt-6">
-            <div className="flex aspect-[4/3] flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50/80 text-center dark:border-slate-700 dark:bg-slate-900/40">
-              <FileText className="mb-2 h-10 w-10 text-slate-400" aria-hidden />
-              <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+          <CardContent className="p-4 pt-3">
+            <div className="flex h-36 flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50/80 text-center dark:border-slate-700 dark:bg-slate-900/40">
+              <FileText className="mb-1.5 h-6 w-6 text-slate-400" aria-hidden />
+              <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
                 {t("emptyState.awaitingSelection")}
               </p>
             </div>
@@ -429,18 +429,18 @@ export function VendorAssessmentSidePanels({
       )}
 
       <Card>
-        <CardHeader className="border-b border-slate-100 dark:border-slate-800">
+        <CardHeader className="border-b border-slate-100 p-4 dark:border-slate-800">
           <CardTitle className="flex items-center gap-2 text-base">
             <Sparkles className="h-4 w-4 text-indigo-600 dark:text-indigo-400" aria-hidden />
             {t("summary.title")}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 pt-6">
-          <ul className="m-0 list-none space-y-3 p-0" aria-label={t("summary.ariaLabel")}>
+        <CardContent className="space-y-2 p-4 pt-3">
+          <ul className="m-0 list-none space-y-2 p-0" aria-label={t("summary.ariaLabel")}>
             {insightLines.map((line, i) => (
               <li
                 key={i}
-                className="rounded-md border border-slate-200/80 bg-white/60 p-3 text-sm leading-relaxed dark:border-slate-800 dark:bg-slate-900/40"
+                className="rounded-md border border-slate-200/80 bg-white/60 p-2.5 text-xs leading-relaxed dark:border-slate-800 dark:bg-slate-900/40"
               >
                 {line}
               </li>
