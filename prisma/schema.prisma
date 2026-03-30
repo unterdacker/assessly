@@ -1,12 +1,12 @@
-// AVRA — EU-oriented multi-tenant core. Use PostgreSQL in production (EU regions);
-// SQLite is the default for local development.
+// AVRA — EU-oriented multi-tenant core.
+// PostgreSQL is the default provider for local and production environments.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

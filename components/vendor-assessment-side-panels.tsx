@@ -177,11 +177,12 @@ function EvidenceForm({ targetStatus, onSave, onCancel, isSaving, t }: EvidenceF
 type AiInsightCardProps = {
   assessmentId: string;
   selectedQuestion: (typeof nis2Questions)[number] | undefined;
+  selectedQuestionText: string | undefined;
   selectedAnswer: AssessmentAnswer | undefined;
   t: ReturnType<typeof useTranslations>;
 };
 
-function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer, t }: AiInsightCardProps) {
+function AiInsightCard({ assessmentId, selectedQuestion, selectedQuestionText, selectedAnswer, t }: AiInsightCardProps) {
   // Which override button was clicked ("COMPLIANT" | "NON_COMPLIANT" | null)
   const [activeOverride, setActiveOverride] = useState<"COMPLIANT" | "NON_COMPLIANT" | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -241,7 +242,7 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedAnswer, t }: Ai
           {t("aiInsight.title")}
         </CardTitle>
         <p className="text-sm font-normal text-muted-foreground">
-          {t("aiInsight.reviewing", { question: selectedQuestion?.text ?? "" })}
+          {t("aiInsight.reviewing", { question: selectedQuestionText ?? "" })}
         </p>
       </CardHeader>
 
@@ -389,6 +390,8 @@ export function VendorAssessmentSidePanels({
   selectedQuestionId,
 }: VendorAssessmentSidePanelsProps) {
   const t = useTranslations("assessment.sidePanels");
+  const tQuestions = useTranslations("externalAssessment.questions");
+  
   const selectedAnswer = selectedQuestionId
     ? answers.find((a) => a.questionId === selectedQuestionId)
     : null;
@@ -396,6 +399,8 @@ export function VendorAssessmentSidePanels({
   const selectedQuestion = selectedQuestionId
     ? nis2Questions.find((q) => q.id === selectedQuestionId)
     : null;
+  
+  const selectedQuestionText = selectedQuestion ? tQuestions(`${selectedQuestion.id}.text`) : undefined;
 
   return (
     <div className="space-y-3 lg:sticky lg:top-20">
@@ -403,6 +408,7 @@ export function VendorAssessmentSidePanels({
         <AiInsightCard
           assessmentId={assessmentId}
           selectedQuestion={selectedQuestion ?? undefined}
+          selectedQuestionText={selectedQuestionText}
           selectedAnswer={selectedAnswer ?? undefined}
           t={t}
         />
