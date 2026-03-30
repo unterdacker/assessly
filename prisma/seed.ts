@@ -20,6 +20,7 @@ type DemoVendor = {
 
 const demoVendors: DemoVendor[] = [
   {
+    // LOW risk — completed assessment, high compliance score
     name: "Northwind Analytics",
     email: "security@northwind.example",
     serviceType: "SaaS / Data Analytics",
@@ -31,6 +32,7 @@ const demoVendors: DemoVendor[] = [
     assessmentUpdatedAt: new Date("2026-01-14T12:00:00.000Z"),
   },
   {
+    // MEDIUM risk — assessment in review, partial compliance
     name: "Contoso Cloud IAM",
     email: "trust@contoso.example",
     serviceType: "Identity & Access",
@@ -42,6 +44,7 @@ const demoVendors: DemoVendor[] = [
     assessmentUpdatedAt: new Date("2026-02-02T12:00:00.000Z"),
   },
   {
+    // HIGH risk — assessment pending, low compliance score, no last assessment date
     name: "Fabrikam Payments",
     email: "pci@fabrikam.example",
     serviceType: "Payment Processing",
@@ -51,28 +54,6 @@ const demoVendors: DemoVendor[] = [
     lastAssessmentDate: null,
     vendorCreatedAt: new Date("2025-11-20T09:00:00.000Z"),
     assessmentUpdatedAt: new Date("2025-11-20T09:00:00.000Z"),
-  },
-  {
-    name: "Adventure Works HR",
-    email: "dpo@adventure.example",
-    serviceType: "HR / Payroll",
-    status: AssessmentStatus.COMPLETED,
-    riskLevel: RiskLevel.MEDIUM,
-    complianceScore: 64,
-    lastAssessmentDate: new Date("2025-11-30T12:00:00.000Z"),
-    vendorCreatedAt: new Date("2025-03-15T08:00:00.000Z"),
-    assessmentUpdatedAt: new Date("2025-11-30T12:00:00.000Z"),
-  },
-  {
-    name: "Litware Backup",
-    email: "soc@litware.example",
-    serviceType: "Backup & Recovery",
-    status: AssessmentStatus.IN_REVIEW,
-    riskLevel: RiskLevel.LOW,
-    complianceScore: 76,
-    lastAssessmentDate: new Date("2026-03-01T12:00:00.000Z"),
-    vendorCreatedAt: new Date("2025-08-01T08:00:00.000Z"),
-    assessmentUpdatedAt: new Date("2026-03-01T12:00:00.000Z"),
   },
 ];
 

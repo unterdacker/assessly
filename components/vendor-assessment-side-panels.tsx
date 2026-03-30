@@ -336,36 +336,59 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedQuestionText, s
           )}
         </p>
         <div className="flex w-full gap-2">
+          {/* Mark Compliant — solid green when already saved, ring when form is open */}
           <Button
             variant="outline"
             size="sm"
             className={cn(
-              "flex-1 gap-1",
-              activeOverride === "COMPLIANT" && "ring-2 ring-emerald-500",
+              "flex-1 gap-1 transition-all",
+              displayStatus === "COMPLIANT" && activeOverride !== "COMPLIANT" &&
+                "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 dark:border-emerald-600",
+              activeOverride === "COMPLIANT" &&
+                "ring-2 ring-emerald-500 border-emerald-400",
             )}
             onClick={() =>
               setActiveOverride(activeOverride === "COMPLIANT" ? null : "COMPLIANT")
             }
-            aria-pressed={activeOverride === "COMPLIANT"}
+            aria-pressed={activeOverride === "COMPLIANT" || displayStatus === "COMPLIANT"}
             disabled={isPending}
           >
-            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <CheckCircle2
+              className={cn(
+                "h-4 w-4",
+                displayStatus === "COMPLIANT" && activeOverride !== "COMPLIANT"
+                  ? "text-white"
+                  : "text-emerald-600 dark:text-emerald-400",
+              )}
+            />
             {t("manualOverride.markCompliant")}
           </Button>
+
+          {/* Mark Non-compliant — solid red when already saved, ring when form is open */}
           <Button
             variant="outline"
             size="sm"
             className={cn(
-              "flex-1 gap-1",
-              activeOverride === "NON_COMPLIANT" && "ring-2 ring-red-500",
+              "flex-1 gap-1 transition-all",
+              displayStatus === "NON_COMPLIANT" && activeOverride !== "NON_COMPLIANT" &&
+                "bg-red-600 hover:bg-red-700 text-white border-red-600 dark:border-red-600",
+              activeOverride === "NON_COMPLIANT" &&
+                "ring-2 ring-red-500 border-red-400",
             )}
             onClick={() =>
               setActiveOverride(activeOverride === "NON_COMPLIANT" ? null : "NON_COMPLIANT")
             }
-            aria-pressed={activeOverride === "NON_COMPLIANT"}
+            aria-pressed={activeOverride === "NON_COMPLIANT" || displayStatus === "NON_COMPLIANT"}
             disabled={isPending}
           >
-            <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+            <XCircle
+              className={cn(
+                "h-4 w-4",
+                displayStatus === "NON_COMPLIANT" && activeOverride !== "NON_COMPLIANT"
+                  ? "text-white"
+                  : "text-red-600 dark:text-red-400",
+              )}
+            />
             {t("manualOverride.markNonCompliant")}
           </Button>
         </div>

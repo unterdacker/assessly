@@ -8,8 +8,6 @@ It is built for practical day-to-day operations: invite vendors, run assessments
 
 ---
 
-## English
-
 ### What Problem AVRA Solves
 
 Security officers often manage third-party assessments in fragmented spreadsheets, email threads, and manual reviews. AVRA centralizes this process into a single workspace where teams can:
@@ -187,7 +185,13 @@ npx prisma db push
 
 **Step 6 — Seed demo data (optional)**
 
-Populates the database with the demo vendors and assessments defined in `prisma/seed.ts`.
+Populates the database with 3 representative demo vendors and their NIS2 assessments defined in `prisma/seed.ts`.
+
+| Vendor | Service Type | Risk | Status | Score |
+|---|---|---|---|---|
+| Northwind Analytics | SaaS / Data Analytics | LOW | Completed | 82% |
+| Contoso Cloud IAM | Identity & Access | MEDIUM | In Review | 58% |
+| Fabrikam Payments | Payment Processing | HIGH | Pending | 34% |
 
 ```powershell
 npx prisma db seed
