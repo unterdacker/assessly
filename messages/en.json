@@ -316,7 +316,16 @@
       "catalogue": "catalogue",
       "compliant": "Compliant",
       "nonCompliant": "Non-compliant",
-      "pending": "Pending"
+      "pending": "Pending",
+      "categories_list": {
+        "governance": "Governance & Risk Management",
+        "access": "Access & Identity",
+        "dataProtection": "Data Protection & Privacy",
+        "cryptography": "Cryptography & Key Management",
+        "operations": "Operations & Monitoring",
+        "incident": "Incident & Business Continuity",
+        "supplyChain": "Supply Chain & Development"
+      }
     },
     "sidePanels": {
       "status": {

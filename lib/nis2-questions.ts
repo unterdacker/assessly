@@ -11,6 +11,30 @@ export type Nis2Question = {
  */
 export const NIS2_QUESTIONNAIRE_VERSION = "2026.1";
 
+/** Map question IDs to their category translation keys */
+export const categoryKeyMap: Record<string, string> = {
+  q1: "governance",
+  q2: "governance",
+  q3: "governance",
+  q4: "access",
+  q5: "access",
+  q6: "access",
+  q7: "dataProtection",
+  q8: "dataProtection",
+  q9: "dataProtection",
+  q10: "cryptography",
+  q11: "cryptography",
+  q12: "operations",
+  q13: "operations",
+  q14: "operations",
+  q15: "incident",
+  q16: "incident",
+  q17: "incident",
+  q18: "supplyChain",
+  q19: "supplyChain",
+  q20: "supplyChain",
+};
+
 /** Twenty NIS2-aligned security assessment questions, grouped by category for the workspace UI. */
 export const nis2Questions: Nis2Question[] = [
   {
