@@ -135,6 +135,74 @@ Open:
 http://localhost:3000
 ```
 
+### Quick Start Tutorial (PowerShell)
+
+A single, copy-paste-ready sequence to go from zero to a running development environment. Run each block in order in a PowerShell terminal.
+
+**Step 1 — Start a fresh PostgreSQL container**
+
+Stop any existing container and volumes, then bring PostgreSQL up clean.
+
+```powershell
+docker-compose down -v
+Start-Sleep -Seconds 2
+docker-compose up -d
+Start-Sleep -Seconds 5
+```
+
+**Step 2 — Verify PostgreSQL is ready**
+
+Confirm the database server is accepting connections before proceeding.
+
+```powershell
+docker-compose exec postgres pg_isready -U postgres
+```
+
+Expected output: `localhost:5432 - accepting connections`
+
+**Step 3 — Remove old SQLite migrations**
+
+SQLite-generated migration files are incompatible with PostgreSQL and must be deleted before pushing the schema.
+
+```powershell
+Remove-Item -Path "prisma/migrations" -Recurse -Force -ErrorAction SilentlyContinue
+```
+
+**Step 4 — Clear Prisma cache and regenerate the client**
+
+Clears any stale type cache and regenerates the Prisma Client for PostgreSQL.
+
+```powershell
+Remove-Item -Path "node_modules/.prisma" -Recurse -Force -ErrorAction SilentlyContinue
+npx prisma generate
+```
+
+**Step 5 — Push schema to PostgreSQL**
+
+Creates all tables from `prisma/schema.prisma` directly into the running database.
+
+```powershell
+npx prisma db push
+```
+
+**Step 6 — Seed demo data (optional)**
+
+Populates the database with the demo vendors and assessments defined in `prisma/seed.ts`.
+
+```powershell
+npx prisma db seed
+```
+
+**Step 7 — Start the development server**
+
+```powershell
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
 ### Database Reset (PostgreSQL Re-Init)
 
 Use this when switching from SQLite migrations or when local DB state is corrupted.
