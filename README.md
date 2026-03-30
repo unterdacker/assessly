@@ -1,3 +1,5 @@
+![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
+
 # AVRA - Automated Vendor Risk Assessment
 
 AVRA is a modern Vendor Risk Management dashboard that helps security teams evaluate digital supply chain risk with NIS2-aligned workflows, structured evidence handling, and AI-assisted document analysis.
@@ -29,6 +31,14 @@ Security officers often manage third-party assessments in fragmented spreadsheet
 - AI document audit workflow for PDF evidence.
 - Manual answer override with justification and supplemental evidence support.
 - Audit trail-aware architecture and EU-sovereign deployment posture.
+
+### Enterprise & Compliance
+
+AVRA is designed for an enterprise/open-source hybrid operating model, with controls that map to real-world regulatory and audit expectations.
+
+- Sovereign AI principles: local LLM endpoint support is available for organizations that require strict data residency and processing control.
+- Full auditability: PostgreSQL-backed audit logs provide durable and reviewable change history across internal and external assessment workflows.
+- NIS2 alignment posture: architecture decisions are aimed at traceability, accountability, and supply-chain risk governance.
 
 ### Tech Stack
 
@@ -201,9 +211,7 @@ Then reference them in this README, for example:
 
 ### License
 
-No `LICENSE` file is currently present in the repository.
-
-If you plan to share this project externally, add a license file (for example MIT, Apache-2.0, or a proprietary internal license) and update this section.
+This project is licensed under the Apache License 2.0. It is designed for enterprise-grade compliance and is open for community contributions while maintaining a posture suitable for corporate integration.
 
 ### Contributing
 
