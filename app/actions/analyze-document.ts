@@ -2,6 +2,8 @@
 
 import type { AnalyzeDocumentResponse } from "@/lib/nis2-question-analysis";
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import fs from "fs/promises";
+import path from "path";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { runNis2Analysis } from "@/lib/ai/provider";
@@ -13,6 +15,8 @@ import {
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_TEXT_LENGTH = 20_000;
+/** Local-disk evidence store — mirrors the path used by the document GET route. */
+const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
 
 function textItemToString(item: unknown): string {
   if (
@@ -37,8 +41,68 @@ function sanitizeExtractedText(text: string): string {
 }
 
 /**
+ * Extract all text from a PDF buffer using pdfjs.
+ * Exported so the re-analysis action can reuse the same logic.
+ */
+export async function extractPdfText(buffer: Buffer): Promise<string> {
+  const loadingTask = pdfjsLib.getDocument({
+    data: new Uint8Array(buffer),
+    useWorkerFetch: false,
+    stopAtErrors: true,
+  });
+  const pdfDocument = await loadingTask.promise;
+  let fullText = "";
+  for (let i = 1; i <= pdfDocument.numPages; i++) {
+    const page = await pdfDocument.getPage(i);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items.map(textItemToString).join(" ");
+    fullText += pageText + "\n";
+  }
+  return sanitizeExtractedText(fullText);
+}
+
+/**
+ * Persist a validated PDF buffer to .avra-storage/ and create a Document record.
+ * Non-throwing — logs errors and returns gracefully so analysis can still proceed.
+ */
+export async function persistEvidencePdf(
+  assessmentId: string,
+  originalFilename: string,
+  buffer: Buffer,
+): Promise<void> {
+  await fs.mkdir(STORAGE_DIR, { recursive: true });
+  const safeName = originalFilename.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const storedName = `${assessmentId}__${safeName}`;
+  const filePath = path.join(STORAGE_DIR, storedName);
+  // Path-traversal guard
+  const resolved = path.resolve(filePath);
+  if (!resolved.startsWith(path.resolve(STORAGE_DIR))) {
+    throw new Error("Storage path validation failed — possible path traversal.");
+  }
+  await fs.writeFile(resolved, buffer);
+  // Create Document audit record and update Assessment with the serving URL
+  await (prisma as any).document.create({
+    data: {
+      assessmentId,
+      filename: originalFilename,
+      storagePath: storedName,
+      mimeType: "application/pdf",
+      fileSize: buffer.byteLength,
+      uploadedBy: "admin",
+    },
+  });
+  await prisma.assessment.update({
+    where: { id: assessmentId },
+    data: {
+      documentFilename: originalFilename,
+      documentUrl: `/api/documents/${assessmentId}`,
+    },
+  });
+}
+
+/**
  * AI-powered document analysis action.
- * Processed STATELESSLY: No PDF files are stored permanently for privacy compliance.
+ * PDFs are persisted to .avra-storage/ for long-term audit traceability.
  */
 export async function analyzeDocument(
   formData: FormData,
@@ -73,43 +137,33 @@ export async function analyzeDocument(
     return { ok: false, error: "Assessment not found for the given vendor." };
   }
 
-  // 1. Fetch the 20 NIS2 questions from the DB
+  // 1. Persist the PDF to disk and record the Document entry
+  try {
+    await persistEvidencePdf(assessment.id, file.name, buffer);
+  } catch (storageErr) {
+    logErrorReport("PDF Storage Phase", storageErr);
+    // Non-fatal: continue with AI analysis even if disk write fails
+  }
+
+  // 2. Fetch the NIS2 questions from the DB
   const questions = await prisma.question.findMany({
     orderBy: { sortOrder: 'asc' }
   });
 
+  // 3. Extract text from PDF
   let extractedText = "";
   try {
-    const loadingTask = pdfjsLib.getDocument({
-      data: new Uint8Array(buffer),
-      useWorkerFetch: false,
-      stopAtErrors: true,
-    });
-
-    const pdfDocument = await loadingTask.promise;
-    let fullText = "";
-
-    for (let i = 1; i <= pdfDocument.numPages; i++) {
-      const page = await pdfDocument.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items.map(textItemToString).join(" ");
-      fullText += pageText + "\n";
-    }
-
-    extractedText = fullText;
+    extractedText = await extractPdfText(buffer);
   } catch (err: unknown) {
     logErrorReport("PDF Extraction Phase", err);
     const errorMessage = err instanceof Error ? err.message : String(err);
     return { ok: false, error: `AI Audit failed: The PDF structure could not be parsed. Details: ${errorMessage}` };
   }
-
   if (!extractedText) {
     return { ok: false, error: "Uploaded PDF contains no extractable text." };
   }
 
-  extractedText = sanitizeExtractedText(extractedText);
-
-  // 2. Call an LLM (Abstracted Provider Logic)
+  // 4. Call the LLM
   const questionPayload = questions.map(q => ({
     id: q.id,
     category: q.category,
@@ -211,6 +265,7 @@ export async function analyzeDocument(
       actorId: "ai-system",
       createdBy: "ai-system",
       metadata: { newScore, compliantCount, totalQuestions, mode: "stateless" },
+      metadata: { newScore, compliantCount, totalQuestions, mode: "stored" },
     }
   });
 

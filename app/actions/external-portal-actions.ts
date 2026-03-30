@@ -7,6 +7,22 @@ import { prisma } from "@/lib/prisma";
 
 const ROOT_STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
 const QUESTION_EVIDENCE_DIR = path.join(ROOT_STORAGE_DIR, "question-evidence");
+const EXPIRY_GRACE_PERIOD_MS = 2 * 60 * 1000;
+
+function resolveDeadline(vendor: {
+  inviteTokenExpires?: Date | null;
+  codeExpiresAt?: Date | null;
+}): Date | null {
+  const candidates = [vendor.inviteTokenExpires, vendor.codeExpiresAt]
+    .filter((value): value is Date => Boolean(value))
+    .map((value) => value.getTime());
+  if (!candidates.length) return null;
+  return new Date(Math.min(...candidates));
+}
+
+function isExpiredUtcWithGrace(deadline: Date): boolean {
+  return Date.now() > deadline.getTime() + EXPIRY_GRACE_PERIOD_MS;
+}
 
 function normalizeOptional(value?: string | null): string | null {
   const trimmed = (value || "").trim();
@@ -19,13 +35,17 @@ async function getExternalVendorByToken(token: string) {
   return (prisma.vendor as any).findFirst({
     where: {
       inviteToken: token,
-      inviteTokenExpires: { gt: new Date() },
       isCodeActive: true,
-      codeExpiresAt: { gt: new Date() },
     },
     include: {
       assessment: true,
     },
+  }).then((vendor: any) => {
+    if (!vendor) return null;
+    const deadline = resolveDeadline(vendor);
+    if (!deadline) return null;
+    if (isExpiredUtcWithGrace(deadline)) return null;
+    return vendor;
   });
 }
 
@@ -144,6 +164,13 @@ export async function deleteExternalAnswerEvidence(input: { token: string; answe
       select: {
         id: true,
         evidenceFileUrl: true,
+        documentId: true,
+        document: {
+          select: {
+            id: true,
+            storagePath: true,
+          },
+        },
       },
     });
 
@@ -159,11 +186,20 @@ export async function deleteExternalAnswerEvidence(input: { token: string; answe
       }
     }
 
+    if (answer.document?.storagePath) {
+      const filePath = path.join(ROOT_STORAGE_DIR, answer.document.storagePath);
+      const resolved = path.resolve(filePath);
+      if (resolved.startsWith(path.resolve(ROOT_STORAGE_DIR))) {
+        await fs.unlink(resolved).catch(() => undefined);
+      }
+    }
+
     const updated = await prisma.assessmentAnswer.update({
       where: { id: answer.id },
       data: {
         evidenceFileUrl: null,
         evidenceFileName: null,
+        documentId: null,
       },
       select: {
         id: true,
@@ -173,8 +209,21 @@ export async function deleteExternalAnswerEvidence(input: { token: string; answe
         justificationText: true,
         evidenceFileName: true,
         evidenceFileUrl: true,
+        document: {
+          select: {
+            id: true,
+            filename: true,
+            fileSize: true,
+            uploadedAt: true,
+            uploadedBy: true,
+          },
+        },
       },
     });
+
+    if (answer.documentId) {
+      await (prisma as any).document.delete({ where: { id: answer.documentId } }).catch(() => undefined);
+    }
 
     await prisma.auditLog.create({
       data: {

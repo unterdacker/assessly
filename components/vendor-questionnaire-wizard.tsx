@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { updateExternalAnswer } from "@/app/actions/update-external-answer";
 import { deleteExternalAnswerEvidence } from "@/app/actions/external-portal-actions";
+import { EvidenceViewer } from "@/components/evidence-viewer";
 
 // Local extension to AssessmentAnswer until prisma generate takes full effect
 type ExtendedAssessmentAnswer = AssessmentAnswer & {
@@ -32,6 +33,13 @@ type ExtendedAssessmentAnswer = AssessmentAnswer & {
   justificationText?: string | null;
   evidenceFileUrl?: string | null;
   evidenceFileName?: string | null;
+  document?: {
+    id: string;
+    filename: string;
+    fileSize: number;
+    uploadedAt: string | Date;
+    uploadedBy: string;
+  } | null;
 };
 
 type VendorQuestionnaireWizardProps = {
@@ -471,15 +479,19 @@ export function VendorQuestionnaireWizard({
                       </p>
                     )}
                     {answer?.id && answer?.evidenceFileUrl && (
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={`/api/documents/answer/${answer.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[11px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline dark:text-indigo-400"
-                        >
-                          {tw("openSavedEvidence", "Open current saved evidence")}
-                        </a>
+                      <div className="space-y-2">
+                        <EvidenceViewer
+                          answerId={answer.id}
+                          filename={answer.evidenceFileName || answer.document?.filename || "evidence-file"}
+                          fileSize={answer.document?.fileSize ?? null}
+                          uploadedAt={answer.document?.uploadedAt ?? null}
+                          uploadedBy={answer.document?.uploadedBy ?? null}
+                          viewLabel={tw("openSavedEvidence", "Open current saved evidence")}
+                          uploadedAtLabel={tw("evidenceMeta.uploadedAt", "Uploaded at")}
+                          uploadedByLabel={tw("evidenceMeta.uploadedBy", "Uploaded by")}
+                          sizeLabel={tw("evidenceMeta.size", "Size")}
+                          unknownLabel={tw("evidenceMeta.unknown", "Unknown")}
+                        />
                         <Button
                           type="button"
                           variant="outline"

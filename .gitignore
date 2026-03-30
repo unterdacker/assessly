@@ -35,5 +35,8 @@ yarn-error.log*
 /prisma/dev.db
 /prisma/dev.db-journal
 
+# local PDF evidence storage (audit documents must not be committed to source control)
+/.avra-storage/
+
 # typescript
 *.tsbuildinfo

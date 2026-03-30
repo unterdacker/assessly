@@ -92,6 +92,7 @@ model Assessment {
   createdBy          String
 
   answers            AssessmentAnswer[]
+  documents          Document[]
 
   @@index([companyId])
   @@index([vendorId])
@@ -153,6 +154,9 @@ model AssessmentAnswer {
   isAiSuggested   Boolean    @default(false)
   /// Whether the AI suggestion has been verified by a human auditor.
   verified        Boolean    @default(false)
+  /// Optional link to a stored Document record (per-answer supplemental evidence).
+  documentId       String?
+  document         Document?  @relation(fields: [documentId], references: [id])
   /// The status string suggested by AI ("COMPLIANT" or "NON_COMPLIANT").
   aiSuggestedStatus String?
   /// The internal confidence score assigned by the AI (0.0 to 1.0).
@@ -181,4 +185,24 @@ model CustomVendorServiceType {
 
   @@unique([companyId, name])
   @@index([companyId])
+}
+
+/// Permanent PDF evidence records — append-only, never deleted.
+/// Each upload is recorded here for audit-grade traceability under NIS2 Article 21.
+model Document {
+  id           String     @id @default(cuid())
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  /// Original filename as provided by the uploader.
+  filename     String
+  /// Path relative to the .avra-storage/ root on the server.
+  storagePath  String
+  mimeType     String     @default("application/pdf")
+  fileSize     Int
+  uploadedAt   DateTime   @default(now())
+  uploadedBy   String     @default("system")
+
+  assessmentAnswers AssessmentAnswer[]
+
+  @@index([assessmentId])
 }

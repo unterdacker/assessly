@@ -112,6 +112,8 @@ export type VendorAssessmentDetail = {
   answers: AssessmentAnswer[];
   documentUrl: string | null;
   documentFilename: string | null;
+  documentFileSize: number | null;
+  lastAuditedAt: string | null;
 };
 
 /** Loads vendor assessment, reconciles strict score/risk to DB, returns full detail for workspace. */
@@ -124,7 +126,27 @@ export async function getVendorAssessmentDetail(
 
   const row = await prisma.assessment.findFirst({
     where: { vendorId },
-    include: { vendor: true, answers: true },
+    include: {
+      vendor: true,
+      answers: {
+        include: {
+          document: {
+            select: {
+              id: true,
+              filename: true,
+              fileSize: true,
+              uploadedAt: true,
+              uploadedBy: true,
+            },
+          },
+        },
+      },
+      documents: {
+        select: { fileSize: true, uploadedAt: true },
+        orderBy: { uploadedAt: "desc" },
+        take: 1,
+      },
+    },
   });
 
   if (!row) return null;
@@ -137,7 +159,8 @@ export async function getVendorAssessmentDetail(
     row.riskLevel,
   );
 
-  const { vendor, answers, ...assessmentFields } = row;
+  const { vendor, answers, documents, ...assessmentFields } = row;
+  const latestDocument = documents[0] ?? null;
 
   const filledCount = answers.filter(
     (a: any) => a.status === "COMPLIANT" || a.status === "NON_COMPLIANT"
@@ -157,6 +180,8 @@ export async function getVendorAssessmentDetail(
     answers,
     documentUrl: row.documentUrl ?? null,
     documentFilename: row.documentFilename ?? null,
+    documentFileSize: latestDocument?.fileSize ?? null,
+    lastAuditedAt: row.updatedAt.toISOString(),
   };
 }
 

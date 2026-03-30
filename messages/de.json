@@ -71,6 +71,7 @@
   "AssessmentLinkInvalid": "Dieser Bewertungslink entspricht keinem Anbieter in Ihrem Workspace.",
   "ReturnToVendors": "Zurück zur Anbieter-Liste",
   "LinkInactive": "Link inaktiv",
+  "LinkExpiredAt": "Dieser Bewertungslink ist nicht mehr aktiv. Er ist am {expiry} abgelaufen.",
   "LinkExpiredMessage": "Dieser Bewertungslink ist abgelaufen oder nicht mehr gültig. Bitte kontaktieren Sie Ihren Käufer, um eine neue Einladung anzufordern.",
   "BackToVendors": "Zurück zu Anbietern",
   "EditVendorInfo": "Anbieterinformationen bearbeiten",
@@ -90,6 +91,30 @@
   "SubmitAssessment": "Bewertung einreichen",
   "Progress": "Fortschritt",
   "Complete": "Abgeschlossen",
+  "pdfUpload": {
+    "title": "Souveraene Dokumentenpruefung",
+    "placeholder": "Sicherheitsdokument hier ablegen oder klicken (Max. 20MB, PDF)",
+    "privacyNote": "🛡️ Datenschutz-Garantie: Analyse via Mistral AI (EU) oder lokalem LLM. Kein Training, kein Datentransfer in die USA.",
+    "consentLabel": "Ich bestaetige, dass dieses Dokument als vertraulicher Nachweis gespeichert und DSGVO-konform verarbeitet wird.",
+    "aiTooltip": "Die Analyse erfolgt in einer isolierten Umgebung gemaess NIS2-Vorgaben.",
+    "privacyConsentRequired": "Datenschutzeinwilligung ist erforderlich.",
+    "selectPdfBeforeSubmitting": "Bitte waehlen Sie vor dem Absenden eine PDF-Datei aus.",
+    "aiAuditFailed": "KI-Pruefung fehlgeschlagen.",
+    "analysisComplete": "Analyse abgeschlossen. Ergebnisse gespeichert.",
+    "choosePdf": "PDF auswaehlen",
+    "runningAnalysis": "Analyse laeuft...",
+    "runAiAudit": "KI-Pruefung starten",
+    "rerunAudit": "KI-Pruefung erneut starten",
+    "viewStoredPdf": "PDF anzeigen",
+    "auditTrailLabel": "Audit-Trail",
+    "lastAuditedAt": "Zuletzt geprueft: {timestamp}",
+    "notAuditedYet": "Es wurde noch keine KI-Pruefung ausgefuehrt.",
+    "evidenceStoredBadge": "Gespeichert",
+    "evidenceReadyBadge": "Bereit",
+    "sizeUnavailable": "Dateigroesse nicht verfuegbar",
+    "pdfOnly": "Nur PDF-Dateien sind erlaubt.",
+    "fileTooLarge": "Datei ist zu gross. Maximale Dateigroesse ist 20MB."
+  },
   "LocaleLandingReady": "AVRA ist in Ihrer ausgewaehlten Sprache bereit.",
   "ExternalExitTitle": "Sie haben das Anbieterportal verlassen",
   "ExternalExitDesc": "Ihre externe Bewertungssitzung wurde geschlossen. Sie koennen diese Registerkarte jetzt sicher schliessen.",
@@ -118,6 +143,7 @@
     "submitted": {
       "title": "Bewertung eingereicht",
       "description": "Vielen Dank fuer Ihre Compliance-Daten. Ihre Antworten fuer <strong>{vendorName}</strong> wurden sicher mit Ihrem Auftraggeber geteilt.",
+      "validUntil": "Sie koennen diesen Link bis {expiry} verwenden.",
       "closeHint": "Sie koennen dieses Fenster jetzt schliessen."
     },
     "welcome": {
@@ -139,6 +165,7 @@
       "progressComplete": "{progress}% abgeschlossen",
       "progressVerified": "{filled} von {total} verifiziert",
       "sessionExpiredBadge": "Sitzung abgelaufen",
+      "linkExpiresAt": "Gueltig bis: {expiry}",
       "expiresBadge": "Laeuft ab: {expiry}",
       "exitPortal": "Portal verlassen",
       "submitting": "Wird eingereicht...",
@@ -231,6 +258,12 @@
       "uploadAccepted": "Akzeptiert: PDF, JPG, PNG. Max 10MB.",
       "selectedEvidence": "Ausgewaehlter Nachweis:",
       "openSavedEvidence": "Aktuell gespeicherten Nachweis oeffnen",
+      "evidenceMeta": {
+        "uploadedAt": "Hochgeladen am",
+        "uploadedBy": "Hochgeladen von",
+        "size": "Groesse",
+        "unknown": "Unbekannt"
+      },
       "delete": "Loeschen",
       "saving": "Speichern...",
       "saveAndConfirm": "Speichern und bestaetigen"
@@ -264,6 +297,10 @@
       "title": "Sitzung abgelaufen",
       "description": "Ihr temporaeres Zugriffsfenster ist beendet. Bitte kontaktieren Sie Ihren Administrator, um einen neuen Zugangscode anzufordern.",
       "returnToPortal": "Zurueck zum Zugangsportal"
+    },
+    "submission": {
+      "deadlinePassed": "Die Einreichungsfrist ist am {expiry} abgelaufen. Bitte fordern Sie einen neuen Link bei Ihrer Administration an.",
+      "genericFailed": "Einreichung fehlgeschlagen. Bitte erneut versuchen."
     }
   },
   "assessment": {
@@ -357,7 +394,17 @@
         "saving": "Speichern...",
         "noReasoning": "Noch keine KI-Begruendung fuer diese Frage vorhanden.",
         "evidenceFromDocument": "Nachweis aus dem Dokument",
-        "viewSupplementalEvidencePdf": "Zusaetzliches Nachweis-PDF anzeigen"
+        "viewSupplementalEvidencePdf": "Zusaetzliches Nachweis-PDF anzeigen",
+        "answerEvidenceTitle": "Nachweis zur Anforderung",
+        "noEvidenceUploaded": "Noch kein Nachweis an diese Anforderung angehaengt.",
+        "uploadEvidence": "Nachweis hochladen",
+        "uploadingEvidence": "Wird hochgeladen...",
+        "uploadFailed": "Nachweis konnte nicht hochgeladen werden.",
+        "viewEvidence": "Download / Anzeigen",
+        "uploadedAt": "Hochgeladen am",
+        "uploadedBy": "Hochgeladen von",
+        "fileSize": "Groesse",
+        "unknown": "Unbekannt"
       },
       "emptyState": {
         "vendorEvidencePdf": "Anbieter-Nachweise (PDF)",
@@ -374,7 +421,17 @@
       "selectPdfBeforeSubmitting": "Bitte waehlen Sie vor dem Absenden eine PDF-Datei aus.",
       "aiAuditFailed": "KI-Pruefung fehlgeschlagen.",
       "analysisComplete": "Analyse abgeschlossen. Ergebnisse gespeichert.",
-      "privacyConsentLabel": "Ich verstehe, dass dieses Dokument fuer Audit-Zwecke <strong>zustandslos</strong> durch AVRAs private KI-Engine analysiert wird. Das PDF selbst wird NICHT dauerhaft gespeichert.",
+      "privacyConsentLabel": "Ich verstehe, dass dieses Dokument durch AVRAs private KI-Engine analysiert und zusammen mit seinem Audit-Nachweis fuer <strong>langfristige Compliance-Nachvollziehbarkeit</strong> gespeichert wird.",
+      "uploadEvidenceTitle": "Nachweisdokument hochladen",
+      "uploadEvidenceDescription": "Nutzen Sie ein revisionsfaehiges PDF als zentrale Quelle fuer KI-Analyse und spaetere Verifikation.",
+      "uploadEvidenceEmptyTitle": "Nachweis hochladen",
+      "evidenceStoredBadge": "Gespeichert",
+      "evidenceReadyBadge": "Bereit",
+      "auditTrailLabel": "Audit-Trail",
+      "lastAuditedAt": "Zuletzt geprueft: {timestamp}",
+      "notAuditedYet": "Es wurde noch keine KI-Pruefung ausgefuehrt.",
+      "viewStoredPdf": "PDF anzeigen",
+      "rerunAudit": "KI-Pruefung erneut starten",
       "dragAndDropTitle": "Ziehen Sie eine PDF-Datei hierher",
       "orClickToSelect": "oder klicken Sie zum Auswaehlen",
       "choosePdf": "PDF auswaehlen",
