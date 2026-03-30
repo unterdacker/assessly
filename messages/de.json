@@ -426,6 +426,35 @@
       }
     }
   },
+  "inviteVendorModal": {
+    "success": {
+      "title": "Einladung zugestellt",
+      "description": "Zugangsdaten wurden fuer <strong>{vendorName}</strong> auf zwei Kanaele verteilt.",
+      "emailStatus": "<strong>E-Mail gesendet</strong> - Portal-Link und Zugangscode wurden zugestellt.",
+      "smsStatus": "<strong>SMS gesendet</strong> - temporaeres Passwort wurde an <mono>{phone}</mono> zugestellt.",
+      "securityHint": "Der Anbieter muss das Passwort beim ersten Login sofort aendern. Das temporaere Passwort wird nie im Klartext gespeichert und kann nicht wiederhergestellt werden."
+    },
+    "form": {
+      "title": "Sichere Einladung senden",
+      "description": "Der Zugangscode geht per <strong>E-Mail</strong>; das temporaere Passwort per <strong>SMS</strong>. Die beiden Zugangsdaten werden nie gemeinsam versendet.",
+      "emailLabel": "E-Mail-Adresse",
+      "emailPlaceholder": "security@vendor.com",
+      "mobileLabel": "Mobilnummer",
+      "mobilePlaceholder": "+49 151 12345678",
+      "mobileHint": "Internationales Format erforderlich, z. B. +49 151 12345678",
+      "codeValidityLabel": "Code-Gueltigkeit",
+      "duration1h": "1 Stunde",
+      "duration24h": "24 Stunden",
+      "duration7d": "7 Tage",
+      "duration30d": "30 Tage"
+    },
+    "actions": {
+      "close": "Schliessen",
+      "cancel": "Abbrechen",
+      "sending": "Senden...",
+      "sendSecureInvite": "Sichere Einladung senden"
+    }
+  },
   "vendors": {
     "pageTitle": "Anbieter",
     "pageDesc": "Anbieter suchen, einladen und NIS2-Bewertungsarbeitsbereiche \u00f6ffnen.",

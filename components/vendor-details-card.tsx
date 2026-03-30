@@ -162,13 +162,13 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
           </div>
 
           <div className="flex flex-wrap items-start gap-2">
-            {/* Access code block + status badges */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex flex-col items-start gap-1 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
+            {/* Compact status tags */}
+            <div className="flex flex-wrap items-start gap-2">
+              <div className="inline-flex flex-col gap-0.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-900">
                 {hasActiveCode ? (
                   <>
-                    <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-wider text-slate-900 dark:text-slate-100">
-                      <span>{vendorAssessment.accessCode}</span>
+                    <div className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wider text-slate-900 dark:text-slate-100">
+                      <span className="font-mono">{vendorAssessment.accessCode}</span>
                       <button
                         type="button"
                         aria-label={t("copyAccessCodeAria", { vendorName: vendorAssessment.name })}
@@ -181,35 +181,33 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
                         <span className="text-[10px] text-emerald-600 dark:text-emerald-400">{t("copied")}</span>
                       )}
                     </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    <p className="text-[10px] text-slate-600 dark:text-slate-300">
                       {formatAccessCodeExpiry(vendorAssessment.codeExpiresAt)}
                     </p>
                   </>
                 ) : (
                   <>
                     <span className="text-xs text-muted-foreground">{t("noActiveCode")}</span>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("generateCodeInvite")}</p>
+                    <p className="text-[10px] text-muted-foreground">{t("generateCodeInvite")}</p>
                   </>
                 )}
               </div>
 
-              {/* Invite status */}
               {vendorAssessment.inviteSentAt ? (
-                <div className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+                <div className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
                   <Mail className="h-3 w-3 shrink-0" />
                   {t("inviteSent")} {new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(vendorAssessment.inviteSentAt))}
                 </div>
               ) : null}
 
-              {/* Password status — only meaningful once an invite has been sent */}
               {vendorAssessment.inviteSentAt && (
                 vendorAssessment.isFirstLogin ? (
-                  <div className="inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:border-amber-800/40 dark:bg-amber-900/20 dark:text-amber-400">
+                  <div className="inline-flex items-center gap-1.5 rounded-md border border-amber-300 bg-amber-100 px-2.5 py-1.5 text-xs font-semibold text-amber-900 dark:border-amber-700/60 dark:bg-amber-900/30 dark:text-amber-200">
                     <ShieldAlert className="h-3 w-3 shrink-0" />
                     {t("passwordPending")}
                   </div>
                 ) : (
-                  <div className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-900/20 dark:text-emerald-400">
+                  <div className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-900/20 dark:text-emerald-300">
                     <ShieldCheck className="h-3 w-3 shrink-0" />
                     {t("passwordSecured")}
                   </div>
