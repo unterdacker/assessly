@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { logErrorReport } from "@/lib/logger";
 import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance";
+import { logAuditEvent } from "@/lib/audit-log";
 
 const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
 
@@ -75,9 +76,10 @@ export async function overrideAssessmentAnswer(
       : auditPrefix;
 
     let answerId: string;
+    let updatedAnswer: { id: string };
 
     if (existing) {
-      const updated = await prisma.assessmentAnswer.update({
+      updatedAnswer = await prisma.assessmentAnswer.update({
         where: { id: existing.id },
         data: {
           status,
@@ -86,9 +88,9 @@ export async function overrideAssessmentAnswer(
         },
         select: { id: true },
       });
-      answerId = updated.id;
+      answerId = updatedAnswer.id;
     } else {
-      const created = await prisma.assessmentAnswer.create({
+      updatedAnswer = await prisma.assessmentAnswer.create({
         data: {
           assessmentId,
           questionId,
@@ -99,7 +101,7 @@ export async function overrideAssessmentAnswer(
         },
         select: { id: true },
       });
-      answerId = created.id;
+      answerId = updatedAnswer.id;
     }
 
     // Persist optional supplemental PDF
@@ -132,30 +134,50 @@ export async function overrideAssessmentAnswer(
       assessment.riskLevel,
     );
 
-    await Promise.all([
-      prisma.auditLog.create({
-        data: {
+    // Safely construct audit payload — no undefined or non-serializable values
+    const previousValuePayload = existing
+      ? {
+          status: existing.status || null,
+          findings: existing.findings || null,
+          manualNotes: existing.manualNotes || null,
+          evidenceUrl: existing.evidenceUrl || null,
+        }
+      : null;
+
+    const newValuePayload = {
+      questionId,
+      status,
+      manualNotes: manualNotes.trim(),
+      hasSupplementalEvidence: !!evidenceUrl,
+      evidenceUrl: evidenceUrl || null,
+      complianceScore: newScore || 0,
+    };
+
+    try {
+      await logAuditEvent(
+        {
           companyId: assessment.companyId,
-          action: `ISB override: Q${questionId} → ${status}`,
+          userId: "isb-user",
+          action: "ASSESSMENT_OVERRIDE",
           entityType: "assessment_answer",
           entityId: answerId,
-          actorId: "isb-user",
-          createdBy: "isb-user",
-          metadata: {
-            questionId,
-            status,
-            newScore,
-            hasSupplementalEvidence: !!evidenceUrl,
-          },
+          previousValue: previousValuePayload,
+          newValue: newValuePayload,
         },
-      }),
-    ]);
+        { captureHeaders: false }, // Disable header capture to avoid async context issues
+      );
+    } catch (auditErr) {
+      logErrorReport("Audit Log Creation Failed", auditErr);
+      // Non-fatal: continue even if audit logging fails
+    }
 
     revalidatePath("/vendors");
     revalidatePath(`/vendors/${assessment.vendorId}/assessment`);
 
     return { success: true, newScore };
   } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error("[overrideAssessmentAnswer] Error:", errorMessage);
     logErrorReport("overrideAssessmentAnswer", err);
     return { success: false, error: "Failed to save override. Please try again." };
   }

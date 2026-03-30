@@ -77,10 +77,18 @@ export function middleware(request: NextRequest) {
   const isInternalRoute = 
     normalizedPathname.startsWith("/dashboard") || 
     normalizedPathname.startsWith("/vendors") || 
-    normalizedPathname.startsWith("/settings");
+    normalizedPathname.startsWith("/settings") ||
+    normalizedPathname.startsWith("/admin");
 
   // 3. Enforce "Vault" rule: If an admin route is hit with a vendor token, clear it to prevent lockout
   const vendorToken = request.cookies.get("avra-vendor-token");
+
+  // Hardened admin restriction: external vendor sessions cannot access /admin.
+  if (normalizedPathname.startsWith("/admin") && vendorToken) {
+    const url = request.nextUrl.clone();
+    url.pathname = withLocalePath("/external/portal", activeLocale);
+    return NextResponse.redirect(url);
+  }
 
   if (isInternalRoute && vendorToken) {
     // Break the redirect loop by clearing the vendor token

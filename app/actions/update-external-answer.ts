@@ -6,6 +6,7 @@ import { randomUUID } from "crypto";
 import sanitizeHtml from "sanitize-html";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { logAuditEvent } from "@/lib/audit-log";
 
 const MAX_EVIDENCE_SIZE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_EVIDENCE_MIME_TYPES = new Set([
@@ -103,6 +104,15 @@ export async function updateExternalAnswer(formData: FormData) {
   }
 
   try {
+    const assessment = await prisma.assessment.findUnique({
+      where: { id: assessmentId },
+      select: { id: true, companyId: true },
+    });
+
+    if (!assessment) {
+      return { ok: false, error: "Assessment not found." };
+    }
+
     let evidenceFileUrl: string | undefined;
     let evidenceFileName: string | undefined;
 
@@ -144,6 +154,40 @@ export async function updateExternalAnswer(formData: FormData) {
         },
       });
 
+      try {
+        const previousValuePayload = {
+          status: existing.status || null,
+          justificationText: existing.justificationText || null,
+          evidenceFileName: existing.evidenceFileName || null,
+          evidenceFileUrl: existing.evidenceFileUrl || null,
+          verified: existing.verified ?? false,
+        };
+
+        const newValuePayload = {
+          status: updated.status || null,
+          justificationText: updated.justificationText || null,
+          evidenceFileName: updated.evidenceFileName || null,
+          evidenceFileUrl: updated.evidenceFileUrl || null,
+          verified: updated.verified ?? false,
+        };
+
+        await logAuditEvent(
+          {
+            companyId: assessment.companyId,
+            userId: "external-vendor",
+            action: "EXTERNAL_ASSESSMENT_UPDATED",
+            entityType: "assessment_answer",
+            entityId: updated.id,
+            previousValue: previousValuePayload,
+            newValue: newValuePayload,
+          },
+          { captureHeaders: false }, // Disable header capture to avoid async context issues
+        );
+      } catch (auditErr) {
+        console.error("[updateExternalAnswer] Audit log failed:", auditErr);
+        // Non-fatal: continue even if audit logging fails
+      }
+
       revalidatePath("/vendors");
       return { ok: true, answer: updated };
     } else {
@@ -168,6 +212,32 @@ export async function updateExternalAnswer(formData: FormData) {
           evidenceFileUrl: true,
         },
       });
+
+      try {
+        const newValuePayload = {
+          status: created.status || null,
+          justificationText: created.justificationText || null,
+          evidenceFileName: created.evidenceFileName || null,
+          evidenceFileUrl: created.evidenceFileUrl || null,
+          verified: created.verified ?? false,
+        };
+
+        await logAuditEvent(
+          {
+            companyId: assessment.companyId,
+            userId: "external-vendor",
+            action: "EXTERNAL_ASSESSMENT_UPDATED",
+            entityType: "assessment_answer",
+            entityId: created.id,
+            previousValue: null,
+            newValue: newValuePayload,
+          },
+          { captureHeaders: false }, // Disable header capture to avoid async context issues
+        );
+      } catch (auditErr) {
+        console.error("[updateExternalAnswer] Audit log failed:", auditErr);
+        // Non-fatal: continue even if audit logging fails
+      }
 
       revalidatePath("/vendors");
       return { ok: true, answer: created };
