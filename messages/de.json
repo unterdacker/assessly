@@ -102,6 +102,8 @@
     "aiAuditFailed": "KI-Pruefung fehlgeschlagen.",
     "analysisComplete": "Analyse abgeschlossen. Ergebnisse gespeichert.",
     "choosePdf": "PDF auswaehlen",
+    "placeholderShort": "Klicken oder PDF hierher ziehen",
+    "microPrivacyNote": "EU-souver\u00e4ne Analyse \u00b7 Kein KI-Training \u00b7 TLS\u00a01.3 \u00b7 DSGVO-konform",
     "runningAnalysis": "Analyse laeuft...",
     "runAiAudit": "KI-Pruefung starten",
     "rerunAudit": "KI-Pruefung erneut starten",
@@ -113,7 +115,12 @@
     "evidenceReadyBadge": "Bereit",
     "sizeUnavailable": "Dateigroesse nicht verfuegbar",
     "pdfOnly": "Nur PDF-Dateien sind erlaubt.",
-    "fileTooLarge": "Datei ist zu gross. Maximale Dateigroesse ist 20MB."
+    "fileTooLarge": "Datei ist zu gross. Maximale Dateigroesse ist 20MB.",
+    "removeDocument": "Dokument entfernen",
+    "removeConfirmTitle": "Nachweisdokument entfernen?",
+    "removeConfirmDescription": "Dadurch wird die gespeicherte PDF dauerhaft geloescht und der Nachweiseintrag geleert. Die Bewertungsergebnisse bleiben erhalten, das Quelldokument kann jedoch nicht wiederhergestellt werden.",
+    "removeConfirmButton": "Dokument loeschen",
+    "removeCancelButton": "Abbrechen"
   },
   "LocaleLandingReady": "AVRA ist in Ihrer ausgewaehlten Sprache bereit.",
   "ExternalExitTitle": "Sie haben das Anbieterportal verlassen",
