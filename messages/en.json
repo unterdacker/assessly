@@ -502,6 +502,33 @@
       }
     }
   },
+  "remediationModal": {
+    "openButton": "One-Click Remediation",
+    "title": "Remediation Suite",
+    "description": "Generate a vendor-ready remediation email from current NIS2 control gaps.",
+    "gapsTitle": "Detected control gaps",
+    "gapsCount": "{count} gaps",
+    "loadingGaps": "Loading assessment gaps...",
+    "noGaps": "No critical gaps detected below threshold. You can still generate a confirmation note.",
+    "scoreLabel": "Score {score}",
+    "generateButton": "Generate Remediation Plan",
+    "generating": "Generating letter...",
+    "deadlineLabel": "Deadline: {date}",
+    "draftLabel": "Draft email",
+    "draftPlaceholder": "Your generated remediation letter will appear here.",
+    "typing": "Drafting in progress...",
+    "copyButton": "Copy to Clipboard",
+    "copied": "Copied",
+    "sendButton": "Send to Vendor",
+    "sending": "Sending...",
+    "sendSuccess": "Mock send complete. Letter queued for {vendorName}.",
+    "vendorFallback": "the vendor",
+    "errors": {
+      "fetchFailed": "Could not load remediation gaps.",
+      "generateFailed": "Could not generate remediation plan.",
+      "copyFailed": "Clipboard access failed."
+    }
+  },
   "inviteVendorModal": {
     "success": {
       "title": "Invite delivered",
