@@ -70,6 +70,8 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
   const [gaps, setGaps] = React.useState<RemediationGap[]>([]);
   const [draftText, setDraftText] = React.useState("");
   const [deadlineDate, setDeadlineDate] = React.useState<string>("");
+  const [aiGenerationEventId, setAiGenerationEventId] = React.useState<string | null>(null);
+  const [originalAiOutput, setOriginalAiOutput] = React.useState<string>("");
   const [error, setError] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState(false);
   const [sentMessage, setSentMessage] = React.useState<string | null>(null);
@@ -144,6 +146,8 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
         data.securityContactEmail?.trim() || data.vendorEmail?.trim() || "";
       setSecurityContactEmail(nextSecurityContactEmail || null);
       setRecipientEmail((prev) => prev.trim() || nextSecurityContactEmail);
+      setAiGenerationEventId(null);
+      setOriginalAiOutput("");
     } catch {
       setError(t("errors.fetchFailed"));
     } finally {
@@ -189,6 +193,8 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
         vendorName?: string;
         securityContactEmail?: string | null;
         vendorEmail?: string | null;
+        aiGenerationEventId?: string | null;
+        originalAiOutput?: string;
       };
 
       if (!res.ok || !data.ok || !data.draft) {
@@ -205,6 +211,8 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
       if (!recipientEmail.trim()) {
         setRecipientEmail(nextSecurityContactEmail);
       }
+      setAiGenerationEventId(data.aiGenerationEventId || null);
+      setOriginalAiOutput(data.originalAiOutput || data.draft);
       runTypewriter(data.draft);
     } catch {
       setError(t("errors.generateFailed"));
@@ -229,14 +237,46 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
     if (!draftText.trim()) return;
 
     setSending(true);
+    setError(null);
     setSentMessage(null);
 
-    await new Promise((resolve) => window.setTimeout(resolve, 900));
+    try {
+      const res = await fetch("/api/remediation/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          vendorId,
+          recipientEmail: recipientEmail.trim(),
+          finalDraft: draftText,
+          originalAiOutput,
+          aiGenerationEventId,
+        }),
+      });
 
-    setSending(false);
-    const successMessage = t("sendSuccess", { vendorName: vendorName || t("vendorFallback") });
-    setSentMessage(successMessage);
-    toast.success(`${successMessage} (${recipientEmail.trim()})`);
+      const data = (await res.json()) as {
+        ok: boolean;
+        error?: string;
+        vendorName?: string;
+        recipientEmail?: string;
+      };
+
+      if (!res.ok || !data.ok) {
+        setError(data.error || t("errors.generateFailed"));
+        return;
+      }
+
+      const successMessage = t("sendSuccess", {
+        vendorName: data.vendorName || vendorName || t("vendorFallback"),
+      });
+      setSentMessage(successMessage);
+      toast.success(`${successMessage} (${data.recipientEmail || recipientEmail.trim()})`);
+    } catch {
+      setError(t("errors.generateFailed"));
+    } finally {
+      setSending(false);
+    }
   }
 
   function resetModalState(isOpen: boolean) {
@@ -248,6 +288,8 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
     setCopied(false);
     setSentMessage(null);
     setRecipientEmail(securityContactEmail?.trim() || "");
+    setAiGenerationEventId(null);
+    setOriginalAiOutput("");
   }
 
   return (

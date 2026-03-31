@@ -1,6 +1,7 @@
 import { Mistral } from "@mistralai/mistralai";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { logAuditEvent } from "@/lib/audit-log";
 import enMessages from "@/messages/en.json";
 import deMessages from "@/messages/de.json";
 
@@ -24,6 +25,7 @@ type RemediationGap = {
 };
 
 type GapResponse = {
+  assessmentId: string;
   companyId: string;
   vendorName: string;
   securityContactEmail: string | null;
@@ -274,6 +276,7 @@ async function getVendorGaps(
     .sort((a, b) => a.score - b.score);
 
   return {
+    assessmentId: assessment.id,
     companyId: assessment.companyId,
     vendorName: assessment.vendor.name,
     securityContactEmail: assessment.vendor.securityOfficerEmail ?? null,
@@ -330,7 +333,15 @@ async function generateRemediationDraft(args: {
   companyId: string;
   prompt: string;
   locale: SupportedLocale;
-}): Promise<string> {
+}): Promise<{
+  draft: string;
+  modelInfo: {
+    provider: string;
+    modelId: string;
+    endpoint?: string;
+  };
+  rawAiOutput: string;
+}> {
   const config = await prisma.company.findUnique({
     where: { id: args.companyId },
     select: {
@@ -375,7 +386,14 @@ async function generateRemediationDraft(args: {
     if (!content) {
       throw new Error("Received empty response from Mistral.");
     }
-    return content;
+    return {
+      draft: content,
+      modelInfo: {
+        provider: "mistral",
+        modelId: "mistral-large-latest",
+      },
+      rawAiOutput: content,
+    };
   }
 
   const endpoint =
@@ -412,7 +430,15 @@ async function generateRemediationDraft(args: {
     throw new Error("Received empty response from local LLM.");
   }
 
-  return content;
+  return {
+    draft: content,
+    modelInfo: {
+      provider: "local",
+      modelId: process.env.LOCAL_AI_MODEL || "mistral",
+      endpoint,
+    },
+    rawAiOutput: content,
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -526,20 +552,47 @@ export async function POST(request: NextRequest) {
       gaps: result.gaps,
     });
 
-    const draft = await generateRemediationDraft({
+    const generated = await generateRemediationDraft({
       companyId: result.companyId,
       prompt,
       locale,
     });
 
+    let aiGenerationEventId: string | null = null;
+    try {
+      const auditRow = await logAuditEvent(
+        {
+          companyId: result.companyId,
+          userId: "ai-system",
+          action: "AI_GENERATION",
+          entityType: "remediation_plan",
+          entityId: result.assessmentId,
+          previousValue: null,
+          newValue: {
+            source: "remediation_plan",
+            vendorId,
+            prompt_snapshot: prompt,
+            model_info: generated.modelInfo,
+            raw_ai_output: generated.rawAiOutput,
+          },
+        },
+        { captureHeaders: false },
+      );
+      aiGenerationEventId = auditRow?.id ?? null;
+    } catch {
+      aiGenerationEventId = null;
+    }
+
     return NextResponse.json({
       ok: true,
-      draft,
+      draft: generated.draft,
       deadlineDate,
       gaps: result.gaps,
       vendorName: result.vendorName,
       securityContactEmail: result.securityContactEmail,
       vendorEmail: result.securityContactEmail,
+      aiGenerationEventId,
+      originalAiOutput: generated.rawAiOutput,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
