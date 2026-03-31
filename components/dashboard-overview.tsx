@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CategoryComplianceRadarChart } from "@/components/category-compliance-radar-chart";
 import { VendorsByRiskBarChart } from "@/components/vendors-by-risk-bar-chart";
+import { ComplianceTrustWidget } from "@/components/compliance-trust-widget";
 
 export type DashboardOverviewProps = {
   vendorAssessments: VendorAssessment[];
@@ -77,6 +78,19 @@ export type DashboardOverviewProps = {
       string
     >;
     riskLevelLabels: Record<"low" | "medium" | "high", string>;
+    ComplianceTrustWidgetTitle: string;
+    ComplianceTrustWidgetDesc: string;
+    AITransparencyMetric: string;
+    HumanOversightMetric: string;
+    SystemIntegrityMetric: string;
+    AIGenerationLabel: string;
+    VerifiedBadge: string;
+    VerifiedValue: string;
+    UnverifiedValue: string;
+    RecordedActionsLabel: string;
+    DownloadForensicAuditSummary: string;
+    DownloadForensicAuditHint: string;
+    DownloadForensicAuditFailed: string;
   };
 };
 
@@ -306,6 +320,25 @@ export function DashboardOverview({
           </ul>
         </CardContent>
       </Card>
+
+      <ComplianceTrustWidget
+        metrics={riskPosture.complianceTrust}
+        translations={{
+          title: translations.ComplianceTrustWidgetTitle,
+          description: translations.ComplianceTrustWidgetDesc,
+          aiDecisionTransparency: translations.AITransparencyMetric,
+          humanOversightRate: translations.HumanOversightMetric,
+          systemIntegrity: translations.SystemIntegrityMetric,
+          aiGenerationLabel: translations.AIGenerationLabel,
+          verifiedBadge: translations.VerifiedBadge,
+          verifiedValue: translations.VerifiedValue,
+          unverifiedValue: translations.UnverifiedValue,
+          recordedActionsLabel: translations.RecordedActionsLabel,
+          downloadButton: translations.DownloadForensicAuditSummary,
+          downloadHint: translations.DownloadForensicAuditHint,
+          downloadFailed: translations.DownloadForensicAuditFailed,
+        }}
+      />
     </div>
   );
 }

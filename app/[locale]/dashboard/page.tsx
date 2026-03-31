@@ -82,6 +82,19 @@ export default async function DashboardPage() {
       medium: t("DashboardRiskMedium"),
       high: t("DashboardRiskHigh"),
     },
+    ComplianceTrustWidgetTitle: t("ComplianceTrustWidgetTitle"),
+    ComplianceTrustWidgetDesc: t("ComplianceTrustWidgetDesc"),
+    AITransparencyMetric: t("AITransparencyMetric"),
+    HumanOversightMetric: t("HumanOversightMetric"),
+    SystemIntegrityMetric: t("SystemIntegrityMetric"),
+    AIGenerationLabel: t("AIGenerationLabel"),
+    VerifiedBadge: t("VerifiedBadge"),
+    VerifiedValue: t("VerifiedValue"),
+    UnverifiedValue: t("UnverifiedValue"),
+    RecordedActionsLabel: t("RecordedActionsLabel"),
+    DownloadForensicAuditSummary: t("DownloadForensicAuditSummary"),
+    DownloadForensicAuditHint: t("DownloadForensicAuditHint"),
+    DownloadForensicAuditFailed: t("DownloadForensicAuditFailed"),
   };
 
   return (
