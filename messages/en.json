@@ -169,7 +169,8 @@
       "expiresBadge": "Expires: {expiry}",
       "exitPortal": "Exit portal",
       "submitting": "Submitting...",
-      "submit": "Submit assessment"
+      "submit": "Submit assessment",
+      "resubmit": "Update & Notify"
     },
     "fastPath": {
       "title": "The fast way",
@@ -300,7 +301,9 @@
     },
     "submission": {
       "deadlinePassed": "Submission deadline passed at {expiry}. Request a new link from your administrator.",
-      "genericFailed": "Submission failed. Please try again."
+      "genericFailed": "Submission failed. Please try again.",
+      "success": "Your assessment has been saved and the buyer has been notified. You can continue editing until your access expires.",
+      "previouslySubmitted": "Previously submitted. You can continue editing until {expiry}."
     }
   },
   "assessment": {
