@@ -8,8 +8,9 @@ import fs from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { runNis2Analysis } from "@/lib/ai/provider";
+import { runNis2AnalysisWithTrace } from "@/lib/ai/provider";
 import { logErrorReport } from "@/lib/logger";
+import { logAuditEvent } from "@/lib/audit-log";
 import {
   countStrictlyCompliantAnswers,
   syncAssessmentComplianceToDatabase,
@@ -90,14 +91,16 @@ export async function reanalyzeStoredDocument(
     guidance: q.guidance ?? undefined,
   }));
 
-  let results;
+  let analysis;
   try {
-    results = await runNis2Analysis(assessment.companyId, questionPayload, extractedText);
+    analysis = await runNis2AnalysisWithTrace(assessment.companyId, questionPayload, extractedText);
   } catch (error: unknown) {
     logErrorReport("AI Re-Analysis Phase", error);
     const message = error instanceof Error ? error.message : "Unknown AI error";
     return { ok: false, error: message };
   }
+
+  const { results, trace } = analysis;
 
   // Write AI results to DB — same logic as the initial analysis
   for (const res of results) {
@@ -145,23 +148,32 @@ export async function reanalyzeStoredDocument(
   );
   const compliantCount = countStrictlyCompliantAnswers(persistedAnswers);
 
-  await prisma.auditLog.create({
-    data: {
-      companyId: assessment.companyId,
-      action: `AI Re-Analysis from stored document for ${assessment.vendor.name}`,
-      entityType: "vendor_assessment",
-      entityId: assessmentId,
-      actorId: "ai-system",
-      createdBy: "ai-system",
-      metadata: {
-        newScore,
-        compliantCount,
-        totalQuestions,
-        mode: "stored-reanalysis",
-        documentFilename: assessment.documentFilename,
+  try {
+    await logAuditEvent(
+      {
+        companyId: assessment.companyId,
+        userId: "ai-system",
+        action: "AI_GENERATION",
+        entityType: "vendor_assessment",
+        entityId: assessmentId,
+        previousValue: null,
+        newValue: {
+          source: "questionnaire_prefill_reanalysis",
+          vendorId: assessment.vendorId,
+          documentFilename: assessment.documentFilename,
+          prompt_snapshot: trace.promptSnapshot,
+          model_info: trace.modelInfo,
+          raw_ai_output: trace.rawAiOutput,
+          newScore,
+          compliantCount,
+          totalQuestions,
+        },
       },
-    },
-  });
+      { captureHeaders: false },
+    );
+  } catch (auditErr) {
+    logErrorReport("AI Reanalysis Audit Log Creation Failed", auditErr);
+  }
 
   revalidatePath("/vendors");
   revalidatePath(`/vendors/${assessment.vendorId}/assessment`);

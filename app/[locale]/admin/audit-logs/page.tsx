@@ -9,7 +9,7 @@ type AuditLogsPageProps = {
 };
 
 export default async function AuditLogsPage({ params }: AuditLogsPageProps) {
-  const { locale } = await params;
+  await params;
 
   const logs = await prisma.auditLog.findMany({
     orderBy: [{ createdAt: "desc" }],
@@ -60,6 +60,7 @@ export default async function AuditLogsPage({ params }: AuditLogsPageProps) {
           : null,
       ipAddress: typeof ipAddress === "string" ? ipAddress : null,
       userAgent: typeof userAgent === "string" ? userAgent : null,
+      metadata,
     };
   });
 

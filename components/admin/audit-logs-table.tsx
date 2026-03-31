@@ -30,6 +30,7 @@ type AuditLogRow = {
   entityId: string;
   previousValue: unknown;
   newValue: unknown;
+  metadata?: Record<string, unknown> | null;
   ipAddress?: string | null;
   userAgent?: string | null;
 };
@@ -56,11 +57,53 @@ function formatTimestamp(iso: string): string {
 
 export function AuditLogsTable({ logs }: AuditLogsTableProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
 
   const selected = useMemo(
     () => logs.find((entry) => entry.id === selectedId) ?? null,
     [logs, selectedId],
   );
+
+  const aiProvenance = useMemo(() => {
+    if (!selected?.metadata || typeof selected.metadata !== "object") return null;
+
+    const metadata = selected.metadata as Record<string, unknown>;
+    const newValue = metadata.newValue;
+    if (!newValue || typeof newValue !== "object") return null;
+
+    const ai = newValue as Record<string, unknown>;
+    const modelInfo = ai.model_info;
+    const promptSnapshot = ai.prompt_snapshot;
+    const rawAiOutput = ai.raw_ai_output;
+    const linkedGenerationId = ai.ai_generation_event_id;
+
+    const hasAiPayload =
+      typeof modelInfo === "object" ||
+      typeof promptSnapshot === "string" ||
+      typeof rawAiOutput === "string" ||
+      typeof linkedGenerationId === "string";
+
+    if (!hasAiPayload) return null;
+
+    const modelRecord =
+      modelInfo && typeof modelInfo === "object"
+        ? (modelInfo as Record<string, unknown>)
+        : null;
+
+    const provider =
+      modelRecord && typeof modelRecord.provider === "string" ? modelRecord.provider : null;
+    const modelId =
+      modelRecord && typeof modelRecord.modelId === "string" ? modelRecord.modelId : null;
+
+    return {
+      provider,
+      modelId,
+      promptSnapshot: typeof promptSnapshot === "string" ? promptSnapshot : null,
+      rawAiOutput: typeof rawAiOutput === "string" ? rawAiOutput : null,
+      linkedGenerationId:
+        typeof linkedGenerationId === "string" ? linkedGenerationId : null,
+    };
+  }, [selected]);
 
   return (
     <div className="space-y-4">
@@ -123,7 +166,10 @@ export function AuditLogsTable({ logs }: AuditLogsTableProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setSelectedId(log.id)}
+                        onClick={() => {
+                          setSelectedId(log.id);
+                          setShowPrompt(false);
+                        }}
                       >
                         <Eye className="h-4 w-4" aria-hidden />
                         Details
@@ -193,6 +239,52 @@ export function AuditLogsTable({ logs }: AuditLogsTableProps) {
                               </div>
                             </div>
                           )}
+
+                          {aiProvenance ? (
+                            <div className="rounded-md border border-cyan-200 bg-cyan-50/40 p-4 dark:border-cyan-900 dark:bg-cyan-950/20">
+                              <h3 className="mb-3 text-sm font-semibold text-cyan-900 dark:text-cyan-200">
+                                AI Provenance
+                              </h3>
+                              <div className="space-y-2 text-sm">
+                                <div>
+                                  <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
+                                    Model
+                                  </p>
+                                  <p className="font-mono text-cyan-900 dark:text-cyan-100">
+                                    {aiProvenance.modelId || "Unknown"}
+                                    {aiProvenance.provider ? ` (${aiProvenance.provider})` : ""}
+                                  </p>
+                                </div>
+                                {aiProvenance.linkedGenerationId ? (
+                                  <div>
+                                    <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
+                                      Linked AI Generation Event
+                                    </p>
+                                    <p className="font-mono text-cyan-900 dark:text-cyan-100">
+                                      {aiProvenance.linkedGenerationId}
+                                    </p>
+                                  </div>
+                                ) : null}
+                                {aiProvenance.promptSnapshot ? (
+                                  <div>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => setShowPrompt((prev) => !prev)}
+                                    >
+                                      {showPrompt ? "Hide Original Prompt" : "View Original Prompt"}
+                                    </Button>
+                                    {showPrompt ? (
+                                      <pre className="mt-2 max-h-52 overflow-auto rounded bg-white/80 p-2 text-xs leading-relaxed text-cyan-950 dark:bg-slate-950 dark:text-cyan-100">
+                                        {aiProvenance.promptSnapshot}
+                                      </pre>
+                                    ) : null}
+                                  </div>
+                                ) : null}
+                              </div>
+                            </div>
+                          ) : null}
 
                           <div>
                             <h3 className="mb-3 text-sm font-semibold">Field Changes</h3>

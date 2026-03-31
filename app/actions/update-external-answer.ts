@@ -216,6 +216,9 @@ export async function updateExternalAnswer(formData: FormData) {
           evidenceFileUrl: updated.evidenceFileUrl || null,
           documentId: updated.document?.id || null,
           verified: updated.verified ?? false,
+          aiSuggestionUsed: existing.isAiSuggested ?? false,
+          aiSuggestedStatus: existing.aiSuggestedStatus || null,
+          aiReasoningSnapshot: existing.aiReasoning || null,
         };
 
         await logAuditEvent(
@@ -278,6 +281,7 @@ export async function updateExternalAnswer(formData: FormData) {
           evidenceFileUrl: created.evidenceFileUrl || null,
           documentId: created.document?.id || null,
           verified: created.verified ?? false,
+          aiSuggestionUsed: false,
         };
 
         await logAuditEvent(

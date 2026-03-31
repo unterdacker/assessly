@@ -6,8 +6,9 @@ import fs from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { runNis2Analysis } from "@/lib/ai/provider";
+import { runNis2AnalysisWithTrace } from "@/lib/ai/provider";
 import { logErrorReport } from "@/lib/logger";
+import { logAuditEvent } from "@/lib/audit-log";
 import {
   countStrictlyCompliantAnswers,
   syncAssessmentComplianceToDatabase,
@@ -171,14 +172,16 @@ export async function analyzeDocument(
     guidance: q.guidance ?? undefined
   }));
 
-  let results;
+  let analysis;
   try {
-    results = await runNis2Analysis(assessment.companyId, questionPayload, extractedText);
+    analysis = await runNis2AnalysisWithTrace(assessment.companyId, questionPayload, extractedText);
   } catch (error: unknown) {
     logErrorReport("AI Evaluation Phase", error);
     const message = error instanceof Error ? error.message : "Unknown AI error";
     return { ok: false, error: message };
   }
+
+  const { results, trace } = analysis;
 
   // 3. Database Write — AI pre-fills suggestions but leaves status PENDING for vendor review.
   for (const res of results) {
@@ -256,18 +259,31 @@ export async function analyzeDocument(
   );
   const compliantCount = countStrictlyCompliantAnswers(persistedAnswers);
 
-  await prisma.auditLog.create({
-    data: {
-      companyId: assessment.companyId,
-      action: `AI-Assessment performed for ${assessment.vendor.name} (Stateless)`, 
-      entityType: "vendor_assessment",
-      entityId: assessment.id,
-      actorId: "ai-system",
-      createdBy: "ai-system",
-      metadata: { newScore, compliantCount, totalQuestions, mode: "stateless" },
-      metadata: { newScore, compliantCount, totalQuestions, mode: "stored" },
-    }
-  });
+  try {
+    await logAuditEvent(
+      {
+        companyId: assessment.companyId,
+        userId: "ai-system",
+        action: "AI_GENERATION",
+        entityType: "vendor_assessment",
+        entityId: assessment.id,
+        previousValue: null,
+        newValue: {
+          source: "questionnaire_prefill",
+          vendorId,
+          prompt_snapshot: trace.promptSnapshot,
+          model_info: trace.modelInfo,
+          raw_ai_output: trace.rawAiOutput,
+          newScore,
+          compliantCount,
+          totalQuestions,
+        },
+      },
+      { captureHeaders: false },
+    );
+  } catch (auditErr) {
+    logErrorReport("AI Prefill Audit Log Creation Failed", auditErr);
+  }
 
   revalidatePath("/vendors");
   revalidatePath(`/vendors/${vendorId}/assessment`);

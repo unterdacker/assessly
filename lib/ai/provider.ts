@@ -138,11 +138,28 @@ export type Nis2QuestionPromptItem = {
   guidance?: string;
 };
 
-export async function runNis2Analysis(
+export type AiModelInfo = {
+  provider: string;
+  modelId: string;
+  endpoint?: string;
+};
+
+export type Nis2AnalysisTrace = {
+  promptSnapshot: string;
+  modelInfo: AiModelInfo;
+  rawAiOutput: string;
+};
+
+export type Nis2AnalysisWithTrace = {
+  results: Nis2QuestionAnalysis[];
+  trace: Nis2AnalysisTrace;
+};
+
+export async function runNis2AnalysisWithTrace(
   companyId: string,
   questions: Nis2QuestionPromptItem[],
   documentExcerpt: string,
-): Promise<Nis2QuestionAnalysis[]> {
+): Promise<Nis2AnalysisWithTrace> {
   const config = await prisma.company.findUnique({
     where: { id: companyId },
   });
@@ -151,12 +168,16 @@ export async function runNis2Analysis(
     throw new Error("Company configuration not found.");
   }
 
-  // Requirement: toggle between 'Mistral' and 'Local LLM' via process.env.AI_PROVIDER
-  // This satisfies Step 3 of Sovereign Compliance Engine Global Rule
   const provider = (process.env.AI_PROVIDER || config.aiProvider).toLowerCase();
-  
   const systemPrompt = buildNis2DocumentAnalysisSystemPrompt();
   const userPayload = buildNis2DocumentAnalysisUserPayload({ questions, documentExcerpt });
+  const promptSnapshot = [
+    "[SYSTEM]",
+    systemPrompt,
+    "",
+    "[USER]",
+    userPayload,
+  ].join("\n");
 
   if (provider === "mistral") {
     const cleanKey = (process.env.MISTRAL_API_KEY || config.mistralApiKey)?.trim();
@@ -165,32 +186,42 @@ export async function runNis2Analysis(
     }
 
     const client = new Mistral({ apiKey: cleanKey });
-    
+
     try {
       const response = await client.chat.complete({
         model: "mistral-large-latest",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userPayload }
-        ]
+          { role: "user", content: userPayload },
+        ],
       });
-      
+
       const content = response.choices?.[0]?.message?.content;
       if (!content) throw new Error("Received empty content from Mistral API");
-
+      const rawAiOutput = toModelContentString(content);
       const parsed = parseLlmJson(content);
-      return normalizeAnalysisResult(parsed);
 
+      return {
+        results: normalizeAnalysisResult(parsed),
+        trace: {
+          promptSnapshot,
+          modelInfo: {
+            provider: "mistral",
+            modelId: "mistral-large-latest",
+          },
+          rawAiOutput,
+        },
+      };
     } catch (error: unknown) {
       logMistralError(error);
       const msg = error instanceof Error ? error.message : "Unknown error";
       throw new Error(`Mistral inference failed: ${msg}`);
     }
-  } 
-  
-  // Local Provider Context (Ollama / vLLM)
+  }
+
   const endpoint = (process.env.LOCAL_AI_ENDPOINT || config.localAiEndpoint)?.trim() || "http://localhost:11434/v1";
-  
+  const modelId = process.env.LOCAL_AI_MODEL || "mistral";
+
   try {
     const response = await fetch(`${endpoint}/chat/completions`, {
       method: "POST",
@@ -198,14 +229,13 @@ export async function runNis2Analysis(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        // For Local LLMs, we typically pass the model string, or Ollama handles it if single model loaded
-        model: process.env.LOCAL_AI_MODEL || "mistral", 
+        model: modelId,
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userPayload }
+          { role: "user", content: userPayload },
         ],
         temperature: 0.1,
-      })
+      }),
     });
 
     if (!response.ok) {
@@ -215,10 +245,21 @@ export async function runNis2Analysis(
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
     if (!content) throw new Error("Received empty content from local AI");
-
+    const rawAiOutput = toModelContentString(content);
     const parsed = parseLlmJson(content);
-    return normalizeAnalysisResult(parsed);
 
+    return {
+      results: normalizeAnalysisResult(parsed),
+      trace: {
+        promptSnapshot,
+        modelInfo: {
+          provider: "local",
+          modelId,
+          endpoint,
+        },
+        rawAiOutput,
+      },
+    };
   } catch (error: unknown) {
     const maybe = error as {
       cause?: { code?: string };
@@ -233,4 +274,13 @@ export async function runNis2Analysis(
     const msg = error instanceof Error ? error.message : "Unknown error";
     throw new Error(`Local inference failed: ${msg}`);
   }
+}
+
+export async function runNis2Analysis(
+  companyId: string,
+  questions: Nis2QuestionPromptItem[],
+  documentExcerpt: string,
+): Promise<Nis2QuestionAnalysis[]> {
+  const { results } = await runNis2AnalysisWithTrace(companyId, questions, documentExcerpt);
+  return results;
 }
