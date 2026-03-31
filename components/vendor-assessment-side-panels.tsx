@@ -193,9 +193,10 @@ type AiInsightCardProps = {
       })
     | undefined;
   t: ReturnType<typeof useTranslations>;
+  readOnly: boolean;
 };
 
-function AiInsightCard({ assessmentId, selectedQuestion, selectedQuestionText, selectedAnswer, t }: AiInsightCardProps) {
+function AiInsightCard({ assessmentId, selectedQuestion, selectedQuestionText, selectedAnswer, t, readOnly }: AiInsightCardProps) {
   const router = useRouter();
   // Which override button was clicked ("COMPLIANT" | "NON_COMPLIANT" | null)
   const [activeOverride, setActiveOverride] = useState<"COMPLIANT" | "NON_COMPLIANT" | null>(null);
@@ -366,25 +367,27 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedQuestionText, s
             </p>
           )}
 
-          <div className="flex items-center gap-2">
-            <input
-              ref={evidenceInputRef}
-              type="file"
-              accept="application/pdf,image/jpeg,image/png"
-              className="hidden"
-              onChange={handleUploadEvidenceFile}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs"
-              disabled={isUploadingEvidence || !selectedQuestion}
-              onClick={() => evidenceInputRef.current?.click()}
-            >
-              {isUploadingEvidence ? t("aiInsight.uploadingEvidence") : t("aiInsight.uploadEvidence")}
-            </Button>
-          </div>
+          {!readOnly ? (
+            <div className="flex items-center gap-2">
+              <input
+                ref={evidenceInputRef}
+                type="file"
+                accept="application/pdf,image/jpeg,image/png"
+                className="hidden"
+                onChange={handleUploadEvidenceFile}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+                disabled={isUploadingEvidence || !selectedQuestion}
+                onClick={() => evidenceInputRef.current?.click()}
+              >
+                {isUploadingEvidence ? t("aiInsight.uploadingEvidence") : t("aiInsight.uploadEvidence")}
+              </Button>
+            </div>
+          ) : null}
 
           {uploadError && (
             <p className="text-xs text-red-500">{uploadError}</p>
@@ -406,7 +409,7 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedQuestionText, s
         )}
 
         {/* Inline evidence form — rendered below AI text */}
-        {activeOverride && (
+        {!readOnly && activeOverride && (
           <EvidenceForm
             targetStatus={activeOverride}
             onSave={handleSaveOverride}
@@ -425,15 +428,21 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedQuestionText, s
       </CardContent>
 
       <CardFooter className="flex flex-col gap-2 border-t border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-900/40">
-        <p className="text-xs font-semibold text-slate-500 tracking-wider uppercase w-full">
-          {t("manualOverride.title")}
-          {isAnswered && (
-            <span className="ml-1 normal-case font-normal text-amber-600 dark:text-amber-400">
-              {t("manualOverride.justificationRequired")}
-            </span>
-          )}
-        </p>
-        <div className="flex w-full gap-2">
+        {readOnly ? (
+          <p className="w-full text-xs text-muted-foreground">
+            Read-only auditor view. Manual overrides and evidence uploads are restricted to admins.
+          </p>
+        ) : (
+          <>
+            <p className="text-xs font-semibold text-slate-500 tracking-wider uppercase w-full">
+              {t("manualOverride.title")}
+              {isAnswered && (
+                <span className="ml-1 normal-case font-normal text-amber-600 dark:text-amber-400">
+                  {t("manualOverride.justificationRequired")}
+                </span>
+              )}
+            </p>
+            <div className="flex w-full gap-2">
           {/* Mark Compliant — solid green when already saved, ring when form is open */}
           <Button
             variant="outline"
@@ -489,7 +498,9 @@ function AiInsightCard({ assessmentId, selectedQuestion, selectedQuestionText, s
             />
             {t("manualOverride.markNonCompliant")}
           </Button>
-        </div>
+            </div>
+          </>
+        )}
       </CardFooter>
     </Card>
   );
@@ -502,6 +513,7 @@ type VendorAssessmentSidePanelsProps = {
   assessmentId: string;
   answers: AssessmentAnswer[];
   selectedQuestionId: string | null;
+  readOnly: boolean;
 };
 
 export function VendorAssessmentSidePanels({
@@ -509,6 +521,7 @@ export function VendorAssessmentSidePanels({
   assessmentId,
   answers,
   selectedQuestionId,
+  readOnly,
 }: VendorAssessmentSidePanelsProps) {
   const t = useTranslations("assessment.sidePanels");
   const tQuestions = useTranslations("externalAssessment.questions");
@@ -532,6 +545,7 @@ export function VendorAssessmentSidePanels({
           selectedQuestionText={selectedQuestionText}
           selectedAnswer={selectedAnswer ?? undefined}
           t={t}
+          readOnly={readOnly}
         />
       ) : (
         <Card>

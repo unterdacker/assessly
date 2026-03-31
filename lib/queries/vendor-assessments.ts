@@ -4,6 +4,7 @@ import type { VendorAssessment } from "@/lib/vendor-assessment";
 import type { AssessmentAnswer } from "@prisma/client";
 import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance";
 import { DEFAULT_COMPANY_SLUG, ensureDemoData } from "@/lib/ensure-demo-data";
+import { requireInternalReadUser } from "@/lib/auth/server";
 
 async function cleanupExpiredVendorCodes(where?: { companyId?: string; vendorId?: string }) {
   const now = new Date();
@@ -60,7 +61,8 @@ export async function getDefaultCompanyId(): Promise<string | null> {
 }
 
 export async function listVendorAssessments(): Promise<VendorAssessment[]> {
-  const companyId = await getDefaultCompanyId();
+  const session = await requireInternalReadUser();
+  const companyId = session.companyId;
   if (!companyId) return [];
 
   await cleanupExpiredVendorCodes({ companyId });
@@ -116,12 +118,17 @@ export type VendorAssessmentDetail = {
 export async function getVendorAssessmentDetail(
   vendorId: string,
 ): Promise<VendorAssessmentDetail | null> {
+  const session = await requireInternalReadUser();
+  if (!session.companyId) {
+    return null;
+  }
+
   await cleanupExpiredVendorCodes({ vendorId });
 
   const totalQuestions = await prisma.question.count();
 
   const row = await prisma.assessment.findFirst({
-    where: { vendorId },
+    where: { vendorId, companyId: session.companyId },
     include: {
       vendor: true,
       answers: {

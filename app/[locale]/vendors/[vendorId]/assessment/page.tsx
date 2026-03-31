@@ -3,11 +3,12 @@ import { getTranslations } from "next-intl/server";
 import { AssessmentWorkspace } from "@/components/assessment-workspace";
 import { Button } from "@/components/ui/button";
 import { getVendorAssessmentDetail } from "@/lib/queries/vendor-assessments";
+import { requirePageRole } from "@/lib/auth/server";
 
 export const dynamic = "force-dynamic";
 
 type PageProps = {
-  params: Promise<{ vendorId: string }>;
+  params: Promise<{ locale: string; vendorId: string }>;
 };
 
 /**
@@ -16,7 +17,8 @@ type PageProps = {
  * `riskLevel` in the database before rendering so the header matches the vendor list.
  */
 export default async function AssessmentPage({ params }: PageProps) {
-  const { vendorId } = await params;
+  const { locale, vendorId } = await params;
+  const session = await requirePageRole(["ADMIN", "AUDITOR"], locale);
   const detail = await getVendorAssessmentDetail(vendorId);
   const t = await getTranslations();
 
@@ -44,6 +46,7 @@ export default async function AssessmentPage({ params }: PageProps) {
       documentFileSize={detail.documentFileSize}
       lastAuditedAt={detail.lastAuditedAt}
       companyId={detail.companyId}
+      role={session.role}
     />
   );
 }

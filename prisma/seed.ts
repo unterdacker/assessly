@@ -1,10 +1,15 @@
-import { PrismaClient, AssessmentStatus, RiskLevel } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import { PrismaClient, AssessmentStatus, RiskLevel, UserRole } from "@prisma/client";
 import { nis2Questions } from "../lib/nis2-questions";
 
 const prisma = new PrismaClient();
 
 const SEED_ACTOR = "system-seed";
 const COMPANY_SLUG = "default";
+const DEFAULT_ADMIN_EMAIL = process.env.AVRA_ADMIN_EMAIL || "admin@avra.local";
+const DEFAULT_ADMIN_PASSWORD = process.env.AVRA_ADMIN_PASSWORD || "admin123";
+const DEFAULT_AUDITOR_EMAIL = process.env.AVRA_AUDITOR_EMAIL || "auditor@avra.local";
+const DEFAULT_AUDITOR_PASSWORD = process.env.AVRA_AUDITOR_PASSWORD || "auditor123";
 
 type DemoVendor = {
   name: string;
@@ -58,6 +63,8 @@ const demoVendors: DemoVendor[] = [
 ];
 
 async function main() {
+  await prisma.authSession.deleteMany();
+  await prisma.user.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.assessment.deleteMany();
   await prisma.vendor.deleteMany();
@@ -70,6 +77,32 @@ async function main() {
       slug: COMPANY_SLUG,
       createdBy: SEED_ACTOR,
     },
+  });
+
+  const [adminPasswordHash, auditorPasswordHash] = await Promise.all([
+    bcrypt.hash(DEFAULT_ADMIN_PASSWORD, 12),
+    bcrypt.hash(DEFAULT_AUDITOR_PASSWORD, 12),
+  ]);
+
+  await prisma.user.createMany({
+    data: [
+      {
+        companyId: company.id,
+        email: DEFAULT_ADMIN_EMAIL,
+        displayName: "AVRA Admin",
+        passwordHash: adminPasswordHash,
+        role: UserRole.ADMIN,
+        createdBy: SEED_ACTOR,
+      },
+      {
+        companyId: company.id,
+        email: DEFAULT_AUDITOR_EMAIL,
+        displayName: "AVRA Auditor",
+        passwordHash: auditorPasswordHash,
+        role: UserRole.AUDITOR,
+        createdBy: SEED_ACTOR,
+      },
+    ],
   });
 
   for (let i = 0; i < nis2Questions.length; i++) {
@@ -126,6 +159,8 @@ async function main() {
 main()
   .then(() => {
     console.info(`Seeded company "${COMPANY_SLUG}", ${nis2Questions.length} questions, ${demoVendors.length} vendors.`);
+    console.info(`Admin login: ${DEFAULT_ADMIN_EMAIL} / ${DEFAULT_ADMIN_PASSWORD}`);
+    console.info(`Auditor login: ${DEFAULT_AUDITOR_EMAIL} / ${DEFAULT_AUDITOR_PASSWORD}`);
   })
   .catch((e) => {
     console.error(e);

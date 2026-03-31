@@ -2,16 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/prisma";
+import { getAuthSessionFromRequest } from "@/lib/auth/server";
 
 const ROOT_STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
 const STORAGE_DIR = path.join(process.cwd(), ".avra-storage", "question-evidence");
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ answerId: string }> },
 ) {
   const { answerId } = await params;
   const vendorToken = req.cookies.get("avra-vendor-token")?.value || null;
+  const session = await getAuthSessionFromRequest(req);
 
   if (vendorToken) {
     const tokenOwner = await (prisma.vendor as any).findFirst({
@@ -42,6 +44,11 @@ export async function GET(
     select: {
       evidenceFileUrl: true,
       evidenceFileName: true,
+      assessment: {
+        select: {
+          companyId: true,
+        },
+      },
       document: {
         select: {
           storagePath: true,
@@ -54,6 +61,16 @@ export async function GET(
 
   if (!answer?.evidenceFileUrl && !answer?.document?.storagePath) {
     return NextResponse.json({ error: "No evidence file on record." }, { status: 404 });
+  }
+
+  const internalAccess = Boolean(
+    session &&
+    (session.role === "ADMIN" || session.role === "AUDITOR") &&
+    session.companyId === answer.assessment.companyId,
+  );
+
+  if (!vendorToken && !internalAccess) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const legacyFilePath = answer.evidenceFileUrl ? path.join(STORAGE_DIR, answer.evidenceFileUrl) : null;

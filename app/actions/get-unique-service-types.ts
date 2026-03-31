@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { logErrorReport } from "@/lib/logger";
+import { requireAdminUser } from "@/lib/auth/server";
 
 /**
  * Returns every distinct `vendorServiceType` string that has been saved
@@ -15,6 +16,10 @@ export async function getUniqueServiceTypes(
   companyId: string,
 ): Promise<string[]> {
   try {
+    const session = await requireAdminUser();
+    if (!session.companyId || session.companyId !== companyId) {
+      return [];
+    }
     const rows = await prisma.vendor.findMany({
       where: {
         companyId,

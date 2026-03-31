@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { logErrorReport } from "@/lib/logger";
 import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance";
 import { logAuditEvent } from "@/lib/audit-log";
+import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 
 const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
 
@@ -56,11 +57,14 @@ export async function overrideAssessmentAnswer(
   }
 
   try {
+    const session = await requireAdminUser();
     const assessment = await prisma.assessment.findUnique({
       where: { id: assessmentId },
       include: { vendor: true },
     });
-    if (!assessment) return { success: false, error: "Assessment not found." };
+    if (!assessment || assessment.companyId !== session.companyId) {
+      return { success: false, error: "Assessment not found." };
+    }
 
     // Upsert the answer
     const existing = await prisma.assessmentAnswer.findFirst({
@@ -97,7 +101,7 @@ export async function overrideAssessmentAnswer(
           status,
           findings: auditedFindings,
           manualNotes: manualNotes.trim(),
-          createdBy: "isb-user",
+          createdBy: session.userId,
         },
         select: { id: true },
       });
@@ -157,7 +161,7 @@ export async function overrideAssessmentAnswer(
       await logAuditEvent(
         {
           companyId: assessment.companyId,
-          userId: "isb-user",
+          userId: session.userId,
           action: "ASSESSMENT_OVERRIDE",
           entityType: "assessment_answer",
           entityId: answerId,
@@ -176,6 +180,9 @@ export async function overrideAssessmentAnswer(
 
     return { success: true, newScore };
   } catch (err) {
+    if (isAccessControlError(err)) {
+      return { success: false, error: "Unauthorized." };
+    }
     const errorMessage = err instanceof Error ? err.message : String(err);
     console.error("[overrideAssessmentAnswer] Error:", errorMessage);
     logErrorReport("overrideAssessmentAnswer", err);

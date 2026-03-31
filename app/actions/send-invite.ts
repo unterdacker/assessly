@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getDefaultCompanyId } from "@/lib/queries/vendor-assessments";
 import type { SendInviteState } from "@/lib/types/vendor-auth";
+import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 
 const ANON_ACTOR = "anonymous:prototype";
 const ACCESS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -72,7 +73,7 @@ export async function sendOutOfBandInviteAction(
     };
   }
 
-  const companyId = await getDefaultCompanyId();
+  const companyId = session.companyId ?? (await getDefaultCompanyId());
   if (!companyId) {
     return { status: "error", error: "Database not ready." };
   }
@@ -87,6 +88,7 @@ export async function sendOutOfBandInviteAction(
   let accessCode = "";
 
   try {
+    const session = await requireAdminUser();
     await prisma.$transaction(async (tx) => {
       const vendor = await tx.vendor.findFirst({
         where: { id: vendorId.trim(), companyId },
@@ -127,8 +129,8 @@ export async function sendOutOfBandInviteAction(
           action: "vendor.invite.sent",
           entityType: "vendor",
           entityId: vendor.id,
-          actorId: ANON_ACTOR,
-          createdBy: ANON_ACTOR,
+          actorId: session.userId,
+          createdBy: session.userId,
           metadata: {
             channel: "out-of-band",
             emailDestination: email.trim(),   // destination logged, credentials are NOT
@@ -179,6 +181,9 @@ export async function sendOutOfBandInviteAction(
     revalidatePath("/vendors");
     return { status: "sent", maskedPhone: maskPhone(phone), error: null };
   } catch (err) {
+    if (isAccessControlError(err)) {
+      return { status: "error", error: "Unauthorized." };
+    }
     console.error("Out-of-band invite failed:", err);
     return { status: "error", error: "Could not send invite. Please try again." };
   }

@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import type { PortalActionState } from "@/lib/types/vendor-auth";
+import { AUTH_SESSION_COOKIE_NAME } from "@/lib/auth/token";
 
 export async function forceResetVendorPasswordAction(
   _prevState: PortalActionState,
@@ -63,6 +64,7 @@ export async function forceResetVendorPasswordAction(
     cookieStore.delete("avra-vendor-id");
     cookieStore.delete("avra-vendor-token");
     cookieStore.delete("avra-vendor-code-exp");
+    cookieStore.delete(AUTH_SESSION_COOKIE_NAME);
   } catch (err) {
     console.error("Force password reset failed:", err);
     return { error: "Could not update password. Please try again." };

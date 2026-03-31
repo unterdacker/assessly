@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import type { UserRole } from "@prisma/client";
 import { Search, ChevronUp, ChevronDown, Copy, SendHorizonal, ShieldAlert, ShieldCheck } from "lucide-react";
 import { AddVendorModal } from "@/components/add-vendor-modal";
 import { InviteVendorModal } from "@/components/admin/invite-vendor-modal";
@@ -36,6 +37,7 @@ import type { VendorAssessment } from "@/lib/vendor-assessment";
 
 export type VendorsTableSectionProps = {
   vendorAssessments: VendorAssessment[];
+  role: UserRole;
 };
 
 type SortKey = 'name' | 'serviceType' | 'status' | 'lastAssessmentDate' | 'complianceScore' | 'riskLevel' | 'questionnaireProgress';
@@ -123,21 +125,30 @@ function ProgressPill({ progress, filled }: { progress: number; filled: number }
   );
 }
 
-function VendorActions({ vendorAssessment }: { vendorAssessment: VendorAssessment }) {
+function VendorActions({
+  vendorAssessment,
+  role,
+}: {
+  vendorAssessment: VendorAssessment;
+  role: UserRole;
+}) {
   const t = useTranslations("vendors");
+  const canManage = role === "ADMIN";
   return (
     <div className="flex justify-end gap-2">
-      <InviteVendorModal
-        vendorId={vendorAssessment.id}
-        vendorName={vendorAssessment.name}
-        prefillEmail={vendorAssessment.email}
-        trigger={
-          <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground">
-            <SendHorizonal className="h-3.5 w-3.5" aria-hidden />
-            {t("sendInvite")}
-          </Button>
-        }
-      />
+      {canManage ? (
+        <InviteVendorModal
+          vendorId={vendorAssessment.id}
+          vendorName={vendorAssessment.name}
+          prefillEmail={vendorAssessment.email}
+          trigger={
+            <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground">
+              <SendHorizonal className="h-3.5 w-3.5" aria-hidden />
+              {t("sendInvite")}
+            </Button>
+          }
+        />
+      ) : null}
       <Button variant="outline" size="sm" className="h-8" asChild>
         <Link href={`/vendors/${vendorAssessment.id}/assessment`}>
           {t("openAssessment")}
@@ -149,9 +160,11 @@ function VendorActions({ vendorAssessment }: { vendorAssessment: VendorAssessmen
 
 export function VendorsTableSection({
   vendorAssessments,
+  role,
 }: VendorsTableSectionProps) {
   const t = useTranslations("vendors");
   const router = useRouter();
+  const canManageVendors = role === "ADMIN";
   const selectAllRef = React.useRef<HTMLInputElement | null>(null);
   const [q, setQ] = React.useState("");
   const [sortKey, setSortKey] = React.useState<SortKey>('name');
@@ -375,7 +388,7 @@ export function VendorsTableSection({
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-          {selectedVendorIds.size > 0 && (
+          {canManageVendors && selectedVendorIds.size > 0 && (
             <Button
               type="button"
               variant="outline"
@@ -386,13 +399,15 @@ export function VendorsTableSection({
               {isBulkDeleting ? `${t("deleteSelected")}...` : `${t("deleteSelected")} (${selectedVendorIds.size})`}
             </Button>
           )}
-          <AddVendorModal
-            trigger={
-              <Button type="button" className="w-full sm:w-auto" disabled={isBulkDeleting}>
-                {t("inviteVendor")}
-              </Button>
-            }
-          />
+          {canManageVendors ? (
+            <AddVendorModal
+              trigger={
+                <Button type="button" className="w-full sm:w-auto" disabled={isBulkDeleting}>
+                  {t("inviteVendor")}
+                </Button>
+              }
+            />
+          ) : null}
         </div>
       </div>
 
@@ -418,15 +433,17 @@ export function VendorsTableSection({
           <TableHeader>
             <TableRow>
               <TableHead className="w-10">
-                <input
-                  ref={selectAllRef}
-                  type="checkbox"
-                  aria-label={t("selectAllVendors")}
-                  checked={allVisibleSelected}
-                  onChange={(e) => handleToggleAllVisible(e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300"
-                  disabled={visibleIds.length === 0 || isBulkDeleting}
-                />
+                {canManageVendors ? (
+                  <input
+                    ref={selectAllRef}
+                    type="checkbox"
+                    aria-label={t("selectAllVendors")}
+                    checked={allVisibleSelected}
+                    onChange={(e) => handleToggleAllVisible(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300"
+                    disabled={visibleIds.length === 0 || isBulkDeleting}
+                  />
+                ) : null}
               </TableHead>
               <TableHead>
                 <Button variant="ghost" onClick={() => handleSort('name')} className="h-auto p-0 font-semibold">
@@ -491,14 +508,16 @@ export function VendorsTableSection({
                 return (
                 <TableRow key={v.id}>
                   <TableCell>
-                    <input
-                      type="checkbox"
-                      aria-label={t("selectVendorAria", { vendorName: v.name })}
-                      checked={selectedVendorIds.has(v.id)}
-                      onChange={(e) => handleToggleVendor(v.id, e.target.checked)}
-                      className="h-4 w-4 rounded border-slate-300"
-                      disabled={isBulkDeleting}
-                    />
+                    {canManageVendors ? (
+                      <input
+                        type="checkbox"
+                        aria-label={t("selectVendorAria", { vendorName: v.name })}
+                        checked={selectedVendorIds.has(v.id)}
+                        onChange={(e) => handleToggleVendor(v.id, e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300"
+                        disabled={isBulkDeleting}
+                      />
+                    ) : null}
                   </TableCell>
                   <TableCell className="font-medium">{v.name}</TableCell>
                   <TableCell>
@@ -536,30 +555,32 @@ export function VendorsTableSection({
                           {t("passwordSecured")}
                         </p>
                       )}
-                      <div className="flex items-center gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="h-7 px-2 text-[10px]"
-                          onClick={() => setCodeDialogVendorId(v.id)}
-                          disabled={Boolean(codeActionVendorId)}
-                        >
-                          {t("generateAccessCode")}
-                        </Button>
-                        {hasAccessCode && v.isCodeActive && (
+                      {canManageVendors ? (
+                        <div className="flex items-center gap-2">
                           <Button
                             type="button"
                             size="sm"
                             variant="outline"
-                            className="h-7 border-red-200 px-2 text-[10px] text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
-                            onClick={() => handleVoidCode(v)}
+                            className="h-7 px-2 text-[10px]"
+                            onClick={() => setCodeDialogVendorId(v.id)}
                             disabled={Boolean(codeActionVendorId)}
                           >
-                            {codeActionVendorId === v.id ? t("voiding") : t("voidCode")}
+                            {t("generateAccessCode")}
                           </Button>
-                        )}
-                      </div>
+                          {hasAccessCode && v.isCodeActive && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="h-7 border-red-200 px-2 text-[10px] text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+                              onClick={() => handleVoidCode(v)}
+                              disabled={Boolean(codeActionVendorId)}
+                            >
+                              {codeActionVendorId === v.id ? t("voiding") : t("voidCode")}
+                            </Button>
+                          )}
+                        </div>
+                      ) : null}
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
@@ -589,7 +610,7 @@ export function VendorsTableSection({
                     <RiskBadge level={v.riskLevel} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <VendorActions vendorAssessment={v} />
+                    <VendorActions vendorAssessment={v} role={role} />
                   </TableCell>
                 </TableRow>
                 );
@@ -599,7 +620,7 @@ export function VendorsTableSection({
         </Table>
       </div>
 
-      <Dialog open={Boolean(generatedCredentials)} onOpenChange={(open) => {
+      <Dialog open={canManageVendors && Boolean(generatedCredentials)} onOpenChange={(open) => {
         if (!open) {
           setGeneratedCredentials(null);
           router.refresh();
@@ -677,7 +698,7 @@ export function VendorsTableSection({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(codeDialogVendorId)} onOpenChange={(open) => !open && setCodeDialogVendorId(null)}>
+      <Dialog open={canManageVendors && Boolean(codeDialogVendorId)} onOpenChange={(open) => !open && setCodeDialogVendorId(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("genCodeDialogTitle")}</DialogTitle>

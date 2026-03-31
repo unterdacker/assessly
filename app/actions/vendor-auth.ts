@@ -6,6 +6,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import type { PortalActionState } from "@/lib/types/vendor-auth";
+import { createSessionForUser, setAuthSessionCookie } from "@/lib/auth/server";
 
 const MAX_CONSECUTIVE_FAILURES = 3;
 const BLOCK_MS = 15 * 60 * 1000;
@@ -110,6 +111,7 @@ export async function authenticateVendorAccessCode(
     },
     select: {
       id: true,
+      companyId: true,
       inviteToken: true,
       inviteTokenExpires: true,
       codeExpiresAt: true,
@@ -221,6 +223,35 @@ export async function authenticateVendorAccessCode(
     path: "/",
     maxAge: 60 * 60 * 24,
   });
+
+  const user = await prisma.user.upsert({
+    where: { vendorId: vendor.id },
+    update: {
+      role: "VENDOR",
+      companyId: vendor.companyId,
+      isActive: true,
+    },
+    create: {
+      vendorId: vendor.id,
+      companyId: vendor.companyId,
+      role: "VENDOR",
+      createdBy: "external-vendor",
+    },
+    select: {
+      id: true,
+      role: true,
+      companyId: true,
+      vendorId: true,
+    },
+  });
+
+  const { token, expiresAt } = await createSessionForUser({
+    userId: user.id,
+    role: user.role,
+    companyId: user.companyId,
+    vendorId: user.vendorId,
+  });
+  await setAuthSessionCookie(token, expiresAt);
 
   redirect(`/external/assessment/${inviteToken}`);
 }

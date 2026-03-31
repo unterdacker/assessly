@@ -6,6 +6,8 @@
         "Set-Content": true,
         "Get-CimInstance": true,
         "ForEach-Object": true,
-        "npx next": true
+        "npx next": true,
+        "Test-Path": true,
+        "npx ts-node": true
     }
 }

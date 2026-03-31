@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import type { UserRole } from "@prisma/client";
 import { ArrowLeft } from "lucide-react";
 import type { AssessmentAnswer } from "@prisma/client";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
@@ -27,6 +28,7 @@ type AssessmentWorkspaceProps = {
   documentFilename: string | null;
   documentFileSize: number | null;
   lastAuditedAt: string | null;
+  role: UserRole;
 };
 
 export function AssessmentWorkspace({
@@ -38,9 +40,12 @@ export function AssessmentWorkspace({
   documentFilename,
   documentFileSize,
   lastAuditedAt,
+  role,
 }: AssessmentWorkspaceProps) {
   const t = useTranslations("assessment.workspace");
   const insightLines = buildVendorAssessmentInsightLines(vendorAssessment);
+  const isAdmin = role === "ADMIN";
+  const isReadOnly = role !== "ADMIN";
   
   // Track selected question for side-by-side view
   const [selectedQuestionId, setSelectedQuestionId] = React.useState<string | null>(null);
@@ -75,26 +80,28 @@ export function AssessmentWorkspace({
           >
             {t("score")} {vendorAssessment.complianceScore}/100
           </span>
-          <RemediationModal vendorId={vendorAssessment.id} />
-          <EditVendorProfileModal
-            vendorId={vendorAssessment.id}
-            companyId={companyId}
-            initialData={{
-              officialName: vendorAssessment.vendor?.officialName || vendorAssessment.name,
-              registrationId: vendorAssessment.vendor?.registrationId,
-              vendorServiceType: vendorAssessment.vendor?.vendorServiceType || vendorAssessment.serviceType,
-              securityOfficerName: vendorAssessment.vendor?.securityOfficerName,
-              securityOfficerEmail: vendorAssessment.vendor?.securityOfficerEmail,
-              dpoName: vendorAssessment.vendor?.dpoName,
-              dpoEmail: vendorAssessment.vendor?.dpoEmail,
-              headquartersLocation: vendorAssessment.vendor?.headquartersLocation,
-            }}
-            trigger={
-              <Button variant="outline" size="sm">
-                {t("editVendorInfo")}
-              </Button>
-            }
-          />
+          {isAdmin ? <RemediationModal vendorId={vendorAssessment.id} /> : null}
+          {isAdmin ? (
+            <EditVendorProfileModal
+              vendorId={vendorAssessment.id}
+              companyId={companyId}
+              initialData={{
+                officialName: vendorAssessment.vendor?.officialName || vendorAssessment.name,
+                registrationId: vendorAssessment.vendor?.registrationId,
+                vendorServiceType: vendorAssessment.vendor?.vendorServiceType || vendorAssessment.serviceType,
+                securityOfficerName: vendorAssessment.vendor?.securityOfficerName,
+                securityOfficerEmail: vendorAssessment.vendor?.securityOfficerEmail,
+                dpoName: vendorAssessment.vendor?.dpoName,
+                dpoEmail: vendorAssessment.vendor?.dpoEmail,
+                headquartersLocation: vendorAssessment.vendor?.headquartersLocation,
+              }}
+              trigger={
+                <Button variant="outline" size="sm">
+                  {t("editVendorInfo")}
+                </Button>
+              }
+            />
+          ) : null}
         </div>
       </header>
 
@@ -118,6 +125,7 @@ export function AssessmentWorkspace({
             <PdfUploadZone
               vendorId={vendorAssessment.id}
               isAdminView
+              readOnly={isReadOnly}
               assessmentId={assessmentId}
               storedDocumentFilename={documentFilename}
               documentUrl={documentUrl}
@@ -131,6 +139,7 @@ export function AssessmentWorkspace({
             assessmentId={assessmentId}
             answers={initialAnswers}
             selectedQuestionId={selectedQuestionId}
+            readOnly={isReadOnly}
           />
         </div>
       </div>

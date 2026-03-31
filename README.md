@@ -209,6 +209,40 @@ This preview data helps you inspect the dashboard, vendor list, and assessment f
 
 ---
 
+### Test Accounts & Roles
+
+> **⚠️ Development & Demo Only** — These credentials exist exclusively for local development and demonstration purposes. **Do not use them in production.**
+
+All accounts below are automatically provisioned during `npx prisma db push` (or on first app start). No manual seeding step is required.
+
+#### Sign-In Routes
+
+| Role type | Sign-in route |
+| --- | --- |
+| Admin / Auditor (internal) | `http://localhost:3000/en/auth/sign-in` |
+| Vendor (external portal) | Unique access code delivered via the invite flow — no password login |
+
+#### Internal Accounts (Admin & Auditor)
+
+Use the **Internal Workspace Sign-In** page (`/auth/sign-in`) for these roles. They have access to the full dashboard, vendor list, assessment workspaces, AI configuration, settings, and audit logs based on their role.
+
+| Role | Email | Password | Access Scope |
+| --- | --- | --- | --- |
+| **Admin** | `admin@avra.local` | `admin123` | Full system control — vendor management, AI config, user settings, audit logs |
+| **Auditor** | `auditor@avra.local` | `auditor123` | Read-only — assessments, compliance charts, audit trail (no write access) |
+
+#### External Vendor Account
+
+Vendor users do **not** use a password login. They receive a time-limited access code and a portal link via the invite flow initiated by an Admin from the Vendors table.
+
+| Vendor | Contact email | Login method | Access Scope |
+| --- | --- | --- | --- |
+| Northwind Analytics | `contact@northwind.local` | Access code (via invite) | External assessment portal — questionnaire completion and document upload only |
+
+To generate a vendor invite: open the **Vendors** table as Admin → locate the vendor row → click **Send invite** → distribute the generated portal link and access code.
+
+---
+
 ### Database Reset (PostgreSQL Re-Init)
 
 Use this when switching from SQLite migrations or when local DB state is corrupted.

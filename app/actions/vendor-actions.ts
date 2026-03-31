@@ -7,8 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getDefaultCompanyId } from "@/lib/queries/vendor-assessments";
 import { calculateRiskLevel } from "@/lib/risk-level";
 import { logAuditEvent } from "@/lib/audit-log";
-
-const ANON_ACTOR = "anonymous:prototype";
+import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 const ACCESS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const ACCESS_CODE_SCHEMA_NOT_READY = "ACCESS_CODE_SCHEMA_NOT_READY";
 const TEMP_PASSWORD_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#%";
@@ -82,7 +81,8 @@ function resolveCodeExpiry(duration: AccessCodeDuration): Date {
 export async function createVendorAction(
   formData: FormData,
 ): Promise<CreateVendorResult> {
-  const companyId = await getDefaultCompanyId();
+  const session = await requireAdminUser();
+  const companyId = session.companyId ?? (await getDefaultCompanyId());
   if (!companyId) {
     return {
       ok: false,
@@ -113,7 +113,7 @@ export async function createVendorAction(
             name: name.trim(),
             email: email.trim().toLowerCase(),
             serviceType: "Pending classification",
-            createdBy: ANON_ACTOR,
+            createdBy: session.userId,
             accessCode: null,
             codeExpiresAt: null,
             isCodeActive: false,
@@ -129,7 +129,7 @@ export async function createVendorAction(
             name: name.trim(),
             email: email.trim().toLowerCase(),
             serviceType: "Pending classification",
-            createdBy: ANON_ACTOR,
+            createdBy: session.userId,
             inviteToken: null,
             inviteTokenExpires: null,
           },
@@ -144,7 +144,7 @@ export async function createVendorAction(
           riskLevel,
           complianceScore,
           lastAssessmentDate: null,
-          createdBy: ANON_ACTOR,
+          createdBy: session.userId,
         },
       });
 
@@ -154,8 +154,8 @@ export async function createVendorAction(
           action: "vendor.created",
           entityType: "vendor",
           entityId: vendor.id,
-          actorId: ANON_ACTOR,
-          createdBy: ANON_ACTOR,
+          actorId: session.userId,
+          createdBy: session.userId,
         },
       });
     });
@@ -170,6 +170,9 @@ export async function createVendorAction(
 
     return { ok: true };
   } catch (err) {
+    if (isAccessControlError(err)) {
+      return { ok: false, error: "Unauthorized." };
+    }
     console.error("Vendor creation failed:", err);
     return { ok: false, error: "Could not save vendor. Try again." };
   }
@@ -179,11 +182,12 @@ export async function generateVendorAccessCodeAction(
   vendorId: string,
   duration: AccessCodeDuration,
 ): Promise<GenerateAccessCodeResult> {
+  const session = await requireAdminUser();
   if (!vendorId || !vendorId.trim()) {
     return { ok: false, error: "Invalid vendor identifier." };
   }
 
-  const companyId = await getDefaultCompanyId();
+  const companyId = session.companyId ?? (await getDefaultCompanyId());
   if (!companyId) {
     return {
       ok: false,
@@ -246,7 +250,7 @@ export async function generateVendorAccessCodeAction(
       await logAuditEvent(
         {
           companyId,
-          userId: ANON_ACTOR,
+          userId: session.userId,
           action: "ACCESS_CODE_GENERATED",
           entityType: "vendor_access_code",
           entityId: vendor.id,
@@ -276,6 +280,9 @@ export async function generateVendorAccessCodeAction(
     revalidatePath("/vendors");
     return { ok: true, accessCode, tempPassword, codeExpiresAt: codeExpiresAt.toISOString() };
   } catch (err) {
+    if (isAccessControlError(err)) {
+      return { ok: false, error: "Unauthorized." };
+    }
     console.error("Access code generation failed:", err);
     if (
       (err instanceof Error && err.message === ACCESS_CODE_SCHEMA_NOT_READY) ||
@@ -292,11 +299,12 @@ export async function generateVendorAccessCodeAction(
 }
 
 export async function voidVendorAccessCodeAction(vendorId: string): Promise<VoidAccessCodeResult> {
+  const session = await requireAdminUser();
   if (!vendorId || !vendorId.trim()) {
     return { ok: false, error: "Invalid vendor identifier." };
   }
 
-  const companyId = await getDefaultCompanyId();
+  const companyId = session.companyId ?? (await getDefaultCompanyId());
   if (!companyId) {
     return {
       ok: false,
@@ -340,8 +348,8 @@ export async function voidVendorAccessCodeAction(vendorId: string): Promise<Void
           action: "vendor.access_code.voided",
           entityType: "vendor",
           entityId: vendor.id,
-          actorId: ANON_ACTOR,
-          createdBy: ANON_ACTOR,
+          actorId: session.userId,
+          createdBy: session.userId,
         },
       });
     });
@@ -349,6 +357,9 @@ export async function voidVendorAccessCodeAction(vendorId: string): Promise<Void
     revalidatePath("/vendors");
     return { ok: true };
   } catch (err) {
+    if (isAccessControlError(err)) {
+      return { ok: false, error: "Unauthorized." };
+    }
     console.error("Void access code failed:", err);
     if (isAccessCodeSchemaMismatch(err)) {
       return {
@@ -362,11 +373,12 @@ export async function voidVendorAccessCodeAction(vendorId: string): Promise<Void
 }
 
 export async function deleteVendorAction(vendorId: string): Promise<DeleteVendorResult> {
+  const session = await requireAdminUser();
   if (!vendorId || !vendorId.trim()) {
     return { ok: false, error: "Invalid vendor identifier." };
   }
 
-  const companyId = await getDefaultCompanyId();
+  const companyId = session.companyId ?? (await getDefaultCompanyId());
   if (!companyId) {
     return {
       ok: false,
@@ -393,8 +405,8 @@ export async function deleteVendorAction(vendorId: string): Promise<DeleteVendor
           action: "vendor.deleted",
           entityType: "vendor",
           entityId: vendor.id,
-          actorId: ANON_ACTOR,
-          createdBy: ANON_ACTOR,
+          actorId: session.userId,
+          createdBy: session.userId,
           metadata: { vendorName: vendor.name },
         },
       });
@@ -405,18 +417,22 @@ export async function deleteVendorAction(vendorId: string): Promise<DeleteVendor
 
     return { ok: true };
   } catch (err) {
+    if (isAccessControlError(err)) {
+      return { ok: false, error: "Unauthorized." };
+    }
     console.error("Vendor deletion failed:", err);
     return { ok: false, error: "Could not delete vendor. Try again." };
   }
 }
 
 export async function deleteVendorsAction(vendorIds: string[]): Promise<DeleteVendorsResult> {
+  const session = await requireAdminUser();
   const uniqueIds = [...new Set(vendorIds.map((id) => id.trim()).filter(Boolean))];
   if (uniqueIds.length === 0) {
     return { ok: false, error: "No vendors selected for deletion." };
   }
 
-  const companyId = await getDefaultCompanyId();
+  const companyId = session.companyId ?? (await getDefaultCompanyId());
   if (!companyId) {
     return {
       ok: false,
@@ -446,8 +462,8 @@ export async function deleteVendorsAction(vendorIds: string[]): Promise<DeleteVe
             action: "vendor.deleted",
             entityType: "vendor",
             entityId: vendor.id,
-            actorId: ANON_ACTOR,
-            createdBy: ANON_ACTOR,
+            actorId: session.userId,
+            createdBy: session.userId,
             metadata: { vendorName: vendor.name, bulk: true },
           },
         });
@@ -461,6 +477,9 @@ export async function deleteVendorsAction(vendorIds: string[]): Promise<DeleteVe
 
     return { ok: true, deletedCount };
   } catch (err) {
+    if (isAccessControlError(err)) {
+      return { ok: false, error: "Unauthorized." };
+    }
     console.error("Bulk vendor deletion failed:", err);
     return { ok: false, error: "Could not delete selected vendors. Try again." };
   }

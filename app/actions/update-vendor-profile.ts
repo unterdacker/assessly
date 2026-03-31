@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { logErrorReport } from "@/lib/logger";
+import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 
 export type UpdateVendorProfileInput = {
   vendorId: string;
@@ -47,10 +48,13 @@ export async function updateVendorProfile(
   }
 
   try {
+    const session = await requireAdminUser();
     const vendor = await prisma.vendor.findUnique({
       where: { id: vendorId },
     });
-    if (!vendor) return { success: false, error: "Vendor not found." };
+    if (!vendor || vendor.companyId !== session.companyId) {
+      return { success: false, error: "Vendor not found." };
+    }
 
     // Update both the display name (name) and officialName to ensure global sync
     await prisma.vendor.update({
@@ -75,8 +79,8 @@ export async function updateVendorProfile(
         action: `Updated vendor profile for ${officialName?.trim() || vendor.name}`,
         entityType: "vendor",
         entityId: vendorId,
-        actorId: "user",
-        createdBy: "user",
+        actorId: session.userId,
+        createdBy: session.userId,
         metadata: { updatedFields: Object.keys(input).filter(k => k !== 'vendorId') },
       },
     });
@@ -87,6 +91,9 @@ export async function updateVendorProfile(
 
     return { success: true };
   } catch (err) {
+    if (isAccessControlError(err)) {
+      return { success: false, error: "Unauthorized." };
+    }
     logErrorReport("updateVendorProfile", err);
     return { success: false, error: "Failed to update vendor profile. Please try again." };
   }

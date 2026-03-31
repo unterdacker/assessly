@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ShieldAlert } from "lucide-react";
 import { AuditLogsTable } from "@/components/admin/audit-logs-table";
+import { requirePageRole } from "@/lib/auth/server";
 
 export const dynamic = "force-dynamic";
 
@@ -9,9 +10,11 @@ type AuditLogsPageProps = {
 };
 
 export default async function AuditLogsPage({ params }: AuditLogsPageProps) {
-  await params;
+  const { locale } = await params;
+  const session = await requirePageRole(["ADMIN", "AUDITOR"], locale);
 
   const logs = await prisma.auditLog.findMany({
+    where: { companyId: session.companyId ?? undefined },
     orderBy: [{ createdAt: "desc" }],
     take: 100,
     select: {

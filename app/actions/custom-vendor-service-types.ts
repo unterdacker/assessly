@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { logErrorReport } from "@/lib/logger";
+import { requireAdminUser } from "@/lib/auth/server";
 
 /**
  * Fetch custom vendor service types for a company.
@@ -10,6 +11,10 @@ export async function getCustomVendorServiceTypes(
   companyId: string,
 ): Promise<string[]> {
   try {
+    const session = await requireAdminUser();
+    if (!session.companyId || session.companyId !== companyId) {
+      return [];
+    }
     const customTypes = await prisma.customVendorServiceType.findMany({
       where: { companyId },
       select: { name: true },
@@ -39,6 +44,11 @@ export async function saveCustomVendorServiceType(
   input: SaveCustomVendorServiceTypeInput,
 ): Promise<SaveCustomVendorServiceTypeResult> {
   const { companyId, name } = input;
+
+  const session = await requireAdminUser();
+  if (!session.companyId || session.companyId !== companyId) {
+    return { success: false, error: "Unauthorized." };
+  }
 
   if (!name.trim()) {
     return { success: false, error: "Service type name cannot be empty." };

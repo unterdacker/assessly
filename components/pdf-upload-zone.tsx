@@ -42,6 +42,7 @@ import { cn } from "@/lib/utils";
 type PdfUploadZoneProps = {
   vendorId: string;
   isAdminView?: boolean;
+  readOnly?: boolean;
   assessmentId?: string;
   storedDocumentFilename?: string | null;
   documentUrl?: string | null;
@@ -77,6 +78,7 @@ function formatAuditTimestamp(timestamp: string | null | undefined): string | nu
 export function PdfUploadZone({
   vendorId,
   isAdminView = false,
+  readOnly = false,
   assessmentId,
   storedDocumentFilename,
   documentUrl,
@@ -118,7 +120,7 @@ export function PdfUploadZone({
   const displayFileName = fileName ?? storedDocumentFilename ?? null;
   const displayFileSize = hasLocalSelection ? fileSize : storedDocumentSize;
   const formattedAuditTimestamp = formatAuditTimestamp(lastAuditedAt);
-  const isAuditActionDisabled = isPending || isReanalyzing || (requiresConsent && !isConsented);
+  const isAuditActionDisabled = readOnly || isPending || isReanalyzing || (requiresConsent && !isConsented);
 
   function assignFile(file: File | null) {
     if (!file) {
@@ -249,7 +251,7 @@ export function PdfUploadZone({
     });
   };
 
-  const canInteract = isConsented || !requiresConsent;
+  const canInteract = (isConsented || !requiresConsent) && !readOnly;
 
   return (
     <Card className="overflow-hidden border-slate-200/80 bg-card shadow-sm dark:border-slate-800">
@@ -305,7 +307,7 @@ export function PdfUploadZone({
               >
                 {hasLocalSelection ? t("evidenceReadyBadge") : t("evidenceStoredBadge")}
               </Badge>
-              {isAdminView && hasStoredDocument && !hasLocalSelection && assessmentId ? (
+              {isAdminView && !readOnly && hasStoredDocument && !hasLocalSelection && assessmentId ? (
                 <button
                   type="button"
                   aria-label={t("removeDocument")}

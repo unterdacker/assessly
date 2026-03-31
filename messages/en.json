@@ -101,7 +101,9 @@
   "MistralAPIKey": "Mistral API Key",
   "EnterMistralAPIKey": "Enter your Mistral API Key",
   "LocalAIEndpoint": "Local AI Endpoint",
-  "LocalAIEndpointPlaceholder": "http://localhost:11434/v1",
+  "LocalAIEndpointPlaceholder": "http://localhost:11434",
+  "LocalAIModel": "Model Name",
+  "LocalAIModelPlaceholder": "e.g. ministral-3:8b, llama3, phi3",
   "SaveConfiguration": "Save Configuration",
   "SettingsUpdatedSuccess": "Settings updated successfully!",
   "VendorsPageDesc": "Search, invite, and open NIS2 assessment workspaces.",
@@ -677,5 +679,18 @@
     "copyAccessCodeAria": "Copy access code for {vendorName}",
     "viewEvidencePdfAria": "View evidence PDF for {vendorName}",
     "selectVendorAria": "Select vendor {vendorName}"
+  },
+  "SignIn": {
+    "badge": "Enterprise RBAC",
+    "headline": "Internal access is separated from vendor access.",
+    "isolationNotice": "AVRA now enforces dedicated admin and auditor sessions for dashboard, vendor, settings, and audit routes. Vendor sessions stay isolated inside the external assessment portal.",
+    "title": "Internal Workspace Sign In",
+    "description": "Admin and auditor access is isolated from the vendor portal and enforced on every protected route.",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "submitButton": "Sign In",
+    "signingIn": "Signing in\u2026",
+    "errorRequired": "Email and password are required.",
+    "errorInvalidCredentials": "Invalid credentials."
   }
 }

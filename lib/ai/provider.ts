@@ -101,6 +101,11 @@ function parseLlmJson(rawContent: unknown): unknown {
   if (balanced && balanced !== normalized) {
     candidates.push(balanced);
   }
+  // Last-resort: scan entire string for any embedded JSON structure
+  const aggressive = aggressiveJsonExtract(normalized);
+  if (aggressive && !candidates.includes(aggressive)) {
+    candidates.push(aggressive);
+  }
 
   for (const candidate of candidates) {
     const variants = [candidate, stripTrailingCommas(candidate)];
@@ -113,7 +118,36 @@ function parseLlmJson(rawContent: unknown): unknown {
     }
   }
 
+  // Log truncated raw output to help debug future failures
+  const preview = normalized.slice(0, 500);
+  console.error("[parseLlmJson] Failed to parse model output. Preview:", preview);
   throw new SyntaxError("Unable to parse model response as valid JSON.");
+}
+
+/**
+ * Scans the full string for the first JSON array or object even when the model
+ * wraps it in explanation text. More aggressive than extractBalancedJson because
+ * it rescans from every '[' / '{' not just the first one.
+ */
+function aggressiveJsonExtract(input: string): string | null {
+  for (const opener of ["[", "{"] as const) {
+    let idx = 0;
+    while (idx < input.length) {
+      const pos = input.indexOf(opener, idx);
+      if (pos === -1) break;
+      const candidate = extractBalancedJson(input.slice(pos));
+      if (candidate) {
+        try {
+          JSON.parse(candidate);
+          return candidate; // valid JSON found
+        } catch {
+          // not valid, keep scanning
+        }
+      }
+      idx = pos + 1;
+    }
+  }
+  return null;
 }
 
 function normalizeAnalysisResult(parsed: unknown): Nis2QuestionAnalysis[] {
@@ -219,17 +253,21 @@ export async function runNis2AnalysisWithTrace(
     }
   }
 
-  const endpoint = (process.env.LOCAL_AI_ENDPOINT || config.localAiEndpoint)?.trim() || "http://localhost:11434/v1";
-  const modelId = process.env.LOCAL_AI_MODEL || "mistral";
+  const rawEndpoint = (process.env.LOCAL_AI_ENDPOINT || config.localAiEndpoint)?.trim() || "http://localhost:11434";
+  // Normalize: strip trailing /v1 or slash so we always control the full path
+  const endpointBase = rawEndpoint.replace(/\/v1\/?$/, "").replace(/\/$/, "");
+  const modelId = process.env.LOCAL_AI_MODEL || config.localAiModel?.trim() || "ministral-3:8b";
 
   try {
-    const response = await fetch(`${endpoint}/chat/completions`, {
+    const response = await fetch(`${endpointBase}/v1/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         model: modelId,
+        // response_format is the correct OpenAI-compat parameter for Ollama JSON mode
+        response_format: { type: "json_object" },
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPayload },
@@ -239,7 +277,14 @@ export async function runNis2AnalysisWithTrace(
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch from local AI: ${response.statusText}`);
+      let detail = response.statusText;
+      try {
+        const errBody = await response.json();
+        if (errBody?.error) detail = errBody.error;
+      } catch {
+        // ignore parse failure — statusText is enough
+      }
+      throw new Error(`Failed to fetch from local AI: ${response.status} — ${detail}`);
     }
 
     const data = await response.json();
@@ -255,7 +300,7 @@ export async function runNis2AnalysisWithTrace(
         modelInfo: {
           provider: "local",
           modelId,
-          endpoint,
+          endpoint: endpointBase,
         },
         rawAiOutput,
       },

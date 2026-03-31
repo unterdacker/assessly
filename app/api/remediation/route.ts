@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit-log";
 import enMessages from "@/messages/en.json";
 import deMessages from "@/messages/de.json";
+import { getAuthSessionFromRequest } from "@/lib/auth/server";
 
 type SupportedLocale = "en" | "de";
 
@@ -208,6 +209,7 @@ function normalizeModelContent(content: unknown): string {
 async function getVendorGaps(
   vendorId: string,
   locale: SupportedLocale,
+  companyId: string,
 ): Promise<GapResponse | null> {
   const assessment = await prisma.assessment.findUnique({
     where: { vendorId },
@@ -233,6 +235,10 @@ async function getVendorGaps(
   });
 
   if (!assessment) {
+    return null;
+  }
+
+  if (assessment.companyId !== companyId) {
     return null;
   }
 
@@ -443,6 +449,11 @@ async function generateRemediationDraft(args: {
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await getAuthSessionFromRequest(request);
+    if (!session || session.role !== "ADMIN") {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 403 });
+    }
+
     const locale = detectLocale(request);
     const vendorId = request.nextUrl.searchParams.get("vendorId")?.trim();
     if (!vendorId) {
@@ -452,7 +463,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const result = await getVendorGaps(vendorId, locale);
+    const result = await getVendorGaps(vendorId, locale, session.companyId ?? "");
     if (!result) {
       return NextResponse.json(
         { ok: false, error: "Vendor assessment not found." },
@@ -475,6 +486,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getAuthSessionFromRequest(request);
+    if (!session || session.role !== "ADMIN") {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 403 });
+    }
+
     const body = (await request.json()) as {
       vendorId?: string;
       locale?: string;
@@ -490,7 +506,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await getVendorGaps(vendorId, locale);
+    const result = await getVendorGaps(vendorId, locale, session.companyId ?? "");
     if (!result) {
       return NextResponse.json(
         { ok: false, error: "Vendor assessment not found." },

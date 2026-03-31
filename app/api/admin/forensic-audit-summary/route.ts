@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDefaultCompanyId } from "@/lib/queries/vendor-assessments";
 import { prisma } from "@/lib/prisma";
+import { getAuthSessionFromRequest } from "@/lib/auth/server";
 
 type ForensicSummaryRow = {
   id: string;
@@ -55,7 +55,12 @@ function toCsv(rows: ForensicSummaryRow[]): string {
 
 export async function GET(request: NextRequest) {
   try {
-    const companyId = await getDefaultCompanyId();
+    const session = await getAuthSessionFromRequest(request);
+    if (!session || (session.role !== "ADMIN" && session.role !== "AUDITOR")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const companyId = session.companyId;
     if (!companyId) {
       return NextResponse.json({
         generatedAt: new Date().toISOString(),

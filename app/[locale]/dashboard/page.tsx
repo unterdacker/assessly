@@ -3,6 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { DashboardOverview } from "@/components/dashboard-overview";
 import { getDashboardRiskPostureOverview } from "@/lib/queries/dashboard-risk-posture";
 import { listVendorAssessments } from "@/lib/queries/vendor-assessments";
+import { requirePageRole } from "@/lib/auth/server";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,13 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  params: Promise<{ locale: string }>;
+};
+
+export default async function DashboardPage({ params }: DashboardPageProps) {
+  const { locale: routeLocale } = await params;
+  const session = await requirePageRole(["ADMIN", "AUDITOR"], routeLocale);
   const t = await getTranslations();
   const locale = (await getLocale()) as "en" | "de";
   const [vendorAssessments, riskPosture] = await Promise.all([
@@ -101,6 +108,7 @@ export default async function DashboardPage() {
     <DashboardOverview
       vendorAssessments={vendorAssessments}
       riskPosture={riskPosture}
+      role={session.role}
       translations={translations}
     />
   );

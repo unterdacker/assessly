@@ -6,6 +6,7 @@ import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit-log";
+import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 
 const MAX_EVIDENCE_SIZE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_EVIDENCE_MIME_TYPES = new Set([
@@ -91,6 +92,16 @@ async function persistEvidenceDocument(
 }
 
 export async function uploadInternalAnswerEvidence(formData: FormData) {
+  const session = await requireAdminUser().catch((error) => {
+    if (isAccessControlError(error)) {
+      return null;
+    }
+    throw error;
+  });
+  if (!session) {
+    return { ok: false, error: "Unauthorized." };
+  }
+
   const assessmentId = String(formData.get("assessmentId") || "").trim();
   const questionId = String(formData.get("questionId") || "").trim();
   const file = formData.get("evidenceFile");
@@ -109,7 +120,7 @@ export async function uploadInternalAnswerEvidence(formData: FormData) {
       select: { id: true, companyId: true, vendorId: true },
     });
 
-    if (!assessment) {
+    if (!assessment || assessment.companyId !== session.companyId) {
       return { ok: false, error: "Assessment not found." };
     }
 
@@ -131,7 +142,7 @@ export async function uploadInternalAnswerEvidence(formData: FormData) {
           questionId,
           status: "PENDING",
           verified: false,
-          createdBy: "isb-user",
+          createdBy: session.userId,
         },
         select: {
           id: true,
@@ -143,7 +154,7 @@ export async function uploadInternalAnswerEvidence(formData: FormData) {
       });
     }
 
-    const persisted = await persistEvidenceDocument(assessmentId, file, "internal-auditor");
+    const persisted = await persistEvidenceDocument(assessmentId, file, session.userId);
 
     const updated = await prisma.assessmentAnswer.update({
       where: { id: answer.id },
@@ -176,7 +187,7 @@ export async function uploadInternalAnswerEvidence(formData: FormData) {
       await logAuditEvent(
         {
           companyId: assessment.companyId,
-          userId: "isb-user",
+          userId: session.userId,
           action: "ASSESSMENT_EVIDENCE_UPLOADED",
           entityType: "assessment_answer",
           entityId: updated.id,
@@ -203,6 +214,9 @@ export async function uploadInternalAnswerEvidence(formData: FormData) {
 
     return { ok: true, answer: updated };
   } catch (err) {
+    if (isAccessControlError(err)) {
+      return { ok: false, error: "Unauthorized." };
+    }
     console.error("Internal answer evidence upload failed:", err);
     return { ok: false, error: "Failed to upload evidence." };
   }

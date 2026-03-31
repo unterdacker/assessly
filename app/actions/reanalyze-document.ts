@@ -16,6 +16,7 @@ import {
   syncAssessmentComplianceToDatabase,
 } from "@/lib/assessment-compliance";
 import { extractPdfText } from "@/app/actions/analyze-document";
+import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 
 const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
 
@@ -27,12 +28,23 @@ const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
 export async function reanalyzeStoredDocument(
   assessmentId: string,
 ): Promise<AnalyzeDocumentResponse> {
+  const session = await requireAdminUser().catch((error) => {
+    if (isAccessControlError(error)) {
+      return null;
+    }
+    throw error;
+  });
+
+  if (!session) {
+    return { ok: false, error: "Unauthorized." };
+  }
+
   if (!assessmentId?.trim()) {
     return { ok: false, error: "Missing assessment identifier." };
   }
 
-  const assessment = await prisma.assessment.findUnique({
-    where: { id: assessmentId },
+  const assessment = await prisma.assessment.findFirst({
+    where: { id: assessmentId, companyId: session.companyId ?? undefined },
     include: { vendor: true, company: true },
   });
 
