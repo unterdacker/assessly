@@ -178,7 +178,13 @@ npx prisma db seed
 #### 7. Start the Development Server
 
 ```bash
-npm run dev --turbopack
+npm run dev
+```
+
+Optional fast path for local-only experimentation:
+
+```bash
+npm run dev:turbo
 ```
 
 Open:

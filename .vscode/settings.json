@@ -5,6 +5,7 @@
         "npm install": true,
         "Set-Content": true,
         "Get-CimInstance": true,
-        "ForEach-Object": true
+        "ForEach-Object": true,
+        "npx next": true
     }
 }

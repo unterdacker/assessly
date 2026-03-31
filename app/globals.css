@@ -8,9 +8,13 @@
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
     --muted: 210 40% 96%;
     /* Darker muted text for ~4.5:1 on light backgrounds (WCAG 2.1 AA body text) */
     --muted-foreground: 215 20% 38%;
+    --accent: 210 40% 94%;
+    --accent-foreground: 222 47% 14%;
     --primary: 239 84% 57%;
     --primary-foreground: 210 40% 98%;
     --border: 214 32% 91%;
@@ -24,8 +28,12 @@
     --foreground: 210 40% 98%;
     --card: 222 47% 10%;
     --card-foreground: 210 40% 98%;
+    --popover: 222 47% 10%;
+    --popover-foreground: 210 40% 98%;
     --muted: 217 33% 14%;
     --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 16%;
+    --accent-foreground: 210 40% 98%;
     --primary: 239 84% 67%;
     --primary-foreground: 222 47% 7%;
     --border: 217 33% 17%;

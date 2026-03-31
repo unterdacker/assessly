@@ -1,6 +1,10 @@
 "use client";
 
 import * as React from "react";
+import {
+  ThemeProvider as NextThemesProvider,
+  useTheme as useNextTheme,
+} from "next-themes";
 
 type Theme = "light" | "dark";
 
@@ -12,44 +16,41 @@ type ThemeContextValue = {
 
 const ThemeContext = React.createContext<ThemeContextValue | null>(null);
 
-const STORAGE_KEY = "avra-theme";
-
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = React.useState<Theme>("light");
+  return (
+    <NextThemesProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      storageKey="avra-theme"
+      disableTransitionOnChange
+    >
+      <ThemeProviderBridge>{children}</ThemeProviderBridge>
+    </NextThemesProvider>
+  );
+}
 
-  React.useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)",
-    ).matches;
-    const initial: Theme =
-      stored === "dark" || stored === "light"
-        ? stored
-        : prefersDark
-          ? "dark"
-          : "light";
-    setThemeState(initial);
-    document.documentElement.classList.toggle("dark", initial === "dark");
-  }, []);
+function ThemeProviderBridge({ children }: { children: React.ReactNode }) {
+  const { resolvedTheme, setTheme: setNextTheme } = useNextTheme();
+  const theme: Theme = resolvedTheme === "dark" ? "dark" : "light";
 
-  const setTheme = React.useCallback((t: Theme) => {
-    setThemeState(t);
-    localStorage.setItem(STORAGE_KEY, t);
-    document.documentElement.classList.toggle("dark", t === "dark");
-  }, []);
+  const setTheme = React.useCallback(
+    (nextTheme: Theme) => {
+      setNextTheme(nextTheme);
+    },
+    [setNextTheme],
+  );
 
   const toggle = React.useCallback(() => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  }, [theme, setTheme]);
+    setNextTheme(theme === "dark" ? "light" : "dark");
+  }, [setNextTheme, theme]);
 
   const value = React.useMemo(
     () => ({ theme, setTheme, toggle }),
     [theme, setTheme, toggle],
   );
 
-  return (
-    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

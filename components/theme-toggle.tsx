@@ -14,7 +14,7 @@ export function ThemeToggle() {
       size="icon"
       onClick={toggle}
       aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      className="border-slate-200 dark:border-slate-700"
+      className="border-border"
     >
       {theme === "dark" ? (
         <Sun className="h-4 w-4" aria-hidden />
