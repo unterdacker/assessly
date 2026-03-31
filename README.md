@@ -54,60 +54,6 @@ AVRA is designed for an enterprise/open-source hybrid operating model, with cont
 - Prisma models for companies, vendors, assessments, answers, questions, and audit logs.
 - Message catalogs in `messages/en.json` and `messages/de.json`.
 
----
-
-## Visual Overview
-
-### Admin Dashboard
-
-Get a bird's-eye view of your supply chain risk posture with aggregated compliance scores, pending assessments, and risk trend indicators.
-
-![AVRA Admin Dashboard](docs/screenshots/dashboard.png)
-
-### Vendor Management
-
-Search, invite, and manage third-party vendors with instant access code generation, credential delivery tracking, and compliance status indicators.
-
-![Vendor Management Table](docs/screenshots/vendors-table.png)
-
-### Secure Vendor Invitation
-
-Split credential delivery ensures access codes go via email and temporary passwords via SMS—credentials never travel together for maximum security.
-
-![Send Secure Invite Dialog](docs/screenshots/send-invite.png)
-
-### Internal Assessment Workspace
-
-Security officers run NIS2-aligned questionnaires, upload PDF evidence, and trigger AI-assisted document analysis—all in one unified assessment view.
-
-![Assessment Workspace](docs/screenshots/assessment-workspace.png)
-
-### AI-Powered Document Audit  
-
-Upload security policies, certifications, and compliance documentation. AVRA leverages Mistral AI (EU) or local LLM endpoints to pre-fill questionnaire answers and flag compliance gaps.
-
-![Document Audit Section](docs/screenshots/document-audit.png)
-
-### External Vendor Portal
-
-Vendors enter their access code and temporary password to access isolated, time-limited assessment sessions in their chosen language (English/German).
-
-![Vendor Portal Login](docs/screenshots/vendor-portal-login.png)
-
-### Vendor Assessment Interface
-
-External vendors complete NIS2 questionnaires, upload supporting evidence, and receive real-time guidance and compliance feedback—all without access to other vendors' data.
-
-![External Assessment](docs/screenshots/external-assessment.png)
-
-### Audit Trail & Compliance Verification
-
-Every administrative action and external vendor submission is timestamped with forensic metadata (IP, user agent, actor ID) for regulatory compliance and incident investigation.
-
-![Audit Trail](docs/screenshots/audit-trail.png)
-
----
-
 ### Getting Started (Local Development)
 
 #### 1. Prerequisites
@@ -169,11 +115,7 @@ npx prisma generate
 npx prisma db push
 ```
 
-Optional seed data:
-
-```bash
-npx prisma db seed
-```
+During the initial database setup, AVRA automatically provisions the default demo company, the NIS2 questionnaire set, and three preview vendors so the dashboard is immediately usable after `npx prisma db push`.
 
 #### 7. Start the Development Server
 
@@ -235,7 +177,7 @@ Remove-Item -Path "node_modules/.prisma" -Recurse -Force -ErrorAction SilentlyCo
 npx prisma generate
 ```
 
-**Step 5 — Push schema to PostgreSQL**
+**Step 5 — Push schema and provision the preview environment**
 
 Creates all tables from `prisma/schema.prisma` directly into the running database.
 
@@ -243,27 +185,27 @@ Creates all tables from `prisma/schema.prisma` directly into the running databas
 npx prisma db push
 ```
 
-**Step 6 — Seed demo data (optional)**
+On first setup, this also provisions the default demo environment so the dashboard is populated immediately after the schema is created.
 
-Populates the database with 3 representative demo vendors and their NIS2 assessments defined in `prisma/seed.ts`.
-
-| Vendor | Service Type | Risk | Status | Score |
-|---|---|---|---|---|
-| Northwind Analytics | SaaS / Data Analytics | LOW | Completed | 82% |
-| Contoso Cloud IAM | Identity & Access | MEDIUM | In Review | 58% |
-| Fabrikam Payments | Payment Processing | HIGH | Pending | 34% |
-
-```powershell
-npx prisma db seed
-```
-
-**Step 7 — Start the development server**
+**Step 6 — Start the development server**
 
 ```powershell
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Demo Environment
+
+After the initial `npx prisma db push`, AVRA starts with a preview company, the built-in NIS2 questionnaire catalog, and these three demo vendors:
+
+| Demo vendor | Service type | Initial assessment state | Initial risk |
+| --- | --- | --- | --- |
+| Northwind Analytics | SaaS / Data Analytics | Completed | Low |
+| Contoso Cloud IAM | Identity & Access | In review | Medium |
+| Fabrikam Payments | Payment Processing | Pending | High |
+
+This preview data helps you inspect the dashboard, vendor list, and assessment flows immediately after the first database initialization.
 
 ---
 
@@ -293,11 +235,7 @@ npx prisma generate
 npx prisma db push
 ```
 
-Optional after reset:
-
-```bash
-npx prisma db seed
-```
+Running `npx prisma db push` after a reset recreates the preview environment automatically.
 
 ### Prisma Config Note
 
@@ -320,26 +258,6 @@ npm run db:studio
 
 - Git remote: `https://github.com/unterdacker/AVRA.git`
 - Default local app URL: `http://localhost:3000`
-
-### Screenshots / Demo Assets
-
-There are currently no image assets committed in the repository.
-
-Recommended structure for visual documentation:
-
-```text
-docs/
-	assets/
-		dashboard-overview.png
-		vendor-workspace.png
-		external-portal.png
-```
-
-Then reference them in this README, for example:
-
-```md
-![Dashboard Overview](docs/assets/dashboard-overview.png)
-```
 
 ### License
 

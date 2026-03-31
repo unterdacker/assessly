@@ -77,9 +77,8 @@ function formatAccessCodeExpiry(
 }
 
 /** Colour-coded compliance score pill. */
-function ScorePill({ score, status }: { score: number; status: string }) {
-  // Pending/incomplete vendors are always treated as 0% for display
-  const displayScore = status === "pending" ? 0 : score;
+function ScorePill({ score }: { score: number }) {
+  const displayScore = score;
 
   const colorCls =
     displayScore >= 70
@@ -584,7 +583,7 @@ export function VendorsTableSection({
                     <ProgressPill progress={v.questionnaireProgress} filled={v.questionsFilled} />
                   </TableCell>
                   <TableCell>
-                    <ScorePill score={v.complianceScore} status={v.status} />
+                    <ScorePill score={v.complianceScore} />
                   </TableCell>
                   <TableCell>
                     <RiskBadge level={v.riskLevel} />

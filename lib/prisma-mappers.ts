@@ -8,10 +8,15 @@ import { calculateDossierCompletion } from "@/lib/vendor-assessment";
 import type { Vendor, Assessment } from "@prisma/client";
 
 export function deriveVendorStatus(
+  assessmentStatus: Assessment["status"],
   answerCount: number,
   totalQuestions: number
 ): VendorStatus {
-  if (answerCount === 0) return "pending";
+  if (answerCount === 0) {
+    if (assessmentStatus === "COMPLETED") return "completed";
+    if (assessmentStatus === "IN_REVIEW") return "incomplete";
+    return "pending";
+  }
   if (answerCount >= totalQuestions && totalQuestions > 0) return "completed";
   return "incomplete";
 }
@@ -47,7 +52,7 @@ export function toVendorAssessment(
   answerCount: number = 0,
   totalQuestions: number = 20
 ): VendorAssessment {
-  const derivedStatus = deriveVendorStatus(answerCount, totalQuestions);
+  const derivedStatus = deriveVendorStatus(assessment.status, answerCount, totalQuestions);
 
   /** Caller passes reconciled complianceScore and riskLevel from strict answer scoring. */
   const complianceScore = assessment.complianceScore ?? 0;

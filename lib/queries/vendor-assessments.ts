@@ -3,8 +3,7 @@ import { toVendorAssessment } from "@/lib/prisma-mappers";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
 import type { AssessmentAnswer } from "@prisma/client";
 import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance";
-
-export const DEFAULT_COMPANY_SLUG = "default";
+import { DEFAULT_COMPANY_SLUG, ensureDemoData } from "@/lib/ensure-demo-data";
 
 async function cleanupExpiredVendorCodes(where?: { companyId?: string; vendorId?: string }) {
   const now = new Date();
@@ -57,11 +56,7 @@ async function cleanupExpiredVendorCodes(where?: { companyId?: string; vendorId?
 }
 
 export async function getDefaultCompanyId(): Promise<string | null> {
-  const row = await prisma.company.findUnique({
-    where: { slug: DEFAULT_COMPANY_SLUG },
-    select: { id: true },
-  });
-  return row?.id ?? null;
+  return ensureDemoData();
 }
 
 export async function listVendorAssessments(): Promise<VendorAssessment[]> {
@@ -89,6 +84,7 @@ export async function listVendorAssessments(): Promise<VendorAssessment[]> {
         totalQuestions,
         r.complianceScore,
         r.riskLevel,
+        r.createdBy,
       );
       const filledCount = r.answers.filter(
         (a) => a.status === "COMPLIANT" || a.status === "NON_COMPLIANT"
@@ -157,6 +153,7 @@ export async function getVendorAssessmentDetail(
     totalQuestions,
     row.complianceScore,
     row.riskLevel,
+    row.createdBy,
   );
 
   const { vendor, answers, documents, ...assessmentFields } = row;
