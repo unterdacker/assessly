@@ -63,6 +63,11 @@
   "Name": "Name",
   "ServiceType": "Servicetyp",
   "Status": "Status",
+  "status": {
+    "COMPLIANT": "Konform",
+    "NON_COMPLIANT": "Nicht konform",
+    "FLAGGED": "Handlungsbedarf"
+  },
   "LastAssessment": "Letzte Bewertung",
   "QuestionsFilled": "Fragen beantwortet",
   "ComplianceScore": "Compliance-Score",
@@ -522,6 +527,9 @@
     "sendButton": "An Anbieter senden",
     "sending": "Senden...",
     "sendSuccess": "Mock-Versand abgeschlossen. Schreiben fuer {vendorName} vorgemerkt.",
+    "recipientEmailLabel": "E-Mail Sicherheitsverantwortlicher",
+    "missingEmailWarning": "Keine E-Mail des Sicherheitsverantwortlichen fuer diesen Anbieter hinterlegt. Bitte geben Sie eine Adresse ein.",
+    "invalidEmail": "Ungueltige E-Mail",
     "vendorFallback": "den Anbieter",
     "errors": {
       "fetchFailed": "Remediation-Luecken konnten nicht geladen werden.",
