@@ -14,6 +14,9 @@ export type AuditAction =
   | "INVITE_SENT"
   | "ACCESS_CODE_GENERATED"
   | "ACCESS_CODE_VOIDED"
+  | "MFA_ENABLED"
+  | "MFA_DISABLED"
+  | "MFA_FAILED_ATTEMPT"
   | "OTHER";
 
 export type LogAuditEventInput = {

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { AiSettingsForm } from "@/components/ai-settings-form";
 import { PasswordSettings } from "@/components/password-settings";
+import { MfaSettings } from "@/components/mfa-settings";
 import { prisma } from "@/lib/prisma";
 import { requirePageRole } from "@/lib/auth/server";
 
@@ -27,9 +28,15 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   const session = await requirePageRole(["ADMIN", "AUDITOR"], locale);
   const t = await getTranslations();
   const isAdmin = session.role === "ADMIN";
-  const company = isAdmin
-    ? await prisma.company.findUnique({ where: { id: session.companyId ?? "" } })
-    : null;
+  const [company, currentUser] = await Promise.all([
+    isAdmin
+      ? prisma.company.findUnique({ where: { id: session.companyId ?? "" } })
+      : Promise.resolve(null),
+    prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { mfaEnabled: true },
+    }),
+  ]);
 
   if (isAdmin && !company) {
     return <div>Company not found</div>; // Or redirect
@@ -113,6 +120,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
         )}
 
         <PasswordSettings />
+        <MfaSettings mfaEnabled={currentUser?.mfaEnabled ?? false} />
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ import {
 } from "@/lib/auth/server";
 import { AUTH_SESSION_COOKIE_NAME, hashSessionToken } from "@/lib/auth/token";
 import { canAccessPath } from "@/lib/auth/permissions";
+import { setMfaPendingCookie } from "@/lib/auth/mfa-pending";
 import type { InternalSignInState } from "@/app/actions/internal-auth.types";
 
 export async function authenticateInternalUser(
@@ -40,6 +41,7 @@ export async function authenticateInternalUser(
       role: true,
       companyId: true,
       vendorId: true,
+      mfaEnabled: true,
     },
   });
 
@@ -50,6 +52,12 @@ export async function authenticateInternalUser(
   const passwordOk = await bcrypt.compare(password, user.passwordHash);
   if (!passwordOk) {
     return { error: "INVALID_CREDENTIALS" };
+  }
+
+  // If MFA is enrolled, gate the session behind a TOTP verification step.
+  if (user.mfaEnabled) {
+    await setMfaPendingCookie(user.id, locale, nextPath);
+    redirect(`/${locale}/auth/mfa-verify`);
   }
 
   const { token, expiresAt } = await createSessionForUser({
