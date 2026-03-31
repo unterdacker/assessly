@@ -63,6 +63,11 @@
   "Name": "Name",
   "ServiceType": "Service type",
   "Status": "Status",
+  "status": {
+    "COMPLIANT": "Compliant",
+    "NON_COMPLIANT": "Non-Compliant",
+    "FLAGGED": "Action Required"
+  },
   "LastAssessment": "Last assessment",
   "QuestionsFilled": "Questions filled",
   "ComplianceScore": "Compliance score",
@@ -522,6 +527,9 @@
     "sendButton": "Send to Vendor",
     "sending": "Sending...",
     "sendSuccess": "Mock send complete. Letter queued for {vendorName}.",
+    "recipientEmailLabel": "Security Contact Email",
+    "missingEmailWarning": "No security contact email is set for this vendor. Please enter one to continue.",
+    "invalidEmail": "Invalid Email",
     "vendorFallback": "the vendor",
     "errors": {
       "fetchFailed": "Could not load remediation gaps.",

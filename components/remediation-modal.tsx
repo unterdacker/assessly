@@ -21,7 +21,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type RemediationGap = {
   answerId: string;
@@ -43,8 +45,18 @@ const TYPEWRITER_SPEED_MS = 12;
 const TYPEWRITER_STEP = 3;
 
 export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
+  const tGlobal = useTranslations();
   const t = useTranslations("remediationModal");
   const locale = useLocale();
+
+  const localizeStatus = React.useCallback(
+    (status: string) => {
+      const normalized = status.trim().toUpperCase();
+      const key = `status.${normalized}`;
+      return tGlobal.has(key) ? tGlobal(key) : normalized;
+    },
+    [tGlobal],
+  );
 
   const [open, setOpen] = React.useState(false);
   const [loadingGaps, setLoadingGaps] = React.useState(false);
@@ -53,6 +65,8 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
   const [isStreaming, setIsStreaming] = React.useState(false);
 
   const [vendorName, setVendorName] = React.useState<string>("");
+  const [vendorEmail, setVendorEmail] = React.useState<string | null>(null);
+  const [recipientEmail, setRecipientEmail] = React.useState("");
   const [gaps, setGaps] = React.useState<RemediationGap[]>([]);
   const [draftText, setDraftText] = React.useState("");
   const [deadlineDate, setDeadlineDate] = React.useState<string>("");
@@ -61,6 +75,9 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
   const [sentMessage, setSentMessage] = React.useState<string | null>(null);
 
   const typewriterTimerRef = React.useRef<number | null>(null);
+
+  const hasDefaultVendorEmail = Boolean(vendorEmail?.trim());
+  const isRecipientEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail.trim());
 
   const stopTypewriter = React.useCallback(() => {
     if (typewriterTimerRef.current !== null) {
@@ -112,6 +129,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
         error?: string;
         gaps?: RemediationGap[];
         vendorName?: string;
+        vendorEmail?: string | null;
       };
 
       if (!res.ok || !data.ok) {
@@ -121,6 +139,9 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
 
       setGaps(data.gaps || []);
       setVendorName(data.vendorName || "");
+      const nextVendorEmail = data.vendorEmail?.trim() || "";
+      setVendorEmail(nextVendorEmail || null);
+      setRecipientEmail((prev) => prev.trim() || nextVendorEmail);
     } catch {
       setError(t("errors.fetchFailed"));
     } finally {
@@ -164,6 +185,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
         deadlineDate?: string;
         gaps?: RemediationGap[];
         vendorName?: string;
+        vendorEmail?: string | null;
       };
 
       if (!res.ok || !data.ok || !data.draft) {
@@ -174,6 +196,11 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
       setDeadlineDate(data.deadlineDate || "");
       setVendorName(data.vendorName || vendorName);
       setGaps(data.gaps || gaps);
+      const nextVendorEmail = data.vendorEmail?.trim() || "";
+      setVendorEmail(nextVendorEmail || vendorEmail);
+      if (!recipientEmail.trim()) {
+        setRecipientEmail(nextVendorEmail);
+      }
       runTypewriter(data.draft);
     } catch {
       setError(t("errors.generateFailed"));
@@ -183,7 +210,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
   }
 
   async function handleCopy() {
-    if (!draftText.trim()) return;
+    if (!draftText.trim() || !isRecipientEmailValid) return;
 
     try {
       await navigator.clipboard.writeText(draftText);
@@ -203,7 +230,9 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
     await new Promise((resolve) => window.setTimeout(resolve, 900));
 
     setSending(false);
-    setSentMessage(t("sendSuccess", { vendorName: vendorName || t("vendorFallback") }));
+    const successMessage = t("sendSuccess", { vendorName: vendorName || t("vendorFallback") });
+    setSentMessage(successMessage);
+    toast.success(`${successMessage} (${recipientEmail.trim()})`);
   }
 
   function resetModalState(isOpen: boolean) {
@@ -214,6 +243,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
     setError(null);
     setCopied(false);
     setSentMessage(null);
+    setRecipientEmail(vendorEmail?.trim() || "");
   }
 
   return (
@@ -227,7 +257,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
         )}
       </DialogTrigger>
 
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto border-border bg-background text-foreground">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -260,7 +290,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
                 {t("loadingGaps")}
               </div>
             ) : gaps.length === 0 ? (
-              <div className="rounded-md border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-300">
+              <div className="rounded-md border border-border bg-muted p-3 text-sm text-foreground">
                 {t("noGaps")}
               </div>
             ) : (
@@ -289,16 +319,23 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
                   >
                     <div className="mb-1 flex items-start justify-between gap-3">
                       <p className="text-sm font-medium text-foreground">{gap.questionText}</p>
-                      <span
-                        className={cn(
-                          "rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                          gap.score < 40
-                            ? "bg-destructive/15 text-destructive"
-                            : "bg-amber-500/15 text-amber-700 dark:text-amber-300",
-                        )}
-                      >
-                        {t("scoreLabel", { score: gap.score })}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={cn(
+                            "rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                            gap.status.toUpperCase() === "COMPLIANT"
+                              ? "bg-emerald-500/15 text-emerald-700"
+                              : gap.status.toUpperCase() === "FLAGGED"
+                                ? "bg-destructive/15 text-destructive"
+                                : "bg-amber-500/15 text-amber-700",
+                          )}
+                        >
+                          {localizeStatus(gap.status)}
+                        </span>
+                        <span className="rounded bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          {t("scoreLabel", { score: gap.score })}
+                        </span>
+                      </div>
                     </div>
                     <p className="text-xs text-muted-foreground">{gap.recommendedCorrection}</p>
                   </motion.li>
@@ -361,6 +398,49 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
             />
           </div>
 
+          <AnimatePresence mode="wait">
+            {hasDefaultVendorEmail ? (
+              <motion.div
+                key="default-recipient"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                className="flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground"
+              >
+                <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span>{vendorEmail}</span>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="fallback-recipient"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                className="space-y-2"
+              >
+                <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+                  {t("missingEmailWarning")}
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="recipient-email" className="text-sm font-medium text-foreground">
+                    {t("recipientEmailLabel")}
+                  </label>
+                  <Input
+                    id="recipient-email"
+                    type="email"
+                    value={recipientEmail}
+                    onChange={(event) => setRecipientEmail(event.target.value)}
+                    placeholder="security@vendor.example"
+                    className="border-border bg-background"
+                  />
+                  {recipientEmail.trim() && !isRecipientEmailValid ? (
+                    <p className="text-xs text-destructive">{t("invalidEmail")}</p>
+                  ) : null}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div className="flex flex-wrap items-center gap-2">
             <Button type="button" variant="outline" onClick={handleCopy} disabled={!draftText.trim()} className="gap-2">
               <Clipboard className="h-4 w-4" aria-hidden />
@@ -370,7 +450,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
             <Button
               type="button"
               onClick={handleSendMock}
-              disabled={!draftText.trim() || sending}
+              disabled={!draftText.trim() || sending || !isRecipientEmailValid}
               className="gap-2 bg-emerald-600 text-white hover:bg-emerald-500"
             >
               {sending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}
@@ -383,7 +463,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
-                  className="text-sm text-emerald-700 dark:text-emerald-300"
+                  className="text-sm text-emerald-700"
                 >
                   {sentMessage}
                 </motion.span>

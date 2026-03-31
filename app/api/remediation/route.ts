@@ -26,6 +26,7 @@ type RemediationGap = {
 type GapResponse = {
   companyId: string;
   vendorName: string;
+  vendorEmail: string | null;
   gaps: RemediationGap[];
 };
 
@@ -214,6 +215,7 @@ async function getVendorGaps(
       vendor: {
         select: {
           name: true,
+          securityOfficerEmail: true,
         },
       },
       answers: {
@@ -274,6 +276,7 @@ async function getVendorGaps(
   return {
     companyId: assessment.companyId,
     vendorName: assessment.vendor.name,
+    vendorEmail: assessment.vendor.securityOfficerEmail ?? null,
     gaps,
   };
 }
@@ -293,6 +296,7 @@ function buildRemediationPrompt(args: {
     .slice(0, 12)
     .map((gap, index) => {
       return [
+        `Question ID: ${gap.questionId}`,
         `${index + 1}. Control Gap: ${gap.questionText}`,
         `Status: ${gap.status}`,
         `Score: ${gap.score}`,
@@ -303,7 +307,8 @@ function buildRemediationPrompt(args: {
     .join("\n\n");
 
   return [
-    `You are a Senior GRC Officer. The user's current language is ${localeLabel}. You MUST write the entire remediation plan and email in ${localeLabel}. Ensure NIS2 terminology is professionally translated.`,
+    `You are a Senior GRC Officer for AVRA. The current user interface is set to ${locale}. You MUST generate the remediation plan and the email draft entirely in ${localeLabel}.`,
+    "When raw question IDs or control categories appear in source data, map them to professional, localized NIS2 control terminology in the output.",
     "Tone requirements: professional, polite, and firm.",
     "Required structure:",
     "- Subject line",
@@ -342,7 +347,7 @@ async function generateRemediationDraft(args: {
   const provider = (process.env.AI_PROVIDER || config.aiProvider || "mistral").toLowerCase();
 
   const localeLabel = args.locale === "de" ? "German" : "English";
-  const localeSystemPrompt = `You are a Senior GRC Officer. The user's current language is ${localeLabel}. You MUST write the entire remediation plan and email in ${localeLabel}. Ensure NIS2 terminology is professionally translated.`;
+  const localeSystemPrompt = `You are a Senior GRC Officer for AVRA. The current user interface is set to ${args.locale}. You MUST generate the remediation plan and the email draft entirely in ${localeLabel}. Ensure NIS2 terminology is professionally translated.`;
 
   if (provider === "mistral") {
     const apiKey = (process.env.MISTRAL_API_KEY || config.mistralApiKey || "").trim();
@@ -432,6 +437,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       vendorName: result.vendorName,
+      vendorEmail: result.vendorEmail,
       gaps: result.gaps,
     });
   } catch (error) {
@@ -506,6 +512,8 @@ export async function POST(request: NextRequest) {
         deadlineDate,
         gaps: [],
         draft: fallback,
+        vendorName: result.vendorName,
+        vendorEmail: result.vendorEmail,
       });
     }
 
@@ -528,6 +536,7 @@ export async function POST(request: NextRequest) {
       deadlineDate,
       gaps: result.gaps,
       vendorName: result.vendorName,
+      vendorEmail: result.vendorEmail,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
