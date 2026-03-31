@@ -1,6 +1,7 @@
 import type { RiskLevel } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { calculateRiskLevel } from "@/lib/risk-level";
+import { DEMO_DATA_ACTOR } from "@/lib/ensure-demo-data";
 
 /**
  * Strict NIS2-style scoring: only rows with status exactly "COMPLIANT" earn points.
@@ -38,7 +39,17 @@ export async function syncAssessmentComplianceToDatabase(
   totalQuestions: number,
   storedScore?: number,
   storedRiskLevel?: RiskLevel,
+  createdBy?: string,
 ): Promise<{ score: number; riskLevel: RiskLevel }> {
+  if (
+    answers.length === 0 &&
+    createdBy === DEMO_DATA_ACTOR &&
+    storedScore !== undefined &&
+    storedRiskLevel !== undefined
+  ) {
+    return { score: storedScore, riskLevel: storedRiskLevel };
+  }
+
   const { score, riskLevel } = strictComplianceFromAnswers(answers, totalQuestions);
   const needsWrite =
     storedScore === undefined ||
