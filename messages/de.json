@@ -502,6 +502,33 @@
       }
     }
   },
+  "remediationModal": {
+    "openButton": "One-Click Remediation",
+    "title": "Remediation Suite",
+    "description": "Erstellen Sie aus aktuellen NIS2-Kontrollluecken eine professionelle Remediation-E-Mail an den Anbieter.",
+    "gapsTitle": "Erkannte Kontrollluecken",
+    "gapsCount": "{count} Luecken",
+    "loadingGaps": "Bewertungsluecken werden geladen...",
+    "noGaps": "Keine kritischen Luecken unterhalb des Grenzwerts erkannt. Sie koennen trotzdem eine Bestaetigungsnachricht erstellen.",
+    "scoreLabel": "Score {score}",
+    "generateButton": "Remediation-Plan generieren",
+    "generating": "Schreiben wird generiert...",
+    "deadlineLabel": "Frist: {date}",
+    "draftLabel": "E-Mail-Entwurf",
+    "draftPlaceholder": "Der generierte Remediation-Brief erscheint hier.",
+    "typing": "Entwurf wird geschrieben...",
+    "copyButton": "In Zwischenablage kopieren",
+    "copied": "Kopiert",
+    "sendButton": "An Anbieter senden",
+    "sending": "Senden...",
+    "sendSuccess": "Mock-Versand abgeschlossen. Schreiben fuer {vendorName} vorgemerkt.",
+    "vendorFallback": "den Anbieter",
+    "errors": {
+      "fetchFailed": "Remediation-Luecken konnten nicht geladen werden.",
+      "generateFailed": "Remediation-Plan konnte nicht generiert werden.",
+      "copyFailed": "Zugriff auf Zwischenablage fehlgeschlagen."
+    }
+  },
   "inviteVendorModal": {
     "success": {
       "title": "Einladung zugestellt",

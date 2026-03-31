@@ -16,6 +16,7 @@ import { VendorAssessmentQuestionnairePanel } from "@/components/vendor-assessme
 import { VendorAssessmentSidePanels } from "@/components/vendor-assessment-side-panels";
 import { EditVendorProfileModal } from "@/components/edit-vendor-profile-modal";
 import { VendorDetailsCard } from "@/components/vendor-details-card";
+import { RemediationModal } from "@/components/remediation-modal";
 
 type AssessmentWorkspaceProps = {
   vendorAssessment: VendorAssessment;
@@ -74,6 +75,7 @@ export function AssessmentWorkspace({
           >
             {t("score")} {vendorAssessment.complianceScore}/100
           </span>
+          <RemediationModal vendorId={vendorAssessment.id} />
           <EditVendorProfileModal
             vendorId={vendorAssessment.id}
             companyId={companyId}
