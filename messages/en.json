@@ -102,6 +102,8 @@
     "aiAuditFailed": "AI audit failed.",
     "analysisComplete": "Analysis complete. Results saved.",
     "choosePdf": "Choose PDF",
+    "placeholderShort": "Click or drag a PDF here",
+    "microPrivacyNote": "EU-sovereign analysis \u00b7 No AI training \u00b7 TLS\u00a01.3 \u00b7 GDPR compliant",
     "runningAnalysis": "Running analysis...",
     "runAiAudit": "Run AI Audit",
     "rerunAudit": "Re-run AI Audit",
@@ -113,7 +115,12 @@
     "evidenceReadyBadge": "Ready",
     "sizeUnavailable": "Size unavailable",
     "pdfOnly": "Only PDF files are allowed.",
-    "fileTooLarge": "File is too large. Maximum allowed size is 20MB."
+    "fileTooLarge": "File is too large. Maximum allowed size is 20MB.",
+    "removeDocument": "Remove document",
+    "removeConfirmTitle": "Remove evidence document?",
+    "removeConfirmDescription": "This will permanently delete the stored PDF and clear the evidence record. The assessment results will remain, but the source document cannot be recovered.",
+    "removeConfirmButton": "Delete document",
+    "removeCancelButton": "Cancel"
   },
   "LocaleLandingReady": "AVRA is ready in your selected language.",
   "ExternalExitTitle": "You have exited the vendor portal",

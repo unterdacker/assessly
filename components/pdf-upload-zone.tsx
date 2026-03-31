@@ -7,22 +7,30 @@ import {
   Eye,
   FileText,
   Loader2,
+  Lock,
   Sparkles,
+  Trash2,
   UploadCloud,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { analyzeDocument } from "@/app/actions/analyze-document";
 import { reanalyzeStoredDocument } from "@/app/actions/reanalyze-document";
+import { removeAssessmentDocument } from "@/app/actions/remove-assessment-document";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -88,6 +96,8 @@ export function PdfUploadZone({
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isConsented, setIsConsented] = React.useState(isAdminView);
   const [isReanalyzing, setIsReanalyzing] = React.useState(false);
+  const [isRemoving, setIsRemoving] = React.useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = React.useState(false);
 
   React.useEffect(() => {
     if (isAdminView) {
@@ -161,6 +171,29 @@ export function PdfUploadZone({
     assignFile(file ?? null);
   };
 
+  async function handleRemove() {
+    if (!assessmentId) return;
+    setIsRemoving(true);
+    setErrorMessage(null);
+    try {
+      const result = await removeAssessmentDocument(assessmentId);
+      if (!result.ok) {
+        setErrorMessage(result.error || t("aiAuditFailed"));
+        return;
+      }
+      setFileName(null);
+      setFileSize(null);
+      setSelectedFile(null);
+      router.refresh();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t("aiAuditFailed");
+      setErrorMessage(message);
+    } finally {
+      setIsRemoving(false);
+      setShowRemoveConfirm(false);
+    }
+  }
+
   async function handleReanalyze() {
     if (!assessmentId) return;
 
@@ -216,208 +249,243 @@ export function PdfUploadZone({
     });
   };
 
+  const canInteract = isConsented || !requiresConsent;
+
   return (
     <Card className="overflow-hidden border-slate-200/80 bg-card shadow-sm dark:border-slate-800">
       <form onSubmit={handleSubmit}>
         <input type="hidden" name="vendorId" value={vendorId} />
 
-        <CardHeader className="border-b border-slate-100 bg-slate-50/50 px-4 py-4 dark:border-slate-800 dark:bg-slate-900/40">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1">
-              <CardTitle className="text-sm font-semibold tracking-tight">{t("title")}</CardTitle>
-              <CardDescription className="text-xs leading-relaxed">{t("placeholder")}</CardDescription>
-            </div>
+        {/* ── Compact header ─────────────────────────────── */}
+        <CardHeader className="border-b border-slate-100 bg-slate-50/50 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-900/40">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-xs font-semibold tracking-tight">{t("title")}</CardTitle>
             {hasStoredDocument && !hasLocalSelection ? (
-              <Badge variant="compliant" className="shrink-0 gap-1 px-2 py-1">
-                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+              <Badge variant="compliant" className="shrink-0 gap-1 px-1.5 py-0 text-[10px]">
+                <CheckCircle2 className="h-3 w-3" aria-hidden />
                 {t("evidenceStoredBadge")}
               </Badge>
             ) : null}
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4 px-4 py-4">
+        <CardContent className="space-y-2 px-3 py-3">
+          {/* Consent checkbox (vendor only) – slim inline */}
           {requiresConsent && (
-            <div className="flex items-start gap-2 rounded-lg border border-indigo-100 bg-indigo-50/40 p-3 dark:border-indigo-900/20 dark:bg-indigo-950/20">
+            <div className="flex items-start gap-2">
               <input
                 type="checkbox"
                 id="privacy-consent"
                 checked={isConsented}
                 onChange={(e) => setIsConsented(e.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
               />
-              <label htmlFor="privacy-consent" className="cursor-pointer select-none text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+              <label
+                htmlFor="privacy-consent"
+                className="cursor-pointer select-none text-[11px] leading-snug text-slate-500 dark:text-slate-400"
+              >
                 {t("consentLabel")}
               </label>
             </div>
           )}
 
-          <div className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs leading-relaxed text-blue-900 dark:border-blue-900/30 dark:bg-slate-900/60 dark:text-blue-200">
-            {t("privacyNote")}
-          </div>
-
-          <div className="rounded-xl border border-slate-200/80 bg-muted/40 p-3 dark:border-slate-800 dark:bg-slate-950/40">
-            {displayFileName ? (
-              <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-background px-3 py-3 shadow-sm dark:border-slate-800">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-300">
-                  <FileText className="h-5 w-5" aria-hidden />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-medium text-foreground">{displayFileName}</p>
-                    <Badge variant={hasLocalSelection ? "secondary" : "compliant"} className="shrink-0">
-                      {hasLocalSelection ? t("evidenceReadyBadge") : t("evidenceStoredBadge")}
-                    </Badge>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {formatFileSize(displayFileSize, t("sizeUnavailable"))}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div
-                className={cn(
-                  "relative rounded-xl border-2 border-dashed p-8 text-center transition-all",
-                  isConsented || !requiresConsent
-                    ? "border-slate-300 bg-background hover:border-indigo-400 hover:bg-slate-50/80 dark:border-slate-700 dark:bg-slate-950/30 dark:hover:border-indigo-500 dark:hover:bg-slate-900/70"
-                    : "cursor-not-allowed border-slate-200 bg-slate-50 opacity-50 dark:border-slate-800 dark:bg-slate-900",
-                  dragOver && (isConsented || !requiresConsent)
-                    ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/40"
-                    : "",
-                )}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  if (isConsented || !requiresConsent) setDragOver(true);
-                }}
-                onDragLeave={(e) => {
-                  e.preventDefault();
-                  setDragOver(false);
-                }}
-                onDrop={onDrop}
+          {/* ── File row  OR  slim dropzone strip ─────────── */}
+          {displayFileName ? (
+            <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50/60 px-2.5 py-2 dark:border-slate-800 dark:bg-slate-900/40">
+              <FileText className="h-4 w-4 shrink-0 text-indigo-500" aria-hidden />
+              <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-foreground">
+                {displayFileName}
+              </span>
+              <span className="shrink-0 text-[10px] text-muted-foreground">
+                {formatFileSize(displayFileSize, "")}
+              </span>
+              <Badge
+                variant={hasLocalSelection ? "secondary" : "compliant"}
+                className="shrink-0 px-1.5 py-0 text-[10px]"
               >
-                <UploadCloud
-                  className={cn(
-                    "mx-auto mb-3 h-8 w-8",
-                    isConsented || !requiresConsent ? "text-indigo-500" : "text-slate-300",
-                  )}
-                  aria-hidden
-                />
-                <p className="text-sm font-semibold text-foreground">{t("title")}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{t("placeholder")}</p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  name="file"
-                  accept="application/pdf"
-                  disabled={requiresConsent && !isConsented}
-                  className="sr-only"
-                  onChange={onFileChange}
-                />
-                <Button
+                {hasLocalSelection ? t("evidenceReadyBadge") : t("evidenceStoredBadge")}
+              </Badge>
+              {isAdminView && hasStoredDocument && !hasLocalSelection && assessmentId ? (
+                <button
                   type="button"
-                  variant="secondary"
-                  size="sm"
-                  className="mt-4 h-8 px-4 text-xs"
-                  disabled={requiresConsent && !isConsented}
-                  onClick={() => fileInputRef.current?.click()}
+                  aria-label={t("removeDocument")}
+                  onClick={() => setShowRemoveConfirm(true)}
+                  className="shrink-0 rounded p-0.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/30 dark:hover:text-red-400"
                 >
-                  {t("choosePdf")}
+                  <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                </button>
+              ) : null}
+            </div>
+          ) : (
+            <div
+              role="button"
+              tabIndex={canInteract ? 0 : -1}
+              aria-label={t("placeholderShort")}
+              className={cn(
+                "flex h-11 cursor-pointer items-center gap-2.5 rounded-md border-2 border-dashed px-3 transition-colors",
+                canInteract
+                  ? "border-slate-300 hover:border-indigo-400 hover:bg-slate-50/80 dark:border-slate-700 dark:hover:border-indigo-500 dark:hover:bg-slate-900/50"
+                  : "cursor-not-allowed border-slate-200 opacity-40",
+                dragOver && canInteract
+                  ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30"
+                  : "",
+              )}
+              onClick={() => { if (canInteract) fileInputRef.current?.click(); }}
+              onKeyDown={(e) => {
+                if ((e.key === "Enter" || e.key === " ") && canInteract)
+                  fileInputRef.current?.click();
+              }}
+              onDragOver={(e) => { e.preventDefault(); if (canInteract) setDragOver(true); }}
+              onDragLeave={(e) => { e.preventDefault(); setDragOver(false); }}
+              onDrop={onDrop}
+            >
+              <UploadCloud
+                className={cn("h-4 w-4 shrink-0", canInteract ? "text-indigo-400" : "text-slate-300")}
+                aria-hidden
+              />
+              <span className="flex-1 text-[11px] text-muted-foreground">{t("placeholderShort")}</span>
+              <span className="shrink-0 rounded border border-slate-300 bg-background px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+                {t("choosePdf")}
+              </span>
+            </div>
+          )}
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            name="file"
+            accept="application/pdf"
+            disabled={requiresConsent && !isConsented}
+            className="sr-only"
+            onChange={onFileChange}
+          />
+
+          {/* ── Inline action row ──────────────────────────── */}
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[10px] text-muted-foreground">
+              {formattedAuditTimestamp
+                ? t("lastAuditedAt", { timestamp: formattedAuditTimestamp })
+                : t("notAuditedYet")}
+            </p>
+
+            <div className="flex items-center gap-1.5">
+              {hasStoredDocument && documentUrl ? (
+                <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px]" asChild>
+                  <a href={documentUrl} target="_blank" rel="noopener noreferrer">
+                    <Eye className="h-3 w-3" aria-hidden />
+                    {t("viewStoredPdf")}
+                  </a>
                 </Button>
-              </div>
-            )}
+              ) : null}
+
+              {hasStoredDocument && !hasLocalSelection && assessmentId ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="h-7 gap-1 bg-indigo-600 px-3 text-[11px] text-white hover:bg-indigo-700"
+                        disabled={isAuditActionDisabled}
+                        onClick={handleReanalyze}
+                      >
+                        {isReanalyzing ? (
+                          <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+                        ) : (
+                          <Sparkles className="h-3 w-3" aria-hidden />
+                        )}
+                        {isReanalyzing ? t("runningAnalysis") : t("rerunAudit")}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{t("aiTooltip")}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex">
+                        <Button
+                          type="submit"
+                          size="sm"
+                          className="h-7 gap-1 bg-indigo-600 px-3 text-[11px] text-white hover:bg-indigo-700"
+                          disabled={!selectedFile || isAuditActionDisabled}
+                        >
+                          {isPending ? (
+                            <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+                          ) : (
+                            <Sparkles className="h-3 w-3" aria-hidden />
+                          )}
+                          {isPending ? t("runningAnalysis") : t("runAiAudit")}
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>{t("aiTooltip")}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
           </div>
 
+          {/* Feedback messages */}
           {errorMessage ? (
-            <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+            <p className="rounded border border-red-200 bg-red-50 px-2 py-1 text-[11px] text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
               {errorMessage}
             </p>
           ) : null}
-
           {statusMessage ? (
-            <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
+            <p className="rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
               {statusMessage}
             </p>
           ) : null}
         </CardContent>
 
-        <CardFooter className="flex flex-col items-stretch gap-3 border-t border-slate-100 bg-slate-50/50 px-4 py-4 dark:border-slate-800 dark:bg-slate-900/40 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              {t("auditTrailLabel")}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {formattedAuditTimestamp
-                ? t("lastAuditedAt", { timestamp: formattedAuditTimestamp })
-                : t("notAuditedYet")}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap justify-end gap-2">
-            {hasStoredDocument && documentUrl ? (
-              <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" asChild>
-                <a href={documentUrl} target="_blank" rel="noopener noreferrer">
-                  <Eye className="h-3.5 w-3.5" aria-hidden />
-                  {t("viewStoredPdf")}
-                </a>
-              </Button>
-            ) : null}
-
-            {hasStoredDocument && !hasLocalSelection && assessmentId ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-flex">
-                      <Button
-                        type="button"
-                        size="sm"
-                        className="h-8 gap-1.5 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 px-4 text-xs text-white shadow-sm transition-all hover:from-indigo-500 hover:via-blue-500 hover:to-indigo-500"
-                        disabled={isAuditActionDisabled}
-                        onClick={handleReanalyze}
-                      >
-                        {isReanalyzing ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-                        ) : (
-                          <Sparkles className="h-3.5 w-3.5" aria-hidden />
-                        )}
-                        {isReanalyzing ? t("runningAnalysis") : t("rerunAudit")}
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>{t("aiTooltip")}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-flex">
-                      <Button
-                        type="submit"
-                        size="sm"
-                        className="h-8 gap-1.5 bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 px-4 text-xs text-white shadow-sm transition-all hover:from-indigo-500 hover:via-blue-500 hover:to-indigo-500"
-                        disabled={!selectedFile || isAuditActionDisabled}
-                      >
-                        {isPending ? (
-                          <>
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-                            {t("runningAnalysis")}
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="h-3.5 w-3.5" aria-hidden />
-                            {t("runAiAudit")}
-                          </>
-                        )}
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>{t("aiTooltip")}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-          </div>
-        </CardFooter>
+        {/* ── Micro privacy note ─────────────────────────── */}
+        <div className="border-t border-slate-100 px-3 py-2 dark:border-slate-800">
+          <p className="flex items-center gap-1 text-[10px] leading-relaxed text-muted-foreground">
+            <Lock className="h-3 w-3 shrink-0" aria-hidden />
+            {t("microPrivacyNote")}
+          </p>
+        </div>
       </form>
+
+      {/* ── Remove document confirmation (admin only) ─── */}
+      <Dialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold">
+              {t("removeConfirmTitle")}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-[12px] leading-relaxed text-muted-foreground">
+            {t("removeConfirmDescription")}
+          </p>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-[11px]"
+              onClick={() => setShowRemoveConfirm(false)}
+              disabled={isRemoving}
+            >
+              {t("removeCancelButton")}
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-7 text-[11px]"
+              onClick={handleRemove}
+              disabled={isRemoving}
+            >
+              {isRemoving ? (
+                <Loader2 className="mr-1 h-3 w-3 animate-spin" aria-hidden />
+              ) : null}
+              {t("removeConfirmButton")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

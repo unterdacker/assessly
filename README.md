@@ -54,6 +54,60 @@ AVRA is designed for an enterprise/open-source hybrid operating model, with cont
 - Prisma models for companies, vendors, assessments, answers, questions, and audit logs.
 - Message catalogs in `messages/en.json` and `messages/de.json`.
 
+---
+
+## Visual Overview
+
+### Admin Dashboard
+
+Get a bird's-eye view of your supply chain risk posture with aggregated compliance scores, pending assessments, and risk trend indicators.
+
+![AVRA Admin Dashboard](docs/screenshots/dashboard.png)
+
+### Vendor Management
+
+Search, invite, and manage third-party vendors with instant access code generation, credential delivery tracking, and compliance status indicators.
+
+![Vendor Management Table](docs/screenshots/vendors-table.png)
+
+### Secure Vendor Invitation
+
+Split credential delivery ensures access codes go via email and temporary passwords via SMS—credentials never travel together for maximum security.
+
+![Send Secure Invite Dialog](docs/screenshots/send-invite.png)
+
+### Internal Assessment Workspace
+
+Security officers run NIS2-aligned questionnaires, upload PDF evidence, and trigger AI-assisted document analysis—all in one unified assessment view.
+
+![Assessment Workspace](docs/screenshots/assessment-workspace.png)
+
+### AI-Powered Document Audit  
+
+Upload security policies, certifications, and compliance documentation. AVRA leverages Mistral AI (EU) or local LLM endpoints to pre-fill questionnaire answers and flag compliance gaps.
+
+![Document Audit Section](docs/screenshots/document-audit.png)
+
+### External Vendor Portal
+
+Vendors enter their access code and temporary password to access isolated, time-limited assessment sessions in their chosen language (English/German).
+
+![Vendor Portal Login](docs/screenshots/vendor-portal-login.png)
+
+### Vendor Assessment Interface
+
+External vendors complete NIS2 questionnaires, upload supporting evidence, and receive real-time guidance and compliance feedback—all without access to other vendors' data.
+
+![External Assessment](docs/screenshots/external-assessment.png)
+
+### Audit Trail & Compliance Verification
+
+Every administrative action and external vendor submission is timestamped with forensic metadata (IP, user agent, actor ID) for regulatory compliance and incident investigation.
+
+![Audit Trail](docs/screenshots/audit-trail.png)
+
+---
+
 ### Getting Started (Local Development)
 
 #### 1. Prerequisites
