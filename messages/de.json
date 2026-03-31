@@ -169,7 +169,8 @@
       "expiresBadge": "Laeuft ab: {expiry}",
       "exitPortal": "Portal verlassen",
       "submitting": "Wird eingereicht...",
-      "submit": "Bewertung einreichen"
+      "submit": "Bewertung einreichen",
+      "resubmit": "Aktualisieren & Benachrichtigen"
     },
     "fastPath": {
       "title": "Der schnelle Weg",
@@ -300,7 +301,9 @@
     },
     "submission": {
       "deadlinePassed": "Die Einreichungsfrist ist am {expiry} abgelaufen. Bitte fordern Sie einen neuen Link bei Ihrer Administration an.",
-      "genericFailed": "Einreichung fehlgeschlagen. Bitte erneut versuchen."
+      "genericFailed": "Einreichung fehlgeschlagen. Bitte erneut versuchen.",
+      "success": "Ihre Bewertung wurde gespeichert und der Auftraggeber wurde benachrichtigt. Sie k\u00f6nnen bis zum Ablauf des Zugangs weiter bearbeiten.",
+      "previouslySubmitted": "Bereits eingereicht. Sie k\u00f6nnen bis {expiry} weiter bearbeiten."
     }
   },
   "assessment": {

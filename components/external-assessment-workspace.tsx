@@ -12,6 +12,7 @@ import {
   ArrowRight,
   Sparkles,
   AlertCircle,
+  CheckCircle2,
   LogOut
 } from "lucide-react";
 import type { AssessmentAnswer, Question } from "@prisma/client";
@@ -80,6 +81,7 @@ export function ExternalAssessmentWorkspace({
   );
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSubmitted, setIsSubmitted] = React.useState(isSubmittedInitially);
+  const [submitSuccess, setSubmitSuccess] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [answers, setAnswers] = React.useState<WorkspaceAnswer[]>(initialAnswers);
   const [profileSaving, setProfileSaving] = React.useState(false);
@@ -112,10 +114,6 @@ export function ExternalAssessmentWorkspace({
     const nextView = searchParams.get("view") === "workspace" ? "workspace" : "welcome";
     setView(nextView);
   }, [searchParams]);
-
-  React.useEffect(() => {
-    setIsSubmitted(isSubmittedInitially);
-  }, [isSubmittedInitially]);
 
   const setViewWithUrl = React.useCallback((nextView: "welcome" | "workspace") => {
     setView(nextView);
@@ -168,6 +166,8 @@ export function ExternalAssessmentWorkspace({
       });
       if (result.ok) {
         setIsSubmitted(true);
+        setSubmitSuccess(true);
+        setSubmitError(null);
       } else if (result.code === "DEADLINE_PASSED" && result.expiresAt) {
         const exactExpiry = new Intl.DateTimeFormat(undefined, {
           day: "2-digit",
@@ -229,7 +229,7 @@ export function ExternalAssessmentWorkspace({
     router.refresh();
   };
 
-  if (isSubmitted) {
+  if (isSubmitted && sessionExpired) {
     return (
       <div className="relative flex min-h-[60vh] items-center justify-center">
         <div className="fixed right-4 top-4 z-[130]">
@@ -247,11 +247,6 @@ export function ExternalAssessmentWorkspace({
                 strong: (chunks) => <span className="font-semibold text-indigo-600 dark:text-indigo-400">{chunks}</span>,
               })}
             </p>
-            {sessionExpiryLabel && (
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                {t("submitted.validUntil", { expiry: sessionExpiryLabel })}
-              </p>
-            )}
           </div>
           <div className="pt-4">
             <p className="text-xs text-slate-400">{t("submitted.closeHint")}</p>
@@ -396,7 +391,7 @@ export function ExternalAssessmentWorkspace({
                     isComplete ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
                   )}
                 >
-                  {isSubmitting ? t("header.submitting") : t("header.submit")}
+                  {isSubmitting ? t("header.submitting") : isSubmitted ? t("header.resubmit") : t("header.submit")}
                   {!isSubmitting && <SendHorizonal className="ml-2 h-3.5 w-3.5" />}
                 </Button>
               </div>
@@ -405,6 +400,25 @@ export function ExternalAssessmentWorkspace({
           
           <div className="mt-3">
             <Progress value={progressPercent} className="h-1 w-full bg-slate-100 dark:bg-slate-800" />
+            {submitSuccess && (
+              <div className="mt-2 flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                <span className="flex-1">{t("submission.success")}</span>
+                <button
+                  type="button"
+                  onClick={() => setSubmitSuccess(false)}
+                  className="ml-2 text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-200"
+                  aria-label="Schließen"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            {isSubmitted && !sessionExpired && !submitSuccess && sessionExpiryLabel && (
+              <p className="mt-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300">
+                {t("submission.previouslySubmitted", { expiry: sessionExpiryLabel })}
+              </p>
+            )}
             {submitError && (
               <p className="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
                 {submitError}
@@ -655,7 +669,7 @@ export function ExternalAssessmentWorkspace({
         </div>
       </div>
 
-      {sessionExpired && (
+      {sessionExpired && !isSubmitted && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/70 p-4">
           <div className="w-full max-w-md space-y-4 rounded-xl border border-red-200 bg-white p-6 text-center shadow-xl dark:border-red-900/40 dark:bg-slate-900">
             <h2 className="text-xl font-semibold text-red-700 dark:text-red-300">{t("sessionExpired.title")}</h2>
