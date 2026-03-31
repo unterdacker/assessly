@@ -65,7 +65,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
   const [isStreaming, setIsStreaming] = React.useState(false);
 
   const [vendorName, setVendorName] = React.useState<string>("");
-  const [vendorEmail, setVendorEmail] = React.useState<string | null>(null);
+  const [securityContactEmail, setSecurityContactEmail] = React.useState<string | null>(null);
   const [recipientEmail, setRecipientEmail] = React.useState("");
   const [gaps, setGaps] = React.useState<RemediationGap[]>([]);
   const [draftText, setDraftText] = React.useState("");
@@ -76,7 +76,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
 
   const typewriterTimerRef = React.useRef<number | null>(null);
 
-  const hasDefaultVendorEmail = Boolean(vendorEmail?.trim());
+  const hasDefaultSecurityContactEmail = Boolean(securityContactEmail?.trim());
   const isRecipientEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail.trim());
 
   const stopTypewriter = React.useCallback(() => {
@@ -129,6 +129,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
         error?: string;
         gaps?: RemediationGap[];
         vendorName?: string;
+        securityContactEmail?: string | null;
         vendorEmail?: string | null;
       };
 
@@ -139,9 +140,10 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
 
       setGaps(data.gaps || []);
       setVendorName(data.vendorName || "");
-      const nextVendorEmail = data.vendorEmail?.trim() || "";
-      setVendorEmail(nextVendorEmail || null);
-      setRecipientEmail((prev) => prev.trim() || nextVendorEmail);
+      const nextSecurityContactEmail =
+        data.securityContactEmail?.trim() || data.vendorEmail?.trim() || "";
+      setSecurityContactEmail(nextSecurityContactEmail || null);
+      setRecipientEmail((prev) => prev.trim() || nextSecurityContactEmail);
     } catch {
       setError(t("errors.fetchFailed"));
     } finally {
@@ -185,6 +187,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
         deadlineDate?: string;
         gaps?: RemediationGap[];
         vendorName?: string;
+        securityContactEmail?: string | null;
         vendorEmail?: string | null;
       };
 
@@ -196,10 +199,11 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
       setDeadlineDate(data.deadlineDate || "");
       setVendorName(data.vendorName || vendorName);
       setGaps(data.gaps || gaps);
-      const nextVendorEmail = data.vendorEmail?.trim() || "";
-      setVendorEmail(nextVendorEmail || vendorEmail);
+      const nextSecurityContactEmail =
+        data.securityContactEmail?.trim() || data.vendorEmail?.trim() || "";
+      setSecurityContactEmail(nextSecurityContactEmail || securityContactEmail);
       if (!recipientEmail.trim()) {
-        setRecipientEmail(nextVendorEmail);
+        setRecipientEmail(nextSecurityContactEmail);
       }
       runTypewriter(data.draft);
     } catch {
@@ -243,7 +247,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
     setError(null);
     setCopied(false);
     setSentMessage(null);
-    setRecipientEmail(vendorEmail?.trim() || "");
+    setRecipientEmail(securityContactEmail?.trim() || "");
   }
 
   return (
@@ -399,7 +403,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
           </div>
 
           <AnimatePresence mode="wait">
-            {hasDefaultVendorEmail ? (
+            {hasDefaultSecurityContactEmail ? (
               <motion.div
                 key="default-recipient"
                 initial={{ opacity: 0, y: 6 }}
@@ -408,7 +412,8 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
                 className="flex items-center gap-2 rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground"
               >
                 <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                <span>{vendorEmail}</span>
+                <span className="font-medium text-foreground">{t("sendingToLabel")}</span>
+                <span>{securityContactEmail}</span>
               </motion.div>
             ) : (
               <motion.div

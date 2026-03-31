@@ -1,7 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { hasLocale } from "next-intl";
 import { NextResponse, NextRequest } from "next/server";
-import { routing } from "./i18n";
+import { routing } from "@/i18n/routing";
 
 const handleI18nRouting = createMiddleware(routing);
 
@@ -36,13 +36,6 @@ export function middleware(request: NextRequest) {
     : hasLocale(routing.locales, localeFromCookie)
       ? localeFromCookie
       : routing.defaultLocale;
-
-  // Redirect root locale pages to /dashboard
-  if (normalizedPathname === "/") {
-    const url = request.nextUrl.clone();
-    url.pathname = withLocalePath("/dashboard", activeLocale);
-    return NextResponse.redirect(url);
-  }
 
   // Force-password-change always requires a setup token cookie.
   if (normalizedPathname.startsWith("/external/force-password-change")) {
@@ -102,5 +95,7 @@ export function middleware(request: NextRequest) {
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
+  matcher: [
+    "/((?!api|trpc|_next|_vercel|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|site.webmanifest|.*\\..*).*)",
+  ],
 };

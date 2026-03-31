@@ -26,7 +26,7 @@ type RemediationGap = {
 type GapResponse = {
   companyId: string;
   vendorName: string;
-  vendorEmail: string | null;
+  securityContactEmail: string | null;
   gaps: RemediationGap[];
 };
 
@@ -276,7 +276,7 @@ async function getVendorGaps(
   return {
     companyId: assessment.companyId,
     vendorName: assessment.vendor.name,
-    vendorEmail: assessment.vendor.securityOfficerEmail ?? null,
+    securityContactEmail: assessment.vendor.securityOfficerEmail ?? null,
     gaps,
   };
 }
@@ -437,7 +437,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       vendorName: result.vendorName,
-      vendorEmail: result.vendorEmail,
+      securityContactEmail: result.securityContactEmail,
+      vendorEmail: result.securityContactEmail,
       gaps: result.gaps,
     });
   } catch (error) {
@@ -513,7 +514,8 @@ export async function POST(request: NextRequest) {
         gaps: [],
         draft: fallback,
         vendorName: result.vendorName,
-        vendorEmail: result.vendorEmail,
+        securityContactEmail: result.securityContactEmail,
+        vendorEmail: result.securityContactEmail,
       });
     }
 
@@ -536,7 +538,8 @@ export async function POST(request: NextRequest) {
       deadlineDate,
       gaps: result.gaps,
       vendorName: result.vendorName,
-      vendorEmail: result.vendorEmail,
+      securityContactEmail: result.securityContactEmail,
+      vendorEmail: result.securityContactEmail,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
