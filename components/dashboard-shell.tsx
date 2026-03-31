@@ -17,6 +17,7 @@ const NAV_LABELS = {
     overview: "Übersicht",
     vendors: "Anbieter",
     settings: "Einstellungen",
+    users: "Benutzerverwaltung",
     auditLogs: "Audit-Trail",
     nis2Label: "NIS2-konforme Bewertungen",
     signOut: "Abmelden",
@@ -25,6 +26,7 @@ const NAV_LABELS = {
     overview: "Overview",
     vendors: "Vendors",
     settings: "Settings",
+    users: "User Management",
     auditLogs: "Audit Trail",
     nis2Label: "NIS2-aligned assessments",
     signOut: "Sign out",
@@ -61,6 +63,11 @@ function getNav(locale: "de" | "en", role: string | null) {
       label: NAV_LABELS[locale].settings,
       icon: Settings,
     });
+    base.splice(3, 0, {
+      href: "/dashboard/users",
+      label: NAV_LABELS[locale].users,
+      icon: Users,
+    });
   }
 
   return base;
@@ -74,8 +81,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const nav = getNav(locale, session?.role ?? null);
 
   const isExternal = normalizedPathname.startsWith("/external/");
+  const isAuth = normalizedPathname.startsWith("/auth/");
 
-  if (isExternal) {
+  if (isExternal || isAuth) {
     return (
       <div className="min-h-screen bg-slate-50/80 dark:bg-background">
         <main
