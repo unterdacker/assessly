@@ -101,7 +101,9 @@
   "MistralAPIKey": "Mistral API-Schlüssel",
   "EnterMistralAPIKey": "Geben Sie Ihren Mistral API-Schlüssel ein",
   "LocalAIEndpoint": "Lokaler KI-Endpunkt",
-  "LocalAIEndpointPlaceholder": "http://localhost:11434/v1",
+  "LocalAIEndpointPlaceholder": "http://localhost:11434",
+  "LocalAIModel": "Modellname",
+  "LocalAIModelPlaceholder": "z. B. ministral-3:8b, llama3, phi3",
   "SaveConfiguration": "Konfiguration speichern",
   "SettingsUpdatedSuccess": "Einstellungen erfolgreich aktualisiert!",
   "VendorsPageDesc": "Suchen, laden Sie ein und öffnen Sie NIS2-Bewertungsarbeitsbereiche.",
@@ -677,5 +679,18 @@
     "copyAccessCodeAria": "Zugangscode f\u00fcr {vendorName} kopieren",
     "viewEvidencePdfAria": "Nachweis-PDF f\u00fcr {vendorName} anzeigen",
     "selectVendorAria": "Anbieter {vendorName} ausw\u00e4hlen"
+  },
+  "SignIn": {
+    "badge": "Enterprise RBAC",
+    "headline": "Interner Zugang ist vom Anbieter-Zugang getrennt.",
+    "isolationNotice": "AVRA erzwingt dedizierte Admin- und Auditor-Sitzungen f\u00fcr Dashboard-, Anbieter-, Einstellungs- und Audit-Routen. Anbieter-Sitzungen bleiben innerhalb des externen Assessment-Portals isoliert.",
+    "title": "Interner Workspace-Login",
+    "description": "Admin- und Auditor-Zugang ist vom Anbieterportal isoliert und wird auf jeder gesch\u00fctzten Route durchgesetzt.",
+    "emailLabel": "E-Mail",
+    "passwordLabel": "Passwort",
+    "submitButton": "Anmelden",
+    "signingIn": "Anmeldung l\u00e4uft\u2026",
+    "errorRequired": "E-Mail und Passwort sind erforderlich.",
+    "errorInvalidCredentials": "Ung\u00fcltige Anmeldedaten."
   }
 }

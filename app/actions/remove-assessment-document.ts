@@ -5,11 +5,22 @@ import fs from "fs/promises";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getDefaultCompanyId } from "@/lib/queries/vendor-assessments";
+import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 
 const ROOT_STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
 
 export async function removeAssessmentDocument(assessmentId: string) {
-  const companyId = await getDefaultCompanyId();
+  const session = await requireAdminUser().catch((error) => {
+    if (isAccessControlError(error)) {
+      return null;
+    }
+    throw error;
+  });
+  if (!session) {
+    return { ok: false, error: "Unauthorized." };
+  }
+
+  const companyId = session.companyId ?? (await getDefaultCompanyId());
   if (!companyId) {
     return { ok: false, error: "Company context not found." };
   }
@@ -57,8 +68,8 @@ export async function removeAssessmentDocument(assessmentId: string) {
         action: "DOCUMENT_REMOVED",
         entityType: "assessment",
         entityId: assessment.id,
-        actorId: "admin",
-        createdBy: "admin",
+        actorId: session.userId,
+        createdBy: session.userId,
         newValue: { documentFilename: null, documentUrl: null },
         previousValue: {
           documentFilename: assessment.documentFilename,

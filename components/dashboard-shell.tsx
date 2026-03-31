@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, LayoutDashboard, ShieldCheck, Users, Activity } from "lucide-react";
+import { Settings, LayoutDashboard, ShieldCheck, Users, Activity, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
+import { useAuthSession } from "@/lib/auth/client";
+import { signOutAction } from "@/app/actions/internal-auth";
 
 const SUPPORTED_LOCALES = ["de", "en"] as const;
 
@@ -17,6 +19,7 @@ const NAV_LABELS = {
     settings: "Einstellungen",
     auditLogs: "Audit-Trail",
     nis2Label: "NIS2-konforme Bewertungen",
+    signOut: "Abmelden",
   },
   en: {
     overview: "Overview",
@@ -24,6 +27,7 @@ const NAV_LABELS = {
     settings: "Settings",
     auditLogs: "Audit Trail",
     nis2Label: "NIS2-aligned assessments",
+    signOut: "Sign out",
   },
 };
 
@@ -44,18 +48,30 @@ function stripLocale(pathname: string): string {
   return stripped || "/";
 }
 
-const getNav = (locale: "de" | "en") => [
-  { href: "/dashboard", label: NAV_LABELS[locale].overview, icon: LayoutDashboard },
-  { href: "/vendors", label: NAV_LABELS[locale].vendors, icon: Users },
-  { href: "/settings", label: NAV_LABELS[locale].settings, icon: Settings },
-  { href: "/admin/audit-logs", label: NAV_LABELS[locale].auditLogs, icon: Activity },
-];
+function getNav(locale: "de" | "en", role: string | null) {
+  const base = [
+    { href: "/dashboard", label: NAV_LABELS[locale].overview, icon: LayoutDashboard },
+    { href: "/vendors", label: NAV_LABELS[locale].vendors, icon: Users },
+    { href: "/admin/audit-logs", label: NAV_LABELS[locale].auditLogs, icon: Activity },
+  ];
+
+  if (role === "ADMIN") {
+    base.splice(2, 0, {
+      href: "/settings",
+      label: NAV_LABELS[locale].settings,
+      icon: Settings,
+    });
+  }
+
+  return base;
+}
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/";
+  const session = useAuthSession();
   const locale = getLocaleFromPathname(pathname);
   const normalizedPathname = stripLocale(pathname);
-  const nav = getNav(locale);
+  const nav = getNav(locale, session?.role ?? null);
 
   const isExternal = normalizedPathname.startsWith("/external/");
 
@@ -86,7 +102,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </div>
             <div className="leading-tight">
               <p className="text-sm font-semibold tracking-tight">AVRA</p>
-              <p className="text-[10px] text-muted-foreground">Vendor risk</p>
+              <p className="text-[10px] text-muted-foreground">
+                {session?.role === "ADMIN" ? "Admin workspace" : session?.role === "AUDITOR" ? "Auditor workspace" : "Vendor risk"}
+              </p>
             </div>
           </div>
           <nav
@@ -119,6 +137,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground">
               {NAV_LABELS[locale].nis2Label}
             </p>
+            <form action={signOutAction} className="mt-2">
+              <input type="hidden" name="locale" value={locale} />
+              <button
+                type="submit"
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
+              >
+                <LogOut className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+                {NAV_LABELS[locale].signOut}
+              </button>
+            </form>
           </div>
         </aside>
 
@@ -156,6 +184,17 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               </nav>
               <LanguageToggle />
               <ThemeToggle />
+              <form action={signOutAction}>
+                <input type="hidden" name="locale" value={locale} />
+                <button
+                  type="submit"
+                  title={NAV_LABELS[locale].signOut}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
+                  aria-label={NAV_LABELS[locale].signOut}
+                >
+                  <LogOut className="h-4 w-4" aria-hidden />
+                </button>
+              </form>
             </div>
           </header>
           <main

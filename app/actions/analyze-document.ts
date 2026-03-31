@@ -13,6 +13,7 @@ import {
   countStrictlyCompliantAnswers,
   syncAssessmentComplianceToDatabase,
 } from "@/lib/assessment-compliance";
+import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_TEXT_LENGTH = 20_000;
@@ -70,6 +71,7 @@ export async function persistEvidencePdf(
   assessmentId: string,
   originalFilename: string,
   buffer: Buffer,
+  uploadedBy: string,
 ): Promise<void> {
   await fs.mkdir(STORAGE_DIR, { recursive: true });
   const safeName = originalFilename.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -89,7 +91,7 @@ export async function persistEvidencePdf(
       storagePath: storedName,
       mimeType: "application/pdf",
       fileSize: buffer.byteLength,
-      uploadedBy: "admin",
+      uploadedBy,
     },
   });
   await prisma.assessment.update({
@@ -108,6 +110,17 @@ export async function persistEvidencePdf(
 export async function analyzeDocument(
   formData: FormData,
 ): Promise<AnalyzeDocumentResponse> {
+  const session = await requireAdminUser().catch((error) => {
+    if (isAccessControlError(error)) {
+      return null;
+    }
+    throw error;
+  });
+
+  if (!session) {
+    return { ok: false, error: "Unauthorized." };
+  }
+
   const vendorId = formData.get("vendorId");
   if (typeof vendorId !== "string" || !vendorId.trim()) {
     return { ok: false, error: "Missing vendor assessment identifier." };
@@ -129,8 +142,8 @@ export async function analyzeDocument(
     return { ok: false, error: "Security Check Failed: File is not a valid PDF document." };
   }
 
-  const assessment = await prisma.assessment.findUnique({
-    where: { vendorId },
+  const assessment = await prisma.assessment.findFirst({
+    where: { vendorId, companyId: session.companyId ?? undefined },
     include: { vendor: true, company: true }
   });
 
@@ -140,7 +153,7 @@ export async function analyzeDocument(
 
   // 1. Persist the PDF to disk and record the Document entry
   try {
-    await persistEvidencePdf(assessment.id, file.name, buffer);
+    await persistEvidencePdf(assessment.id, file.name, buffer, session.userId);
   } catch (storageErr) {
     logErrorReport("PDF Storage Phase", storageErr);
     // Non-fatal: continue with AI analysis even if disk write fails

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { UserRole } from "@prisma/client";
 import { ClipboardList, Mail, Radar, ShieldAlert, Sparkles, UserCheck } from "lucide-react";
 import {
   countByStatus,
@@ -20,6 +21,7 @@ import { ComplianceTrustWidget } from "@/components/compliance-trust-widget";
 export type DashboardOverviewProps = {
   vendorAssessments: VendorAssessment[];
   riskPosture: DashboardRiskPostureOverview;
+  role: UserRole;
   translations: {
     Dashboard: string;
     DashboardDesc: string;
@@ -97,6 +99,7 @@ export type DashboardOverviewProps = {
 export function DashboardOverview({
   vendorAssessments,
   riskPosture,
+  role,
   translations,
 }: DashboardOverviewProps) {
   const score = supplyChainRiskScore(vendorAssessments);
@@ -316,7 +319,7 @@ export function DashboardOverview({
           <ul className="list-inside list-disc space-y-1">
             <li>{translations.RiskColoring}</li>
             <li>{translations.AssessmentWorkspace}</li>
-            <li>{translations.InviteNewVendors}</li>
+            {role === "ADMIN" ? <li>{translations.InviteNewVendors}</li> : null}
           </ul>
         </CardContent>
       </Card>

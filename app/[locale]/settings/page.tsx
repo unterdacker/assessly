@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { AiSettingsForm } from "@/components/ai-settings-form";
 import { prisma } from "@/lib/prisma";
+import { requirePageRole } from "@/lib/auth/server";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +17,16 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function SettingsPage() {
+type SettingsPageProps = {
+  params: Promise<{ locale: string }>;
+};
+
+export default async function SettingsPage({ params }: SettingsPageProps) {
+  const { locale } = await params;
+  const session = await requirePageRole(["ADMIN"], locale);
   const t = await getTranslations();
   const company = await prisma.company.findUnique({
-    where: { slug: "default" },
+    where: { id: session.companyId ?? "" },
   });
 
   if (!company) {
@@ -37,6 +44,8 @@ export default async function SettingsPage() {
     EnterMistralAPIKey: t("EnterMistralAPIKey"),
     LocalAIEndpoint: t("LocalAIEndpoint"),
     LocalAIEndpointPlaceholder: t("LocalAIEndpointPlaceholder"),
+    LocalAIModel: t("LocalAIModel"),
+    LocalAIModelPlaceholder: t("LocalAIModelPlaceholder"),
     SaveConfiguration: t("SaveConfiguration"),
     SettingsUpdatedSuccess: t("SettingsUpdatedSuccess"),
   };

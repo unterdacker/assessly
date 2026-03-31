@@ -2,6 +2,14 @@ import createMiddleware from "next-intl/middleware";
 import { hasLocale } from "next-intl";
 import { NextResponse, NextRequest } from "next/server";
 import { routing } from "@/i18n/routing";
+import {
+  canAccessPath,
+  getRoleLandingPath,
+  isExternalPath,
+  isProtectedInternalPath,
+  withLocalePath,
+} from "@/lib/auth/permissions";
+import { AUTH_SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/auth/token";
 
 const handleI18nRouting = createMiddleware(routing);
 
@@ -18,15 +26,11 @@ function stripLocaleFromPathname(pathname: string): string {
   return stripped ? stripped : "/";
 }
 
-function withLocalePath(pathname: string, locale: string): string {
-  return `/${locale}${pathname === "/" ? "" : pathname}`;
-}
-
 /**
  * Middleware to enforce the "Vault" rule for AVRA.
  * Ensures that external vendor requests stay isolated within the /external/ route tree.
  */
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const localeFromPath = getLocaleFromPathname(request.nextUrl.pathname);
   const normalizedPathname = stripLocaleFromPathname(request.nextUrl.pathname);
 
@@ -48,6 +52,13 @@ export function middleware(request: NextRequest) {
   }
 
   const response = handleI18nRouting(request);
+  const authToken = request.cookies.get(AUTH_SESSION_COOKIE_NAME)?.value || null;
+  const authSession = await verifySessionToken(authToken);
+  const vendorToken = request.cookies.get("avra-vendor-token")?.value || null;
+
+  if (!authSession && authToken) {
+    response.cookies.delete(AUTH_SESSION_COOKIE_NAME);
+  }
 
   // External portal token bootstrap.
   if (normalizedPathname.startsWith("/external/assessment/")) {
@@ -66,28 +77,41 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // 2. Identify Internal Admin Routes
-  const isInternalRoute = 
-    normalizedPathname.startsWith("/dashboard") || 
-    normalizedPathname.startsWith("/vendors") || 
-    normalizedPathname.startsWith("/settings") ||
-    normalizedPathname.startsWith("/admin");
-
-  // 3. Enforce "Vault" rule: If an admin route is hit with a vendor token, clear it to prevent lockout
-  const vendorToken = request.cookies.get("avra-vendor-token");
-
-  // Hardened admin restriction: external vendor sessions cannot access /admin.
-  if (normalizedPathname.startsWith("/admin") && vendorToken) {
+  if (normalizedPathname.startsWith("/auth/sign-in") && authSession) {
     const url = request.nextUrl.clone();
-    url.pathname = withLocalePath("/external/portal", activeLocale);
+    url.pathname = withLocalePath(getRoleLandingPath(authSession.role), activeLocale);
     return NextResponse.redirect(url);
   }
 
-  if (isInternalRoute && vendorToken) {
-    // Break the redirect loop by clearing the vendor token
-    // This allows admins to regain control by simply hitting /, /dashboard, or /vendors
-    response.cookies.delete("avra-vendor-token");
+  if (isProtectedInternalPath(normalizedPathname)) {
+    if (!authSession) {
+      const url = request.nextUrl.clone();
+      url.pathname = withLocalePath(vendorToken ? "/external/portal" : "/auth/sign-in", activeLocale);
+      if (!vendorToken) {
+        url.searchParams.set("next", normalizedPathname);
+      }
+      return NextResponse.redirect(url);
+    }
+
+    if (!canAccessPath(authSession.role, normalizedPathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = withLocalePath(
+        authSession.role === "VENDOR" ? "/external/portal" : "/unauthorized",
+        activeLocale,
+      );
+      return NextResponse.redirect(url);
+    }
+
+    if (vendorToken && authSession.role !== "VENDOR") {
+      response.cookies.delete("avra-vendor-token");
+    }
     return response;
+  }
+
+  if (isExternalPath(normalizedPathname) && authSession && authSession.role !== "VENDOR") {
+    const url = request.nextUrl.clone();
+    url.pathname = withLocalePath(getRoleLandingPath(authSession.role), activeLocale);
+    return NextResponse.redirect(url);
   }
 
   return response;

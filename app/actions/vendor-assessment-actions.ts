@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance";
 import { logAuditEvent } from "@/lib/audit-log";
+import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 
 export async function saveAssessmentAnswer({
   assessmentId,
@@ -22,13 +23,14 @@ export async function saveAssessmentAnswer({
   overrideReason?: string | null;
 }) {
   try {
+    const session = await requireAdminUser();
     // 1. Fetch related assessment to get companyId and vendor info
     const assessment = await prisma.assessment.findUnique({
       where: { id: assessmentId },
       include: { vendor: true }
     });
 
-    if (!assessment) throw new Error("Assessment not found");
+    if (!assessment || assessment.companyId !== session.companyId) throw new Error("Assessment not found");
 
     // 2. Fetch existing answer
     const existing = await prisma.assessmentAnswer.findFirst({
@@ -53,7 +55,7 @@ export async function saveAssessmentAnswer({
           status,
           findings,
           evidenceSnippet,
-          createdBy: "isb-user", // Hardcoded manual user for prototype
+          createdBy: session.userId,
         },
       });
     }
@@ -93,7 +95,7 @@ export async function saveAssessmentAnswer({
       await logAuditEvent(
         {
           companyId: assessment.companyId,
-          userId: "isb-user",
+          userId: session.userId,
           action: existing ? "ASSESSMENT_OVERRIDE" : "ASSESSMENT_UPDATED",
           entityType: "assessment_answer",
           entityId: answer.id,
@@ -113,6 +115,9 @@ export async function saveAssessmentAnswer({
 
     return { success: true, data: answer };
   } catch (err) {
+    if (isAccessControlError(err)) {
+      return { success: false, error: "Unauthorized." };
+    }
     const errorMessage = err instanceof Error ? err.message : String(err);
     console.error("[saveAssessmentAnswer] Error:", errorMessage);
     return { success: false, error: "Failed to save answer" };

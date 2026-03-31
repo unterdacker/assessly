@@ -15,6 +15,7 @@ interface Company {
   aiProvider: string;
   mistralApiKey: string | null;
   localAiEndpoint: string | null;
+  localAiModel: string | null;
 }
 
 interface Translations {
@@ -26,6 +27,8 @@ interface Translations {
   EnterMistralAPIKey: string;
   LocalAIEndpoint: string;
   LocalAIEndpointPlaceholder: string;
+  LocalAIModel: string;
+  LocalAIModelPlaceholder: string;
   SaveConfiguration: string;
   SettingsUpdatedSuccess: string;
 }
@@ -81,14 +84,25 @@ export function AiSettingsForm({ company, companyId, translations }: { company: 
           )}
 
           {aiProvider === "local" && (
-            <div className="space-y-2">
-              <Label htmlFor="localAiEndpoint">{translations.LocalAIEndpoint}</Label>
-              <Input
-                id="localAiEndpoint"
-                name="localAiEndpoint"
-                placeholder={translations.LocalAIEndpointPlaceholder}
-                defaultValue={company.localAiEndpoint || ""}
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="localAiEndpoint">{translations.LocalAIEndpoint}</Label>
+                <Input
+                  id="localAiEndpoint"
+                  name="localAiEndpoint"
+                  placeholder={translations.LocalAIEndpointPlaceholder}
+                  defaultValue={company.localAiEndpoint || ""}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="localAiModel">{translations.LocalAIModel}</Label>
+                <Input
+                  id="localAiModel"
+                  name="localAiModel"
+                  placeholder={translations.LocalAIModelPlaceholder}
+                  defaultValue={company.localAiModel || ""}
+                />
+              </div>
             </div>
           )}
 

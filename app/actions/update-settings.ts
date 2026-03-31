@@ -2,18 +2,25 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 
 export async function updateAiSettings(
   _prevState: unknown,
   formData: FormData,
 ) {
+  const session = await requireAdminUser();
   const companyId = formData.get("companyId") as string;
   const aiProvider = formData.get("aiProvider") as string;
   const mistralApiKey = formData.get("mistralApiKey") as string | null;
   const localAiEndpoint = formData.get("localAiEndpoint") as string | null;
+  const localAiModel = formData.get("localAiModel") as string | null;
 
   if (!companyId) {
     return { success: false, error: "Company ID is required." };
+  }
+
+  if (!session.companyId || companyId !== session.companyId) {
+    return { success: false, error: "Unauthorized." };
   }
 
   if (!aiProvider || !["mistral", "local"].includes(aiProvider)) {
@@ -35,6 +42,7 @@ export async function updateAiSettings(
         aiProvider,
         mistralApiKey: aiProvider === "mistral" ? mistralApiKey : null,
         localAiEndpoint: aiProvider === "local" ? localAiEndpoint : null,
+        localAiModel: aiProvider === "local" ? (localAiModel?.trim() || null) : null,
       },
     });
 
@@ -45,14 +53,17 @@ export async function updateAiSettings(
         action: `AI Provider switched to ${aiProvider === "mistral" ? "Mistral AI" : "Local Server"}`,
         entityType: "company_settings",
         entityId: companyId,
-        actorId: "user", // TODO: From auth
-        createdBy: "user",
+        actorId: session.userId,
+        createdBy: session.userId,
       },
     });
 
     revalidatePath('/settings');
     return { success: true };
   } catch (error) {
+    if (isAccessControlError(error)) {
+      return { success: false, error: "Unauthorized." };
+    }
     console.error("Settings Update Error:", error);
     return { success: false, error: "Failed to update settings. Please try again." };
   }

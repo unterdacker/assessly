@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { Providers } from "./providers";
+import { getOptionalAuthSession } from "@/lib/auth/server";
 
 /**
  * Root metadata: self-hosted fonts (no Google Fonts CDN), conservative referrer,
@@ -27,6 +28,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
+  const session = await getOptionalAuthSession();
   const localeCookie = cookieStore.get("NEXT_LOCALE")?.value;
   const htmlLang = localeCookie === "de" || localeCookie === "en" ? localeCookie : "de";
 
@@ -41,7 +43,18 @@ export default async function RootLayout({
         >
           Skip to main content
         </a>
-        <Providers>{children}</Providers>
+        <Providers
+          session={session ? {
+            userId: session.userId,
+            role: session.role,
+            companyId: session.companyId,
+            vendorId: session.vendorId,
+            email: session.email,
+            displayName: session.displayName,
+          } : null}
+        >
+          {children}
+        </Providers>
       </body>
     </html>
   );

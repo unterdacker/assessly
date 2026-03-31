@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit-log";
+import { getAuthSessionFromRequest } from "@/lib/auth/server";
 
 type SendRemediationBody = {
   vendorId?: string;
@@ -12,6 +13,11 @@ type SendRemediationBody = {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getAuthSessionFromRequest(request);
+    if (!session || session.role !== "ADMIN") {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 403 });
+    }
+
     const body = (await request.json()) as SendRemediationBody;
     const vendorId = body.vendorId?.trim();
     const recipientEmail = body.recipientEmail?.trim();
@@ -49,6 +55,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, error: "Vendor assessment not found." }, { status: 404 });
     }
 
+    if (assessment.companyId !== session.companyId) {
+      return NextResponse.json({ ok: false, error: "Forbidden." }, { status: 403 });
+    }
+
     const securityContactEmail = assessment.vendor.securityOfficerEmail?.trim() || null;
     const effectiveRecipientEmail = securityContactEmail || recipientEmail;
     const wasEditedByHuman = originalAiOutput.trim() !== finalDraft;
@@ -56,7 +66,7 @@ export async function POST(request: NextRequest) {
     const sendAudit = await logAuditEvent(
       {
         companyId: assessment.companyId,
-        userId: "isb-user",
+        userId: session.userId,
         action: "AI_REMEDIATION_SENT",
         entityType: "remediation_email",
         entityId: assessment.id,
