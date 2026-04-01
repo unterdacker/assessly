@@ -269,6 +269,7 @@ async function runProviderPrompt(args: {
       aiProvider: true,
       mistralApiKey: true,
       localAiEndpoint: true,
+      localAiModel: true,
     },
   });
 
@@ -303,16 +304,21 @@ async function runProviderPrompt(args: {
     return response.choices?.[0]?.message?.content;
   }
 
-  const endpoint =
-    (process.env.LOCAL_AI_ENDPOINT || config.localAiEndpoint || "http://localhost:11434/v1").trim();
+  const rawEndpoint = (process.env.LOCAL_AI_ENDPOINT || config.localAiEndpoint || "http://localhost:11434").trim();
+  // Normalize: strip trailing /v1 or slash so we always control the full path.
+  const endpoint = rawEndpoint.replace(/\/v1\/?$/, "").replace(/\/$/, "");
 
-  const response = await fetch(`${endpoint}/chat/completions`, {
+  const modelId = (process.env.LOCAL_AI_MODEL || config.localAiModel?.trim() || "ministral-3:8b").trim();
+  const fullUrl = `${endpoint}/v1/chat/completions`;
+  console.log("[AI] Requesting executive summary from:", fullUrl, "model:", modelId);
+
+  const response = await fetch(fullUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: process.env.LOCAL_AI_MODEL || "mistral",
+      model: modelId,
       temperature: 0.2,
       messages: [
         {

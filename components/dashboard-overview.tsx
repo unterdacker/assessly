@@ -1,8 +1,11 @@
 "use client";
 
+import { useTransition } from "react";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { UserRole } from "@prisma/client";
-import { ClipboardList, Mail, Radar, ShieldAlert, Sparkles, UserCheck } from "lucide-react";
+import { ClipboardList, Mail, Radar, RefreshCw, ShieldAlert, Sparkles, UserCheck } from "lucide-react";
 import {
   countByStatus,
   supplyChainRiskScore,
@@ -17,6 +20,8 @@ import { cn } from "@/lib/utils";
 import { CategoryComplianceRadarChart } from "@/components/category-compliance-radar-chart";
 import { VendorsByRiskBarChart } from "@/components/vendors-by-risk-bar-chart";
 import { ComplianceTrustWidget } from "@/components/compliance-trust-widget";
+
+import { refreshAiSummary } from "@/app/actions/refresh-ai-summary";
 
 export type DashboardOverviewProps = {
   vendorAssessments: VendorAssessment[];
@@ -59,6 +64,8 @@ export type DashboardOverviewProps = {
     NoVendorData: string;
     AIAnalysisLive: string;
     AIAnalysisFallback: string;
+    RefreshAISummary: string;
+    RefreshAISummaryPending: string;
     categoryLabels: Record<
       | "governanceRisk"
       | "accessIdentity"
@@ -103,6 +110,7 @@ export function DashboardOverview({
   translations,
 }: DashboardOverviewProps) {
   const score = supplyChainRiskScore(vendorAssessments);
+  const [isPending, startTransition] = useTransition();
   const pending = countByStatus(vendorAssessments, "pending");
   const inProgress = countByStatus(vendorAssessments, "incomplete");
   const completed = countByStatus(vendorAssessments, "completed");
@@ -228,8 +236,21 @@ export function DashboardOverview({
             </p>
           </div>
           <div className="rounded-full border border-slate-300/80 bg-white/80 px-3 py-1 text-xs text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
-            {summarySourceLabel}
-          </div>
+              {summarySourceLabel}
+            </div>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() =>
+                startTransition(async () => {
+                  await refreshAiSummary();
+                })
+              }
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-300/80 bg-white/80 px-3 py-1 text-xs text-slate-600 shadow-sm transition-opacity hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              <RefreshCw className={cn("h-3 w-3", isPending && "animate-spin")} aria-hidden />
+              {isPending ? translations.RefreshAISummaryPending : translations.RefreshAISummary}
+            </button>
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[1.25fr_1fr]">
@@ -284,7 +305,11 @@ export function DashboardOverview({
                     <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
                     <span>
                       <span className="font-semibold">{translations.BiggestSystemicRisk}</span>{" "}
-                      {riskPosture.executiveSummary.systemicRisk}
+                      <span className="prose prose-sm dark:prose-invert max-w-none [&_p]:inline [&_p]:m-0">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {riskPosture.executiveSummary.systemicRisk}
+                        </ReactMarkdown>
+                      </span>
                     </span>
                   </li>
                   <li className="flex gap-3 rounded-xl border border-border bg-muted p-3">

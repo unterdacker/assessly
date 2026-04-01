@@ -34,6 +34,8 @@ export type AuditAction =
   | "LOGIN_FAILED"
   // --- System configuration (CONFIG) ---
   | "SETTINGS_UPDATED"
+  // --- Notifications (NOTIFY) ---
+  | "MAIL_DELIVERY_FAILED"
   // --- User lifecycle (ISO27001_SOC2) ---
   | "USER_CREATED"
   | "USER_DELETED"
@@ -95,7 +97,7 @@ export type LogAuditEventOptions = {
 
 const AI_ACTIONS = new Set(["AI_GENERATION", "AI_REMEDIATION_SENT", "DOCUMENT_ANALYZED"]);
 const AUTH_ACTIONS = new Set(["MFA_ENABLED", "MFA_DISABLED", "MFA_FAILED_ATTEMPT", "LOGIN_FAILED"]);
-const CONFIG_ACTIONS = new Set(["SETTINGS_UPDATED"]);
+const CONFIG_ACTIONS = new Set(["SETTINGS_UPDATED", "MAIL_DELIVERY_FAILED"]);
 const NIS2_DORA_ACTIONS = new Set([
   "VENDOR_CREATED",
   "ACCESS_CODE_GENERATED",

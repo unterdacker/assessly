@@ -54,8 +54,28 @@ function toDashboardRiskLevel(level: string): DashboardRiskLevelKey {
   return "medium";
 }
 
+const AI_SUMMARY_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+type CachedSummary = DashboardExecutiveSummaryResult & { cachedAt: string };
+
+function parseCachedSummary(raw: string): DashboardExecutiveSummaryResult | null {
+  try {
+    const parsed = JSON.parse(raw) as CachedSummary;
+    if (typeof parsed.systemicRisk !== "string") return null;
+    return {
+      systemicRisk: parsed.systemicRisk,
+      averageRemediationTimeDays: parsed.averageRemediationTimeDays ?? 0,
+      recommendedCategoryKey: parsed.recommendedCategoryKey ?? null,
+      source: parsed.source ?? "ai",
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function getDashboardRiskPostureOverview(
   locale: SupportedLocale,
+  bypassCache = false,
 ): Promise<DashboardRiskPostureOverview> {
   const companyId = await getDefaultCompanyId();
 
@@ -97,7 +117,7 @@ export async function getDashboardRiskPostureOverview(
     };
   }
 
-  const [questions, assessments, aiAuditEvents, totalAuditCount] = await prisma.$transaction([
+  const [questions, assessments, aiAuditEvents, totalAuditCount, companyCache] = await prisma.$transaction([
     prisma.question.findMany({
       select: {
         id: true,
@@ -142,6 +162,13 @@ export async function getDashboardRiskPostureOverview(
     prisma.auditLog.count({
       where: {
         companyId,
+      },
+    }),
+    prisma.company.findUnique({
+      where: { id: companyId },
+      select: {
+        lastAiSummary: true,
+        aiSummaryUpdatedAt: true,
       },
     }),
   ]);
@@ -251,14 +278,50 @@ export async function getDashboardRiskPostureOverview(
       )
     : 0;
 
-  const executiveSummary = await generateDashboardExecutiveSummary({
-    companyId,
-    locale,
-    categoryMetrics,
-    vendorSummaries,
-    riskBuckets,
-    averageRemediationTimeDays,
-  });
+  // Check cache before calling the LLM
+  let executiveSummary: DashboardExecutiveSummaryResult;
+
+  const cachedAt = companyCache?.aiSummaryUpdatedAt;
+  const cacheAge = cachedAt ? Date.now() - cachedAt.getTime() : Infinity;
+  const cacheHit =
+    !bypassCache &&
+    companyCache?.lastAiSummary &&
+    cacheAge < AI_SUMMARY_CACHE_TTL_MS;
+
+  if (cacheHit) {
+    const cached = parseCachedSummary(companyCache.lastAiSummary!);
+    if (cached) {
+      executiveSummary = cached;
+    } else {
+      executiveSummary = await generateDashboardExecutiveSummary({
+        companyId,
+        locale,
+        categoryMetrics,
+        vendorSummaries,
+        riskBuckets,
+        averageRemediationTimeDays,
+      });
+    }
+  } else {
+    executiveSummary = await generateDashboardExecutiveSummary({
+      companyId,
+      locale,
+      categoryMetrics,
+      vendorSummaries,
+      riskBuckets,
+      averageRemediationTimeDays,
+    });
+    // Persist to cache (fire-and-forget — don't block the response)
+    prisma.company.update({
+      where: { id: companyId },
+      data: {
+        lastAiSummary: JSON.stringify({ ...executiveSummary, cachedAt: new Date().toISOString() }),
+        aiSummaryUpdatedAt: new Date(),
+      },
+    }).catch((err: unknown) => {
+      console.warn("[dashboard-risk-posture] Failed to persist AI summary cache:", err);
+    });
+  }
 
   const aiGenerationCount = aiAuditEvents.filter(
     (entry) => entry.action === "AI_GENERATION",

@@ -29,6 +29,12 @@ enum UserRole {
   VENDOR
 }
 
+enum MailStrategy {
+  SMTP
+  RESEND
+  LOG
+}
+
 model Company {
   id        String   @id @default(cuid())
   name      String
@@ -37,6 +43,8 @@ model Company {
   mistralApiKey String?
   localAiEndpoint String? @default("http://localhost:11434")
   localAiModel String? @default("ministral-3:8b")
+  lastAiSummary String?
+  aiSummaryUpdatedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   createdBy String
@@ -295,4 +303,28 @@ model Document {
   assessmentAnswers AssessmentAnswer[]
 
   @@index([assessmentId])
+}
+
+/// Singleton row (id = "singleton") holding system-wide configuration.
+/// Sensitive fields (smtpPassword, resendApiKey) are stored AES-256-GCM encrypted.
+model SystemSettings {
+  id           String       @id @default("singleton")
+  /// Mail delivery strategy; overrides MAIL_STRATEGY env var when set.
+  mailStrategy MailStrategy @default(LOG)
+  /// Sender address, e.g. "noreply@company.com".
+  mailFrom     String?
+  /// Sender display name, e.g. "AVRA Compliance".
+  mailFromName String?
+  /// SMTP relay host.
+  smtpHost     String?
+  /// SMTP port (default 587).
+  smtpPort     Int?         @default(587)
+  /// SMTP authentication username.
+  smtpUser     String?
+  /// SMTP password — AES-256-GCM encrypted via lib/crypto.ts.
+  smtpPassword String?
+  /// Resend API key — AES-256-GCM encrypted via lib/crypto.ts.
+  resendApiKey String?
+  updatedAt    DateTime     @updatedAt
+  updatedBy    String?
 }

@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
@@ -7,12 +7,14 @@ import { prisma } from "@/lib/prisma";
 import { getDefaultCompanyId } from "@/lib/queries/vendor-assessments";
 import type { SendInviteState } from "@/lib/types/vendor-auth";
 import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
+import { sendMail } from "@/lib/mail";
+import { buildVendorInviteEmail } from "@/components/emails/vendor-invite";
+import { logAuditEvent } from "@/lib/audit-log";
 
-const ANON_ACTOR = "anonymous:prototype";
 const ACCESS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const TEMP_PASSWORD_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#%";
 
-// Strict E.164: + followed by 7–15 digits (spaces stripped before test)
+// Strict E.164: + followed by 7-15 digits (spaces stripped before test)
 const E164_RE = /^\+[1-9]\d{6,14}$/;
 
 function generateAccessCode(): string {
@@ -53,6 +55,9 @@ export async function sendOutOfBandInviteAction(
   const email    = formData.get("email");
   const rawPhone = formData.get("phone");
   const duration = formData.get("duration") ?? "24h";
+  const locale   = typeof formData.get("locale") === "string"
+    ? (formData.get("locale") as string)
+    : "en";
 
   if (typeof vendorId !== "string" || !vendorId.trim()) {
     return { status: "error", error: "Invalid vendor." };
@@ -64,13 +69,22 @@ export async function sendOutOfBandInviteAction(
     return { status: "error", error: "A phone number is required." };
   }
 
-  // Normalize: strip spaces and dashes so "+49 151 1234 5678" → "+491511234568"
+  // Normalize: strip spaces and dashes so "+49 151 1234 5678" -> "+491511234568"
   const phone = rawPhone.replace(/[\s\-().]/g, "");
   if (!E164_RE.test(phone)) {
     return {
       status: "error",
       error: "Phone must be in international format, e.g. +49 151 12345678.",
     };
+  }
+
+  // Authenticate before any DB access (fixes previous ordering bug)
+  let session: Awaited<ReturnType<typeof requireAdminUser>>;
+  try {
+    session = await requireAdminUser();
+  } catch (err) {
+    if (isAccessControlError(err)) return { status: "error", error: "Unauthorized." };
+    return { status: "error", error: "Authentication failed." };
   }
 
   const companyId = session.companyId ?? (await getDefaultCompanyId());
@@ -80,21 +94,23 @@ export async function sendOutOfBandInviteAction(
 
   const resolvedDuration = typeof duration === "string" ? duration : "24h";
 
-  // Credentials created once, in memory only — hash immediately, never return to client
+  // Credentials created once, in memory only -- hash immediately, never return to client
   const tempPassword = generateTempPassword();
   const passwordHash = await bcrypt.hash(tempPassword, 12);
   const codeExpiresAt = resolveExpiry(resolvedDuration);
   const inviteToken = crypto.randomUUID().replace(/-/g, "");
   let accessCode = "";
+  let vendorName = "";
 
   try {
-    const session = await requireAdminUser();
     await prisma.$transaction(async (tx) => {
       const vendor = await tx.vendor.findFirst({
         where: { id: vendorId.trim(), companyId },
         select: { id: true, name: true },
       });
       if (!vendor) throw new Error("Vendor not found.");
+
+      vendorName = vendor.name;
 
       // Retry on unique-code collision
       let updated = false;
@@ -140,46 +156,7 @@ export async function sendOutOfBandInviteAction(
           },
         },
       });
-
-      // ── EMAIL DELIVERY ─────────────────────────────────────────────────────────
-      // TODO: replace with your email provider SDK (e.g. Resend, SendGrid, AWS SES)
-      //
-      // await resend.emails.send({
-      //   from: "noreply@yourdomain.com",
-      //   to: email.trim(),
-      //   subject: "You've been invited to an AVRA NIS2 Assessment",
-      //   html: `
-      //     <p>You have been invited to complete a secure NIS2 supply chain assessment.</p>
-      //     <p>1. Go to: https://[YOUR_DOMAIN]/external/portal</p>
-      //     <p>2. Your Access Code is: <strong>${accessCode}</strong></p>
-      //     <p>For security, your temporary password has been sent separately via SMS.
-      //        <strong>You must change it immediately on first login.</strong></p>
-      //   `,
-      // });
-      console.log(`[SIMULATED EMAIL → ${email.trim()}]`);
-      console.log(`  Portal: https://[YOUR_DOMAIN]/external/portal`);
-      console.log(`  Access Code: ${accessCode}`);
-      console.log(`  (Password delivered by SMS separately)`);
-
-      // ── SMS DELIVERY ────────────────────────────────────────────────────────────
-      // SECURITY: tempPassword is transmitted here and then falls out of scope.
-      // It is NEVER stored in plain text, never logged, never returned to the client.
-      //
-      // TODO: replace with your SMS provider SDK (e.g. Twilio, Vonage, AWS SNS)
-      //
-      // await twilioClient.messages.create({
-      //   from: process.env.TWILIO_PHONE_NUMBER,
-      //   to: phone,
-      //   body: `AVRA Security Portal: Your temporary password is: ${tempPassword}. ` +
-      //         `Log in with your emailed Access Code and change this password immediately.`,
-      // });
-      console.log(`[SIMULATED SMS → ${maskPhone(phone)}]`);
-      console.log(`  [SMS BODY REDACTED — password delivered to device only]`);
-      // tempPassword is now out of scope; no reference leaves this server action
     });
-
-    revalidatePath("/vendors");
-    return { status: "sent", maskedPhone: maskPhone(phone), error: null };
   } catch (err) {
     if (isAccessControlError(err)) {
       return { status: "error", error: "Unauthorized." };
@@ -187,4 +164,55 @@ export async function sendOutOfBandInviteAction(
     console.error("Out-of-band invite failed:", err);
     return { status: "error", error: "Could not send invite. Please try again." };
   }
+
+  // -- EMAIL DELIVERY ---------------------------------------------------------
+  // Outside the transaction: a mail failure must not roll back the DB write.
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const portalUrl = `${appUrl}/${locale}/external/portal`;
+
+  const { subject, html } = buildVendorInviteEmail({
+    locale,
+    companyName: process.env.MAIL_COMPANY_NAME ?? "AVRA Compliance",
+    vendorName,
+    accessCode,
+    portalUrl,
+  });
+
+  const mailResult = await sendMail({ to: email.trim(), subject, html });
+
+  if (!mailResult.ok) {
+    // Log failure to the audit trail but do not surface it in the UI --
+    // the access code was saved successfully; the admin can resend manually.
+    await logAuditEvent({
+      companyId,
+      userId: session.userId,
+      action: "MAIL_DELIVERY_FAILED",
+      entityType: "vendor",
+      entityId: vendorId.trim(),
+      newValue: {
+        reason: mailResult.error,
+        destination: email.trim(),
+        strategy: process.env.MAIL_STRATEGY ?? "log",
+      },
+    }).catch(() => {});
+  }
+
+  // -- SMS DELIVERY -----------------------------------------------------------
+  // SECURITY: tempPassword is transmitted here and then falls out of scope.
+  // It is NEVER stored in plain text, never logged, never returned to the client.
+  //
+  // TODO: replace with your SMS provider SDK (e.g. Twilio, Vonage, AWS SNS)
+  //
+  // await twilioClient.messages.create({
+  //   from: process.env.TWILIO_PHONE_NUMBER,
+  //   to: phone,
+  //   body: `AVRA Security Portal: Your temporary password is: ${tempPassword}. ` +
+  //         `Log in with your emailed Access Code and change this password immediately.`,
+  // });
+  console.log(`[SIMULATED SMS -> ${maskPhone(phone)}]`);
+  console.log(`  [SMS BODY REDACTED -- password delivered to device only]`);
+  // tempPassword is now out of scope; no reference leaves this server action
+
+  revalidatePath("/vendors");
+  return { status: "sent", maskedPhone: maskPhone(phone), error: null };
 }

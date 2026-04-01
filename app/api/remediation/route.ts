@@ -354,6 +354,7 @@ async function generateRemediationDraft(args: {
       aiProvider: true,
       mistralApiKey: true,
       localAiEndpoint: true,
+      localAiModel: true,
     },
   });
 
@@ -403,7 +404,12 @@ async function generateRemediationDraft(args: {
   }
 
   const endpoint =
-    (process.env.LOCAL_AI_ENDPOINT || config.localAiEndpoint || "http://localhost:11434/v1").trim();
+    ((process.env.LOCAL_AI_ENDPOINT || config.localAiEndpoint || "http://localhost:11434").trim()
+      .replace(/\/v1\/?$/, "")
+      .replace(/\/$/, "")) + "/v1";
+
+  const remediationModelId = (process.env.LOCAL_AI_MODEL || config.localAiModel?.trim() || "ministral-3:8b").trim();
+  console.log("[AI] Requesting remediation from:", `${endpoint}/chat/completions`, "model:", remediationModelId);
 
   const response = await fetch(`${endpoint}/chat/completions`, {
     method: "POST",
@@ -411,7 +417,7 @@ async function generateRemediationDraft(args: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: process.env.LOCAL_AI_MODEL || "mistral",
+      model: remediationModelId,
       temperature: 0.2,
       messages: [
         {
@@ -440,7 +446,7 @@ async function generateRemediationDraft(args: {
     draft: content,
     modelInfo: {
       provider: "local",
-      modelId: process.env.LOCAL_AI_MODEL || "mistral",
+      modelId: remediationModelId,
       endpoint,
     },
     rawAiOutput: content,
