@@ -1,7 +1,26 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Eye, Activity, UserRound, Clock3, Database, MapPin, Smartphone } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import {
+  Eye,
+  Activity,
+  UserRound,
+  Clock3,
+  Database,
+  MapPin,
+  Smartphone,
+  Download,
+  Filter,
+  BrainCircuit,
+  KeyRound,
+  Settings2,
+  ShieldAlert,
+  Users,
+  Hash,
+  UserCheck,
+  AlertCircle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -20,6 +39,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { AuditDiffViewer } from "@/components/admin/audit-diff-viewer";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 type AuditLogRow = {
   id: string;
@@ -33,18 +63,115 @@ type AuditLogRow = {
   metadata?: Record<string, unknown> | null;
   ipAddress?: string | null;
   userAgent?: string | null;
+  // Compliance fields
+  complianceCategory?: string | null;
+  reason?: string | null;
+  requestId?: string | null;
+  previousLogHash?: string | null;
+  eventHash?: string | null;
+  aiModelId?: string | null;
+  aiProviderName?: string | null;
+  inputContextHash?: string | null;
+  hitlVerifiedBy?: string | null;
 };
 
 type AuditLogsTableProps = {
   logs: AuditLogRow[];
+  activeCategory: string;
+  isAdmin: boolean;
 };
+
+// ---------------------------------------------------------------------------
+// Compliance category display config
+// ---------------------------------------------------------------------------
+
+type CategoryConfig = {
+  label: string;
+  description: string;
+  Icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
+  color: string;
+  badge: string;
+};
+
+const COMPLIANCE_CATEGORIES: Record<string, CategoryConfig> = {
+  ALL: {
+    label: "All Events",
+    description: "Show all audit events",
+    Icon: Activity,
+    color: "text-slate-600 dark:text-slate-400",
+    badge: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
+  },
+  AI_ACT: {
+    label: "EU AI Act",
+    description: "AI generation, document analysis, human-in-the-loop",
+    Icon: BrainCircuit,
+    color: "text-cyan-700 dark:text-cyan-400",
+    badge: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-200",
+  },
+  AUTH: {
+    label: "Auth Events",
+    description: "Login failures, MFA events, access control",
+    Icon: KeyRound,
+    color: "text-rose-700 dark:text-rose-400",
+    badge: "bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200",
+  },
+  CONFIG: {
+    label: "Configuration",
+    description: "System settings changes",
+    Icon: Settings2,
+    color: "text-amber-700 dark:text-amber-400",
+    badge: "bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200",
+  },
+  NIS2_DORA: {
+    label: "NIS2 / DORA",
+    description: "Vendor, assessment, and access code lifecycle",
+    Icon: ShieldAlert,
+    color: "text-indigo-700 dark:text-indigo-400",
+    badge: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-200",
+  },
+  ISO27001_SOC2: {
+    label: "ISO 27001 / SOC2",
+    description: "User lifecycle and access governance",
+    Icon: Users,
+    color: "text-violet-700 dark:text-violet-400",
+    badge: "bg-violet-100 text-violet-800 dark:bg-violet-900/60 dark:text-violet-200",
+  },
+  OTHER: {
+    label: "Other",
+    description: "Uncategorized events",
+    Icon: Activity,
+    color: "text-slate-600 dark:text-slate-400",
+    badge: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
+  },
+};
+
+const FILTER_OPTIONS = ["ALL", "AI_ACT", "AUTH", "CONFIG", "NIS2_DORA", "ISO27001_SOC2"];
+
+function ComplianceBadge({ category }: { category: string | null | undefined }) {
+  const cfg = COMPLIANCE_CATEGORIES[category ?? "OTHER"] ?? COMPLIANCE_CATEGORIES.OTHER;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-semibold ${cfg.badge}`}
+    >
+      <cfg.Icon className="h-3 w-3" aria-hidden />
+      {cfg.label}
+    </span>
+  );
+}
+
+function HashDisplay({ label, value }: { label: string; value: string | null | undefined }) {
+  if (!value) return null;
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <code className="block break-all font-mono text-[11px] text-foreground/80">{value}</code>
+    </div>
+  );
+}
 
 function formatTimestamp(iso: string): string {
   const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) {
-    return iso;
-  }
-
+  if (Number.isNaN(date.getTime())) return iso;
   return new Intl.DateTimeFormat("en-GB", {
     year: "numeric",
     month: "2-digit",
@@ -55,9 +182,13 @@ function formatTimestamp(iso: string): string {
   }).format(date);
 }
 
-export function AuditLogsTable({ logs }: AuditLogsTableProps) {
+export function AuditLogsTable({ logs, activeCategory, isAdmin }: AuditLogsTableProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [downloading, startDownload] = useTransition();
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const selected = useMemo(
     () => logs.find((entry) => entry.id === selectedId) ?? null,
@@ -105,40 +236,133 @@ export function AuditLogsTable({ logs }: AuditLogsTableProps) {
     };
   }, [selected]);
 
+  function handleCategoryChange(value: string) {
+    const params = new URLSearchParams();
+    if (value && value !== "ALL") params.set("category", value);
+    const qs = params.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname);
+  }
+
+  function handleDownloadBundle() {
+    startDownload(async () => {
+      setDownloadError(null);
+      try {
+        const categoryParam =
+          activeCategory && activeCategory !== "ALL" ? `?category=${activeCategory}` : "";
+        const res = await fetch(`/api/audit-logs/forensic-bundle${categoryParam}`);
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          setDownloadError((body as { error?: string }).error ?? `HTTP ${res.status}`);
+          return;
+        }
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `avra-forensic-bundle-${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        setDownloadError(err instanceof Error ? err.message : "Download failed");
+      }
+    });
+  }
+
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/40">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      {/* ── Toolbar: Compliance Filter + Forensic Download ── */}
+      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/40 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="text-sm font-medium text-muted-foreground">Compliance Filter:</span>
+          <Select value={activeCategory} onValueChange={handleCategoryChange}>
+            <SelectTrigger className="h-8 w-[200px] text-sm" aria-label="Filter by compliance category">
+              <SelectValue placeholder="All Events" />
+            </SelectTrigger>
+            <SelectContent>
+              {FILTER_OPTIONS.map((opt) => {
+                const cfg = COMPLIANCE_CATEGORIES[opt] ?? COMPLIANCE_CATEGORIES.OTHER;
+                return (
+                  <SelectItem key={opt} value={opt}>
+                    <span className="inline-flex items-center gap-1.5">
+                      <cfg.Icon className={`h-3.5 w-3.5 ${cfg.color}`} aria-hidden />
+                      {cfg.label}
+                    </span>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {isAdmin && (
+          <div className="flex flex-col items-end gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadBundle}
+              disabled={downloading}
+              aria-label="Download signed forensic bundle for external auditors"
+              className="gap-1.5 border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
+            >
+              <Download className="h-4 w-4" aria-hidden />
+              {downloading ? "Preparing…" : "Download Forensic Bundle"}
+            </Button>
+            {downloadError && (
+              <p className="flex items-center gap-1 text-xs text-rose-600 dark:text-rose-400">
+                <AlertCircle className="h-3.5 w-3.5" aria-hidden />
+                {downloadError}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Legend bar ── */}
+      <div className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-800 dark:bg-slate-950/40">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <Activity className="h-4 w-4" aria-hidden />
-          Latest audit events for security review and incident traceability. Each entry includes forensic
-          metadata (IP address, user agent) for NIS2 compliance.
+          <span>
+            Privacy-first forensic log — IP truncated (GDPR Rec. 30), hash-chained (NIS2/DORA Art. 9),
+            AI identity tracked (EU AI Act Art. 12/14).
+          </span>
+          <span className="ml-auto font-mono">
+            {logs.length} event{logs.length !== 1 ? "s" : ""}
+            {activeCategory && activeCategory !== "ALL"
+              ? ` · ${COMPLIANCE_CATEGORIES[activeCategory]?.label ?? activeCategory}`
+              : ""}
+          </span>
         </div>
       </div>
 
+      {/* ── Table ── */}
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[220px]">
+            <TableHead className="w-[200px]">
               <span className="inline-flex items-center gap-1.5">
                 <Clock3 className="h-3.5 w-3.5" aria-hidden />
                 Timestamp
               </span>
             </TableHead>
-            <TableHead className="w-[160px]">
+            <TableHead className="w-[140px]">
               <span className="inline-flex items-center gap-1.5">
                 <UserRound className="h-3.5 w-3.5" aria-hidden />
                 User
               </span>
             </TableHead>
-            <TableHead className="w-[220px]">Action</TableHead>
+            <TableHead className="w-[200px]">Action</TableHead>
+            <TableHead className="w-[140px]">Framework</TableHead>
             <TableHead>Entity</TableHead>
-            <TableHead className="w-[120px] text-right">Details</TableHead>
+            <TableHead className="w-[100px] text-right">Details</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {logs.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
+              <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
                 No audit events found.
               </TableCell>
             </TableRow>
@@ -146,11 +370,16 @@ export function AuditLogsTable({ logs }: AuditLogsTableProps) {
             logs.map((log) => (
               <TableRow key={log.id}>
                 <TableCell className="font-mono text-xs">{formatTimestamp(log.timestamp)}</TableCell>
-                <TableCell className="font-medium">{log.userId}</TableCell>
+                <TableCell className="max-w-[140px] truncate font-medium" title={log.userId}>
+                  {log.userId}
+                </TableCell>
                 <TableCell>
                   <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                     {log.action}
                   </span>
+                </TableCell>
+                <TableCell>
+                  <ComplianceBadge category={log.complianceCategory} />
                 </TableCell>
                 <TableCell>
                   <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
@@ -179,43 +408,72 @@ export function AuditLogsTable({ logs }: AuditLogsTableProps) {
                       <DialogHeader>
                         <DialogTitle>Audit Event Details</DialogTitle>
                         <DialogDescription>
-                          Complete change history with forensic metadata for compliance verification.
+                          Complete forensic record — NIS2 · DORA · EU AI Act · ISO 27001 · GDPR
                         </DialogDescription>
                       </DialogHeader>
 
                       {selected ? (
-                        <div className="space-y-6">
-                          <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900/40 md:grid-cols-2">
+                        <div className="space-y-5">
+                          {/* ── Core event fields ── */}
+                          <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900/40 sm:grid-cols-2">
                             <div>
                               <p className="text-xs uppercase tracking-wide text-muted-foreground">Timestamp</p>
                               <p className="font-mono">{formatTimestamp(selected.timestamp)}</p>
                             </div>
                             <div>
-                              <p className="text-xs uppercase tracking-wide text-muted-foreground">User</p>
-                              <p>{selected.userId}</p>
+                              <p className="text-xs uppercase tracking-wide text-muted-foreground">User ID</p>
+                              <p className="break-all font-mono text-xs">{selected.userId}</p>
                             </div>
                             <div>
                               <p className="text-xs uppercase tracking-wide text-muted-foreground">Action</p>
-                              <p>{selected.action}</p>
+                              <p className="font-semibold">{selected.action}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs uppercase tracking-wide text-muted-foreground">Framework</p>
+                              <ComplianceBadge category={selected.complianceCategory} />
                             </div>
                             <div>
                               <p className="text-xs uppercase tracking-wide text-muted-foreground">Entity</p>
-                              <p className="font-mono">{selected.entityType}/{selected.entityId}</p>
+                              <p className="font-mono text-xs">
+                                {selected.entityType}/{selected.entityId}
+                              </p>
                             </div>
+                            {selected.requestId && (
+                              <div>
+                                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                                  Request ID (NIS2/DORA correlation)
+                                </p>
+                                <code className="break-all font-mono text-xs">{selected.requestId}</code>
+                              </div>
+                            )}
+                            {selected.reason && (
+                              <div className="col-span-full">
+                                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                                  Purpose / Reason (GDPR Art. 5(1)(b))
+                                </p>
+                                <p className="rounded border border-amber-200 bg-amber-50/40 px-2 py-1 text-xs dark:border-amber-800 dark:bg-amber-950/20">
+                                  {selected.reason}
+                                </p>
+                              </div>
+                            )}
                           </div>
 
+                          {/* ── Forensic metadata ── */}
                           {(selected.ipAddress || selected.userAgent) && (
                             <div className="rounded-md border border-indigo-200 bg-indigo-50/40 p-4 dark:border-indigo-900 dark:bg-indigo-950/20">
                               <h3 className="mb-3 text-sm font-semibold text-indigo-800 dark:text-indigo-300">
-                                Forensic Metadata
+                                Forensic Metadata (BSI Grundschutz / ISO 27001 A.12.4)
                               </h3>
                               <div className="space-y-2 text-sm">
                                 {selected.ipAddress && (
                                   <div className="flex items-start gap-2">
-                                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
                                     <div>
-                                      <p className="font-semibold text-indigo-900 dark:text-indigo-100">
-                                        IP Address
+                                      <p className="text-xs font-semibold text-indigo-900 dark:text-indigo-100">
+                                        IP Address{" "}
+                                        <span className="font-normal text-indigo-600 dark:text-indigo-300">
+                                          (truncated — GDPR Rec. 30)
+                                        </span>
                                       </p>
                                       <code className="block text-xs text-indigo-800 dark:text-indigo-200">
                                         {selected.ipAddress}
@@ -225,9 +483,9 @@ export function AuditLogsTable({ logs }: AuditLogsTableProps) {
                                 )}
                                 {selected.userAgent && (
                                   <div className="flex items-start gap-2">
-                                    <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" />
+                                    <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
                                     <div>
-                                      <p className="font-semibold text-indigo-900 dark:text-indigo-100">
+                                      <p className="text-xs font-semibold text-indigo-900 dark:text-indigo-100">
                                         User Agent
                                       </p>
                                       <code className="block max-w-sm overflow-auto text-xs text-indigo-800 dark:text-indigo-200">
@@ -240,55 +498,109 @@ export function AuditLogsTable({ logs }: AuditLogsTableProps) {
                             </div>
                           )}
 
-                          {aiProvenance ? (
-                            <div className="rounded-md border border-cyan-200 bg-cyan-50/40 p-4 dark:border-cyan-900 dark:bg-cyan-950/20">
-                              <h3 className="mb-3 text-sm font-semibold text-cyan-900 dark:text-cyan-200">
-                                AI Provenance
+                          {/* ── NIS2/DORA hash-chain ── */}
+                          {(selected.eventHash || selected.previousLogHash) && (
+                            <div className="rounded-md border border-emerald-200 bg-emerald-50/40 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
+                              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-emerald-900 dark:text-emerald-200">
+                                <Hash className="h-4 w-4" aria-hidden />
+                                Hash-Chain Integrity (NIS2 / DORA Art. 9)
                               </h3>
                               <div className="space-y-2 text-sm">
-                                <div>
-                                  <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
-                                    Model
-                                  </p>
-                                  <p className="font-mono text-cyan-900 dark:text-cyan-100">
-                                    {aiProvenance.modelId || "Unknown"}
-                                    {aiProvenance.provider ? ` (${aiProvenance.provider})` : ""}
-                                  </p>
-                                </div>
-                                {aiProvenance.linkedGenerationId ? (
+                                <HashDisplay label="Event Hash (SHA-256)" value={selected.eventHash} />
+                                <HashDisplay
+                                  label="Previous Log Hash"
+                                  value={selected.previousLogHash ?? "GENESIS"}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* ── EU AI Act traceability ── */}
+                          {(selected.aiModelId ||
+                            selected.aiProviderName ||
+                            selected.inputContextHash ||
+                            selected.hitlVerifiedBy ||
+                            aiProvenance) && (
+                            <div className="rounded-md border border-cyan-200 bg-cyan-50/40 p-4 dark:border-cyan-900 dark:bg-cyan-950/20">
+                              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-cyan-900 dark:text-cyan-200">
+                                <BrainCircuit className="h-4 w-4" aria-hidden />
+                                AI Traceability (EU AI Act Art. 12/14)
+                              </h3>
+                              <div className="grid gap-2 text-sm sm:grid-cols-2">
+                                {selected.aiModelId && (
                                   <div>
                                     <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
-                                      Linked AI Generation Event
+                                      Model Identity
                                     </p>
-                                    <p className="font-mono text-cyan-900 dark:text-cyan-100">
-                                      {aiProvenance.linkedGenerationId}
-                                    </p>
+                                    <code className="font-mono text-xs text-cyan-900 dark:text-cyan-100">
+                                      {selected.aiModelId}
+                                      {selected.aiProviderName ? ` / ${selected.aiProviderName}` : ""}
+                                    </code>
                                   </div>
-                                ) : null}
-                                {aiProvenance.promptSnapshot ? (
+                                )}
+                                {selected.inputContextHash && (
+                                  <div className="col-span-full">
+                                    <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
+                                      Input Context Hash (SHA-256 — no raw PII stored)
+                                    </p>
+                                    <code className="block break-all font-mono text-xs text-cyan-900 dark:text-cyan-100">
+                                      {selected.inputContextHash}
+                                    </code>
+                                  </div>
+                                )}
+                                {selected.hitlVerifiedBy && (
+                                  <div className="col-span-full">
+                                    <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
+                                      Human-in-the-Loop Reviewer (Art. 14)
+                                    </p>
+                                    <div className="flex items-center gap-1.5">
+                                      <UserCheck className="h-4 w-4 text-cyan-600 dark:text-cyan-400" aria-hidden />
+                                      <code className="font-mono text-xs text-cyan-900 dark:text-cyan-100">
+                                        {selected.hitlVerifiedBy}
+                                      </code>
+                                    </div>
+                                  </div>
+                                )}
+                                {aiProvenance?.linkedGenerationId && (
                                   <div>
+                                    <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
+                                      Linked Generation Event
+                                    </p>
+                                    <code className="font-mono text-xs text-cyan-900 dark:text-cyan-100">
+                                      {aiProvenance.linkedGenerationId}
+                                    </code>
+                                  </div>
+                                )}
+                                {aiProvenance?.promptSnapshot && (
+                                  <div className="col-span-full">
                                     <Button
                                       type="button"
                                       variant="outline"
                                       size="sm"
                                       onClick={() => setShowPrompt((prev) => !prev)}
                                     >
-                                      {showPrompt ? "Hide Original Prompt" : "View Original Prompt"}
+                                      {showPrompt ? "Hide Prompt Snapshot" : "View Prompt Snapshot"}
                                     </Button>
-                                    {showPrompt ? (
+                                    {showPrompt && (
                                       <pre className="mt-2 max-h-52 overflow-auto rounded bg-white/80 p-2 text-xs leading-relaxed text-cyan-950 dark:bg-slate-950 dark:text-cyan-100">
                                         {aiProvenance.promptSnapshot}
                                       </pre>
-                                    ) : null}
+                                    )}
                                   </div>
-                                ) : null}
+                                )}
                               </div>
                             </div>
-                          ) : null}
+                          )}
 
+                          {/* ── Field diff ── */}
                           <div>
-                            <h3 className="mb-3 text-sm font-semibold">Field Changes</h3>
-                            <AuditDiffViewer previousValue={selected.previousValue} newValue={selected.newValue} />
+                            <h3 className="mb-3 text-sm font-semibold">
+                              Field Changes (ISO 27001 A.12.4 / SOC2 CC7)
+                            </h3>
+                            <AuditDiffViewer
+                              previousValue={selected.previousValue}
+                              newValue={selected.newValue}
+                            />
                           </div>
                         </div>
                       ) : null}
