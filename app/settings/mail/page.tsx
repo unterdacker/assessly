@@ -1,5 +1,7 @@
+import Link from "next/link";
 import type { Metadata } from "next";
-import { Mail, ShieldCheck } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import { Mail, ShieldCheck, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 import { requirePageRole } from "@/lib/auth/server";
@@ -20,6 +22,7 @@ type PageProps = {
 export default async function MailSettingsPage({ params }: PageProps) {
   const { locale } = await params;
   await requirePageRole(["ADMIN"], locale);
+  const t = await getTranslations();
 
   const settings = await prisma.systemSettings.findUnique({
     where: { id: "singleton" },
@@ -39,16 +42,24 @@ export default async function MailSettingsPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
+      {/* ── Breadcrumb ── */}
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-xs text-muted-foreground">
+        <Link href={`/${locale}/settings`} className="hover:text-foreground transition-colors">
+          {t("Settings")}
+        </Link>
+        <ChevronRight className="h-3 w-3" aria-hidden />
+        <span className="text-foreground font-medium">{t("MailSettingsTitle")}</span>
+      </nav>
+
       {/* ── Page header ── */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <Mail className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-            Mail Delivery Settings
+            {t("MailSettingsTitle")}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Choose how AVRA delivers transactional emails. Sensitive credentials are encrypted
-            at rest with AES-256-GCM and never stored in plain text.
+            {t("MailSettingsDesc")}
           </p>
         </div>
         <div className="flex flex-col items-end gap-1 shrink-0">
