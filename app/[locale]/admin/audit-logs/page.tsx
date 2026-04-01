@@ -7,16 +7,23 @@ export const dynamic = "force-dynamic";
 
 type AuditLogsPageProps = {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ category?: string }>;
 };
 
-export default async function AuditLogsPage({ params }: AuditLogsPageProps) {
+export default async function AuditLogsPage({ params, searchParams }: AuditLogsPageProps) {
   const { locale } = await params;
+  const { category } = await searchParams;
   const session = await requirePageRole(["ADMIN", "AUDITOR"], locale);
 
+  const categoryFilter = category && category !== "ALL" ? category : undefined;
+
   const logs = await prisma.auditLog.findMany({
-    where: { companyId: session.companyId ?? undefined },
+    where: {
+      companyId: session.companyId ?? undefined,
+      ...(categoryFilter ? { complianceCategory: categoryFilter } : {}),
+    },
     orderBy: [{ createdAt: "desc" }],
-    take: 100,
+    take: 200,
     select: {
       id: true,
       createdAt: true,
@@ -25,6 +32,15 @@ export default async function AuditLogsPage({ params }: AuditLogsPageProps) {
       entityType: true,
       entityId: true,
       metadata: true,
+      complianceCategory: true,
+      reason: true,
+      requestId: true,
+      previousLogHash: true,
+      eventHash: true,
+      aiModelId: true,
+      aiProviderName: true,
+      inputContextHash: true,
+      hitlVerifiedBy: true,
     },
   });
 
@@ -34,7 +50,6 @@ export default async function AuditLogsPage({ params }: AuditLogsPageProps) {
         ? (entry.metadata as Record<string, unknown>)
         : null;
 
-    // Extract forensic metadata if available
     const forensics = metadata?.forensics;
     const ipAddress =
       (forensics && typeof forensics === "object" && "ipAddress" in forensics
@@ -64,6 +79,16 @@ export default async function AuditLogsPage({ params }: AuditLogsPageProps) {
       ipAddress: typeof ipAddress === "string" ? ipAddress : null,
       userAgent: typeof userAgent === "string" ? userAgent : null,
       metadata,
+      // Compliance fields
+      complianceCategory: entry.complianceCategory ?? "OTHER",
+      reason: entry.reason ?? null,
+      requestId: entry.requestId ?? null,
+      previousLogHash: entry.previousLogHash ?? null,
+      eventHash: entry.eventHash ?? null,
+      aiModelId: entry.aiModelId ?? null,
+      aiProviderName: entry.aiProviderName ?? null,
+      inputContextHash: entry.inputContextHash ?? null,
+      hitlVerifiedBy: entry.hitlVerifiedBy ?? null,
     };
   });
 
@@ -77,13 +102,13 @@ export default async function AuditLogsPage({ params }: AuditLogsPageProps) {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Audit Trail</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Security-grade event history for vendor assessments and administrative actions.
+              Privacy-first forensic event history. NIS2 · DORA · EU AI Act · ISO 27001 · SOC2 · GDPR compliant.
             </p>
           </div>
         </div>
       </header>
 
-      <AuditLogsTable logs={tableRows} />
+      <AuditLogsTable logs={tableRows} activeCategory={categoryFilter ?? "ALL"} isAdmin={session.role === "ADMIN"} />
     </div>
   );
 }

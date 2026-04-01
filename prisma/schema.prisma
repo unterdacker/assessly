@@ -185,10 +185,45 @@ model AuditLog {
   updatedAt  DateTime @updatedAt
   createdBy  String
 
+  // === Privacy-First Forensic Logging: Multi-Framework Compliance ===
+
+  /// SOC2/ISO 27001/BSI: Framework category for compliance filtering.
+  /// Values: AI_ACT | AUTH | CONFIG | NIS2_DORA | ISO27001_SOC2 | BSI_TISAX | OTHER
+  complianceCategory String?
+
+  /// GDPR Art. 5(1)(b) — Purpose limitation: documented intent for sensitive operations.
+  reason     String?
+
+  /// NIS2/DORA: Request correlation ID to join this event with server-side API logs.
+  requestId  String?
+
+  /// NIS2/DORA hash-chain: SHA-256 of the previous log entry's eventHash in this company's chain.
+  /// Enables detection of deleted or reordered records (BSI Grundschutz / DORA Art. 9).
+  previousLogHash String?
+
+  /// NIS2/DORA hash-chain: SHA-256 of this entry's canonical fields for tamper evidence.
+  eventHash  String?
+
+  /// EU AI Act Art. 14: Model identifier (e.g. "mistral-large-latest") for AI traceability.
+  aiModelId  String?
+
+  /// EU AI Act Art. 14: Provider name (e.g. "mistral", "local") for AI traceability.
+  aiProviderName String?
+
+  /// EU AI Act Art. 12: SHA-256 hash of the AI prompt/source document.
+  /// PII is never stored — only the hash, enabling integrity verification without data exposure.
+  inputContextHash String?
+
+  /// EU AI Act Art. 14 (HITL): ID of the human who reviewed and approved the AI output.
+  /// Mandatory for Art. 14 compliance — proves human-in-the-loop oversight.
+  hitlVerifiedBy String?
+
   @@index([companyId])
   @@index([entityType, entityId])
   @@index([userId])
   @@index([timestamp])
+  @@index([complianceCategory])
+  @@index([requestId])
 }
 
 model AssessmentAnswer {
