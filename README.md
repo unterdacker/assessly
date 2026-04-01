@@ -28,7 +28,8 @@ Security officers often manage third-party assessments in fragmented spreadsheet
 - NIS2-aligned questionnaire flow with progress tracking.
 - AI document audit workflow for PDF evidence.
 - Manual answer override with justification and supplemental evidence support.
-- Audit trail-aware architecture and EU-sovereign deployment posture.
+- Privacy-First Forensic Logging: cryptographic hash-chain audit log covering EU AI Act, NIS2/DORA, ISO 27001/SOC2, BSI Grundschutz, and GDPR requirements.
+- Compliance filter and Forensic Bundle export (Admin-only, HMAC-SHA256 signed JSON) in the Audit Logs view.
 
 ### Enterprise & Compliance
 
@@ -36,7 +37,10 @@ AVRA is designed for an enterprise/open-source hybrid operating model, with cont
 
 - Sovereign AI principles: local LLM endpoint support is available for organizations that require strict data residency and processing control.
 - Full auditability: PostgreSQL-backed audit logs provide durable and reviewable change history across internal and external assessment workflows.
-- NIS2 alignment posture: architecture decisions are aimed at traceability, accountability, and supply-chain risk governance.
+- NIS2 / DORA alignment: hash-chain sequencing on every audit log row ensures forensic integrity; no log can be silently deleted from the middle of the chain without detection.
+- EU AI Act (Art. 12 / 14): every AI-assisted action records the model identity, a SHA-256 hash of the input context, and a mandatory Human-in-the-Loop reviewer field.
+- ISO 27001 / SOC2: failed login and MFA events are first-class audit types; configuration changes capture before/after field diffs.
+- GDPR / DSGVO by default: IP addresses are truncated at write time, user IDs are HMAC-pseudonymized in exports, and PII fields are scrubbed from the forensic bundle before delivery to external auditors.
 
 ### Tech Stack
 
@@ -53,6 +57,23 @@ AVRA is designed for an enterprise/open-source hybrid operating model, with cont
 - External vendor routes: isolated access portal and token/code-based assessment pages.
 - Prisma models for companies, vendors, assessments, answers, questions, and audit logs.
 - Message catalogs in `messages/en.json` and `messages/de.json`.
+
+#### Forensic Audit Log Architecture
+
+The `AuditLog` table implements a cryptographic hash-chain and multi-framework compliance tagging:
+
+| Field | Purpose |
+|---|---|
+| `eventHash` | SHA-256 over `(action, actorId, entityId, metadata, timestamp)` — tamper evidence |
+| `previousLogHash` | Hash of the preceding row — chain-break detection (NIS2/DORA) |
+| `complianceCategory` | Auto-tagged framework: `EU_AI_ACT`, `NIS2_DORA`, `ISO_SOC2`, `CONFIG`, `AUTH` |
+| `reason` | Mandatory GDPR purpose-limitation note on sensitive actions |
+| `requestId` | Correlates UI actions with server-side API traces |
+| `aiModelId` / `aiProviderName` | LLM identity for EU AI Act Art. 12 transparency |
+| `inputContextHash` | SHA-256 of the AI prompt — never the raw text |
+| `hitlVerifiedBy` | Human-in-the-Loop reviewer ID (EU AI Act Art. 14) |
+
+The `/api/audit-logs/forensic-bundle` endpoint (Admin-only) exports a company-scoped, HMAC-SHA256 signed JSON bundle with a `chainIntegrity` verification report suitable for BaFin, BSI, or EU AI Office audits.
 
 ### Getting Started (Local Development)
 
@@ -349,6 +370,10 @@ git push origin v0.x.y
 - AVRA is designed for EU-oriented security workflows and NIS2-aligned assessments.
 - Use production-grade secrets management for API keys and cron secrets.
 - For production, prefer managed EU-region databases and hardened deployment settings.
+- Set `AUDIT_SIGNING_SECRET` in production to a high-entropy random string (min. 32 bytes). This key signs the forensic bundle HMAC. Without it, bundles fall back to `dev-secret` and must not be used as legal evidence.
+- The audit log is append-only by design. No application-level delete or update path exists for `AuditLog` rows. Enforce this at the database level with a restrictive role that has `INSERT`/`SELECT` only on the `AuditLog` table.
+- IP truncation and user-ID pseudonymization are applied automatically by `lib/audit-sanitize.ts`. Do not bypass these helpers when writing custom log calls.
+- The forensic bundle endpoint (`GET /api/audit-logs/forensic-bundle`) is restricted to the `ADMIN` role and is company-scoped. It must sit behind your network perimeter or an API gateway in production.
 
 ### Troubleshooting
 
