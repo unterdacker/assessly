@@ -125,47 +125,18 @@ CRON_SECRET="<optional-secret>"
 
 #### 5. Configure Email Delivery (optional for local dev)
 
-AVRA ships with three email delivery strategies controlled by a single environment variable. The default (`log`) prints a formatted simulation to the console, so the app works out of the box without any mail configuration.
+AVRA defaults to **Log mode** out of the box — invite emails are printed to the server console so the app works immediately without any mail configuration.
 
-| `MAIL_STRATEGY` | When to use |
+**Mail is configured through the web console — no `.env` mail variables needed.** Once the app is running, sign in as Admin and go to **Settings → Mail** (`http://localhost:3000/en/settings/mail`). Choose a strategy, enter your credentials, and send a test email — all from the browser. Credentials (SMTP password, Resend API key) are stored encrypted at rest using AES-256-GCM.
+
+| Strategy | When to use |
 |---|---|
-| `log` | Local development — no SMTP or API key needed (default) |
-| `smtp` | Any standard SMTP relay: Gmail, Outlook, Postmark SMTP, private on-prem mail servers |
-| `resend` | Serverless / edge deployments via [Resend](https://resend.com) |
+| **Log** | Local development — no credentials needed (default) |
+| **SMTP** | Any standard SMTP relay: Gmail, Outlook, Postmark, private on-prem servers |
+| **Resend** | Serverless / edge deployments via [Resend](https://resend.com) |
 
-**Option A — Standard SMTP** (works with Gmail, Outlook, Postmark, any SMTP relay):
-
-```bash
-MAIL_STRATEGY="smtp"
-MAIL_FROM="AVRA Compliance <noreply@yourdomain.com>"
-MAIL_COMPANY_NAME="Your Company Name"
-SMTP_HOST="smtp.yourdomain.com"
-SMTP_PORT="587"
-SMTP_USER="noreply@yourdomain.com"
-SMTP_PASSWORD="your_smtp_password"
-```
-
-> For Gmail: enable "App Passwords" in your Google Account, set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`.  
-> For Postmark: use your Postmark SMTP credentials from the Postmark dashboard.
-
-**Option B — Resend API** (recommended for Vercel / serverless):
-
-```bash
-MAIL_STRATEGY="resend"
-MAIL_FROM="AVRA Compliance <noreply@yourdomain.com>"
-MAIL_COMPANY_NAME="Your Company Name"
-RESEND_API_KEY="re_your_api_key_here"
-```
-
-> Get your free API key at [resend.com/api-keys](https://resend.com/api-keys). You must verify your sending domain in the Resend dashboard before production use.
-
-**Option C — Log mode** (default, no config needed):
-
-```bash
-MAIL_STRATEGY="log"
-```
-
-Invite emails are printed to the server console in a formatted block. Useful for local development and demos.
+> For Gmail SMTP: enable "App Passwords" in your Google Account and use host `smtp.gmail.com`, port `587`.  
+> For Resend: get a free API key at [resend.com/api-keys](https://resend.com/api-keys) and verify your sending domain before production use.
 
 **All three strategies share the same template.** Vendor invite emails are rendered in the user's locale (English or German) and include the vendor name, a prominent access code badge, and a direct portal link.
 
@@ -416,6 +387,7 @@ git push origin v0.x.y
 - AVRA is designed for EU-oriented security workflows and NIS2-aligned assessments.
 - Use production-grade secrets management for API keys and cron secrets.
 - For production, prefer managed EU-region databases and hardened deployment settings.
+- Set `SETTINGS_ENCRYPTION_KEY` in production to a 64-character hex string (32 bytes). This key encrypts mail credentials stored via the web console (AES-256-GCM). It cannot be configured through the UI — it must be present before the app starts. Generate one with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. In local dev it can be omitted; a deterministic fallback is used automatically.
 - Set `AUDIT_SIGNING_SECRET` in production to a high-entropy random string (min. 32 bytes). This key signs the forensic bundle HMAC. Without it, bundles fall back to `dev-secret` and must not be used as legal evidence.
 - The audit log is append-only by design. No application-level delete or update path exists for `AuditLog` rows. Enforce this at the database level with a restrictive role that has `INSERT`/`SELECT` only on the `AuditLog` table.
 - IP truncation and user-ID pseudonymization are applied automatically by `lib/audit-sanitize.ts`. Do not bypass these helpers when writing custom log calls.
