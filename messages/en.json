@@ -38,6 +38,8 @@
   "NoVendorData": "No vendor data available yet.",
   "AIAnalysisLive": "AI-backed analysis",
   "AIAnalysisFallback": "Deterministic fallback analysis",
+  "RefreshAISummary": "Refresh AI analysis",
+  "RefreshAISummaryPending": "Refreshing…",
   "ComplianceTrustWidgetTitle": "Compliance trust widget",
   "ComplianceTrustWidgetDesc": "Safety-certificate snapshot proving AVRA AI governance, human oversight, and immutable audit traceability.",
   "AITransparencyMetric": "AI decision transparency",

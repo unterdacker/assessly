@@ -24,6 +24,8 @@
         "/^node -e \"const \\{generateSecret, verify, TOTP\\} = require\\('otplib'\\); const s = generateSecret\\(\\); console\\.log\\('verify sig:', verify\\.toString\\(\\)\\.substring\\(0,80\\)\\); console\\.log\\('TOTP type:', typeof TOTP\\); const t = new TOTP\\(\\); console\\.log\\('TOTP methods:', Object\\.getOwnPropertyNames\\(Object\\.getPrototypeOf\\(t\\)\\)\\)\"$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "npm audit": true,
+        "Out-File": true
     }
 }

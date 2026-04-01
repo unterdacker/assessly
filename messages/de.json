@@ -38,6 +38,8 @@
   "NoVendorData": "Es sind noch keine Anbieterdaten verfügbar.",
   "AIAnalysisLive": "KI-gestützte Analyse",
   "AIAnalysisFallback": "Deterministische Fallback-Analyse",
+  "RefreshAISummary": "KI-Analyse aktualisieren",
+  "RefreshAISummaryPending": "Wird aktualisiert…",
   "ComplianceTrustWidgetTitle": "Compliance Trust Widget",
   "ComplianceTrustWidgetDesc": "Safety-Certificate Snapshot fuer nachvollziehbare KI-Governance, Human Oversight und unveraenderbare Audit-Traceability.",
   "AITransparencyMetric": "KI-Entscheidungstransparenz",

@@ -59,6 +59,8 @@ export default async function DashboardPage() {
     NoVendorData: t("NoVendorData"),
     AIAnalysisLive: t("AIAnalysisLive"),
     AIAnalysisFallback: t("AIAnalysisFallback"),
+    RefreshAISummary: t("RefreshAISummary"),
+    RefreshAISummaryPending: t("RefreshAISummaryPending"),
     categoryLabels: {
       governanceRisk: t("DashboardCategoryGovernanceRisk"),
       accessIdentity: t("DashboardCategoryAccessIdentity"),

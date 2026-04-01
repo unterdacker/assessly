@@ -123,6 +123,52 @@ NEXT_PUBLIC_APP_URL="http://localhost:3000"
 CRON_SECRET="<optional-secret>"
 ```
 
+#### 5. Configure Email Delivery (optional for local dev)
+
+AVRA ships with three email delivery strategies controlled by a single environment variable. The default (`log`) prints a formatted simulation to the console, so the app works out of the box without any mail configuration.
+
+| `MAIL_STRATEGY` | When to use |
+|---|---|
+| `log` | Local development — no SMTP or API key needed (default) |
+| `smtp` | Any standard SMTP relay: Gmail, Outlook, Postmark SMTP, private on-prem mail servers |
+| `resend` | Serverless / edge deployments via [Resend](https://resend.com) |
+
+**Option A — Standard SMTP** (works with Gmail, Outlook, Postmark, any SMTP relay):
+
+```bash
+MAIL_STRATEGY="smtp"
+MAIL_FROM="AVRA Compliance <noreply@yourdomain.com>"
+MAIL_COMPANY_NAME="Your Company Name"
+SMTP_HOST="smtp.yourdomain.com"
+SMTP_PORT="587"
+SMTP_USER="noreply@yourdomain.com"
+SMTP_PASSWORD="your_smtp_password"
+```
+
+> For Gmail: enable "App Passwords" in your Google Account, set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`.  
+> For Postmark: use your Postmark SMTP credentials from the Postmark dashboard.
+
+**Option B — Resend API** (recommended for Vercel / serverless):
+
+```bash
+MAIL_STRATEGY="resend"
+MAIL_FROM="AVRA Compliance <noreply@yourdomain.com>"
+MAIL_COMPANY_NAME="Your Company Name"
+RESEND_API_KEY="re_your_api_key_here"
+```
+
+> Get your free API key at [resend.com/api-keys](https://resend.com/api-keys). You must verify your sending domain in the Resend dashboard before production use.
+
+**Option C — Log mode** (default, no config needed):
+
+```bash
+MAIL_STRATEGY="log"
+```
+
+Invite emails are printed to the server console in a formatted block. Useful for local development and demos.
+
+**All three strategies share the same template.** Vendor invite emails are rendered in the user's locale (English or German) and include the vendor name, a prominent access code badge, and a direct portal link.
+
 #### 5. Start PostgreSQL (Docker)
 
 ```bash
