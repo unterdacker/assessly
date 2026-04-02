@@ -31,11 +31,11 @@ function encodeBase64Url(input: Uint8Array): string {
     .replace(/=+$/g, "");
 }
 
-function decodeBase64Url(input: string): Uint8Array {
+function decodeBase64Url(input: string): ArrayBuffer {
   const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
   const padding = normalized.length % 4 === 0 ? "" : "=".repeat(4 - (normalized.length % 4));
   const binary = atob(`${normalized}${padding}`);
-  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return Uint8Array.from(binary, (char) => char.charCodeAt(0)).buffer as ArrayBuffer;
 }
 
 async function importSigningKey() {

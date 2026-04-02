@@ -43,7 +43,10 @@ export function CategoryComplianceRadarChart({
             tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
           />
           <Tooltip
-            formatter={(value: number) => [`${value}%`, legendLabel]}
+            formatter={(value) => {
+              const num = typeof value === "number" ? value : Number(value ?? 0);
+              return [`${Number.isFinite(num) ? num : 0}%`, legendLabel];
+            }}
             labelFormatter={(_, payload) => payload?.[0]?.payload?.label ?? ""}
             contentStyle={{
               borderRadius: 12,

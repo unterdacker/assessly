@@ -13,6 +13,48 @@ import { AUTH_SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/auth/token";
 
 const handleI18nRouting = createMiddleware(routing);
 
+// ---------------------------------------------------------------------------
+// Security headers applied to every page response
+// ---------------------------------------------------------------------------
+
+const CSP_DIRECTIVES = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "worker-src 'self' blob:",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join("; ");
+
+function applySecurityHeaders(response: NextResponse): NextResponse {
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  // Disable the legacy broken XSS auditor (modern browsers use CSP instead)
+  response.headers.set("X-XSS-Protection", "0");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), payment=()",
+  );
+  response.headers.set("Content-Security-Policy", CSP_DIRECTIVES);
+  if (process.env.NODE_ENV === "production") {
+    response.headers.set(
+      "Strict-Transport-Security",
+      "max-age=63072000; includeSubDomains; preload",
+    );
+  }
+  return response;
+}
+
+// ---------------------------------------------------------------------------
+// Locale helpers
+// ---------------------------------------------------------------------------
+
 function getLocaleFromPathname(pathname: string): string | null {
   const segment = pathname.split("/")[1];
   return hasLocale(routing.locales, segment) ? segment : null;
@@ -29,8 +71,9 @@ function stripLocaleFromPathname(pathname: string): string {
 /**
  * Middleware to enforce the "Vault" rule for AVRA.
  * Ensures that external vendor requests stay isolated within the /external/ route tree.
+ * Security headers are applied to every response via applySecurityHeaders().
  */
-export async function middleware(request: NextRequest) {
+async function _middleware(request: NextRequest): Promise<NextResponse> {
   const localeFromPath = getLocaleFromPathname(request.nextUrl.pathname);
   const normalizedPathname = stripLocaleFromPathname(request.nextUrl.pathname);
 
@@ -66,11 +109,13 @@ export async function middleware(request: NextRequest) {
     const token = parts[parts.length - 1]; // Assume token is the last segment
     
     if (token && token.length > 20) {
-      // Safely set the session cookie in the middleware response
+      // Bootstrap: write the token from the invite URL into a secure HttpOnly cookie.
+      // SameSite=Lax so the cookie is sent when the vendor follows an email link
+      // (top-level navigation) but not on cross-site sub-resource requests.
       response.cookies.set("avra-vendor-token", token, {
         path: "/",
-        maxAge: 60 * 60 * 24, // 24 hours
-        sameSite: "strict",
+        maxAge: 60 * 60 * 24, // Conservative 24-hour cap; refreshed on re-login
+        sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
         httpOnly: true,
       });
@@ -115,6 +160,10 @@ export async function middleware(request: NextRequest) {
   }
 
   return response;
+}
+
+export async function middleware(request: NextRequest): Promise<NextResponse> {
+  return applySecurityHeaders(await _middleware(request));
 }
 
 // See "Matching Paths" below to learn more

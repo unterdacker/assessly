@@ -1,6 +1,7 @@
 import { Mistral } from "@mistralai/mistralai";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { decrypt } from "@/lib/crypto";
 import { logAuditEvent } from "@/lib/audit-log";
 import enMessages from "@/messages/en.json";
 import deMessages from "@/messages/de.json";
@@ -368,7 +369,11 @@ async function generateRemediationDraft(args: {
   const localeSystemPrompt = `You are a Senior GRC Officer for AVRA. The current user interface is set to ${args.locale}. You MUST generate the remediation plan and the email draft entirely in ${localeLabel}. Ensure NIS2 terminology is professionally translated.`;
 
   if (provider === "mistral") {
-    const apiKey = (process.env.MISTRAL_API_KEY || config.mistralApiKey || "").trim();
+    let dbApiKey = "";
+    if (config.mistralApiKey) {
+      try { dbApiKey = decrypt(config.mistralApiKey); } catch { dbApiKey = ""; }
+    }
+    const apiKey = (process.env.MISTRAL_API_KEY || dbApiKey).trim();
     if (!apiKey) {
       throw new Error("Mistral API key not configured.");
     }

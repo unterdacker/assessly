@@ -45,6 +45,13 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
 
   const isLocal = company?.aiProvider === "local";
 
+  // Never send the encrypted key value to the browser — pass null so the form
+  // shows an empty password field.  The action preserves the existing encrypted
+  // key when the field is left blank (see update-settings.ts).
+  const companyForForm = company
+    ? { ...company, mistralApiKey: company.mistralApiKey ? "" : null }
+    : null;
+
   const aiTranslations = {
     AIProviderConfiguration: t("AIProviderConfiguration"),
     SelectAIProvider: t("SelectAIProvider"),
@@ -68,8 +75,8 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
       </div>
 
       <div className="grid gap-6">
-        {isAdmin && company && (
-          <AiSettingsForm company={company} companyId={company.id} translations={aiTranslations} />
+        {isAdmin && companyForForm && (
+          <AiSettingsForm company={companyForForm} companyId={companyForForm.id} translations={aiTranslations} />
         )}
 
         {isAdmin && company && (

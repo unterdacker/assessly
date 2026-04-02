@@ -2,7 +2,41 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { encrypt } from "@/lib/crypto";
 import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
+
+// ---------------------------------------------------------------------------
+// SSRF block-list: deny well-known cloud metadata and link-local endpoints.
+// This is a defence-in-depth measure — the admin is trusted, but we prevent
+// accidental or supply-chain-injected SSRF vectors.
+// ---------------------------------------------------------------------------
+const SSRF_BLOCKLIST = new Set([
+  "169.254.169.254",       // AWS / Azure / GCP instance metadata
+  "169.254.170.2",         // AWS ECS credentials
+  "fd00:ec2::254",         // AWS IPv6 metadata
+  "metadata.google.internal",
+  "metadata.goog",
+]);
+
+function validateLocalAiEndpoint(raw: string): { ok: true; url: URL } | { ok: false; error: string } {
+  let parsed: URL;
+  try {
+    parsed = new URL(raw.trim());
+  } catch {
+    return { ok: false, error: "Local AI endpoint must be a valid URL (e.g. http://localhost:11434)." };
+  }
+
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    return { ok: false, error: "Local AI endpoint must use the http or https scheme." };
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  if (SSRF_BLOCKLIST.has(hostname)) {
+    return { ok: false, error: "That Local AI endpoint address is not permitted." };
+  }
+
+  return { ok: true, url: parsed };
+}
 
 export async function updateAiSettings(
   _prevState: unknown,
@@ -28,11 +62,35 @@ export async function updateAiSettings(
   }
 
   if (aiProvider === "mistral" && !mistralApiKey?.trim()) {
-    return { ok: false, error: "Mistral API Key is required when using Mistral provider." };
+    // Allow empty submission so the form can be saved without re-providing an
+    // already-stored key. The existing encrypted value will be preserved below.
   }
 
   if (aiProvider === "local" && !localAiEndpoint?.trim()) {
     return { ok: false, error: "Local AI Endpoint is required when using Local provider." };
+  }
+
+  // F-21: validate localAiEndpoint to prevent SSRF attacks
+  if (aiProvider === "local" && localAiEndpoint?.trim()) {
+    const validation = validateLocalAiEndpoint(localAiEndpoint);
+    if (!validation.ok) {
+      return { ok: false, error: validation.error };
+    }
+  }
+
+  // F-20: encrypt the Mistral API key before persisting so a DB dump does not
+  // expose the credential in plaintext. The key is decrypted at call-time only.
+  // If the submitted key is blank, preserve the existing encrypted value in the DB.
+  let encryptedMistralApiKey: string | null | undefined = undefined; // undefined = no change
+  if (aiProvider === "mistral") {
+    if (mistralApiKey?.trim()) {
+      try {
+        encryptedMistralApiKey = encrypt(mistralApiKey.trim());
+      } catch {
+        return { ok: false, error: "Failed to encrypt the Mistral API key. Check SETTINGS_ENCRYPTION_KEY." };
+      }
+    }
+    // else: user left the field blank — keep the existing stored key (undefined means Prisma skips the field)
   }
 
   try {
@@ -40,7 +98,11 @@ export async function updateAiSettings(
       where: { id: companyId },
       data: {
         aiProvider,
-        mistralApiKey: aiProvider === "mistral" ? mistralApiKey : null,
+        ...(aiProvider === "mistral"
+          ? encryptedMistralApiKey !== undefined
+            ? { mistralApiKey: encryptedMistralApiKey }
+            : {}
+          : { mistralApiKey: null }),
         localAiEndpoint: aiProvider === "local" ? localAiEndpoint : null,
         localAiModel: aiProvider === "local" ? (localAiModel?.trim() || null) : null,
       },

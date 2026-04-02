@@ -77,8 +77,12 @@ export function AiSettingsForm({ company, companyId, translations }: { company: 
                 id="mistralApiKey"
                 name="mistralApiKey"
                 type="password"
-                placeholder={translations.EnterMistralAPIKey}
-                defaultValue={company.mistralApiKey || ""}
+                placeholder={
+                  company.mistralApiKey === ""
+                    ? translations.KeyAlreadyConfigured ?? "Leave blank to keep the existing key"
+                    : translations.EnterMistralAPIKey
+                }
+                defaultValue=""
               />
             </div>
           )}

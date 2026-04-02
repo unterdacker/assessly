@@ -16,7 +16,7 @@ export async function GET(
   const session = await getAuthSessionFromRequest(req);
 
   if (vendorToken) {
-    const tokenOwner = await (prisma.vendor as any).findFirst({
+    const tokenOwner = await prisma.vendor.findFirst({
       where: {
         inviteToken: vendorToken,
         inviteTokenExpires: { gt: new Date() },

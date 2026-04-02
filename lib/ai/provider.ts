@@ -2,6 +2,7 @@ import { Mistral } from '@mistralai/mistralai';
 import { buildNis2DocumentAnalysisSystemPrompt, buildNis2DocumentAnalysisUserPayload } from "../nis2-document-analysis-prompt";
 import type { Nis2QuestionAnalysis } from "../nis2-question-analysis";
 import { prisma } from "../prisma";
+import { decrypt } from "../crypto";
 
 function logMistralError(error: unknown) {
   if (error instanceof Error) {
@@ -214,7 +215,11 @@ export async function runNis2AnalysisWithTrace(
   ].join("\n");
 
   if (provider === "mistral") {
-    const cleanKey = (process.env.MISTRAL_API_KEY || config.mistralApiKey)?.trim();
+    let dbMistralKey: string | null = null;
+    if (config.mistralApiKey) {
+      try { dbMistralKey = decrypt(config.mistralApiKey); } catch { dbMistralKey = null; }
+    }
+    const cleanKey = (process.env.MISTRAL_API_KEY || dbMistralKey)?.trim();
     if (!cleanKey) {
       throw new Error("Mistral API key not found in environment or database for this workspace.");
     }

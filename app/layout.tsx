@@ -5,6 +5,10 @@ import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { Providers } from "./providers";
 import { getOptionalAuthSession } from "@/lib/auth/server";
+// Triggers Zod validation of all environment variables at server startup.
+// In production the process will throw here (before serving any request) if
+// any required variable is absent, too short, or set to a placeholder value.
+import "@/lib/env";
 
 /**
  * Root metadata: self-hosted fonts (no Google Fonts CDN), conservative referrer,

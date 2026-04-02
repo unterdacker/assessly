@@ -201,107 +201,188 @@ async function extractHeadersForForensics(): Promise<{
  *
  * Privacy: Only opaque IDs and hashes are written. No email addresses, no
  * full IPs (last octet truncated), no free-text prompt content.
+ *
+ * ── Hash-chain atomicity guarantee ───────────────────────────────────────────
+ *
+ * SECURITY INVARIANT: A log entry MUST NEVER be persisted without being
+ * linked to the correct SHA-256 hash of the previous entry in the company's
+ * chain. Violating this invariant would allow an attacker (or a bug) to
+ * silently insert rows mid-chain without detection.
+ *
+ * Enforcement mechanism (see `writeChainEntry` below):
+ *   1. A PostgreSQL advisory lock (pg_advisory_xact_lock) is acquired at the
+ *      start of the transaction, keyed on (ADVISORY_LOCK_NAMESPACE, companyId).
+ *      This serialises all concurrent chain writes for the same company — no
+ *      two callers can race through findFirst + create simultaneously.
+ *   2. The SELECT of the previous eventHash and the INSERT of the new row
+ *      execute inside the SAME database transaction, so no other writer can
+ *      sneak in a row between them.
+ *   3. The advisory lock is transaction-scoped: PostgreSQL releases it
+ *      automatically on commit or rollback, with no manual UNLOCK step.
+ *
+ * Auditor note: To verify the chain, walk the AuditLog table for a company
+ * ordered by `createdAt ASC`.  For each row, recompute `eventHash` from the
+ * seven canonical fields (see computeEventHash in audit-sanitize.ts) and
+ * confirm it matches `previousLogHash` in the next row.
  */
+
+// ---------------------------------------------------------------------------
+// Advisory lock namespace
+// ---------------------------------------------------------------------------
+
+/**
+ * Application-specific namespace integer for pg_advisory_xact_lock.
+ *
+ * PostgreSQL advisory locks take either one bigint key or two int4 keys.
+ * Using the two-argument form (namespace, derived key) avoids collisions with
+ * advisory locks used by other subsystems in the same database.
+ *
+ * 7769 was chosen arbitrarily for AVRA; document it here so operators can
+ * identify it in pg_locks:
+ *   SELECT pid, granted, classid, objid
+ *   FROM pg_locks WHERE locktype = 'advisory' AND classid = 7769;
+ */
+const ADVISORY_LOCK_NAMESPACE = 7769;
+
 export async function logAuditEvent(
   input: LogAuditEventInput,
   options: LogAuditEventOptions = {},
-) {
-  const client = options.tx ?? prisma;
+): Promise<unknown> {
+  // ── Pre-flight: work that can safely run before the transaction ─────────────
 
-  // --- GDPR: Truncate IP to remove personal-data status (Recital 30) ---
+  // GDPR Recital 30: Truncate IP so it no longer qualifies as personal data.
   let ipAddress = truncateIp(input.ipAddress) ?? null;
   let userAgent = input.userAgent ?? null;
 
   if (options.captureHeaders) {
     const hdrs = await extractHeadersForForensics();
-    ipAddress = ipAddress || truncateIp(hdrs.ipAddress);
-    userAgent = userAgent || hdrs.userAgent;
+    // Only overwrite if the caller did not supply values directly.
+    ipAddress = ipAddress ?? truncateIp(hdrs.ipAddress);
+    userAgent = userAgent ?? hdrs.userAgent;
   }
 
-  // --- Compute field-level diff ---
+  // Compute the structural diff outside the transaction — pure CPU work.
   const diff = computeFieldDiff(input.previousValue, input.newValue);
-
-  // --- Auto-tag compliance category ---
+  // Auto-derive compliance category from the action name.
   const complianceCategory = deriveComplianceCategory(input.action);
-
-  // --- NIS2/DORA hash-chain: fetch previous log hash ---
-  let previousLogHash: string | null = null;
-  try {
-    const lastLog = await prisma.auditLog.findFirst({
-      where: { companyId: input.companyId },
-      orderBy: { createdAt: "desc" },
-      select: { eventHash: true, id: true },
-    });
-    if (lastLog) {
-      // Use eventHash if available (new logs), fall back to id for pre-chain logs
-      previousLogHash = lastLog.eventHash ?? lastLog.id;
-    }
-  } catch {
-    // Hash-chain fetch failure must not block the audit write
-  }
-
+  // Fix the timestamp before the transaction; all derived values use this.
   const timestamp = input.timestamp ?? new Date();
 
-  // --- EU AI Act / NIS2: Compute canonical event hash ---
-  const eventHash = computeEventHash({
-    companyId: input.companyId,
-    userId: input.userId,
-    action: input.action,
-    entityType: input.entityType,
-    entityId: input.entityId,
-    timestamp: timestamp.toISOString(),
-    previousLogHash,
-  });
-
-  const forensicsObj: Record<string, unknown> = {
-    capturedAt: new Date().toISOString(),
-  };
+  const forensicsObj: Record<string, unknown> = { capturedAt: new Date().toISOString() };
   if (ipAddress) forensicsObj.ipAddress = ipAddress;
   if (userAgent) forensicsObj.userAgent = userAgent;
 
-  const data = {
-    companyId: input.companyId,
-    userId: input.userId,
-    action: input.action,
-    entityType: input.entityType,
-    entityId: input.entityId,
-    previousValue: diff.previous ?? null,
-    newValue: diff.current ?? null,
-    timestamp,
-    actorId: input.userId,
-    metadata: {
+  // ── Atomic hash-chain write ─────────────────────────────────────────────────
+  //
+  // writeChainEntry encapsulates the three-step atomic operation that enforces
+  // the hash-chain invariant.  It MUST be called inside a database transaction.
+  //
+  // Step 1 — Advisory lock: prevents concurrent chain writers for this company.
+  // Step 2 — Read previous hash: reads the chain tail *inside* the locked tx.
+  // Step 3 — Compute + insert: hashes the new entry and writes it atomically.
+  const writeChainEntry = async (tx: Prisma.TransactionClient): Promise<unknown> => {
+    // ── Step 1: Serialise concurrent chain writes via an advisory lock ──────
+    //
+    // pg_advisory_xact_lock(ns int4, key int4) blocks until the lock is free.
+    // hashtext(text) → int32: derives a deterministic key from the companyId.
+    // The lock is automatically released when the surrounding transaction ends.
+    //
+    // Auditor note: While this lock is held, no other session can write an
+    // audit row for the same company.  This guarantees that the SELECT in
+    // Step 2 returns the true chain tail at the moment of INSERT.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(${ADVISORY_LOCK_NAMESPACE}, hashtext(${input.companyId}))`;
+
+    // ── Step 2: Read the chain tail inside the locked transaction ───────────
+    //
+    // Because the advisory lock is held, no concurrent writer can insert a
+    // new row between this SELECT and the INSERT below.
+    //
+    // We select only `eventHash` and deliberately ignore `id`.  The CUID `id`
+    // is NOT a hash and MUST NOT be used as previousLogHash — doing so would
+    // break the chain's mathematical verification property.
+    const lastLog = await tx.auditLog.findFirst({
+      where: { companyId: input.companyId },
+      orderBy: { createdAt: "desc" },
+      select: { eventHash: true },
+    });
+
+    // If the most recent row has a null eventHash (written before hash-chain
+    // support was added), we start a fresh chain segment from this entry.
+    // This is explicitly documented in previousLogHash as null (= GENESIS).
+    // The pre-chain rows remain accessible by their own fields; the chain
+    // audit simply begins from the first row that carries an eventHash.
+    const previousLogHash: string | null = lastLog?.eventHash ?? null;
+
+    // ── Step 3: Compute the canonical event hash and insert the row ─────────
+    //
+    // computeEventHash will throw if any field contains the separator character,
+    // ensuring the canonical form is always unambiguous.
+    const eventHash = computeEventHash({
+      companyId: input.companyId,
+      userId: input.userId,
+      action: input.action,
+      entityType: input.entityType,
+      entityId: input.entityId,
+      timestamp: timestamp.toISOString(),
+      previousLogHash,
+    });
+
+    const data = {
+      companyId: input.companyId,
+      userId: input.userId,
+      action: input.action,
+      entityType: input.entityType,
+      entityId: input.entityId,
       previousValue: diff.previous ?? null,
       newValue: diff.current ?? null,
-      ...(ipAddress !== null ? { ipAddress } : {}),
-      ...(userAgent !== null ? { userAgent } : {}),
-      forensics: forensicsObj,
-    } as Record<string, unknown>,
-    createdBy: input.userId,
-    // --- Compliance fields ---
-    complianceCategory,
-    reason: input.reason ?? null,
-    requestId: input.requestId ?? null,
-    previousLogHash,
-    eventHash,
-    aiModelId: input.aiModelId ?? null,
-    aiProviderName: input.aiProviderName ?? null,
-    inputContextHash: input.inputContextHash ?? null,
-    hitlVerifiedBy: input.hitlVerifiedBy ?? null,
-  } as Record<string, unknown>;
+      timestamp,
+      actorId: input.userId,
+      metadata: {
+        previousValue: diff.previous ?? null,
+        newValue: diff.current ?? null,
+        ...(ipAddress !== null ? { ipAddress } : {}),
+        ...(userAgent !== null ? { userAgent } : {}),
+        forensics: forensicsObj,
+      } as Record<string, unknown>,
+      createdBy: input.userId,
+      // --- Compliance fields ---
+      complianceCategory,
+      reason: input.reason ?? null,
+      requestId: input.requestId ?? null,
+      previousLogHash,
+      eventHash,
+      aiModelId: input.aiModelId ?? null,
+      aiProviderName: input.aiProviderName ?? null,
+      inputContextHash: input.inputContextHash ?? null,
+      hitlVerifiedBy: input.hitlVerifiedBy ?? null,
+    } as Record<string, unknown>;
 
-  // Validate JSON serializability before attempting database write
-  try {
-    JSON.stringify(data);
-  } catch (jsonErr) {
-    console.error("[logAuditEvent] JSON serialization failed for audit payload:", jsonErr);
-    console.error("[logAuditEvent] Input:", input);
-    return;
-  }
+    // Validate JSON serializability before the write.
+    // A non-serializable payload would cause an opaque database error later;
+    // throwing here surfaces a clear error message with the offending input.
+    try {
+      JSON.stringify(data);
+    } catch (jsonErr) {
+      throw new Error(
+        `[logAuditEvent] Audit payload is not JSON-serializable: ${jsonErr}. Input action: ${input.action}`,
+      );
+    }
 
-  try {
-    return (client.auditLog as any).create({ data });
-  } catch (err) {
-    console.error("[logAuditEvent] Audit event creation failed:", err);
-    throw err;
+    return (tx.auditLog as any).create({ data });
+  };
+
+  // ── Execute in the caller's transaction or a new one ───────────────────────
+  //
+  // If options.tx is provided, the caller already owns a transaction and is
+  // responsible for its commit/rollback.  We participate by acquiring the
+  // advisory lock within that transaction, so the chain invariant holds for
+  // the entire caller-managed unit of work.
+  //
+  // If no transaction is provided, we open a dedicated one.  The default
+  // isolation level (Read Committed) is sufficient because the advisory lock
+  // provides the necessary serialisation guarantee.
+  if (options.tx) {
+    return writeChainEntry(options.tx);
   }
+  return prisma.$transaction(writeChainEntry);
 }

@@ -84,7 +84,7 @@ export async function persistEvidencePdf(
   }
   await fs.writeFile(resolved, buffer);
   // Create Document audit record and update Assessment with the serving URL
-  await (prisma as any).document.create({
+  await prisma.document.create({
     data: {
       assessmentId,
       filename: originalFilename,
@@ -204,8 +204,8 @@ export async function analyzeDocument(
       where: { assessmentId: assessment.id, questionId: res.questionId }
     });
 
-    const data: any = {
-      status: aiCalculatedStatus, 
+    const aiWriteFields = {
+      status: aiCalculatedStatus,
       isAiSuggested: true,
       verified: false,
       aiSuggestedStatus: aiCalculatedStatus,
@@ -214,42 +214,42 @@ export async function analyzeDocument(
       aiConfidence: 0.95,
       findings: res.reasoning,
       evidenceSnippet: res.evidenceSnippet,
-      createdBy: "ai-analysis-system"
+      createdBy: "ai-analysis-system",
     };
 
     try {
       if (existing) {
-        const { id, ...updateData } = data;
         await prisma.assessmentAnswer.update({
           where: { id: existing.id },
-          data: updateData
+          data: aiWriteFields,
         });
       } else {
         await prisma.assessmentAnswer.create({
           data: {
             assessmentId: assessment.id,
             questionId: res.questionId,
-            ...data
-          }
+            ...aiWriteFields,
+          },
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const prismaErr = error as { message?: string; code?: string };
       console.error(`[Prisma Error] Failed updating question ${res.questionId}:`, {
-        message: error.message,
-        code: error.code,
-        dataSent: data
+        message: prismaErr.message,
+        code: prismaErr.code,
+        dataSent: aiWriteFields,
       });
       
       try {
-        const fallbackData = { 
-          status: "PENDING", 
+        const fallbackData = {
+          status: "PENDING",
           findings: res.reasoning,
-          evidenceSnippet: res.evidenceSnippet 
+          evidenceSnippet: res.evidenceSnippet,
         };
         if (existing) {
           await prisma.assessmentAnswer.update({
             where: { id: existing.id },
-            data: fallbackData
+            data: fallbackData,
           });
         }
       } catch (fallbackError) {

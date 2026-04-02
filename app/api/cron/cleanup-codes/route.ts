@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 
 function isAuthorized(request: NextRequest): boolean {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return true;
+  // Deny all requests when CRON_SECRET is not configured — fail closed, never open.
+  if (!secret) return false;
 
   const bearer = request.headers.get("authorization");
   return bearer === `Bearer ${secret}`;
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const [pendingResult, securedResult, stalePendingResult] = await prisma.$transaction([
-      (prisma.vendor as any).updateMany({
+      prisma.vendor.updateMany({
         where: {
           isCodeActive: true,
           codeExpiresAt: { lt: now },
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
           passwordHash: null,
         },
       }),
-      (prisma.vendor as any).updateMany({
+      prisma.vendor.updateMany({
         where: {
           isCodeActive: true,
           codeExpiresAt: { lt: now },
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
           isCodeActive: false,
         },
       }),
-      (prisma.vendor as any).updateMany({
+      prisma.vendor.updateMany({
         where: {
           isCodeActive: false,
           isFirstLogin: true,
