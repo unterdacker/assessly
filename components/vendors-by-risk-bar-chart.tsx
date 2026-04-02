@@ -52,11 +52,11 @@ export function VendorsByRiskBarChart({
             tickLine={{ stroke: "hsl(var(--border))" }}
           />
           <Tooltip
-            formatter={(value: number | string, _name, item) => {
+            formatter={(value: number | string | (string | number)[] | undefined, _name, item) => {
               const payloadCount = item?.payload?.count;
               const normalizedCount = Number.isFinite(Number(payloadCount))
                 ? Number(payloadCount)
-                : Number(value);
+                : Number.isFinite(Number(value)) ? Number(value) : 0;
               return [normalizedCount, legendLabel];
             }}
             contentStyle={{

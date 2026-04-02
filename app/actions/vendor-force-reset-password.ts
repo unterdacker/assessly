@@ -40,7 +40,7 @@ export async function forceResetVendorPasswordAction(
   }
 
   try {
-    const vendor = await (prisma.vendor as any).findFirst({
+    const vendor = await prisma.vendor.findFirst({
       where: { id: vendorId, isCodeActive: true },
       select: { id: true },
     });
@@ -51,7 +51,7 @@ export async function forceResetVendorPasswordAction(
 
     const passwordHash = await bcrypt.hash(newPassword, 12);
 
-    await (prisma.vendor as any).update({
+    await prisma.vendor.update({
       where: { id: vendor.id },
       data: {
         passwordHash,

@@ -1,5 +1,6 @@
 import { Mistral } from "@mistralai/mistralai";
 import { prisma } from "@/lib/prisma";
+import { decrypt } from "@/lib/crypto";
 import {
   DASHBOARD_CATEGORY_ORDER,
   type DashboardCategoryKey,
@@ -280,7 +281,11 @@ async function runProviderPrompt(args: {
   const provider = (process.env.AI_PROVIDER || config.aiProvider || "mistral").toLowerCase();
 
   if (provider === "mistral") {
-    const apiKey = (process.env.MISTRAL_API_KEY || config.mistralApiKey || "").trim();
+    let dbApiKey = "";
+    if (config.mistralApiKey) {
+      try { dbApiKey = decrypt(config.mistralApiKey); } catch { dbApiKey = ""; }
+    }
+    const apiKey = (process.env.MISTRAL_API_KEY || dbApiKey).trim();
     if (!apiKey) {
       throw new Error("Mistral API key not configured.");
     }

@@ -4,11 +4,14 @@ import fs from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
 import sanitizeHtml from "sanitize-html";
+import { cookies, headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { logAuditEvent } from "@/lib/audit-log";
 
 const MAX_EVIDENCE_SIZE_BYTES = 10 * 1024 * 1024;
+/** Grace period keeps sessions alive through brief clock skew at the boundary. */
+const EXPIRY_GRACE_PERIOD_MS = 2 * 60 * 1000;
 const ALLOWED_EVIDENCE_MIME_TYPES = new Set([
   "application/pdf",
   "image/jpeg",
@@ -104,9 +107,63 @@ async function createEvidenceDocument(
 
 /**
  * Explicit save endpoint for one external vendor answer.
- * Enforces server-side sanitization and secure evidence upload controls.
+ * Enforces server-side token authentication, sanitization, and secure evidence upload controls.
  */
 export async function updateExternalAnswer(formData: FormData) {
+  // ── CSRF: verify Origin header ────────────────────────────────────────────
+  // Defense-in-depth on top of SameSite=Lax. If the browser sends an Origin
+  // header (all modern browsers do on cross-origin POST/form submissions) it
+  // must match the application's own origin.  A mismatch means the request
+  // originated from a foreign site and is rejected immediately, before any
+  // cookie reading or database access.
+  const headerStore = await headers();
+  const requestOrigin = headerStore.get("origin");
+  if (requestOrigin) {
+    // Build the canonical expected origin from NEXT_PUBLIC_APP_URL, falling
+    // back to constructing it from the Host header.
+    const rawAppUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/+$/, "");
+    let expectedOrigin: string | undefined;
+    try {
+      if (rawAppUrl) expectedOrigin = new URL(rawAppUrl).origin;
+    } catch { /* ignore misconfigured URL — fall through to Host */ }
+    if (!expectedOrigin) {
+      const host = headerStore.get("host");
+      const proto = process.env.NODE_ENV === "production" ? "https" : "http";
+      if (host) expectedOrigin = `${proto}://${host}`;
+    }
+    if (expectedOrigin && requestOrigin !== expectedOrigin) {
+      return { ok: false, error: "Request rejected: cross-origin submission is not allowed." };
+    }
+  }
+
+  // ── Authentication: validate vendor portal token ──────────────────────────
+  const cookieStore = await cookies();
+  const vendorToken = cookieStore.get("avra-vendor-token")?.value;
+  if (!vendorToken) {
+    return { ok: false, error: "Session expired. Please reload the portal." };
+  }
+
+  const tokenVendor = await (prisma.vendor as any).findFirst({
+    where: { inviteToken: vendorToken, isCodeActive: true },
+    select: {
+      id: true,
+      inviteTokenExpires: true,
+      codeExpiresAt: true,
+      assessment: { select: { id: true } },
+    },
+  });
+
+  if (!tokenVendor || !tokenVendor.assessment) {
+    return { ok: false, error: "Invalid or expired portal session." };
+  }
+
+  const sessionDeadline: Date | null =
+    tokenVendor.inviteTokenExpires ?? tokenVendor.codeExpiresAt ?? null;
+  if (sessionDeadline && Date.now() > sessionDeadline.getTime() + EXPIRY_GRACE_PERIOD_MS) {
+    return { ok: false, error: "Portal session has expired." };
+  }
+
+  // ── Input parsing ─────────────────────────────────────────────────────────
   const assessmentId = String(formData.get("assessmentId") || "").trim();
   const questionId = String(formData.get("questionId") || "").trim();
   const status = String(formData.get("status") || "").trim() as
@@ -119,6 +176,11 @@ export async function updateExternalAnswer(formData: FormData) {
 
   if (!assessmentId || !questionId) {
     throw new Error("Missing identification for answer update.");
+  }
+
+  // Cross-check: the submitted assessmentId must belong to the authenticated vendor
+  if (tokenVendor.assessment.id !== assessmentId) {
+    return { ok: false, error: "Unauthorized." };
   }
 
   if (!["COMPLIANT", "NON_COMPLIANT", "NOT_APPLICABLE"].includes(status)) {

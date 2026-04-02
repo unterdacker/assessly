@@ -3,7 +3,7 @@ import { toVendorAssessment } from "@/lib/prisma-mappers";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
 import type { AssessmentAnswer } from "@prisma/client";
 import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance";
-import { DEFAULT_COMPANY_SLUG, ensureDemoData } from "@/lib/ensure-demo-data";
+import { ensureDemoData } from "@/lib/ensure-demo-data";
 import { requireInternalReadUser } from "@/lib/auth/server";
 
 async function cleanupExpiredVendorCodes(where?: { companyId?: string; vendorId?: string }) {
@@ -92,7 +92,7 @@ export async function listVendorAssessments(): Promise<VendorAssessment[]> {
         (a) => a.status === "COMPLIANT" || a.status === "NON_COMPLIANT"
       ).length;
 
-      const { vendor, answers, ...assessmentFields } = r;
+      const { vendor, answers: _, ...assessmentFields } = r;
       return toVendorAssessment(
         vendor,
         { ...assessmentFields, complianceScore: score, riskLevel },

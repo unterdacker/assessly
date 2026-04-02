@@ -14,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 const groupedByCategory = groupQuestionsByCategory(nis2Questions);
-const categoryKeys = Object.keys(groupedByCategory);
 
 export type VendorAssessmentQuestionnairePanelProps = {
   answers: AssessmentAnswer[];

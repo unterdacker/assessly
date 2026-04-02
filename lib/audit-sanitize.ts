@@ -87,12 +87,95 @@ export function hashContent(content: string): string {
   return createHash("sha256").update(content, "utf8").digest("hex");
 }
 
+// ---------------------------------------------------------------------------
+// Forensic Hash-Chain — canonical event hash
+// NIS2 Art. 21 / DORA Art. 9 / BSI Grundschutz OPS.1.1.5
+// ---------------------------------------------------------------------------
+
+/**
+ * The separator character used to delimit fields in the canonical event string.
+ *
+ * INVARIANT: No field value in the canonical form may contain this character.
+ * All of the fields passed to computeEventHash are either:
+ *   - Database auto-generated IDs (CUID / UUID  — no pipe character)
+ *   - Fixed enum values defined in AuditAction   — no pipe character
+ *   - ISO-8601 timestamps                        — no pipe character
+ *   - The sentinel literal "GENESIS"             — no pipe character
+ *   - A previous eventHash (hex string)          — no pipe character
+ *
+ * If a caller ever supplies a value containing this separator, computeEventHash
+ * raises an Error rather than silently producing an ambiguous hash.
+ */
+const CANONICAL_SEPARATOR = "|";
+
+/**
+ * Throws if any string in `values` contains the canonical separator.
+ * Called at the start of computeEventHash to enforce the collision-free
+ * invariant before hashing.
+ *
+ * Auditor note: This guard turns a theoretical ambiguity into a hard failure.
+ * If you encounter this error, a field value was supplied that could allow
+ * two distinct inputs to map to the same canonical string — which would break
+ * the chain's integrity property.
+ */
+function assertNoPipeInFields(values: string[]): void {
+  for (const v of values) {
+    if (v.includes(CANONICAL_SEPARATOR)) {
+      throw new Error(
+        `[computeEventHash] Field value contains the canonical separator '${CANONICAL_SEPARATOR}': "${v}". ` +
+          "The canonical form would be ambiguous. Use opaque IDs and fixed enum values only.",
+      );
+    }
+  }
+}
+
 /**
  * Computes the canonical event hash for a single audit log entry.
- * This is used to build and verify the NIS2/DORA hash-chain.
  *
- * The canonical form includes all immutable fields (no `updatedAt`).
- * Re-computing this from the stored fields lets auditors verify integrity.
+ * ── Hash-chain construction (NIS2/DORA tamper evidence) ──────────────────────
+ *
+ * Each audit log row stores two hash fields:
+ *   • previousLogHash — SHA-256 of the PREVIOUS row's eventHash in the same
+ *                       company's chain, or null for the first row (GENESIS).
+ *   • eventHash       — SHA-256 of this row's own canonical string (see below).
+ *
+ * The chain forms a singly-linked list where each node commits to the identity
+ * of the node before it.  Deleting or reordering any row breaks all subsequent
+ * hashes, making tampering immediately detectable during a chain walk.
+ *
+ * ── Canonical string format ──────────────────────────────────────────────────
+ *
+ *   companyId | userId | action | entityType | entityId | timestamp | previousLogHash
+ *
+ * Fields are joined with the pipe character (U+007C).
+ * All fields must be pipe-free (see assertNoPipeInFields above).
+ * The timestamp MUST be an ISO-8601 string in UTC (e.g. "2026-04-01T10:00:00.000Z").
+ * When there is no previous entry, the literal string "GENESIS" is used.
+ *
+ * ── Auditor verification steps ───────────────────────────────────────────────
+ *
+ *   1. Read the chain rows for a company ordered by `createdAt ASC`.
+ *   2. For the first row: verify that `previousLogHash` is NULL in the database.
+ *   3. For the first row: reconstruct canonicalStr with "GENESIS" in position 7,
+ *      run SHA-256, compare to stored `eventHash`.
+ *   4. For every subsequent row N: verify that `previousLogHash` equals the
+ *      `eventHash` of row N-1.
+ *   5. Reconstruct canonicalStr using the stored field values and run SHA-256;
+ *      compare to stored `eventHash`.
+ *   6. Any mismatch indicates a deleted, inserted, or modified row.
+ *
+ * ── Algorithm ────────────────────────────────────────────────────────────────
+ *
+ *   canonicalStr = join(fields, "|")
+ *   eventHash    = hex(SHA-256(UTF-8(canonicalStr)))
+ *
+ * SHA-256 is used per NIST FIPS 180-4.  Output is lowercase hex (64 chars).
+ * The Node.js `crypto.createHash("sha256")` implementation is the native
+ * OpenSSL binding — no JavaScript loop, maximum throughput.
+ *
+ * The canonical form includes only immutable fields (`updatedAt` is excluded).
+ * Re-computing this from the stored fields lets auditors verify integrity
+ * without accessing any secret key.
  */
 export function computeEventHash(fields: {
   companyId: string;
@@ -100,10 +183,16 @@ export function computeEventHash(fields: {
   action: string;
   entityType: string;
   entityId: string;
-  timestamp: string; // ISO-8601
+  /** Must be a UTC ISO-8601 string, e.g. "2026-04-01T10:00:00.000Z". */
+  timestamp: string;
+  /**
+   * SHA-256 hex of the previous row's eventHash, or null for the first entry.
+   * The sentinel literal "GENESIS" is substituted when this is null.
+   */
   previousLogHash: string | null;
 }): string {
-  const canonical = [
+  // The seven canonical fields — order is fixed and part of the specification.
+  const fieldValues = [
     fields.companyId,
     fields.userId,
     fields.action,
@@ -111,8 +200,16 @@ export function computeEventHash(fields: {
     fields.entityId,
     fields.timestamp,
     fields.previousLogHash ?? "GENESIS",
-  ].join("|");
+  ];
 
+  // Guard: reject any value that contains the separator character.
+  // Failing loudly here prevents silent hash collisions.
+  assertNoPipeInFields(fieldValues);
+
+  // Build the canonical string and hash it with SHA-256 via native OpenSSL.
+  // A single update() call hashes the complete buffer in one pass — no
+  // partial-update overhead.
+  const canonical = fieldValues.join(CANONICAL_SEPARATOR);
   return createHash("sha256").update(canonical, "utf8").digest("hex");
 }
 

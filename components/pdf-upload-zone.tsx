@@ -299,7 +299,7 @@ export function PdfUploadZone({
                 {displayFileName}
               </span>
               <span className="shrink-0 text-[10px] text-muted-foreground">
-                {formatFileSize(displayFileSize, "")}
+                {formatFileSize(displayFileSize ?? null, "")}
               </span>
               <Badge
                 variant={hasLocalSelection ? "secondary" : "compliant"}

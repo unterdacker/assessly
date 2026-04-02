@@ -46,9 +46,7 @@ export async function GET(request: NextRequest) {
   const categoryFilter = searchParams.get("category") || undefined;
 
   // --- Fetch all logs for this company, oldest first (chain order) ---
-  // Cast to any: Prisma client types lag behind schema until next `prisma generate`.
-  // The select fields are correct per schema.prisma — this cast is intentional.
-  const rawLogs = await (prisma.auditLog as any).findMany({
+  const rawLogs = await prisma.auditLog.findMany({
     where: {
       companyId,
       ...(categoryFilter ? { complianceCategory: categoryFilter } : {}),
@@ -76,28 +74,7 @@ export async function GET(request: NextRequest) {
       hitlVerifiedBy: true,
       metadata: true,
     },
-  }) as Array<{
-    id: string;
-    companyId: string;
-    userId: string;
-    action: string;
-    entityType: string;
-    entityId: string;
-    previousValue: unknown;
-    newValue: unknown;
-    timestamp: Date;
-    createdAt: Date;
-    complianceCategory: string | null;
-    reason: string | null;
-    requestId: string | null;
-    previousLogHash: string | null;
-    eventHash: string | null;
-    aiModelId: string | null;
-    aiProviderName: string | null;
-    inputContextHash: string | null;
-    hitlVerifiedBy: string | null;
-    metadata: unknown;
-  }>;
+  });
 
   // --- Hash-chain verification ---
   let chainVerified = 0;

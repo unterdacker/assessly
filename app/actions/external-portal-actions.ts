@@ -32,7 +32,7 @@ function normalizeOptional(value?: string | null): string | null {
 async function getExternalVendorByToken(token: string) {
   if (!token || !token.trim()) return null;
 
-  return (prisma.vendor as any).findFirst({
+  const vendor = await prisma.vendor.findFirst({
     where: {
       inviteToken: token,
       isCodeActive: true,
@@ -40,13 +40,13 @@ async function getExternalVendorByToken(token: string) {
     include: {
       assessment: true,
     },
-  }).then((vendor: any) => {
-    if (!vendor) return null;
-    const deadline = resolveDeadline(vendor);
-    if (!deadline) return null;
-    if (isExpiredUtcWithGrace(deadline)) return null;
-    return vendor;
   });
+
+  if (!vendor) return null;
+  const deadline = resolveDeadline(vendor);
+  if (!deadline) return null;
+  if (isExpiredUtcWithGrace(deadline)) return null;
+  return vendor;
 }
 
 export async function updateExternalVendorProfileByToken(input: {
@@ -222,7 +222,7 @@ export async function deleteExternalAnswerEvidence(input: { token: string; answe
     });
 
     if (answer.documentId) {
-      await (prisma as any).document.delete({ where: { id: answer.documentId } }).catch(() => undefined);
+      await prisma.document.delete({ where: { id: answer.documentId } }).catch(() => undefined);
     }
 
     await prisma.auditLog.create({

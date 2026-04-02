@@ -17,8 +17,9 @@ type RateLimitState = {
   blockedUntil: number;
 };
 
-const rateLimitStore: Map<string, RateLimitState> = (globalThis as any).__avraPortalRateLimit || new Map();
-(globalThis as any).__avraPortalRateLimit = rateLimitStore;
+const g = globalThis as typeof globalThis & { __avraPortalRateLimit?: Map<string, RateLimitState> };
+const rateLimitStore: Map<string, RateLimitState> = g.__avraPortalRateLimit ?? new Map();
+g.__avraPortalRateLimit = rateLimitStore;
 
 function sanitizeAccessCode(raw: unknown): string {
   if (typeof raw !== "string") return "";
@@ -104,7 +105,7 @@ export async function authenticateVendorAccessCode(
     return failWithDelay();
   }
 
-  const vendor = await (prisma.vendor as any).findFirst({
+  const vendor = await prisma.vendor.findFirst({
     where: {
       accessCode: formatted,
       isCodeActive: true,
@@ -125,11 +126,11 @@ export async function authenticateVendorAccessCode(
     return failWithDelay();
   }
 
-  const codeExpiresAt = vendor.codeExpiresAt ? new Date(vendor.codeExpiresAt as Date) : null;
+  const codeExpiresAt = vendor.codeExpiresAt;
   if (!codeExpiresAt || codeExpiresAt <= new Date()) {
     const resetPendingInviteState = Boolean(vendor.isFirstLogin);
 
-    await (prisma.vendor as any).update({
+    await prisma.vendor.update({
       where: { id: vendor.id },
       data: {
         accessCode: null,
@@ -149,7 +150,7 @@ export async function authenticateVendorAccessCode(
   }
 
   // Verify password — must have a hash (requires code regeneration after MFA upgrade)
-  const passwordHash = vendor.passwordHash as string | null;
+  const passwordHash = vendor.passwordHash;
   if (!passwordHash) {
     registerFailure(key);
     return failWithDelay();
@@ -164,7 +165,7 @@ export async function authenticateVendorAccessCode(
   resetFailures(key);
 
   // If this is the vendor's first login, redirect to force-change-password flow
-  const isFirstLogin = vendor.isFirstLogin as boolean;
+  const isFirstLogin = vendor.isFirstLogin;
   if (isFirstLogin) {
     cookieStore.set("avra-vendor-setup", crypto.randomUUID(), {
       httpOnly: true,
@@ -184,14 +185,14 @@ export async function authenticateVendorAccessCode(
   }
 
   const now = new Date();
-  let inviteToken = vendor.inviteToken as string | null;
-  let expires = vendor.inviteTokenExpires as Date | null;
+  let inviteToken = vendor.inviteToken;
+  let expires = vendor.inviteTokenExpires;
 
   if (!inviteToken || !expires || expires <= now) {
     inviteToken = crypto.randomUUID().replace(/-/g, "");
     expires = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 14);
 
-    await (prisma.vendor as any).update({
+    await prisma.vendor.update({
       where: { id: vendor.id },
       data: {
         inviteToken,
@@ -200,28 +201,39 @@ export async function authenticateVendorAccessCode(
     });
   }
 
+  // Derive cookie lifetimes from the actual server-side expiry timestamps so the
+  // browser discards them at the same moment the server considers them invalid.
+  const tokenMaxAgeSeconds = Math.max(0, Math.floor((expires.getTime() - Date.now()) / 1000));
+  const codeMaxAgeSeconds  = Math.max(0, Math.floor((codeExpiresAt.getTime() - Date.now()) / 1000));
+  const isProduction = process.env.NODE_ENV === "production";
+
+  // avra-vendor-id — identifies which vendor record backs this session.
   cookieStore.set("avra-vendor-id", vendor.id, {
     httpOnly: true,
-    sameSite: "strict",
-    secure: true,
+    sameSite: "lax",
+    secure: isProduction,
     path: "/",
-    maxAge: 60 * 60 * 24,
+    maxAge: tokenMaxAgeSeconds,
   });
 
+  // avra-vendor-token — the opaque invite token used to authenticate portal actions.
+  // SameSite=Lax: sent on top-level navigations (click a link) but NOT on
+  // cross-site sub-resource requests or cross-site POST, preventing CSRF.
   cookieStore.set("avra-vendor-token", inviteToken, {
     httpOnly: true,
-    sameSite: "strict",
-    secure: true,
+    sameSite: "lax",
+    secure: isProduction,
     path: "/",
-    maxAge: 60 * 60 * 24,
+    maxAge: tokenMaxAgeSeconds,
   });
 
+  // avra-vendor-code-exp — expiry timestamp surfaced to the UI countdown clock.
   cookieStore.set("avra-vendor-code-exp", codeExpiresAt.toISOString(), {
     httpOnly: true,
-    sameSite: "strict",
-    secure: true,
+    sameSite: "lax",
+    secure: isProduction,
     path: "/",
-    maxAge: 60 * 60 * 24,
+    maxAge: codeMaxAgeSeconds,
   });
 
   const user = await prisma.user.upsert({

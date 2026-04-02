@@ -99,6 +99,7 @@ model AuthSession {
   @@index([vendorId])
   @@index([role])
   @@index([expiresAt])
+  @@index([userId, expiresAt])
 }
 
 model Vendor {

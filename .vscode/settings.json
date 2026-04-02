@@ -26,6 +26,8 @@
             "matchCommandLine": true
         },
         "npm audit": true,
-        "Out-File": true
+        "Out-File": true,
+        "ConvertFrom-Json": true,
+        "ConvertTo-Json": true
     }
 }
