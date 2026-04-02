@@ -683,7 +683,10 @@
     "confirmVoidCode": "Aktiven Zugangscode f\u00fcr {vendorName} ung\u00fcltig machen?",
     "copyAccessCodeAria": "Zugangscode f\u00fcr {vendorName} kopieren",
     "viewEvidencePdfAria": "Nachweis-PDF f\u00fcr {vendorName} anzeigen",
-    "selectVendorAria": "Anbieter {vendorName} ausw\u00e4hlen"
+    "selectVendorAria": "Anbieter {vendorName} ausw\u00e4hlen",
+    "paginationInfo": "{from}\u2013{to} von {total} Anbietern",
+    "paginationPrev": "Zur\u00fcck",
+    "paginationNext": "Weiter"
   },
   "SignIn": {
     "badge": "Enterprise RBAC",

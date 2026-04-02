@@ -2,7 +2,8 @@
 
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { RISK_POSTURE_CACHE_TAG } from "@/lib/queries/dashboard-risk-posture";
 import { prisma } from "@/lib/prisma";
 import { getDefaultCompanyId } from "@/lib/queries/vendor-assessments";
 import { calculateRiskLevel } from "@/lib/risk-level";
@@ -167,6 +168,7 @@ export async function createVendorAction(
 
     revalidatePath("/dashboard");
     revalidatePath("/vendors");
+    revalidateTag(RISK_POSTURE_CACHE_TAG);
 
     return { ok: true };
   } catch (err) {
@@ -414,6 +416,7 @@ export async function deleteVendorAction(vendorId: string): Promise<DeleteVendor
 
     revalidatePath("/dashboard");
     revalidatePath("/vendors");
+    revalidateTag(RISK_POSTURE_CACHE_TAG);
 
     return { ok: true };
   } catch (err) {
@@ -474,6 +477,7 @@ export async function deleteVendorsAction(vendorIds: string[]): Promise<DeleteVe
 
     revalidatePath("/dashboard");
     revalidatePath("/vendors");
+    revalidateTag(RISK_POSTURE_CACHE_TAG);
 
     return { ok: true, deletedCount };
   } catch (err) {

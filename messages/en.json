@@ -683,7 +683,10 @@
     "confirmVoidCode": "Void active access code for {vendorName}?",
     "copyAccessCodeAria": "Copy access code for {vendorName}",
     "viewEvidencePdfAria": "View evidence PDF for {vendorName}",
-    "selectVendorAria": "Select vendor {vendorName}"
+    "selectVendorAria": "Select vendor {vendorName}",
+    "paginationInfo": "{from}\u2013{to} of {total} vendors",
+    "paginationPrev": "Previous",
+    "paginationNext": "Next"
   },
   "SignIn": {
     "badge": "Enterprise RBAC",

@@ -6,7 +6,8 @@ import { randomUUID } from "crypto";
 import sanitizeHtml from "sanitize-html";
 import { cookies, headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { RISK_POSTURE_CACHE_TAG } from "@/lib/queries/dashboard-risk-posture";
 import { logAuditEvent } from "@/lib/audit-log";
 
 const MAX_EVIDENCE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -301,6 +302,7 @@ export async function updateExternalAnswer(formData: FormData) {
       }
 
       revalidatePath("/vendors");
+      revalidateTag(RISK_POSTURE_CACHE_TAG);
       return { ok: true, answer: updated };
     } else {
       const created = await prisma.assessmentAnswer.create({
@@ -364,6 +366,7 @@ export async function updateExternalAnswer(formData: FormData) {
       }
 
       revalidatePath("/vendors");
+      revalidateTag(RISK_POSTURE_CACHE_TAG);
       return { ok: true, answer: created };
     }
   } catch (err) {

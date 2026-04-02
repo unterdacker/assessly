@@ -1,5 +1,6 @@
 import { getDefaultCompanyId } from "@/lib/queries/vendor-assessments";
 import { prisma } from "@/lib/prisma";
+import { unstable_cache } from "next/cache";
 import {
   DASHBOARD_CATEGORY_ORDER,
   isOpenGapStatus,
@@ -12,6 +13,8 @@ import {
   generateDashboardExecutiveSummary,
   type DashboardExecutiveSummaryResult,
 } from "@/lib/ai/dashboard-executive-summary";
+
+export const RISK_POSTURE_CACHE_TAG = "risk-posture";
 
 type SupportedLocale = "en" | "de";
 
@@ -73,6 +76,88 @@ function parseCachedSummary(raw: string): DashboardExecutiveSummaryResult | null
   }
 }
 
+// ---------------------------------------------------------------------------
+// Serializable raw data type — Dates are stored as ISO strings so the result
+// is safe to pass through Next.js unstable_cache JSON serialization.
+// ---------------------------------------------------------------------------
+type SerializableAssessment = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  riskLevel: string;
+  complianceScore: number;
+  vendor: { name: string; serviceType: string };
+  answers: Array<{ questionId: string; status: string }>;
+};
+
+type RiskPostureRawData = {
+  questions: Array<{ id: string; category: string }>;
+  assessments: SerializableAssessment[];
+  aiAuditEvents: Array<{ action: string; metadata: unknown }>;
+  totalAuditCount: number;
+  lastAiSummary: string | null;
+  aiSummaryUpdatedAt: string | null; // ISO string
+};
+
+/**
+ * Inner fetcher — runs the 5-query Prisma transaction.
+ * Wrapped by unstable_cache so repeated dashboard renders within the TTL
+ * window skip the database entirely.
+ */
+async function fetchRiskPostureRawData(companyId: string): Promise<RiskPostureRawData> {
+  const [questions, assessments, aiAuditEvents, totalAuditCount, companyCache] =
+    await prisma.$transaction([
+      prisma.question.findMany({ select: { id: true, category: true } }),
+      prisma.assessment.findMany({
+        where: { companyId },
+        select: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          riskLevel: true,
+          complianceScore: true,
+          vendor: { select: { name: true, serviceType: true } },
+          answers: { select: { questionId: true, status: true } },
+        },
+        orderBy: { updatedAt: "desc" },
+      }),
+      prisma.auditLog.findMany({
+        where: { companyId, action: { in: ["AI_GENERATION", "AI_REMEDIATION_SENT"] } },
+        select: { action: true, metadata: true },
+      }),
+      prisma.auditLog.count({ where: { companyId } }),
+      prisma.company.findUnique({
+        where: { id: companyId },
+        select: { lastAiSummary: true, aiSummaryUpdatedAt: true },
+      }),
+    ]);
+
+  return {
+    questions,
+    assessments: assessments.map((a) => ({
+      ...a,
+      createdAt: a.createdAt.toISOString(),
+      updatedAt: a.updatedAt.toISOString(),
+      riskLevel: a.riskLevel as string,
+    })),
+    aiAuditEvents,
+    totalAuditCount,
+    lastAiSummary: companyCache?.lastAiSummary ?? null,
+    aiSummaryUpdatedAt: companyCache?.aiSummaryUpdatedAt?.toISOString() ?? null,
+  };
+}
+
+/**
+ * Cached Prisma aggregation — revalidated via revalidateTag(RISK_POSTURE_CACHE_TAG)
+ * whenever a vendor or assessment changes (vendor create/delete, answer submit, etc.).
+ * TTL acts as a safety net: max 5 minutes of staleness even without an explicit tag bust.
+ */
+const getCachedRiskPostureRawData = unstable_cache(
+  fetchRiskPostureRawData,
+  [RISK_POSTURE_CACHE_TAG],
+  { revalidate: 300, tags: [RISK_POSTURE_CACHE_TAG] },
+);
+
 export async function getDashboardRiskPostureOverview(
   locale: SupportedLocale,
   bypassCache = false,
@@ -117,61 +202,28 @@ export async function getDashboardRiskPostureOverview(
     };
   }
 
-  const [questions, assessments, aiAuditEvents, totalAuditCount, companyCache] = await prisma.$transaction([
-    prisma.question.findMany({
-      select: {
-        id: true,
-        category: true,
-      },
-    }),
-    prisma.assessment.findMany({
-      where: { companyId },
-      select: {
-        id: true,
-        createdAt: true,
-        updatedAt: true,
-        riskLevel: true,
-        complianceScore: true,
-        vendor: {
-          select: {
-            name: true,
-            serviceType: true,
-          },
-        },
-        answers: {
-          select: {
-            questionId: true,
-            status: true,
-          },
-        },
-      },
-      orderBy: { updatedAt: "desc" },
-    }),
-    prisma.auditLog.findMany({
-      where: {
-        companyId,
-        action: {
-          in: ["AI_GENERATION", "AI_REMEDIATION_SENT"],
-        },
-      },
-      select: {
-        action: true,
-        metadata: true,
-      },
-    }),
-    prisma.auditLog.count({
-      where: {
-        companyId,
-      },
-    }),
-    prisma.company.findUnique({
-      where: { id: companyId },
-      select: {
-        lastAiSummary: true,
-        aiSummaryUpdatedAt: true,
-      },
-    }),
-  ]);
+  // Use the cached fetcher — skips all 5 Prisma queries on repeated page loads
+  // within the TTL window or until revalidateTag(RISK_POSTURE_CACHE_TAG) is called.
+  const raw = await getCachedRiskPostureRawData(companyId);
+
+  const questions = raw.questions;
+  // Re-hydrate ISO date strings back to Date objects after cache deserialization.
+  const assessments = raw.assessments.map((a) => ({
+    ...a,
+    createdAt: new Date(a.createdAt),
+    updatedAt: new Date(a.updatedAt),
+  }));
+  const aiAuditEvents = raw.aiAuditEvents;
+  const totalAuditCount = raw.totalAuditCount;
+  const companyCache =
+    raw.lastAiSummary !== null || raw.aiSummaryUpdatedAt !== null
+      ? {
+          lastAiSummary: raw.lastAiSummary,
+          aiSummaryUpdatedAt: raw.aiSummaryUpdatedAt
+            ? new Date(raw.aiSummaryUpdatedAt)
+            : null,
+        }
+      : null;
 
   const questionToCategory = new Map<string, DashboardCategoryKey>();
   const questionCounts = new Map<DashboardCategoryKey, number>();

@@ -1,10 +1,43 @@
 import { prisma } from "@/lib/prisma";
 import { toVendorAssessment } from "@/lib/prisma-mappers";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
-import type { AssessmentAnswer } from "@prisma/client";
+import type { AssessmentAnswer, Vendor } from "@prisma/client";
 import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance";
 import { ensureDemoData } from "@/lib/ensure-demo-data";
 import { requireInternalReadUser } from "@/lib/auth/server";
+
+/**
+ * Explicit vendor column selection — omits sensitive fields that must never
+ * leave the database in a list or detail context:
+ *   - passwordHash  : bcrypt digest  — login-flow only
+ *   - inviteToken   : single-use URL token
+ *   - inviteTokenExpires : paired expiry
+ *   - vendorServiceTypeCustom : internal classification scratch-pad, not displayed
+ */
+const VENDOR_SELECT = {
+  id: true,
+  companyId: true,
+  name: true,
+  email: true,
+  serviceType: true,
+  officialName: true,
+  registrationId: true,
+  vendorServiceType: true,
+  securityOfficerName: true,
+  securityOfficerEmail: true,
+  dpoName: true,
+  dpoEmail: true,
+  headquartersLocation: true,
+  sizeClassification: true,
+  createdAt: true,
+  updatedAt: true,
+  createdBy: true,
+  accessCode: true,
+  codeExpiresAt: true,
+  isCodeActive: true,
+  isFirstLogin: true,
+  inviteSentAt: true,
+} as const;
 
 async function cleanupExpiredVendorCodes(where?: { companyId?: string; vendorId?: string }) {
   const now = new Date();
@@ -71,8 +104,20 @@ export async function listVendorAssessments(): Promise<VendorAssessment[]> {
 
   const rows = await prisma.assessment.findMany({
     where: { companyId },
-    include: {
-      vendor: true,
+    select: {
+      id: true,
+      companyId: true,
+      vendorId: true,
+      status: true,
+      riskLevel: true,
+      complianceScore: true,
+      lastAssessmentDate: true,
+      documentFilename: true,
+      documentUrl: true,
+      createdAt: true,
+      updatedAt: true,
+      createdBy: true,
+      vendor: { select: VENDOR_SELECT },
       answers: { select: { status: true } },
     },
     orderBy: { updatedAt: "desc" },
@@ -94,7 +139,7 @@ export async function listVendorAssessments(): Promise<VendorAssessment[]> {
 
       const { vendor, answers: _, ...assessmentFields } = r;
       return toVendorAssessment(
-        vendor,
+        vendor as unknown as Vendor,
         { ...assessmentFields, complianceScore: score, riskLevel },
         filledCount,
         totalQuestions,
@@ -130,7 +175,7 @@ export async function getVendorAssessmentDetail(
   const row = await prisma.assessment.findFirst({
     where: { vendorId, companyId: session.companyId },
     include: {
-      vendor: true,
+      vendor: { select: VENDOR_SELECT },
       answers: {
         include: {
           document: {
@@ -171,7 +216,7 @@ export async function getVendorAssessmentDetail(
   ).length;
 
   const vendorAssessment = toVendorAssessment(
-    vendor,
+    vendor as unknown as Vendor,
     { ...assessmentFields, complianceScore: score, riskLevel },
     filledCount,
     totalQuestions,
@@ -194,4 +239,93 @@ export async function getVendorAssessmentByVendorId(
 ): Promise<VendorAssessment | null> {
   const detail = await getVendorAssessmentDetail(vendorId);
   return detail?.vendorAssessment ?? null;
+}
+
+export const VENDORS_PAGE_SIZE = 25;
+
+export type PaginatedVendorAssessments = {
+  items: VendorAssessment[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+};
+
+/**
+ * Paginated variant of listVendorAssessments for the Vendors table view.
+ * Uses take/skip to prevent loading thousands of rows at once.
+ */
+export async function listVendorAssessmentsPaginated(
+  page = 1,
+  pageSize = VENDORS_PAGE_SIZE,
+): Promise<PaginatedVendorAssessments> {
+  const session = await requireInternalReadUser();
+  const companyId = session.companyId;
+  if (!companyId) {
+    return { items: [], total: 0, page, pageSize, pageCount: 0 };
+  }
+
+  await cleanupExpiredVendorCodes({ companyId });
+
+  const safePage = Math.max(1, page);
+  const skip = (safePage - 1) * pageSize;
+
+  const [totalQuestions, total, rows] = await Promise.all([
+    prisma.question.count(),
+    prisma.assessment.count({ where: { companyId } }),
+    prisma.assessment.findMany({
+      where: { companyId },
+      select: {
+        id: true,
+        companyId: true,
+        vendorId: true,
+        status: true,
+        riskLevel: true,
+        complianceScore: true,
+        lastAssessmentDate: true,
+        documentFilename: true,
+        documentUrl: true,
+        createdAt: true,
+        updatedAt: true,
+        createdBy: true,
+        vendor: { select: VENDOR_SELECT },
+        answers: { select: { status: true } },
+      },
+      orderBy: { updatedAt: "desc" },
+      take: pageSize,
+      skip,
+    }),
+  ]);
+
+  const items = await Promise.all(
+    rows.map(async (r) => {
+      const { score, riskLevel } = await syncAssessmentComplianceToDatabase(
+        r.id,
+        r.answers,
+        totalQuestions,
+        r.complianceScore,
+        r.riskLevel,
+        r.createdBy,
+      );
+      const filledCount = r.answers.filter(
+        (a) => a.status === "COMPLIANT" || a.status === "NON_COMPLIANT",
+      ).length;
+
+      const { vendor, answers: _, ...assessmentFields } = r;
+      return toVendorAssessment(
+        vendor as unknown as Vendor,
+        { ...assessmentFields, complianceScore: score, riskLevel },
+        filledCount,
+        totalQuestions,
+      );
+    }),
+  );
+
+  return {
+    items,
+    total,
+    page: safePage,
+    pageSize,
+    pageCount: Math.ceil(total / pageSize),
+  };
 }
