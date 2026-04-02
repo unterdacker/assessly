@@ -497,7 +497,7 @@ export function VendorQuestionnaireWizard({
                           variant="outline"
                           size="sm"
                           className="h-7 border-red-200 px-2 text-[10px] text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
-                          onClick={() => handleDeleteEvidence(q.id, answer.id)}
+                          onClick={() => { if (typeof answer.id === "string") handleDeleteEvidence(q.id, answer.id); }}
                           disabled={isCurrentQuestionSaving}
                         >
                           {tw("delete", "Delete")}
