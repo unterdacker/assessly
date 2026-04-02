@@ -86,6 +86,17 @@ const rawEnvSchema = z.object({
     .url("NEXT_PUBLIC_APP_URL must be a valid URL")
     .default("http://localhost:3000"),
 
+  /**
+   * Safety escape hatch for containerised local/CI deployments that run with
+   * NODE_ENV=production but deliberately serve on http://localhost.
+   * Set to "true" only in Docker Compose or CI — never in a real deployment.
+   * When true, the localhost and HTTP checks for NEXT_PUBLIC_APP_URL are
+   * skipped in the production superRefine.
+   */
+  ALLOW_INSECURE_LOCALHOST: z
+    .enum(["true", "false"])
+    .default("false"),
+
   // ── Cron ──────────────────────────────────────────────────────────────────
   /**
    * Bearer token for /api/cron/* endpoints.
@@ -280,7 +291,10 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
   }
 
   // ── NEXT_PUBLIC_APP_URL ────────────────────────────────────────────────────
-  if (data.NEXT_PUBLIC_APP_URL) {
+  // Skip localhost/HTTP checks when ALLOW_INSECURE_LOCALHOST=true so that
+  // containerised local and CI deployments (NODE_ENV=production,
+  // NEXT_PUBLIC_APP_URL=http://localhost:3000) can start without errors.
+  if (data.NEXT_PUBLIC_APP_URL && data.ALLOW_INSECURE_LOCALHOST !== "true") {
     if (/localhost|127\.0\.0\.1/.test(data.NEXT_PUBLIC_APP_URL)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
