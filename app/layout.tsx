@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { Providers } from "./providers";
+import { DashboardShell } from "@/components/dashboard-shell";
 import { getOptionalAuthSession } from "@/lib/auth/server";
 // Triggers Zod validation of all environment variables at server startup.
 // In production the process will throw here (before serving any request) if
@@ -57,7 +58,9 @@ export default async function RootLayout({
             displayName: session.displayName,
           } : null}
         >
-          {children}
+          <DashboardShell>
+            {children}
+          </DashboardShell>
         </Providers>
       </body>
     </html>
