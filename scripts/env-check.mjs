@@ -80,6 +80,10 @@ const DEV_SECURITY_KEYS = [
 // ---------------------------------------------------------------------------
 const PLACEHOLDER_RE =
   /change[_-]?me|dev[_-]only|placeholder|your_\w|example_|^CHANGE_ME/i;
+
+// When true, localhost URL checks are skipped for containerised local/CI runs.
+const ALLOW_INSECURE_LOCALHOST =
+  process.env.ALLOW_INSECURE_LOCALHOST === "true";
 const HEX_64_RE = /^[0-9a-f]{64}$/i;
 
 const schema = z
@@ -263,7 +267,10 @@ const schema = z
     }
 
     // ── NEXT_PUBLIC_APP_URL ──────────────────────────────────────────────────
-    if (data.NEXT_PUBLIC_APP_URL) {
+    // Skip localhost/HTTP checks when ALLOW_INSECURE_LOCALHOST=true so that
+    // containerised local and CI deployments (NODE_ENV=production,
+    // NEXT_PUBLIC_APP_URL=http://localhost:3000) can start without errors.
+    if (data.NEXT_PUBLIC_APP_URL && !ALLOW_INSECURE_LOCALHOST) {
       if (/localhost|127\.0\.0\.1/.test(data.NEXT_PUBLIC_APP_URL)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,

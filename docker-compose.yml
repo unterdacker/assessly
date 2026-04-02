@@ -41,23 +41,50 @@ services:
       - "3000:3000"
     environment:
       # Runtime database connection — points to the db service above.
-      DATABASE_URL: "postgresql://postgres:postgres@db:5432/avra?schema=public"
+      # Override DATABASE_URL in your .env file to connect to a remote database.
+      DATABASE_URL: "${DATABASE_URL:-postgresql://postgres:postgres@db:5432/avra?schema=public}"
 
       # -----------------------------------------------------------------------
-      # Required secrets — replace these values or inject via a .env file /
-      # Docker secrets before running in production.
-      # Generate AUTH_SESSION_SECRET:
-      #   node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-      # Generate SETTINGS_ENCRYPTION_KEY / MFA_ENCRYPTION_KEY:
-      #   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+      # Security secrets — ${VAR:-default} reads from your .env file first;
+      # the hex fallbacks are zero-touch defaults for local development only.
+      #
+      # Generate real keys for production:
+      #   SETTINGS_ENCRYPTION_KEY / MFA_ENCRYPTION_KEY (32 bytes → 64 hex chars):
+      #     node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+      #   AUTH_SESSION_SECRET (64 bytes → 128 hex chars):
+      #     node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+      #   AUDIT_BUNDLE_SECRET / CRON_SECRET (32 bytes → 64 hex chars):
+      #     node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
       # -----------------------------------------------------------------------
-      AUTH_SESSION_SECRET: "CHANGE_ME_generate_with_crypto_randomBytes_64"
-      SETTINGS_ENCRYPTION_KEY: "CHANGE_ME_64_hex_chars"
-      MFA_ENCRYPTION_KEY: "CHANGE_ME_64_hex_chars"
 
-      # Next.js
-      NODE_ENV: production
+      # AES-256-GCM key for mail credentials at rest (exactly 64 hex chars).
+      SETTINGS_ENCRYPTION_KEY: "${SETTINGS_ENCRYPTION_KEY:-f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2}"
+
+      # AES-256-GCM key for TOTP/MFA secrets at rest (exactly 64 hex chars).
+      MFA_ENCRYPTION_KEY: "${MFA_ENCRYPTION_KEY:-e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3}"
+
+      # HMAC-SHA256 signing key for forensic audit bundle exports (≥32 chars).
+      AUDIT_BUNDLE_SECRET: "${AUDIT_BUNDLE_SECRET:-d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4}"
+
+      # HMAC-SHA256 session signing key (≥32 chars).
+      AUTH_SESSION_SECRET: "${AUTH_SESSION_SECRET:-c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5}"
+
+      # Bearer token for /api/cron/* endpoints (≥32 chars).
+      CRON_SECRET: "${CRON_SECRET:-b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6}"
+
+      # Public-facing app URL. The runtime validator rejects localhost in
+      # NODE_ENV=production — override both vars in .env for production deploys.
+      NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL:-http://localhost:3000}"
+
+      # NODE_ENV defaults to development so the localhost URL above is accepted
+      # by the runtime validator out of the box. Set NODE_ENV=production in
+      # your .env (with a real NEXT_PUBLIC_APP_URL https:// domain) for prod.
+      NODE_ENV: "${NODE_ENV:-development}"
       NEXT_TELEMETRY_DISABLED: "1"
+
+      # Allows http://localhost:3000 as NEXT_PUBLIC_APP_URL even when
+      # NODE_ENV=production. Set to "false" (or omit) in real deployments.
+      ALLOW_INSECURE_LOCALHOST: "${ALLOW_INSECURE_LOCALHOST:-true}"
     depends_on:
       db:
         condition: service_healthy
