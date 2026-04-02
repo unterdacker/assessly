@@ -87,7 +87,7 @@ async function createEvidenceDocument(
   displayName: string,
   uploadedBy: string,
 ) {
-  return (prisma as any).document.create({
+  return prisma.document.create({
     data: {
       assessmentId,
       filename: displayName,
@@ -144,7 +144,7 @@ export async function updateExternalAnswer(formData: FormData) {
     return { ok: false, error: "Session expired. Please reload the portal." };
   }
 
-  const tokenVendor = await (prisma.vendor as any).findFirst({
+  const tokenVendor = await prisma.vendor.findFirst({
     where: { inviteToken: vendorToken, isCodeActive: true },
     select: {
       id: true,

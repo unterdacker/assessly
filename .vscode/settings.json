@@ -28,6 +28,7 @@
         "npm audit": true,
         "Out-File": true,
         "ConvertFrom-Json": true,
-        "ConvertTo-Json": true
+        "ConvertTo-Json": true,
+        "npx eslint": true
     }
 }

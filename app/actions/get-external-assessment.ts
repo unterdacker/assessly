@@ -1,11 +1,36 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { toVendorAssessment } from "@/lib/prisma-mappers";
+import { toVendorAssessment, VendorDomainMapper } from "@/lib/prisma-mappers";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
-import type { AssessmentAnswer, Question } from "@prisma/client";
+import type { Assessment, AssessmentAnswer, Question } from "@prisma/client";
 
 const EXPIRY_GRACE_PERIOD_MS = 2 * 60 * 1000;
+
+/** Placeholder used in error-path returns where isValid is false. */
+const EMPTY_VENDOR_ASSESSMENT: VendorAssessment = {
+  id: "",
+  name: "",
+  accessCode: null,
+  codeExpiresAt: null,
+  isCodeActive: false,
+  inviteSentAt: null,
+  isFirstLogin: false,
+  email: "",
+  serviceType: "",
+  lastAssessmentDate: null,
+  riskLevel: "not_calculated",
+  status: "pending",
+  complianceScore: 0,
+  documentUrl: null,
+  documentFilename: null,
+  createdAt: "",
+  updatedAt: "",
+  createdBy: "",
+  dossierCompletion: 0,
+  questionnaireProgress: 0,
+  questionsFilled: 0,
+};
 
 function resolveDeadline(vendor: {
   inviteTokenExpires?: Date | null;
@@ -50,7 +75,7 @@ export async function getExternalAssessment(
   if (!token) return null;
 
   try {
-    const vendor = await (prisma.vendor as any).findFirst({
+    const vendor = await prisma.vendor.findFirst({
       where: {
         inviteToken: token,
       },
@@ -80,7 +105,7 @@ export async function getExternalAssessment(
         isValid: false, 
         error: "Invalid or expired assessment link.",
         errorCode: "INVALID_LINK",
-        vendorAssessment: {} as any, 
+        vendorAssessment: EMPTY_VENDOR_ASSESSMENT, 
         assessmentId: "", 
         isSubmitted: false,
         questions: [], 
@@ -97,7 +122,7 @@ export async function getExternalAssessment(
         isValid: false,
         error: "Invalid or expired assessment link.",
         errorCode: "INVALID_LINK",
-        vendorAssessment: {} as any,
+        vendorAssessment: EMPTY_VENDOR_ASSESSMENT,
         assessmentId: "",
         isSubmitted: false,
         questions: [],
@@ -113,7 +138,7 @@ export async function getExternalAssessment(
         isValid: false,
         error: "Assessment link is inactive.",
         errorCode: "LINK_INACTIVE",
-        vendorAssessment: {} as any,
+        vendorAssessment: EMPTY_VENDOR_ASSESSMENT,
         assessmentId: "",
         isSubmitted: false,
         questions: [],
@@ -129,7 +154,7 @@ export async function getExternalAssessment(
         isValid: false,
         error: `Deadline passed. Expired at ${deadline.toISOString()}`,
         errorCode: "DEADLINE_PASSED",
-        vendorAssessment: {} as any,
+        vendorAssessment: EMPTY_VENDOR_ASSESSMENT,
         assessmentId: "",
         isSubmitted: false,
         questions: [],
@@ -145,13 +170,13 @@ export async function getExternalAssessment(
       orderBy: { sortOrder: 'asc' }
     });
 
-    const filledCount = (vendor.assessment as any).answers.filter(
-      (a: any) => a.status === "COMPLIANT" || a.status === "NON_COMPLIANT"
+    const filledCount = vendor.assessment.answers.filter(
+      (a: { status: string }) => a.status === "COMPLIANT" || a.status === "NON_COMPLIANT"
     ).length;
 
     const vendorAssessment = toVendorAssessment(
-      vendor as any,
-      vendor.assessment as any,
+      vendor as unknown as VendorDomainMapper,
+      vendor.assessment as unknown as Assessment,
       filledCount,
       totalQuestions
     );

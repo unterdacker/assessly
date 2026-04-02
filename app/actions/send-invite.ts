@@ -117,7 +117,7 @@ export async function sendOutOfBandInviteAction(
       for (let i = 0; i < 10; i++) {
         accessCode = generateAccessCode();
         try {
-          await (tx.vendor as any).update({
+          await tx.vendor.update({
             where: { id: vendor.id },
             data: {
               accessCode,

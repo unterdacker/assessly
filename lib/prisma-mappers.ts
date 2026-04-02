@@ -1,11 +1,41 @@
-import type { RiskLevel as PrismaRiskLevel } from "@prisma/client";
+import type { RiskLevel as PrismaRiskLevel, Vendor, Assessment } from "@prisma/client";
 import {
   VendorAssessment,
   VendorStatus,
   RiskLevel,
 } from "@/lib/vendor-assessment";
 import { calculateDossierCompletion } from "@/lib/vendor-assessment";
-import type { Vendor, Assessment } from "@prisma/client";
+
+/**
+ * Explicit domain-mapping input contract for toVendorAssessment.
+ * Declares exactly the Vendor columns the mapper reads — removes the need
+ * for `as any` casts while keeping callers free to pass query sub-selects
+ * that satisfy this structural interface without a full Vendor load.
+ */
+export type VendorDomainMapper = Pick<
+  Vendor,
+  | "id"
+  | "name"
+  | "email"
+  | "serviceType"
+  | "createdAt"
+  | "updatedAt"
+  | "createdBy"
+  | "accessCode"
+  | "codeExpiresAt"
+  | "isCodeActive"
+  | "inviteSentAt"
+  | "isFirstLogin"
+  | "officialName"
+  | "registrationId"
+  | "vendorServiceType"
+  | "securityOfficerName"
+  | "securityOfficerEmail"
+  | "dpoName"
+  | "dpoEmail"
+  | "headquartersLocation"
+  | "sizeClassification"
+>;
 
 export function deriveVendorStatus(
   assessmentStatus: Assessment["status"],
@@ -47,7 +77,7 @@ export function riskLevelToPrisma(level: RiskLevel): PrismaRiskLevel {
 
 /** Join row for list/detail views: one Assessment per Vendor. */
 export function toVendorAssessment(
-  vendor: Vendor,
+  vendor: VendorDomainMapper,
   assessment: Assessment,
   answerCount: number = 0,
   totalQuestions: number = 20
@@ -61,11 +91,11 @@ export function toVendorAssessment(
   return {
     id: vendor.id,
     name: vendor.name,
-    accessCode: (vendor as any).accessCode ?? null,
-    codeExpiresAt: (vendor as any).codeExpiresAt ? new Date((vendor as any).codeExpiresAt).toISOString() : null,
-    isCodeActive: Boolean((vendor as any).isCodeActive),
-    inviteSentAt: (vendor as any).inviteSentAt ? new Date((vendor as any).inviteSentAt).toISOString() : null,
-    isFirstLogin: Boolean((vendor as any).isFirstLogin ?? true),
+    accessCode: vendor.accessCode ?? null,
+    codeExpiresAt: vendor.codeExpiresAt ? vendor.codeExpiresAt.toISOString() : null,
+    isCodeActive: vendor.isCodeActive,
+    inviteSentAt: vendor.inviteSentAt ? vendor.inviteSentAt.toISOString() : null,
+    isFirstLogin: vendor.isFirstLogin,
     email: vendor.email,
     serviceType: vendor.serviceType,
     lastAssessmentDate: assessment.lastAssessmentDate

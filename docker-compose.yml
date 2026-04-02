@@ -1,5 +1,8 @@
 services:
-  postgres:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16 — persistent primary database
+  # ---------------------------------------------------------------------------
+  db:
     image: postgres:16-alpine
     container_name: avra-postgres
     restart: unless-stopped
@@ -16,6 +19,48 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+
+  # ---------------------------------------------------------------------------
+  # AVRA web application
+  # The web container is held back by `depends_on` until the database passes
+  # its health check, preventing Prisma connection errors on cold start.
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Override DATABASE_URL at build time when connecting to a remote DB or
+      # CI-injected secret.  The default (dummy) value is sufficient because
+      # `prisma generate` does not open a live connection.
+      args:
+        DATABASE_URL: "postgresql://build:build@localhost:5432/builddb?schema=public"
+    container_name: avra-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Runtime database connection — points to the db service above.
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/avra?schema=public"
+
+      # -----------------------------------------------------------------------
+      # Required secrets — replace these values or inject via a .env file /
+      # Docker secrets before running in production.
+      # Generate AUTH_SESSION_SECRET:
+      #   node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+      # Generate SETTINGS_ENCRYPTION_KEY / MFA_ENCRYPTION_KEY:
+      #   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+      # -----------------------------------------------------------------------
+      AUTH_SESSION_SECRET: "CHANGE_ME_generate_with_crypto_randomBytes_64"
+      SETTINGS_ENCRYPTION_KEY: "CHANGE_ME_64_hex_chars"
+      MFA_ENCRYPTION_KEY: "CHANGE_ME_64_hex_chars"
+
+      # Next.js
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:

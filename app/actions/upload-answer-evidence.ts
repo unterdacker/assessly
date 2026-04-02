@@ -69,7 +69,7 @@ async function persistEvidenceDocument(
   const buffer = Buffer.from(arrayBuffer);
   await fs.writeFile(storagePath, buffer, { flag: "wx" });
 
-  const doc = await (prisma as any).document.create({
+  const doc = await prisma.document.create({
     data: {
       assessmentId,
       filename: displayName,

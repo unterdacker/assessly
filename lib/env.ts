@@ -24,6 +24,7 @@
 
 import "server-only";
 
+import { createHash } from "crypto";
 import { z } from "zod";
 
 // ---------------------------------------------------------------------------
@@ -279,17 +280,24 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
   }
 
   // ── NEXT_PUBLIC_APP_URL ────────────────────────────────────────────────────
-  if (
-    data.NEXT_PUBLIC_APP_URL &&
-    /localhost|127\.0\.0\.1/.test(data.NEXT_PUBLIC_APP_URL)
-  ) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["NEXT_PUBLIC_APP_URL"],
-      message:
-        "NEXT_PUBLIC_APP_URL must not point to localhost in production. " +
-        "Set it to your public-facing domain (e.g. https://avra.example.com).",
-    });
+  if (data.NEXT_PUBLIC_APP_URL) {
+    if (/localhost|127\.0\.0\.1/.test(data.NEXT_PUBLIC_APP_URL)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["NEXT_PUBLIC_APP_URL"],
+        message:
+          "NEXT_PUBLIC_APP_URL must not point to localhost in production. " +
+          "Set it to your public-facing domain (e.g. https://avra.example.com).",
+      });
+    } else if (!data.NEXT_PUBLIC_APP_URL.startsWith("https://")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["NEXT_PUBLIC_APP_URL"],
+        message:
+          "NEXT_PUBLIC_APP_URL must use HTTPS in production " +
+          "(e.g. https://avra.example.com). HTTP is not permitted.",
+      });
+    }
   }
 
   // ── AUDIT_EXPORT_KEY length ────────────────────────────────────────────────
@@ -340,12 +348,26 @@ are resolved. Set the variables in your deployment environment
 (Docker secrets, Kubernetes secrets, or a .env file).
 `;
 
+/**
+ * Returns a deterministic, insecure, development-only fallback value for
+ * the named environment variable.  The output is a 64-char lowercase hex
+ * string (SHA-256 digest) that satisfies all structural constraints while
+ * being obviously unsuitable for production use.
+ *
+ * The same input always produces the same output, so dev databases encrypted
+ * with the fallback key remain readable across server restarts.
+ */
+function devFallbackKey(variableName: string): string {
+  return createHash("sha256")
+    .update(`avra-dev-insecure:${variableName}:do-not-use-in-production`)
+    .digest("hex");
+}
+
 function validateEnv(): Env {
-  // --- Phase 1: base structural parse (always required, both envs) ----------
+  // --- Phase 1: base structural parse — always required in all environments --
   const baseResult = rawEnvSchema.safeParse(process.env);
 
   if (!baseResult.success) {
-    // Structural failures (e.g. DATABASE_URL missing) are always fatal
     const msg = formatErrors(baseResult.error);
     throw new Error(
       FATAL_HEADER +
@@ -356,27 +378,59 @@ function validateEnv(): Env {
     );
   }
 
-  // --- Phase 2: strict production security checks ---------------------------
-  const strictResult = envSchema.safeParse(process.env);
+  const data: Env = { ...baseResult.data };
 
-  if (!strictResult.success) {
-    const msg = formatErrors(strictResult.error);
-
-    if (baseResult.data.NODE_ENV === "production") {
-      // Fatal in production — container should not start
-      throw new Error(FATAL_HEADER + msg + FATAL_FOOTER);
+  // --- Phase 2: production — strict security checks, fatal on any failure ----
+  if (data.NODE_ENV === "production") {
+    const strictResult = envSchema.safeParse(process.env);
+    if (!strictResult.success) {
+      throw new Error(FATAL_HEADER + formatErrors(strictResult.error) + FATAL_FOOTER);
     }
+    return data;
+  }
 
-    // Development / test — warn and continue (libs have their own dev fallbacks)
+  // --- Phase 3: development / test — inject deterministic fallbacks ----------
+  //
+  // Missing security keys never block local development.  Instead, a stable
+  // SHA-256 fallback is derived from the variable name so that encrypted data
+  // written in one dev session remains readable in subsequent sessions.
+  //
+  // ⚠  These keys are public knowledge (the derivation is in the source).
+  //    They MUST NOT be used in production or staging environments.
+  const fallbacksUsed: string[] = [];
+
+  if (!data.SETTINGS_ENCRYPTION_KEY) {
+    data.SETTINGS_ENCRYPTION_KEY = devFallbackKey("SETTINGS_ENCRYPTION_KEY");
+    fallbacksUsed.push("SETTINGS_ENCRYPTION_KEY");
+  }
+  if (!data.MFA_ENCRYPTION_KEY) {
+    data.MFA_ENCRYPTION_KEY = devFallbackKey("MFA_ENCRYPTION_KEY");
+    fallbacksUsed.push("MFA_ENCRYPTION_KEY");
+  }
+  if (!data.AUDIT_BUNDLE_SECRET) {
+    data.AUDIT_BUNDLE_SECRET = devFallbackKey("AUDIT_BUNDLE_SECRET");
+    fallbacksUsed.push("AUDIT_BUNDLE_SECRET");
+  }
+  if (!data.AUTH_SESSION_SECRET && !data.NEXTAUTH_SECRET) {
+    data.AUTH_SESSION_SECRET = devFallbackKey("AUTH_SESSION_SECRET");
+    fallbacksUsed.push("AUTH_SESSION_SECRET");
+  }
+  if (!data.CRON_SECRET) {
+    data.CRON_SECRET = devFallbackKey("CRON_SECRET");
+    fallbacksUsed.push("CRON_SECRET");
+  }
+
+  if (fallbacksUsed.length > 0) {
     console.warn(
-      `\n⚠  AVRA [env] — configuration warnings` +
-        ` (these are fatal errors in production):\n\n` +
-        msg +
-        `\n\nSee .env.example for documentation and key-generation commands.\n`,
+      "\n⚠️  WARNING: Using insecure development keys for: " +
+        fallbacksUsed.join(", ") +
+        ".\n" +
+        "   Set production keys in .env for real deployments.\n" +
+        "   See .env.example for generation commands.\n",
     );
   }
 
-  return baseResult.data;
+  return data;
 }
 
 /**
@@ -391,3 +445,90 @@ function validateEnv(): Env {
  *   const appUrl = env.NEXT_PUBLIC_APP_URL;
  */
 export const env: Env = validateEnv();
+
+// ---------------------------------------------------------------------------
+// Typed logical groups
+//
+// Import the group that matches your concern instead of the flat `env` object.
+// Each group is a plain object with JSDoc on every field — editors show the
+// purpose inline while you type.
+//
+//   import { authEnv }       from "@/lib/env";   // session & auth
+//   import { encryptionEnv } from "@/lib/env";   // AES-256-GCM keys
+//   import { auditEnv }      from "@/lib/env";   // audit log signing
+//   import { appEnv }        from "@/lib/env";   // URL, cron, node env
+//   import { aiEnv }         from "@/lib/env";   // AI provider config
+//   import { mailEnv }       from "@/lib/env";   // mail delivery
+// ---------------------------------------------------------------------------
+
+/** Session signing and authentication. */
+export const authEnv = {
+  /**
+   * Primary session HMAC-SHA256 secret.
+   * Falls back to the legacy NEXTAUTH_SECRET alias if AUTH_SESSION_SECRET
+   * is absent so existing deployments continue to work during migration.
+   */
+  sessionSecret: (env.AUTH_SESSION_SECRET ?? env.NEXTAUTH_SECRET) as string | undefined,
+  /** Legacy NextAuth secret alias. Prefer AUTH_SESSION_SECRET in new code. */
+  nextAuthSecret: env.NEXTAUTH_SECRET,
+};
+
+/** AES-256-GCM encryption keys for sensitive data at rest. */
+export const encryptionEnv = {
+  /** 64-char hex key (32 bytes) for mail-credential / settings encryption. */
+  settingsKey: env.SETTINGS_ENCRYPTION_KEY,
+  /** 64-char hex key (32 bytes) for TOTP / MFA secret encryption. */
+  mfaKey: env.MFA_ENCRYPTION_KEY,
+};
+
+/** Audit log integrity and forensic bundle export secrets. */
+export const auditEnv = {
+  /** HMAC-SHA256 signing secret for forensic bundle exports (BaFin / BSI). */
+  bundleSecret: env.AUDIT_BUNDLE_SECRET,
+  /** HMAC key for user-ID pseudonymisation in GDPR exports (Art. 5). */
+  exportKey: env.AUDIT_EXPORT_KEY,
+};
+
+/** Application-level runtime settings. */
+export const appEnv = {
+  /** Canonical public-facing URL, e.g. https://avra.example.com. */
+  url: env.NEXT_PUBLIC_APP_URL,
+  /** Bearer token for /api/cron/* route protection. */
+  cronSecret: env.CRON_SECRET,
+  /** Current deployment environment ("development" | "test" | "production"). */
+  nodeEnv: env.NODE_ENV,
+  /** True when NODE_ENV === "production". Avoids string comparison at call sites. */
+  isProd: env.NODE_ENV === "production",
+};
+
+/** AI provider configuration. */
+export const aiEnv = {
+  /** Active provider: "mistral" for cloud, "local" for sovereign on-prem. */
+  provider: env.AI_PROVIDER,
+  /** Mistral API key — required when provider === "mistral". */
+  mistralApiKey: env.MISTRAL_API_KEY,
+  /** Local LLM base URL, e.g. http://localhost:11434 (Ollama default). */
+  localEndpoint: env.LOCAL_AI_ENDPOINT,
+  /** Model identifier for the local endpoint, e.g. "mistral:7b". */
+  localModel: env.LOCAL_AI_MODEL,
+};
+
+/** Mail delivery configuration. */
+export const mailEnv = {
+  /** Active delivery strategy: "log" | "smtp" | "resend". */
+  strategy: env.MAIL_STRATEGY,
+  /** Sender address / display name used in all outbound emails. */
+  from: env.MAIL_FROM,
+  /** Company name injected into email templates. */
+  companyName: env.MAIL_COMPANY_NAME,
+  /** SMTP relay hostname. */
+  smtpHost: env.SMTP_HOST,
+  /** SMTP relay port, parsed to a number (default: 587). */
+  smtpPort: parseInt(env.SMTP_PORT, 10),
+  /** SMTP authentication username. */
+  smtpUser: env.SMTP_USER,
+  /** SMTP authentication password. */
+  smtpPassword: env.SMTP_PASSWORD,
+  /** Resend API key for serverless/edge mail delivery. */
+  resendApiKey: env.RESEND_API_KEY,
+};

@@ -44,12 +44,17 @@ AVRA is designed for an enterprise/open-source hybrid operating model, with cont
 
 ### Tech Stack
 
-- Framework: Next.js (App Router), React 19, TypeScript
-- Styling/UI: Tailwind CSS, Radix UI primitives, Lucide icons
-- i18n: next-intl
-- Database: Prisma ORM with PostgreSQL
+- Framework: Next.js 15 (App Router), React 19, TypeScript 5
+- Styling/UI: Tailwind CSS, Radix UI primitives, Lucide icons, Framer Motion
+- i18n: next-intl (English and German)
+- Forms & Validation: React Hook Form, Zod
+- Database: Prisma 6 ORM with PostgreSQL 16
 - AI Integration: Mistral SDK and configurable local endpoint support
+- PDF Processing: pdfjs-dist (client-side text extraction for AI document audit)
+- MFA: otplib (TOTP), qrcode.react (QR provisioning)
+- Charts: Recharts
 - Notifications: Sonner
+- Testing: Vitest (unit), Playwright (E2E)
 
 ### Architecture Overview
 
@@ -233,6 +238,116 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+---
+
+### Docker Quickstart (Production-like Container Deployment)
+
+Use this path to run the full AVRA stack — application and database — as Docker containers on any machine with Docker Engine and Compose installed. No Node.js installation is required on the host.
+
+#### Prerequisites
+
+- Docker Engine 24+ with the Compose plugin (or Docker Desktop).
+- A copy of `.env.example` (included in the repository root).
+
+#### 1. Configure Environment Variables
+
+The AVRA web container reads runtime secrets from environment variables. The recommended approach is to create a `.env` file in the project root **before** bringing containers up. Docker Compose automatically loads it and substitutes values into the `web` service's `environment` block.
+
+Copy the example file and fill in every required value:
+
+```bash
+cp .env.example .env
+```
+
+Key variables to set for a container deployment:
+
+```dotenv
+# Points to the postgres service by its Compose service name — do not use localhost.
+DATABASE_URL="postgresql://postgres:postgres@postgres:5432/avra?schema=public"
+
+# HMAC-SHA256 session signing key — 64 random bytes encoded as hex.
+# Generate: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+AUTH_SESSION_SECRET="<64-byte-hex>"
+
+# AES-256-GCM key for encrypting settings at rest (SMTP passwords, API keys).
+# Must be exactly 64 hex characters (32 bytes).
+# Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+SETTINGS_ENCRYPTION_KEY="<64-hex-chars>"
+
+# AES-256-GCM key for encrypting TOTP / MFA secrets — same format.
+MFA_ENCRYPTION_KEY="<64-hex-chars>"
+```
+
+> **Security note:** Never commit `.env` to version control. It is already listed in `.gitignore`. For production deployments prefer a secrets manager (Docker Secrets, HashiCorp Vault, AWS Secrets Manager) over a plain file.
+
+> **Build-time vs. runtime keys:** The `Dockerfile` builder stage supplies syntactically valid dummy hex strings for `SETTINGS_ENCRYPTION_KEY`, `MFA_ENCRYPTION_KEY`, `AUDIT_BUNDLE_SECRET`, and `AUTH_SESSION_SECRET` via `ARG`/`ENV` so the environment validator (`env-check.mjs`) passes during `docker-compose up --build`. These stub values are **build-time only** — they are never baked into the final runner image and carry no security weight. At container startup every key is replaced by the real values you provide in `docker-compose.yml` → `environment:` or your `.env` file. If you see a blank or incorrect key at runtime, verify that your `docker-compose.yml` (or runtime secret store) is supplying all four keys.
+
+#### 2. Build and Start All Services
+
+```bash
+docker-compose up -d
+```
+
+This single command:
+
+1. Builds the AVRA image from the `Dockerfile` (three-stage build: deps → builder → runner).
+2. Starts the PostgreSQL 16 container and its persistent named volume (`postgres_data`).
+3. Waits for the database health check to pass before starting the `web` container.
+4. Starts AVRA on port `3000`.
+
+#### 3. Initialize the Database
+
+On first launch, run Prisma migrations against the running database container:
+
+```bash
+docker-compose exec web npx prisma db push
+```
+
+This also provisions the default demo company, NIS2 questionnaire catalog, and three preview vendors so the dashboard is immediately usable.
+
+#### 4. Open the Application
+
+```
+http://localhost:3000
+```
+
+#### How Environment Variables Are Handled Inside the Container
+
+The container is a standard Node.js process; it reads environment variables at **runtime**, not at build time. The Dockerfile does not bake any `.env` secrets into the image layers. There are three ways to supply them:
+
+| Method | When to use |
+|---|---|
+| `.env` file in the project root | Local / development — Docker Compose loads it automatically |
+| `environment:` block in `docker-compose.yml` | Staging pipelines where values are injected by CI |
+| Docker Secrets / external secret store | Production — mount secrets as files and reference with `_FILE` suffix where supported |
+
+#### `env-check` Logic Still Protects the Container
+
+The `scripts/env-check.mjs` script is part of the `prebuild` npm lifecycle. It runs during container image construction (the builder stage calls `npm run build` which triggers `prebuild`) and will **fail the build** if any required variable is missing or malformed. This means a container image that was successfully built is already guaranteed to have passed the environment validation gate.
+
+At runtime, Next.js itself validates the presence of variables referenced via `lib/env.ts` on server startup, so misconfigured containers are caught early — before the first request is served — rather than failing silently on a specific code path.
+
+#### Useful Container Commands
+
+```bash
+# View live logs from the web container
+docker-compose logs -f web
+
+# Run a Prisma migration against the running database
+docker-compose exec web npx prisma db push
+
+# Open a psql shell inside the database container
+docker-compose exec postgres psql -U postgres -d avra
+
+# Stop all containers (preserves the postgres_data volume)
+docker-compose down
+
+# Stop all containers and delete data (full reset)
+docker-compose down -v
+```
+
+---
+
 ### Demo Environment
 
 After the initial `npx prisma db push`, AVRA starts with a preview company, the built-in NIS2 questionnaire catalog, and these three demo vendors:
@@ -316,15 +431,74 @@ This repository no longer uses the deprecated `package.json#prisma` field. This 
 ### Useful Scripts
 
 ```bash
-npm run dev
-npm run build
-npm run start
+# Development
+npm run dev               # Start dev server (with pre-flight checks)
+npm run dev:turbo         # Start dev server with Turbopack
+npm run build             # Production build (runs env validation + prisma generate)
+npm run start             # Start production server
+
+# Code quality
 npm run lint
-npm run db:push
-npm run db:migrate
-npm run db:seed
-npm run db:studio
+
+# Database
+npm run db:push           # Push schema changes without a migration file
+npm run db:migrate        # Create and apply a named Prisma migration
+npm run db:seed           # Run the Prisma seed script manually
+npm run db:studio         # Open Prisma Studio (browser-based DB explorer)
+
+# Testing
+npm run test              # Run unit tests once (Vitest)
+npm run test:watch        # Run unit tests in watch mode
+npm run test:coverage     # Run unit tests with v8 coverage report
+npm run test:e2e          # Run E2E tests (Playwright)
+npm run test:e2e:ui       # Open Playwright UI runner
+
+# Utilities
+npm run audit:verify-chain   # Verify the cryptographic audit log hash-chain
+npm run env:validate         # Validate required environment variables
+npm run ready-check          # Pre-flight check (Docker / DB reachability)
+npm run clean                # Remove all build and dev caches
+npm run clean:dev            # Remove dev caches only (.next)
+npm run clean:build          # Remove build artefacts only
 ```
+
+### Testing
+
+AVRA ships with both unit tests (Vitest) and end-to-end tests (Playwright).
+
+#### Unit Tests
+
+Located in `tests/unit/`. Cover domain logic such as risk scoring and audit log sanitization.
+
+```bash
+npm run test              # Run once
+npm run test:watch        # Watch mode
+npm run test:coverage     # With v8 coverage report
+```
+
+#### End-to-End Tests
+
+Located in `tests/e2e/`. Cover critical user flows (vendor invitation, assessment completion) against a running development server.
+
+```bash
+# Requires a running app (npm run dev) and a seeded database
+npm run test:e2e          # Headless Chromium run
+npm run test:e2e:ui       # Playwright interactive UI
+```
+
+Configuration is in `playwright.config.ts` (base URL: `http://localhost:3000`).
+
+#### Audit Chain Verification
+
+After running the app with real data, verify the forensic audit log hash-chain with:
+
+```bash
+npm run audit:verify-chain
+```
+
+This replays every `eventHash` and `previousLogHash` in sequence and reports any broken links.
+
+---
 
 ### Repository Information
 
@@ -350,6 +524,7 @@ git checkout -b feat/short-description
 
 ```bash
 npm run lint
+npm run test
 npm run build
 ```
 

@@ -183,7 +183,7 @@ async function extractHeadersForForensics(): Promise<{
       null;
     const userAgent = headerStore.get("user-agent") || null;
     return { ipAddress, userAgent };
-  } catch (err) {
+  } catch {
     // Headers not available in current context (e.g., transaction, API route)
     // Return nulls gracefully
     return { ipAddress: null, userAgent: null };
@@ -368,7 +368,7 @@ export async function logAuditEvent(
       );
     }
 
-    return (tx.auditLog as any).create({ data });
+    return tx.auditLog.create({ data: data as unknown as Prisma.AuditLogCreateInput });
   };
 
   // ── Execute in the caller's transaction or a new one ───────────────────────

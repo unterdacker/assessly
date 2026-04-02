@@ -108,7 +108,7 @@ export async function createVendorAction(
     await prisma.$transaction(async (tx) => {
       let vendor;
       try {
-        vendor = await (tx.vendor as any).create({
+        vendor = await tx.vendor.create({
           data: {
             companyId,
             name: name.trim(),
@@ -219,7 +219,7 @@ export async function generateVendorAccessCodeAction(
       for (let i = 0; i < 10; i++) {
         accessCode = generateAccessCode();
         try {
-          await (tx.vendor as any).update({
+          await tx.vendor.update({
             where: { id: vendor.id },
             data: {
               accessCode,
@@ -327,7 +327,7 @@ export async function voidVendorAccessCodeAction(vendorId: string): Promise<Void
 
       const resetPendingInviteState = Boolean(vendor.isFirstLogin);
 
-      await (tx.vendor as any).update({
+      await tx.vendor.update({
         where: { id: vendor.id },
         data: {
           isCodeActive: false,

@@ -249,7 +249,6 @@ export function VendorQuestionnaireWizard({
         
         // AI-Suggested logic: Use new DB fields for explicit suggestion state
         const isAiPending = answer?.isAiSuggested && !answer?.verified;
-        const isAiSuggested = answer?.isAiSuggested;
 
         return (
           <div 

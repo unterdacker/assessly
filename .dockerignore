@@ -1,0 +1,46 @@
+# Dependencies / build artifacts
+node_modules
+.next
+.swc
+out
+
+# Development environment files
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+
+# Docker files (no recursive builds)
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Editor / IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# Test output
+coverage
+playwright-report
+test-results
+
+# Logs
+*.log
+npm-debug.log*
+
+# Misc
+README.md
+docs/
