@@ -35,9 +35,17 @@ import {
 import { RiskBadge } from "@/components/risk-badge";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
 
+export type VendorsPagination = {
+  page: number;
+  pageCount: number;
+  total: number;
+  pageSize: number;
+};
+
 export type VendorsTableSectionProps = {
   vendorAssessments: VendorAssessment[];
   role: UserRole;
+  pagination?: VendorsPagination;
 };
 
 type SortKey = 'name' | 'serviceType' | 'status' | 'lastAssessmentDate' | 'complianceScore' | 'riskLevel' | 'questionnaireProgress';
@@ -161,6 +169,7 @@ function VendorActions({
 export function VendorsTableSection({
   vendorAssessments,
   role,
+  pagination,
 }: VendorsTableSectionProps) {
   const t = useTranslations("vendors");
   const router = useRouter();
@@ -619,6 +628,47 @@ export function VendorsTableSection({
           </TableBody>
         </Table>
       </div>
+
+      {pagination && pagination.pageCount > 1 && (
+        <div className="flex items-center justify-between border-t border-border pt-4 text-sm text-muted-foreground">
+          <span>
+            {t("paginationInfo", {
+              from: (pagination.page - 1) * pagination.pageSize + 1,
+              to: Math.min(pagination.page * pagination.pageSize, pagination.total),
+              total: pagination.total,
+            })}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:pointer-events-none disabled:opacity-40"
+              disabled={pagination.page <= 1}
+              onClick={() => {
+                const params = new URLSearchParams(window.location.search);
+                params.set("page", String(pagination.page - 1));
+                router.push(`?${params.toString()}`);
+              }}
+            >
+              {t("paginationPrev")}
+            </button>
+            <span className="tabular-nums">
+              {pagination.page} / {pagination.pageCount}
+            </span>
+            <button
+              type="button"
+              className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:pointer-events-none disabled:opacity-40"
+              disabled={pagination.page >= pagination.pageCount}
+              onClick={() => {
+                const params = new URLSearchParams(window.location.search);
+                params.set("page", String(pagination.page + 1));
+                router.push(`?${params.toString()}`);
+              }}
+            >
+              {t("paginationNext")}
+            </button>
+          </div>
+        </div>
+      )}
 
       <Dialog open={canManageVendors && Boolean(generatedCredentials)} onOpenChange={(open) => {
         if (!open) {

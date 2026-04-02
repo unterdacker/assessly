@@ -2,47 +2,58 @@ import { prisma } from "@/lib/prisma";
 import { ShieldAlert } from "lucide-react";
 import { AuditLogsTable } from "@/components/admin/audit-logs-table";
 import { requirePageRole } from "@/lib/auth/server";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
+const AUDIT_LOG_PAGE_SIZE = 50;
+
 type AuditLogsPageProps = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; page?: string }>;
 };
 
 export default async function AuditLogsPage({ params, searchParams }: AuditLogsPageProps) {
   const { locale } = await params;
-  const { category } = await searchParams;
+  const { category, page: pageParam } = await searchParams;
   const session = await requirePageRole(["ADMIN", "AUDITOR"], locale);
 
   const categoryFilter = category && category !== "ALL" ? category : undefined;
+  const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
+  const skip = (page - 1) * AUDIT_LOG_PAGE_SIZE;
 
-  const logs = await prisma.auditLog.findMany({
-    where: {
-      companyId: session.companyId ?? undefined,
-      ...(categoryFilter ? { complianceCategory: categoryFilter } : {}),
-    },
-    orderBy: [{ createdAt: "desc" }],
-    take: 200,
-    select: {
-      id: true,
-      createdAt: true,
-      actorId: true,
-      action: true,
-      entityType: true,
-      entityId: true,
-      metadata: true,
-      complianceCategory: true,
-      reason: true,
-      requestId: true,
-      previousLogHash: true,
-      eventHash: true,
-      aiModelId: true,
-      aiProviderName: true,
-      inputContextHash: true,
-      hitlVerifiedBy: true,
-    },
-  });
+  const where = {
+    companyId: session.companyId ?? undefined,
+    ...(categoryFilter ? { complianceCategory: categoryFilter } : {}),
+  };
+
+  const [total, logs] = await Promise.all([
+    prisma.auditLog.count({ where }),
+    prisma.auditLog.findMany({
+      where,
+      orderBy: [{ createdAt: "desc" }],
+      take: AUDIT_LOG_PAGE_SIZE,
+      skip,
+      select: {
+        id: true,
+        createdAt: true,
+        actorId: true,
+        action: true,
+        entityType: true,
+        entityId: true,
+        metadata: true,
+        complianceCategory: true,
+        reason: true,
+        requestId: true,
+        previousLogHash: true,
+        eventHash: true,
+        aiModelId: true,
+        aiProviderName: true,
+        inputContextHash: true,
+        hitlVerifiedBy: true,
+      },
+    }),
+  ]);
 
   const tableRows = logs.map((entry) => {
     const metadata =
@@ -109,6 +120,33 @@ export default async function AuditLogsPage({ params, searchParams }: AuditLogsP
       </header>
 
       <AuditLogsTable logs={tableRows} activeCategory={categoryFilter ?? "ALL"} isAdmin={session.role === "ADMIN"} />
+
+      {total > AUDIT_LOG_PAGE_SIZE && (
+        <nav aria-label="Audit log pagination" className="flex items-center justify-between border-t border-slate-200 pt-4 text-sm dark:border-slate-800">
+          <span className="text-muted-foreground">
+            {skip + 1}–{Math.min(skip + AUDIT_LOG_PAGE_SIZE, total)} of {total} entries
+          </span>
+          <div className="flex items-center gap-2">
+            {page > 1 && (
+              <Link
+                href={`?${new URLSearchParams({ ...(categoryFilter ? { category: categoryFilter } : {}), page: String(page - 1) }).toString()}`}
+                className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+              >
+                Previous
+              </Link>
+            )}
+            <span className="tabular-nums text-muted-foreground">{page} / {Math.ceil(total / AUDIT_LOG_PAGE_SIZE)}</span>
+            {skip + AUDIT_LOG_PAGE_SIZE < total && (
+              <Link
+                href={`?${new URLSearchParams({ ...(categoryFilter ? { category: categoryFilter } : {}), page: String(page + 1) }).toString()}`}
+                className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
+              >
+                Next
+              </Link>
+            )}
+          </div>
+        </nav>
+      )}
     </div>
   );
 }

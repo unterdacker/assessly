@@ -3,7 +3,8 @@
 import fs from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { RISK_POSTURE_CACHE_TAG } from "@/lib/queries/dashboard-risk-posture";
 import { logErrorReport } from "@/lib/logger";
 import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance";
 import { logAuditEvent } from "@/lib/audit-log";
@@ -177,6 +178,7 @@ export async function overrideAssessmentAnswer(
 
     revalidatePath("/vendors");
     revalidatePath(`/vendors/${assessment.vendorId}/assessment`);
+    revalidateTag(RISK_POSTURE_CACHE_TAG);
 
     return { success: true, newScore };
   } catch (err) {
