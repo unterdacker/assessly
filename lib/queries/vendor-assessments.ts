@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { toVendorAssessment } from "@/lib/prisma-mappers";
+import { toVendorAssessment, VendorDomainMapper } from "@/lib/prisma-mappers";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
-import type { AssessmentAnswer, Vendor } from "@prisma/client";
+import type { AssessmentAnswer } from "@prisma/client";
 import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance";
 import { ensureDemoData } from "@/lib/ensure-demo-data";
 import { requireInternalReadUser } from "@/lib/auth/server";
@@ -43,7 +43,7 @@ async function cleanupExpiredVendorCodes(where?: { companyId?: string; vendorId?
   const now = new Date();
 
   await prisma.$transaction([
-    (prisma.vendor as any).updateMany({
+    prisma.vendor.updateMany({
       where: {
         isCodeActive: true,
         codeExpiresAt: { lt: now },
@@ -59,7 +59,7 @@ async function cleanupExpiredVendorCodes(where?: { companyId?: string; vendorId?
         passwordHash: null,
       },
     }),
-    (prisma.vendor as any).updateMany({
+    prisma.vendor.updateMany({
       where: {
         isCodeActive: true,
         codeExpiresAt: { lt: now },
@@ -73,7 +73,7 @@ async function cleanupExpiredVendorCodes(where?: { companyId?: string; vendorId?
         isCodeActive: false,
       },
     }),
-    (prisma.vendor as any).updateMany({
+    prisma.vendor.updateMany({
       where: {
         isCodeActive: false,
         isFirstLogin: true,
@@ -137,9 +137,10 @@ export async function listVendorAssessments(): Promise<VendorAssessment[]> {
         (a) => a.status === "COMPLIANT" || a.status === "NON_COMPLIANT"
       ).length;
 
-      const { vendor, answers: _, ...assessmentFields } = r;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { vendor, answers: _answers, ...assessmentFields } = r;
       return toVendorAssessment(
-        vendor as unknown as Vendor,
+        vendor as unknown as VendorDomainMapper,
         { ...assessmentFields, complianceScore: score, riskLevel },
         filledCount,
         totalQuestions,
@@ -212,11 +213,11 @@ export async function getVendorAssessmentDetail(
   const latestDocument = documents[0] ?? null;
 
   const filledCount = answers.filter(
-    (a: any) => a.status === "COMPLIANT" || a.status === "NON_COMPLIANT"
+    (a: { status: string }) => a.status === "COMPLIANT" || a.status === "NON_COMPLIANT"
   ).length;
 
   const vendorAssessment = toVendorAssessment(
-    vendor as unknown as Vendor,
+    vendor as unknown as VendorDomainMapper,
     { ...assessmentFields, complianceScore: score, riskLevel },
     filledCount,
     totalQuestions,
@@ -311,9 +312,10 @@ export async function listVendorAssessmentsPaginated(
         (a) => a.status === "COMPLIANT" || a.status === "NON_COMPLIANT",
       ).length;
 
-      const { vendor, answers: _, ...assessmentFields } = r;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { vendor, answers: _answers, ...assessmentFields } = r;
       return toVendorAssessment(
-        vendor as unknown as Vendor,
+        vendor as unknown as VendorDomainMapper,
         { ...assessmentFields, complianceScore: score, riskLevel },
         filledCount,
         totalQuestions,

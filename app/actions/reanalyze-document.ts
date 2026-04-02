@@ -4,6 +4,7 @@
 "use server";
 
 import type { AnalyzeDocumentResponse } from "@/lib/nis2-question-analysis";
+import type { Prisma } from "@prisma/client";
 import fs from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/prisma";
@@ -134,11 +135,10 @@ export async function reanalyzeStoredDocument(
     };
     try {
       if (existing) {
-        const { id: _id, ...updateData } = data as any;
-        await prisma.assessmentAnswer.update({ where: { id: existing.id }, data: updateData });
+        await prisma.assessmentAnswer.update({ where: { id: existing.id }, data: data as unknown as Prisma.AssessmentAnswerUpdateInput });
       } else {
         await prisma.assessmentAnswer.create({
-          data: { assessmentId, questionId: res.questionId, ...(data as any) },
+          data: { assessmentId, questionId: res.questionId, ...data } as unknown as Prisma.AssessmentAnswerUncheckedCreateInput,
         });
       }
     } catch (err: unknown) {

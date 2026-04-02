@@ -42,7 +42,7 @@ export async function submitExternalAssessment(input: {
   }
 
   try {
-    const vendor = await (prisma.vendor as any).findFirst({
+    const vendor = await prisma.vendor.findFirst({
       where: {
         id: vendorId,
         inviteToken: token,

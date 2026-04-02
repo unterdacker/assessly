@@ -204,7 +204,7 @@ export function VendorsTableSection({
 
   const sorted = React.useMemo(() => {
     return [...filtered].sort((a, b) => {
-      let aVal: any, bVal: any;
+      let aVal: string | number, bVal: string | number;
       switch (sortKey) {
         case 'name':
           aVal = a.name.toLowerCase();
