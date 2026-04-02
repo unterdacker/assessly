@@ -1,7 +1,6 @@
 "use server";
 
 import type { AnalyzeDocumentResponse } from "@/lib/nis2-question-analysis";
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import fs from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/prisma";
@@ -47,6 +46,9 @@ function sanitizeExtractedText(text: string): string {
  * Exported so the re-analysis action can reuse the same logic.
  */
 export async function extractPdfText(buffer: Buffer): Promise<string> {
+  // Lazy-load pdfjs so the heavy module is only initialized when a document is
+  // actually being processed — not on every cold start of the server action.
+  const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
   const loadingTask = pdfjsLib.getDocument({
     data: new Uint8Array(buffer),
     useWorkerFetch: false,

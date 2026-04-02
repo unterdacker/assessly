@@ -17,8 +17,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RiskGauge } from "@/components/risk-gauge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { CategoryComplianceRadarChart } from "@/components/category-compliance-radar-chart";
-import { VendorsByRiskBarChart } from "@/components/vendors-by-risk-bar-chart";
+import dynamic from "next/dynamic";
+
+const ChartSkeleton = () => (
+  <div className="h-[320px] w-full animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" aria-hidden />
+);
+
+const CategoryComplianceRadarChart = dynamic(
+  () =>
+    import("@/components/category-compliance-radar-chart").then((m) => ({
+      default: m.CategoryComplianceRadarChart,
+    })),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
+
+const VendorsByRiskBarChart = dynamic(
+  () =>
+    import("@/components/vendors-by-risk-bar-chart").then((m) => ({
+      default: m.VendorsByRiskBarChart,
+    })),
+  { ssr: false, loading: () => <ChartSkeleton /> },
+);
 import { ComplianceTrustWidget } from "@/components/compliance-trust-widget";
 
 import { refreshAiSummary } from "@/app/actions/refresh-ai-summary";
