@@ -39,7 +39,7 @@ model Company {
   id        String   @id @default(cuid())
   name      String
   slug      String   @unique
-  aiProvider String @default("mistral")
+  aiProvider String @default("local")
   mistralApiKey String?
   localAiEndpoint String? @default("http://localhost:11434")
   localAiModel String? @default("ministral-3:8b")

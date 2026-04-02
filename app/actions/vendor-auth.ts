@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import type { PortalActionState } from "@/lib/types/vendor-auth";
 import { createSessionForUser, setAuthSessionCookie } from "@/lib/auth/server";
+import { shouldSecureCookie } from "@/lib/auth/token";
 
 const MAX_CONSECUTIVE_FAILURES = 3;
 const BLOCK_MS = 15 * 60 * 1000;
@@ -80,7 +81,7 @@ export async function authenticateVendorAccessCode(
     cookieStore.set("avra-portal-client", clientId, {
       httpOnly: true,
       sameSite: "strict",
-      secure: true,
+      secure: shouldSecureCookie(),
       path: "/",
       maxAge: 60 * 60 * 24,
     });
@@ -170,14 +171,14 @@ export async function authenticateVendorAccessCode(
     cookieStore.set("avra-vendor-setup", crypto.randomUUID(), {
       httpOnly: true,
       sameSite: "strict",
-      secure: true,
+      secure: shouldSecureCookie(),
       path: "/",
       maxAge: 60 * 30, // 30 minutes
     });
     cookieStore.set("avra-vendor-id", vendor.id, {
       httpOnly: true,
       sameSite: "strict",
-      secure: true,
+      secure: shouldSecureCookie(),
       path: "/",
       maxAge: 60 * 30,
     });
@@ -205,13 +206,13 @@ export async function authenticateVendorAccessCode(
   // browser discards them at the same moment the server considers them invalid.
   const tokenMaxAgeSeconds = Math.max(0, Math.floor((expires.getTime() - Date.now()) / 1000));
   const codeMaxAgeSeconds  = Math.max(0, Math.floor((codeExpiresAt.getTime() - Date.now()) / 1000));
-  const isProduction = process.env.NODE_ENV === "production";
+  const isSecure = shouldSecureCookie();
 
   // avra-vendor-id — identifies which vendor record backs this session.
   cookieStore.set("avra-vendor-id", vendor.id, {
     httpOnly: true,
     sameSite: "lax",
-    secure: isProduction,
+    secure: isSecure,
     path: "/",
     maxAge: tokenMaxAgeSeconds,
   });
@@ -222,7 +223,7 @@ export async function authenticateVendorAccessCode(
   cookieStore.set("avra-vendor-token", inviteToken, {
     httpOnly: true,
     sameSite: "lax",
-    secure: isProduction,
+    secure: isSecure,
     path: "/",
     maxAge: tokenMaxAgeSeconds,
   });
@@ -231,7 +232,7 @@ export async function authenticateVendorAccessCode(
   cookieStore.set("avra-vendor-code-exp", codeExpiresAt.toISOString(), {
     httpOnly: true,
     sameSite: "lax",
-    secure: isProduction,
+    secure: isSecure,
     path: "/",
     maxAge: codeMaxAgeSeconds,
   });

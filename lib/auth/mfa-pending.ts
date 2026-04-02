@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cookies } from "next/headers";
+import { shouldSecureCookie } from "@/lib/auth/token";
 
 export const MFA_PENDING_COOKIE = "avra-mfa-pending";
 const MFA_PENDING_TTL_SECONDS = 5 * 60; // 5 minutes
@@ -31,14 +32,14 @@ function encodeBase64Url(input: Uint8Array): string {
     .replace(/=+$/g, "");
 }
 
-function decodeBase64Url(input: string): Uint8Array {
+function decodeBase64Url(input: string): Uint8Array<ArrayBuffer> {
   const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
   const padding =
     normalized.length % 4 === 0
       ? ""
       : "=".repeat(4 - (normalized.length % 4));
   const binary = atob(`${normalized}${padding}`);
-  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  return new Uint8Array(Array.from(binary, (char) => char.charCodeAt(0)));
 }
 
 async function importSigningKey() {
@@ -73,7 +74,7 @@ async function verifyClaims(token: string): Promise<MfaPendingClaims | null> {
     const valid = await crypto.subtle.verify(
       "HMAC",
       key,
-      decodeBase64Url(signature) as unknown as BufferSource,
+      decodeBase64Url(signature),
       encoder.encode(payload),
     );
     if (!valid) return null;
@@ -106,7 +107,7 @@ export async function setMfaPendingCookie(
   const cookieStore = await cookies();
   cookieStore.set(MFA_PENDING_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldSecureCookie(),
     sameSite: "strict",
     path: "/",
     maxAge: MFA_PENDING_TTL_SECONDS,

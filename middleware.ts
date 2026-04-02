@@ -9,7 +9,7 @@ import {
   isProtectedInternalPath,
   withLocalePath,
 } from "@/lib/auth/permissions";
-import { AUTH_SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/auth/token";
+import { AUTH_SESSION_COOKIE_NAME, shouldSecureCookie, verifySessionToken } from "@/lib/auth/token";
 
 const handleI18nRouting = createMiddleware(routing);
 
@@ -96,6 +96,7 @@ async function _middleware(request: NextRequest): Promise<NextResponse> {
 
   const response = handleI18nRouting(request);
   const authToken = request.cookies.get(AUTH_SESSION_COOKIE_NAME)?.value || null;
+
   const authSession = await verifySessionToken(authToken);
   const vendorToken = request.cookies.get("avra-vendor-token")?.value || null;
 
@@ -116,7 +117,7 @@ async function _middleware(request: NextRequest): Promise<NextResponse> {
         path: "/",
         maxAge: 60 * 60 * 24, // Conservative 24-hour cap; refreshed on re-login
         sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
+        secure: shouldSecureCookie(),
         httpOnly: true,
       });
     }
