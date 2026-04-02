@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 type VendorsByRiskBarChartProps = {
   data: Array<{
@@ -52,7 +53,8 @@ export function VendorsByRiskBarChart({
             tickLine={{ stroke: "hsl(var(--border))" }}
           />
           <Tooltip
-            formatter={(value: number | string | (string | number)[] | undefined, _name, item) => {
+            formatter={(value: ValueType | undefined, _name, item) => {
+              if (value === undefined) return ["0", ""];
               const payloadCount = item?.payload?.count;
               const normalizedCount = Number.isFinite(Number(payloadCount))
                 ? Number(payloadCount)

@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { AuditLog, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { truncateIp, computeEventHash } from "@/lib/audit-sanitize";
@@ -247,7 +247,7 @@ const ADVISORY_LOCK_NAMESPACE = 7769;
 export async function logAuditEvent(
   input: LogAuditEventInput,
   options: LogAuditEventOptions = {},
-): Promise<unknown> {
+): Promise<AuditLog> {
   // ── Pre-flight: work that can safely run before the transaction ─────────────
 
   // GDPR Recital 30: Truncate IP so it no longer qualifies as personal data.
@@ -280,7 +280,7 @@ export async function logAuditEvent(
   // Step 1 — Advisory lock: prevents concurrent chain writers for this company.
   // Step 2 — Read previous hash: reads the chain tail *inside* the locked tx.
   // Step 3 — Compute + insert: hashes the new entry and writes it atomically.
-  const writeChainEntry = async (tx: Prisma.TransactionClient): Promise<unknown> => {
+  const writeChainEntry = async (tx: Prisma.TransactionClient): Promise<AuditLog> => {
     // ── Step 1: Serialise concurrent chain writes via an advisory lock ──────
     //
     // pg_advisory_xact_lock(ns int4, key int4) blocks until the lock is free.
