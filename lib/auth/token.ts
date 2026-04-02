@@ -31,11 +31,11 @@ function encodeBase64Url(input: Uint8Array): string {
     .replace(/=+$/g, "");
 }
 
-function decodeBase64Url(input: string): ArrayBuffer {
+function decodeBase64Url(input: string): Uint8Array<ArrayBuffer> {
   const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
   const padding = normalized.length % 4 === 0 ? "" : "=".repeat(4 - (normalized.length % 4));
   const binary = atob(`${normalized}${padding}`);
-  return Uint8Array.from(binary, (char) => char.charCodeAt(0)).buffer as ArrayBuffer;
+  return new Uint8Array(Array.from(binary, (char) => char.charCodeAt(0)));
 }
 
 async function importSigningKey() {
@@ -61,9 +61,7 @@ export async function verifySessionToken(token: string | null | undefined): Prom
   }
 
   const [payload, signature] = token.split(".");
-  if (!payload || !signature) {
-    return null;
-  }
+  if (!payload || !signature) return null;
 
   try {
     const key = await importSigningKey();
@@ -74,14 +72,10 @@ export async function verifySessionToken(token: string | null | undefined): Prom
       encoder.encode(payload),
     );
 
-    if (!isValid) {
-      return null;
-    }
+    if (!isValid) return null;
 
     const claims = JSON.parse(decoder.decode(decodeBase64Url(payload))) as SessionClaims;
-    if (claims.type !== "avra-session" || claims.exp <= Date.now()) {
-      return null;
-    }
+    if (claims.type !== "avra-session" || claims.exp <= Date.now()) return null;
 
     return claims;
   } catch {
@@ -92,4 +86,21 @@ export async function verifySessionToken(token: string | null | undefined): Prom
 export async function hashSessionToken(token: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", encoder.encode(token));
   return encodeBase64Url(new Uint8Array(digest));
+}
+
+/**
+ * Returns true when cookies should carry the `Secure` attribute.
+ *
+ * The flag is tied to the actual transport protocol rather than NODE_ENV
+ * because Next.js standalone always runs with NODE_ENV=production — even
+ * inside a local Docker container served over plain HTTP.
+ *
+ * We use the runtime env var ALLOW_INSECURE_LOCALHOST (not a NEXT_PUBLIC_
+ * var, so it is NOT inlined at build time and reflects the real runtime
+ * environment).  docker-compose.yml sets it to "true" for local Docker;
+ * real deployments omit it or set it to "false".
+ */
+export function shouldSecureCookie(): boolean {
+  if (process.env.ALLOW_INSECURE_LOCALHOST === "true") return false;
+  return process.env.NODE_ENV === "production";
 }

@@ -5,10 +5,11 @@ import type { UserRole } from "@prisma/client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import {
   AUTH_SESSION_COOKIE_NAME,
   hashSessionToken,
+  shouldSecureCookie,
   signSessionClaims,
   verifySessionToken,
 } from "@/lib/auth/token";
@@ -65,29 +66,31 @@ async function getPersistedSessionByToken(token: string | null | undefined): Pro
   }
 
   const tokenHash = await hashSessionToken(token);
-  const session = await prisma.authSession.findUnique({
-    where: { tokenHash },
-    select: {
-      id: true,
-      userId: true,
-      role: true,
-      companyId: true,
-      vendorId: true,
-      expiresAt: true,
-      revokedAt: true,
-      user: {
-        select: {
-          id: true,
-          role: true,
-          email: true,
-          displayName: true,
-          isActive: true,
-          companyId: true,
-          vendorId: true,
+  const session = await withDbRetry(() =>
+    prisma.authSession.findUnique({
+      where: { tokenHash },
+      select: {
+        id: true,
+        userId: true,
+        role: true,
+        companyId: true,
+        vendorId: true,
+        expiresAt: true,
+        revokedAt: true,
+        user: {
+          select: {
+            id: true,
+            role: true,
+            email: true,
+            displayName: true,
+            isActive: true,
+            companyId: true,
+            vendorId: true,
+          },
         },
       },
-    },
-  });
+    }),
+  );
 
   if (!session || session.revokedAt || session.expiresAt <= new Date()) {
     return null;
@@ -212,8 +215,8 @@ export async function setAuthSessionCookie(token: string, expiresAt: Date): Prom
   const cookieStore = await cookies();
   cookieStore.set(AUTH_SESSION_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    secure: shouldSecureCookie(),
+    sameSite: "lax",
     path: "/",
     expires: expiresAt,
   });

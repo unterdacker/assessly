@@ -3,7 +3,7 @@
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { prisma, withDbRetry } from "@/lib/prisma";
 import {
   createSessionForUser,
   clearAuthSessionCookie,
@@ -28,22 +28,24 @@ export async function authenticateInternalUser(
     return { error: "REQUIRED" };
   }
 
-  const user = await prisma.user.findFirst({
-    where: {
-      email,
-      isActive: true,
-      role: { in: ["ADMIN", "AUDITOR"] },
-    },
-    select: {
-      id: true,
-      email: true,
-      passwordHash: true,
-      role: true,
-      companyId: true,
-      vendorId: true,
-      mfaEnabled: true,
-    },
-  });
+  const user = await withDbRetry(() =>
+    prisma.user.findFirst({
+      where: {
+        email,
+        isActive: true,
+        role: { in: ["ADMIN", "AUDITOR"] },
+      },
+      select: {
+        id: true,
+        email: true,
+        passwordHash: true,
+        role: true,
+        companyId: true,
+        vendorId: true,
+        mfaEnabled: true,
+      },
+    }),
+  );
 
   if (!user?.passwordHash) {
     return { error: "INVALID_CREDENTIALS" };
@@ -73,7 +75,10 @@ export async function authenticateInternalUser(
     ? safeNextPath
     : getLocalizedLandingPath(user.role, locale);
 
-  redirect(target);
+  // Return the target to the client so it can perform a full-page navigation
+  // (window.location.href) instead of a soft RSC redirect. This busts the
+  // router cache and forces the root layout to re-evaluate the session.
+  return { error: null, redirectTo: target };
 }
 
 export async function signOutAction(formData: FormData): Promise<never> {

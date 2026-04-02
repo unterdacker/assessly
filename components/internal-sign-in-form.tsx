@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { LockKeyhole, ShieldCheck } from "lucide-react";
 import { authenticateInternalUser } from "@/app/actions/internal-auth";
@@ -23,6 +23,17 @@ export function InternalSignInForm({ locale, nextPath }: { locale: string; nextP
     authenticateInternalUser,
     initialState,
   );
+
+  // Fix: perform a hard navigation on success to bust the Next.js RSC router
+  // cache. A soft redirect() from the server action leaves the root layout
+  // stale, causing the sidebar to linger while the login form re-appears.
+  useEffect(() => {
+    if (state.redirectTo) {
+      window.location.href = state.redirectTo;
+    }
+  }, [state.redirectTo]);
+
+  const isRedirecting = Boolean(state.redirectTo);
 
   return (
     <Card className="mx-auto w-full max-w-md border-border bg-card shadow-sm">
@@ -59,7 +70,7 @@ export function InternalSignInForm({ locale, nextPath }: { locale: string; nextP
             </p>
           ) : null}
 
-          <Button type="submit" className="w-full" disabled={isPending}>
+          <Button type="submit" className="w-full" disabled={isPending || isRedirecting}>
             {isPending ? t("signingIn") : t("submitButton")}
           </Button>
         </form>

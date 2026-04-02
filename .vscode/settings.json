@@ -29,6 +29,7 @@
         "Out-File": true,
         "ConvertFrom-Json": true,
         "ConvertTo-Json": true,
-        "npx eslint": true
+        "npx eslint": true,
+        "docker-compose": true
     }
 }

@@ -40,9 +40,11 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Runtime database connection — points to the db service above.
-      # Override DATABASE_URL in your .env file to connect to a remote database.
-      DATABASE_URL: "${DATABASE_URL:-postgresql://postgres:postgres@db:5432/avra?schema=public}"
+      # Runtime database connection — always uses the 'db' service hostname.
+      # This is intentionally NOT interpolated from .env: the .env file holds
+      # DATABASE_URL=...@localhost:... for local dev, which would break the
+      # container if Docker Compose substituted it here.
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/avra?schema=public"
 
       # -----------------------------------------------------------------------
       # Security secrets — ${VAR:-default} reads from your .env file first;
@@ -67,6 +69,11 @@ services:
       AUDIT_BUNDLE_SECRET: "${AUDIT_BUNDLE_SECRET:-d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4}"
 
       # HMAC-SHA256 session signing key (≥32 chars).
+      # The hex fallback below is a DOCKER-LOCAL-DEV-ONLY default. It satisfies
+      # env.ts production validation (Next.js standalone forces NODE_ENV=production
+      # at runtime) without baking a weak placeholder into the container.
+      # For any real deployment provide your own secret in .env:
+      #   node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
       AUTH_SESSION_SECRET: "${AUTH_SESSION_SECRET:-c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5}"
 
       # Bearer token for /api/cron/* endpoints (≥32 chars).
@@ -81,6 +88,10 @@ services:
       # your .env (with a real NEXT_PUBLIC_APP_URL https:// domain) for prod.
       NODE_ENV: "${NODE_ENV:-development}"
       NEXT_TELEMETRY_DISABLED: "1"
+
+      # AI provider. Defaults to 'local' (no external API key required).
+      # Set to 'mistral' and provide MISTRAL_API_KEY in .env for AI summaries.
+      AI_PROVIDER: "${AI_PROVIDER:-local}"
 
       # Allows http://localhost:3000 as NEXT_PUBLIC_APP_URL even when
       # NODE_ENV=production. Set to "false" (or omit) in real deployments.
