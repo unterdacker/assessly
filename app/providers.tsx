@@ -1,7 +1,6 @@
 "use client";
 
 import { ThemeProvider } from "@/components/theme-provider";
-import { DashboardShell } from "@/components/dashboard-shell";
 import { Toaster } from "sonner";
 import { AuthSessionProvider, type ClientAuthSession } from "@/lib/auth/client";
 
@@ -15,7 +14,7 @@ export function Providers({
   return (
     <AuthSessionProvider session={session}>
       <ThemeProvider>
-        <DashboardShell>{children}</DashboardShell>
+        {children}
         <Toaster />
       </ThemeProvider>
     </AuthSessionProvider>

@@ -1,11 +1,8 @@
-"use client";
-
-import { useTransition } from "react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { UserRole } from "@prisma/client";
-import { ClipboardList, Mail, Radar, RefreshCw, ShieldAlert, Sparkles, UserCheck } from "lucide-react";
+import { ClipboardList, Mail, Radar, ShieldAlert, Sparkles, UserCheck } from "lucide-react";
 import {
   countByStatus,
   supplyChainRiskScore,
@@ -17,30 +14,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RiskGauge } from "@/components/risk-gauge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import dynamic from "next/dynamic";
-
-const ChartSkeleton = () => (
-  <div className="h-[320px] w-full animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" aria-hidden />
-);
-
-const CategoryComplianceRadarChart = dynamic(
-  () =>
-    import("@/components/category-compliance-radar-chart").then((m) => ({
-      default: m.CategoryComplianceRadarChart,
-    })),
-  { ssr: false, loading: () => <ChartSkeleton /> },
-);
-
-const VendorsByRiskBarChart = dynamic(
-  () =>
-    import("@/components/vendors-by-risk-bar-chart").then((m) => ({
-      default: m.VendorsByRiskBarChart,
-    })),
-  { ssr: false, loading: () => <ChartSkeleton /> },
-);
+import { CategoryComplianceRadarChartLazy } from "@/components/category-compliance-radar-chart-lazy";
+import { VendorsByRiskBarChartLazy } from "@/components/vendors-by-risk-bar-chart-lazy";
 import { ComplianceTrustWidget } from "@/components/compliance-trust-widget";
-
-import { refreshAiSummary } from "@/app/actions/refresh-ai-summary";
+import { RefreshAiSummaryButton } from "@/components/refresh-ai-summary-button";
 
 export type DashboardOverviewProps = {
   vendorAssessments: VendorAssessment[];
@@ -129,7 +106,6 @@ export function DashboardOverview({
   translations,
 }: DashboardOverviewProps) {
   const score = supplyChainRiskScore(vendorAssessments);
-  const [isPending, startTransition] = useTransition();
   const pending = countByStatus(vendorAssessments, "pending");
   const inProgress = countByStatus(vendorAssessments, "incomplete");
   const completed = countByStatus(vendorAssessments, "completed");
@@ -257,19 +233,9 @@ export function DashboardOverview({
           <div className="rounded-full border border-slate-300/80 bg-white/80 px-3 py-1 text-xs text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
               {summarySourceLabel}
             </div>
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={() =>
-                startTransition(async () => {
-                  await refreshAiSummary();
-                })
-              }
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-300/80 bg-white/80 px-3 py-1 text-xs text-slate-600 shadow-sm transition-opacity hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800"
-            >
-              <RefreshCw className={cn("h-3 w-3", isPending && "animate-spin")} aria-hidden />
-              {isPending ? translations.RefreshAISummaryPending : translations.RefreshAISummary}
-            </button>
+            <RefreshAiSummaryButton
+              labels={{ idle: translations.RefreshAISummary, pending: translations.RefreshAISummaryPending }}
+            />
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[1.25fr_1fr]">
@@ -281,7 +247,7 @@ export function DashboardOverview({
               </p>
             </CardHeader>
             <CardContent className="pt-6">
-              <CategoryComplianceRadarChart
+              <CategoryComplianceRadarChartLazy
                 data={radarData}
                 legendLabel={translations.AverageComplianceLegend}
                 emptyLabel={translations.NoVendorData}
@@ -298,7 +264,7 @@ export function DashboardOverview({
                 </p>
               </CardHeader>
               <CardContent className="pt-6">
-                <VendorsByRiskBarChart
+                <VendorsByRiskBarChartLazy
                   data={barData}
                   legendLabel={translations.VendorCountLegend}
                   emptyLabel={translations.NoVendorData}

@@ -264,7 +264,7 @@ export function VendorQuestionnaireWizard({
             {/* Question Header */}
             <button
               onClick={() => setOpenQuestionId(isOpen ? null : q.id)}
-              className="flex w-full cursor-pointer items-center justify-between px-6 py-4 text-left"
+              className="flex min-h-[72px] w-full cursor-pointer items-center justify-between px-6 py-4 text-left"
             >
               <div className="flex items-center gap-4">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
@@ -301,8 +301,14 @@ export function VendorQuestionnaireWizard({
             </button>
 
             {/* Question Body */}
-            {isOpen && (
-              <div className="border-t border-slate-100 px-6 py-6 transition-all dark:border-slate-800">
+            <div
+              className={cn(
+                "grid transition-[grid-template-rows] duration-200 ease-in-out",
+                isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+              )}
+            >
+              <div className="min-h-0 overflow-hidden">
+              <div className="border-t border-slate-100 px-6 py-6 dark:border-slate-800">
                 <div className="space-y-6">
                   {/* Guidance */}
                   {questionGuidance && (
@@ -527,7 +533,8 @@ export function VendorQuestionnaireWizard({
                   </div>
                 </div>
               </div>
-            )}
+              </div>
+            </div>
           </div>
         );
       })}
