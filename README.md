@@ -278,6 +278,18 @@ SETTINGS_ENCRYPTION_KEY="<64-hex-chars>"
 MFA_ENCRYPTION_KEY="<64-hex-chars>"
 ```
 
+##### Local AI / Ollama Configuration
+
+When `AI_PROVIDER` is set to `local` (the default), AVRA sends inference requests to a local LLM endpoint such as [Ollama](https://ollama.com). Inside Docker, `localhost` refers to the container itself — not your host machine. Use `host.docker.internal` to reach Ollama running on the host OS:
+
+```dotenv
+AI_PROVIDER="local"
+LOCAL_AI_ENDPOINT="http://host.docker.internal:11434"
+LOCAL_AI_MODEL="ministral-3:8b"
+```
+
+> **Important:** If your `.env` file contains `LOCAL_AI_ENDPOINT=http://localhost:11434`, the container will not be able to reach Ollama. Change it to `http://host.docker.internal:11434` for Docker deployments. The `docker-compose.yml` default already uses `host.docker.internal`.
+
 > **Security note:** Never commit `.env` to version control. It is already listed in `.gitignore`. For production deployments prefer a secrets manager (Docker Secrets, HashiCorp Vault, AWS Secrets Manager) over a plain file.
 
 > **Build-time vs. runtime keys:** The `Dockerfile` builder stage supplies syntactically valid dummy hex strings for `SETTINGS_ENCRYPTION_KEY`, `MFA_ENCRYPTION_KEY`, `AUDIT_BUNDLE_SECRET`, and `AUTH_SESSION_SECRET` via `ARG`/`ENV` so the environment validator (`env-check.mjs`) passes during `docker-compose up --build`. These stub values are **build-time only** — they are never baked into the final runner image and carry no security weight. At container startup every key is replaced by the real values you provide in `docker-compose.yml` → `environment:` or your `.env` file. If you see a blank or incorrect key at runtime, verify that your `docker-compose.yml` (or runtime secret store) is supplying all four keys.
@@ -310,6 +322,8 @@ This also provisions the default demo company, NIS2 questionnaire catalog, and t
 ```
 http://localhost:3000
 ```
+
+> **Tip:** If `http://localhost:3000` does not load in your browser (some browsers force HTTPS redirects for localhost), try `http://127.0.0.1:3000` instead.
 
 #### How Environment Variables Are Handled Inside the Container
 
