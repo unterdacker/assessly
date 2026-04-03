@@ -290,7 +290,7 @@ export async function logAuditEvent(
     // Auditor note: While this lock is held, no other session can write an
     // audit row for the same company.  This guarantees that the SELECT in
     // Step 2 returns the true chain tail at the moment of INSERT.
-    await tx.$executeRaw`SELECT pg_advisory_xact_lock(${ADVISORY_LOCK_NAMESPACE}, hashtext(${input.companyId}))`;
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(CAST(${ADVISORY_LOCK_NAMESPACE} AS int4), hashtext(${input.companyId}))`;
 
     // ── Step 2: Read the chain tail inside the locked transaction ───────────
     //

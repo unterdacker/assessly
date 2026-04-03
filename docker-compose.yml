@@ -93,6 +93,11 @@ services:
       # Set to 'mistral' and provide MISTRAL_API_KEY in .env for AI summaries.
       AI_PROVIDER: "${AI_PROVIDER:-local}"
 
+      # Local LLM endpoint (Ollama). Inside Docker, "localhost" means the
+      # container itself — use host.docker.internal to reach the host OS.
+      LOCAL_AI_ENDPOINT: "${LOCAL_AI_ENDPOINT:-http://host.docker.internal:11434}"
+      LOCAL_AI_MODEL: "${LOCAL_AI_MODEL:-ministral-3:8b}"
+
       # Allows http://localhost:3000 as NEXT_PUBLIC_APP_URL even when
       # NODE_ENV=production. Set to "false" (or omit) in real deployments.
       ALLOW_INSECURE_LOCALHOST: "${ALLOW_INSECURE_LOCALHOST:-true}"
