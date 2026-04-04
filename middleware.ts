@@ -74,6 +74,12 @@ function stripLocaleFromPathname(pathname: string): string {
  * Security headers are applied to every response via applySecurityHeaders().
  */
 async function _middleware(request: NextRequest): Promise<NextResponse> {
+  // Server Actions are POSTs with a Next-Action header. Locale routing (rewrites
+  // / redirects) must be skipped so Next.js can resolve the action by its hash.
+  if (request.headers.get("Next-Action")) {
+    return NextResponse.next();
+  }
+
   const localeFromPath = getLocaleFromPathname(request.nextUrl.pathname);
   const normalizedPathname = stripLocaleFromPathname(request.nextUrl.pathname);
 
