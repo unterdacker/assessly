@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Eye,
   Activity,
@@ -11,7 +11,6 @@ import {
   MapPin,
   Smartphone,
   Download,
-  Filter,
   BrainCircuit,
   KeyRound,
   Settings2,
@@ -39,13 +38,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { AuditDiffViewer } from "@/components/admin/audit-diff-viewer";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 
 // ---------------------------------------------------------------------------
 // Types
@@ -77,7 +70,6 @@ type AuditLogRow = {
 
 type AuditLogsTableProps = {
   logs: AuditLogRow[];
-  activeCategory: string;
   isAdmin: boolean;
 };
 
@@ -145,8 +137,6 @@ const COMPLIANCE_CATEGORIES: Record<string, CategoryConfig> = {
   },
 };
 
-const FILTER_OPTIONS = ["ALL", "AI_ACT", "AUTH", "CONFIG", "NIS2_DORA", "ISO27001_SOC2"];
-
 function ComplianceBadge({ category }: { category: string | null | undefined }) {
   const cfg = COMPLIANCE_CATEGORIES[category ?? "OTHER"] ?? COMPLIANCE_CATEGORIES.OTHER;
   return (
@@ -182,8 +172,7 @@ function formatTimestamp(iso: string): string {
   }).format(date);
 }
 
-export function AuditLogsTable({ logs, activeCategory, isAdmin }: AuditLogsTableProps) {
-  const router = useRouter();
+export function AuditLogsTable({ logs, isAdmin }: AuditLogsTableProps) {
   const pathname = usePathname();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -236,20 +225,11 @@ export function AuditLogsTable({ logs, activeCategory, isAdmin }: AuditLogsTable
     };
   }, [selected]);
 
-  function handleCategoryChange(value: string) {
-    const params = new URLSearchParams();
-    if (value && value !== "ALL") params.set("category", value);
-    const qs = params.toString();
-    router.push(qs ? `${pathname}?${qs}` : pathname);
-  }
-
   function handleDownloadBundle() {
     startDownload(async () => {
       setDownloadError(null);
       try {
-        const categoryParam =
-          activeCategory && activeCategory !== "ALL" ? `?category=${activeCategory}` : "";
-        const res = await fetch(`/api/audit-logs/forensic-bundle${categoryParam}`);
+        const res = await fetch(`/api/audit-logs/forensic-bundle`);
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           setDownloadError((body as { error?: string }).error ?? `HTTP ${res.status}`);
@@ -272,32 +252,10 @@ export function AuditLogsTable({ logs, activeCategory, isAdmin }: AuditLogsTable
 
   return (
     <div className="space-y-4">
-      {/* ── Toolbar: Compliance Filter + Forensic Download ── */}
-      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/40 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-          <span className="text-sm font-medium text-muted-foreground">Compliance Filter:</span>
-          <Select value={activeCategory} onValueChange={handleCategoryChange}>
-            <SelectTrigger className="h-8 w-[200px] text-sm" aria-label="Filter by compliance category">
-              <SelectValue placeholder="All Events" />
-            </SelectTrigger>
-            <SelectContent>
-              {FILTER_OPTIONS.map((opt) => {
-                const cfg = COMPLIANCE_CATEGORIES[opt] ?? COMPLIANCE_CATEGORIES.OTHER;
-                return (
-                  <SelectItem key={opt} value={opt}>
-                    <span className="inline-flex items-center gap-1.5">
-                      <cfg.Icon className={`h-3.5 w-3.5 ${cfg.color}`} aria-hidden />
-                      {cfg.label}
-                    </span>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {isAdmin && (
+      {/* ── Toolbar: Forensic Download ── */}
+      {isAdmin && (
+      <div className="flex rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/40 sm:justify-end">
+        {
           <div className="flex flex-col items-end gap-1">
             <Button
               variant="outline"
@@ -317,8 +275,9 @@ export function AuditLogsTable({ logs, activeCategory, isAdmin }: AuditLogsTable
               </p>
             )}
           </div>
-        )}
+        }
       </div>
+      )}
 
       {/* ── Legend bar ── */}
       <div className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-800 dark:bg-slate-950/40">
@@ -330,9 +289,6 @@ export function AuditLogsTable({ logs, activeCategory, isAdmin }: AuditLogsTable
           </span>
           <span className="ml-auto font-mono">
             {logs.length} event{logs.length !== 1 ? "s" : ""}
-            {activeCategory && activeCategory !== "ALL"
-              ? ` · ${COMPLIANCE_CATEGORIES[activeCategory]?.label ?? activeCategory}`
-              : ""}
           </span>
         </div>
       </div>

@@ -151,9 +151,11 @@ COPY --from=builder /app/lib ./lib
 # so the Prisma CLI has every transitive dependency (engines, effect, etc.).
 COPY --from=deps /app/node_modules /app/node_modules
 
-# Install the entrypoint script and make it executable.
+# Install the entrypoint script, strip Windows CRLF line endings, and make it
+# executable.  Without the sed step the Alpine /bin/sh interpreter cannot parse
+# the shebang when the file was checked out with \r\n on Windows.
 COPY entrypoint.sh ./entrypoint.sh
-RUN chmod +x ./entrypoint.sh
+RUN sed -i 's/\r$//' ./entrypoint.sh && chmod +x ./entrypoint.sh
 
 # Transfer ownership of the entire working directory to the non-root user
 # after all copies are complete (copies above run as root).

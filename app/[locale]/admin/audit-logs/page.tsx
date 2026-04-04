@@ -10,21 +10,19 @@ const AUDIT_LOG_PAGE_SIZE = 50;
 
 type AuditLogsPageProps = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ category?: string; page?: string }>;
+  searchParams: Promise<{ page?: string }>;
 };
 
 export default async function AuditLogsPage({ params, searchParams }: AuditLogsPageProps) {
   const { locale } = await params;
-  const { category, page: pageParam } = await searchParams;
+  const { page: pageParam } = await searchParams;
   const session = await requirePageRole(["ADMIN", "AUDITOR"], locale);
 
-  const categoryFilter = category && category !== "ALL" ? category : undefined;
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
   const skip = (page - 1) * AUDIT_LOG_PAGE_SIZE;
 
   const where = {
     companyId: session.companyId ?? undefined,
-    ...(categoryFilter ? { complianceCategory: categoryFilter } : {}),
   };
 
   const [total, logs] = await Promise.all([
@@ -119,7 +117,7 @@ export default async function AuditLogsPage({ params, searchParams }: AuditLogsP
         </div>
       </header>
 
-      <AuditLogsTable logs={tableRows} activeCategory={categoryFilter ?? "ALL"} isAdmin={session.role === "ADMIN"} />
+      <AuditLogsTable logs={tableRows} isAdmin={session.role === "ADMIN"} />
 
       {total > AUDIT_LOG_PAGE_SIZE && (
         <nav aria-label="Audit log pagination" className="flex items-center justify-between border-t border-slate-200 pt-4 text-sm dark:border-slate-800">
@@ -129,7 +127,7 @@ export default async function AuditLogsPage({ params, searchParams }: AuditLogsP
           <div className="flex items-center gap-2">
             {page > 1 && (
               <Link
-                href={`?${new URLSearchParams({ ...(categoryFilter ? { category: categoryFilter } : {}), page: String(page - 1) }).toString()}`}
+                href={`?${new URLSearchParams({ page: String(page - 1) }).toString()}`}
                 className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
               >
                 Previous
@@ -138,7 +136,7 @@ export default async function AuditLogsPage({ params, searchParams }: AuditLogsP
             <span className="tabular-nums text-muted-foreground">{page} / {Math.ceil(total / AUDIT_LOG_PAGE_SIZE)}</span>
             {skip + AUDIT_LOG_PAGE_SIZE < total && (
               <Link
-                href={`?${new URLSearchParams({ ...(categoryFilter ? { category: categoryFilter } : {}), page: String(page + 1) }).toString()}`}
+                href={`?${new URLSearchParams({ page: String(page + 1) }).toString()}`}
                 className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
               >
                 Next

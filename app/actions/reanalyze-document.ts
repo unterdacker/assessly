@@ -16,7 +16,7 @@ import {
   countStrictlyCompliantAnswers,
   syncAssessmentComplianceToDatabase,
 } from "@/lib/assessment-compliance";
-import { extractPdfText } from "@/app/actions/analyze-document";
+import { extractPdfText } from "@/lib/pdf-utils";
 import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 
 const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
