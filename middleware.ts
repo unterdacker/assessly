@@ -14,6 +14,41 @@ import { AUTH_SESSION_COOKIE_NAME, shouldSecureCookie, verifySessionToken } from
 const handleI18nRouting = createMiddleware(routing);
 
 // ---------------------------------------------------------------------------
+// Edge-compatible structured logger (no Node.js crypto dependency)
+// Emits JSON lines consistent with the AuditLogger for log aggregation.
+// ---------------------------------------------------------------------------
+
+function emitMiddlewareLog(entry: {
+  event_type: string;
+  action_name: string;
+  status: "success" | "failure";
+  user_id?: string | null;
+  role?: string | null;
+  source_ip?: string | null;
+  pathname?: string;
+  message?: string;
+  response_code?: number;
+}) {
+  const log = {
+    timestamp: new Date().toISOString(),
+    level: entry.status === "failure" ? "warn" : "info",
+    event_type: entry.event_type,
+    action_name: entry.action_name,
+    service_name: "avra-compliance",
+    environment: process.env.NODE_ENV ?? "development",
+    status: entry.status,
+    user_id: entry.user_id ?? null,
+    role: entry.role ?? null,
+    source_ip: entry.source_ip ?? null,
+    response_code: entry.response_code ?? null,
+    details: { pathname: entry.pathname },
+    message: entry.message,
+  };
+  // Edge Runtime: console.log writes to stdout as JSON in most runtimes
+  console.log(JSON.stringify(log));
+}
+
+// ---------------------------------------------------------------------------
 // Security headers applied to every page response
 // ---------------------------------------------------------------------------
 
@@ -137,6 +172,15 @@ async function _middleware(request: NextRequest): Promise<NextResponse> {
 
   if (isProtectedInternalPath(normalizedPathname)) {
     if (!authSession) {
+      emitMiddlewareLog({
+        event_type: "AUTH",
+        action_name: "middleware.unauthenticated_redirect",
+        status: "failure",
+        pathname: normalizedPathname,
+        source_ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+        message: "Unauthenticated access to protected path — redirecting to sign-in",
+        response_code: 302,
+      });
       const url = request.nextUrl.clone();
       url.pathname = withLocalePath(vendorToken ? "/external/portal" : "/auth/sign-in", activeLocale);
       if (!vendorToken) {
@@ -146,6 +190,17 @@ async function _middleware(request: NextRequest): Promise<NextResponse> {
     }
 
     if (!canAccessPath(authSession.role, normalizedPathname)) {
+      emitMiddlewareLog({
+        event_type: "ACCESS_CONTROL",
+        action_name: "middleware.access_denied",
+        status: "failure",
+        user_id: authSession.uid,
+        role: authSession.role,
+        pathname: normalizedPathname,
+        source_ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+        message: `Role ${authSession.role} denied access to ${normalizedPathname}`,
+        response_code: 403,
+      });
       const url = request.nextUrl.clone();
       url.pathname = withLocalePath(
         authSession.role === "VENDOR" ? "/external/portal" : "/unauthorized",

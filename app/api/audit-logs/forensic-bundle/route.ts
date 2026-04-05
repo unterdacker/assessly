@@ -19,6 +19,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getAuthSessionFromRequest } from "@/lib/auth/server";
 import {
@@ -45,11 +46,47 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const categoryFilter = searchParams.get("category") || undefined;
 
+  /** Maps base UI filter keys to DB complianceCategory values. */
+  const categoryToDb: Record<string, string[]> = {
+    auth: ["AUTH"],
+    access: ["ISO27001_SOC2"],
+    config: ["CONFIG"],
+    data: ["AI_ACT", "NIS2_DORA", "OTHER"],
+    health: ["SYSTEM_HEALTH"],
+  };
+
+  const categoryWhere = (() => {
+    if (!categoryFilter) return undefined;
+
+    if (categoryFilter === "AI_GOVERNANCE") {
+      return {
+        complianceCategory: "AI_ACT",
+        OR: [
+          { aiModelId: { not: null } },
+          { inputContextHash: { not: null } },
+          { action: { in: ["AI_GENERATION", "DOCUMENT_ANALYZED", "AI_REMEDIATION_SENT"] } },
+        ],
+      } satisfies Prisma.AuditLogWhereInput;
+    }
+
+    if (categoryFilter === "HUMAN_OVERSIGHT") {
+      return {
+        complianceCategory: "AI_ACT",
+        OR: [{ hitlVerifiedBy: { not: null } }, { action: "AI_REMEDIATION_SENT" }],
+      } satisfies Prisma.AuditLogWhereInput;
+    }
+
+    const dbCategories = categoryToDb[categoryFilter];
+    if (!dbCategories) return undefined;
+
+    return { complianceCategory: { in: dbCategories } } satisfies Prisma.AuditLogWhereInput;
+  })();
+
   // --- Fetch all logs for this company, oldest first (chain order) ---
   const rawLogs = await prisma.auditLog.findMany({
     where: {
       companyId,
-      ...(categoryFilter ? { complianceCategory: categoryFilter } : {}),
+      ...(categoryWhere ?? {}),
     },
     orderBy: { createdAt: "asc" },
     select: {

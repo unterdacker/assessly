@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { logErrorReport } from "@/lib/logger";
 import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
+import { logAuditEvent } from "@/lib/audit-log";
+import { AuditLogger } from "@/lib/structured-logger";
 
 export type UpdateVendorProfileInput = {
   vendorId: string;
@@ -72,17 +74,26 @@ export async function updateVendorProfile(
       },
     });
 
-    // Audit log
-    await prisma.auditLog.create({
-      data: {
+    // Audit log — hash-chained via centralized logAuditEvent
+    await logAuditEvent(
+      {
         companyId: vendor.companyId,
-        action: `Updated vendor profile for ${officialName?.trim() || vendor.name}`,
-        entityType: "vendor",
+        userId: session.userId,
+        action: "VENDOR_CREATED", // vendor profile update (closest available action)
+        entityType: "Vendor",
         entityId: vendorId,
-        actorId: session.userId,
-        createdBy: session.userId,
-        metadata: { updatedFields: Object.keys(input).filter(k => k !== 'vendorId') },
+        previousValue: { name: vendor.name },
+        newValue: { name: officialName?.trim() || vendor.name, updatedFields: Object.keys(input).filter(k => k !== 'vendorId') },
       },
+      { captureHeaders: true },
+    );
+
+    AuditLogger.dataOp("vendor.profile_updated", "success", {
+      userId: session.userId,
+      entityType: "Vendor",
+      entityId: vendorId,
+      message: `Vendor profile updated for ${officialName?.trim() || vendor.name}`,
+      details: { updatedFields: Object.keys(input).filter(k => k !== 'vendorId') },
     });
 
     revalidatePath("/vendors");

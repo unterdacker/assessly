@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { encrypt, decrypt } from "@/lib/crypto";
 import { requireAdminUser, isAccessControlError } from "@/lib/auth/server";
 import { logAuditEvent } from "@/lib/audit-log";
+import { AuditLogger } from "@/lib/structured-logger";
 
 // ─── Update Mail Settings ─────────────────────────────────────────────────────
 
@@ -111,11 +112,23 @@ export async function updateMailSettings(
       { captureHeaders: true },
     );
 
+    AuditLogger.configuration("settings.mail_updated", "success", {
+      userId: session.userId,
+      entityType: "system_settings",
+      entityId: "mail_config",
+      message: `Mail configuration updated to ${mailStrategy}`,
+      details: { mailStrategy, smtpHost, smtpPort },
+    });
+
     revalidatePath("/", "layout");
     return { ok: true };
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
-    console.error("[AVRA Mail Settings] Failed to save:", error);
+    AuditLogger.configuration("settings.mail_updated", "failure", {
+      userId: session?.userId,
+      message: `Failed to save mail settings: ${error}`,
+      error: err instanceof Error ? err : new Error(String(err)),
+    });
     return { ok: false, error: "Failed to save settings. Please try again." };
   }
 }

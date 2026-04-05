@@ -1,10 +1,12 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Eye,
   Activity,
+  Cpu,
   UserRound,
   Clock3,
   Database,
@@ -21,6 +23,13 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -71,10 +80,13 @@ type AuditLogRow = {
 type AuditLogsTableProps = {
   logs: AuditLogRow[];
   isAdmin: boolean;
+  activeCategory?: string;
+  total: number;
 };
 
 // ---------------------------------------------------------------------------
-// Compliance category display config
+// Compliance category display config (keyed by DB complianceCategory values)
+// Used by ComplianceBadge for per-row display.
 // ---------------------------------------------------------------------------
 
 type CategoryConfig = {
@@ -86,13 +98,6 @@ type CategoryConfig = {
 };
 
 const COMPLIANCE_CATEGORIES: Record<string, CategoryConfig> = {
-  ALL: {
-    label: "All Events",
-    description: "Show all audit events",
-    Icon: Activity,
-    color: "text-slate-600 dark:text-slate-400",
-    badge: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
-  },
   AI_ACT: {
     label: "EU AI Act",
     description: "AI generation, document analysis, human-in-the-loop",
@@ -128,6 +133,13 @@ const COMPLIANCE_CATEGORIES: Record<string, CategoryConfig> = {
     color: "text-violet-700 dark:text-violet-400",
     badge: "bg-violet-100 text-violet-800 dark:bg-violet-900/60 dark:text-violet-200",
   },
+  SYSTEM_HEALTH: {
+    label: "System Health",
+    description: "Health checks and system monitoring",
+    Icon: Activity,
+    color: "text-emerald-700 dark:text-emerald-400",
+    badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200",
+  },
   OTHER: {
     label: "Other",
     description: "Uncategorized events",
@@ -135,6 +147,26 @@ const COMPLIANCE_CATEGORIES: Record<string, CategoryConfig> = {
     color: "text-slate-600 dark:text-slate-400",
     badge: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
   },
+};
+
+// ---------------------------------------------------------------------------
+// Filter dropdown config (keyed by UI filter values sent as ?category= param)
+// ---------------------------------------------------------------------------
+
+type FilterConfig = {
+  Icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
+  color: string;
+};
+
+const FILTER_CATEGORIES: Record<string, FilterConfig> = {
+  all:    { Icon: Activity,    color: "text-slate-600 dark:text-slate-400" },
+  auth:   { Icon: KeyRound,    color: "text-rose-700 dark:text-rose-400" },
+  access: { Icon: Users,       color: "text-violet-700 dark:text-violet-400" },
+  config: { Icon: Settings2,   color: "text-amber-700 dark:text-amber-400" },
+  data:   { Icon: Database,    color: "text-indigo-700 dark:text-indigo-400" },
+  health: { Icon: Activity,    color: "text-emerald-700 dark:text-emerald-400" },
+  AI_GOVERNANCE: { Icon: Cpu, color: "text-cyan-700 dark:text-cyan-400" },
+  HUMAN_OVERSIGHT: { Icon: UserCheck, color: "text-teal-700 dark:text-teal-400" },
 };
 
 function ComplianceBadge({ category }: { category: string | null | undefined }) {
@@ -172,8 +204,11 @@ function formatTimestamp(iso: string): string {
   }).format(date);
 }
 
-export function AuditLogsTable({ logs, isAdmin }: AuditLogsTableProps) {
+export function AuditLogsTable({ logs, isAdmin, activeCategory, total }: AuditLogsTableProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const t = useTranslations("Audit");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [downloading, startDownload] = useTransition();
@@ -225,25 +260,39 @@ export function AuditLogsTable({ logs, isAdmin }: AuditLogsTableProps) {
     };
   }, [selected]);
 
+  function handleCategoryChange(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("page"); // reset to page 1 on filter change
+    if (value === "all") {
+      params.delete("category");
+    } else {
+      params.set("category", value);
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
   function handleDownloadBundle() {
     startDownload(async () => {
       setDownloadError(null);
       try {
-        const res = await fetch(`/api/audit-logs/forensic-bundle`);
+        const url = activeCategory
+          ? `/api/audit-logs/forensic-bundle?category=${encodeURIComponent(activeCategory)}`
+          : `/api/audit-logs/forensic-bundle`;
+        const res = await fetch(url);
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           setDownloadError((body as { error?: string }).error ?? `HTTP ${res.status}`);
           return;
         }
         const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
+        const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.href = url;
+        a.href = blobUrl;
         a.download = `avra-forensic-bundle-${Date.now()}.json`;
         document.body.appendChild(a);
         a.click();
         a.remove();
-        URL.revokeObjectURL(url);
+        URL.revokeObjectURL(blobUrl);
       } catch (err) {
         setDownloadError(err instanceof Error ? err.message : "Download failed");
       }
@@ -252,11 +301,34 @@ export function AuditLogsTable({ logs, isAdmin }: AuditLogsTableProps) {
 
   return (
     <div className="space-y-4">
-      {/* ── Toolbar: Forensic Download ── */}
-      {isAdmin && (
-      <div className="flex rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/40 sm:justify-end">
-        {
-          <div className="flex flex-col items-end gap-1">
+      {/* ── Toolbar: Category Filter + Forensic Download ── */}
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950/40">
+        <div className="flex items-center gap-2">
+          <label htmlFor="category-filter" className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+            {t("filter.label")}
+          </label>
+          <Select value={activeCategory ?? "all"} onValueChange={handleCategoryChange}>
+            <SelectTrigger id="category-filter" className="w-[220px] [&>span]:flex [&>span]:items-center [&>span]:gap-1.5 [&>span]:truncate">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(FILTER_CATEGORIES).map(([key, cfg]) => {
+                const label = t(`filter.${key}`);
+                return (
+                  <SelectItem key={key} value={key} textValue={label}>
+                    <span className="flex items-center gap-1.5">
+                      <cfg.Icon className={`h-3.5 w-3.5 shrink-0 ${cfg.color}`} aria-hidden />
+                      <span className="truncate">{label}</span>
+                    </span>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {isAdmin && (
+          <div className="flex flex-col items-end gap-1 sm:ml-auto">
             <Button
               variant="outline"
               size="sm"
@@ -266,7 +338,7 @@ export function AuditLogsTable({ logs, isAdmin }: AuditLogsTableProps) {
               className="gap-1.5 border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
             >
               <Download className="h-4 w-4" aria-hidden />
-              {downloading ? "Preparing…" : "Download Forensic Bundle"}
+              {downloading ? t("downloadPreparing") : t("downloadBundle")}
             </Button>
             {downloadError && (
               <p className="flex items-center gap-1 text-xs text-rose-600 dark:text-rose-400">
@@ -275,20 +347,18 @@ export function AuditLogsTable({ logs, isAdmin }: AuditLogsTableProps) {
               </p>
             )}
           </div>
-        }
+        )}
       </div>
-      )}
 
       {/* ── Legend bar ── */}
       <div className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-800 dark:bg-slate-950/40">
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <Activity className="h-4 w-4" aria-hidden />
           <span>
-            Privacy-first forensic log — IP truncated (GDPR Rec. 30), hash-chained (NIS2/DORA Art. 9),
-            AI identity tracked (EU AI Act Art. 12/14).
+            {t("legendPrefix")}
           </span>
           <span className="ml-auto font-mono">
-            {logs.length} event{logs.length !== 1 ? "s" : ""}
+            {t("eventCount", { count: total })}
           </span>
         </div>
       </div>
@@ -319,7 +389,7 @@ export function AuditLogsTable({ logs, isAdmin }: AuditLogsTableProps) {
           {logs.length === 0 ? (
             <TableRow>
               <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                No audit events found.
+                {t("noEvents")}
               </TableCell>
             </TableRow>
           ) : (
