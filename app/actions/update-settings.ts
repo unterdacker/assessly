@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { encrypt } from "@/lib/crypto";
 import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
+import { logAuditEvent } from "@/lib/audit-log";
+import { AuditLogger } from "@/lib/structured-logger";
 
 // ---------------------------------------------------------------------------
 // SSRF block-list: deny well-known cloud metadata and link-local endpoints.
@@ -108,16 +110,30 @@ export async function updateAiSettings(
       },
     });
 
-    // Audit log
-    await prisma.auditLog.create({
-      data: {
+    // Audit log — hash-chained via centralized logAuditEvent
+    await logAuditEvent(
+      {
         companyId,
-        action: `AI Provider switched to ${aiProvider === "mistral" ? "Mistral AI" : "Local Server"}`,
+        userId: session.userId,
+        action: "SETTINGS_UPDATED",
         entityType: "company_settings",
         entityId: companyId,
-        actorId: session.userId,
-        createdBy: session.userId,
+        newValue: {
+          aiProvider,
+          localAiEndpoint: aiProvider === "local" ? localAiEndpoint : null,
+          localAiModel: aiProvider === "local" ? localAiModel : null,
+        },
+        reason: "Admin updated AI provider configuration via System Settings UI",
       },
+      { captureHeaders: true },
+    );
+
+    AuditLogger.configuration("settings.ai_provider_updated", "success", {
+      userId: session.userId,
+      entityType: "company_settings",
+      entityId: companyId,
+      message: `AI Provider switched to ${aiProvider === "mistral" ? "Mistral AI" : "Local Server"}`,
+      details: { aiProvider },
     });
 
     revalidatePath('/settings');
@@ -126,7 +142,11 @@ export async function updateAiSettings(
     if (isAccessControlError(error)) {
       return { success: false, error: "Unauthorized." };
     }
-    console.error("Settings Update Error:", error);
+    AuditLogger.configuration("settings.ai_provider_updated", "failure", {
+      userId: session.userId,
+      error: error instanceof Error ? error : new Error(String(error)),
+      message: "Failed to update AI settings",
+    });
     return { success: false, error: "Failed to update settings. Please try again." };
   }
 }

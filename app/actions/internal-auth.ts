@@ -10,10 +10,14 @@ import {
   getLocalizedLandingPath,
   setAuthSessionCookie,
 } from "@/lib/auth/server";
-import { AUTH_SESSION_COOKIE_NAME, hashSessionToken } from "@/lib/auth/token";
+import { AUTH_SESSION_COOKIE_NAME, hashSessionToken, verifySessionToken } from "@/lib/auth/token";
 import { canAccessPath } from "@/lib/auth/permissions";
 import { setMfaPendingCookie } from "@/lib/auth/mfa-pending";
 import type { InternalSignInState } from "@/app/actions/internal-auth.types";
+import { AuditLogger, AuditCategory } from "@/lib/structured-logger";
+import { logAuditEvent } from "@/lib/audit-log";
+import { truncateIp } from "@/lib/audit-sanitize";
+import { headers } from "next/headers";
 
 export async function authenticateInternalUser(
   _prevState: InternalSignInState,
@@ -47,12 +51,47 @@ export async function authenticateInternalUser(
     }),
   );
 
+  // Extract IP for forensic logging
+  let sourceIp: string | null = null;
+  try {
+    const hdrs = await headers();
+    sourceIp = truncateIp(
+      hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ?? hdrs.get("x-real-ip"),
+    );
+  } catch { /* headers unavailable */ }
+
   if (!user?.passwordHash) {
+    AuditLogger.auth("user.login_failed", "failure", {
+      message: "Login failed: unknown email",
+      sourceIp,
+      details: { reason: "unknown_email" },
+    });
     return { error: "INVALID_CREDENTIALS" };
   }
 
   const passwordOk = await bcrypt.compare(password, user.passwordHash);
   if (!passwordOk) {
+    AuditLogger.auth("user.login_failed", "failure", {
+      userId: user.id,
+      role: user.role,
+      sourceIp,
+      message: "Login failed: wrong password",
+      details: { reason: "wrong_password" },
+    });
+    // Persist to DB audit trail for compliance (LOGIN_FAILED was declared but never used)
+    if (user.companyId) {
+      await logAuditEvent(
+        {
+          companyId: user.companyId,
+          userId: user.id,
+          action: "LOGIN_FAILED",
+          entityType: "User",
+          entityId: user.id,
+          newValue: { reason: "wrong_password" },
+        },
+        { captureHeaders: true },
+      ).catch(() => { /* non-blocking */ });
+    }
     return { error: "INVALID_CREDENTIALS" };
   }
 
@@ -75,6 +114,13 @@ export async function authenticateInternalUser(
     ? safeNextPath
     : getLocalizedLandingPath(user.role, locale);
 
+  AuditLogger.auth("user.login", "success", {
+    userId: user.id,
+    role: user.role,
+    sourceIp,
+    message: `User ${user.id} logged in successfully`,
+  });
+
   // Return the target to the client so it can perform a full-page navigation
   // (window.location.href) instead of a soft RSC redirect. This busts the
   // router cache and forces the root layout to re-evaluate the session.
@@ -87,7 +133,10 @@ export async function signOutAction(formData: FormData): Promise<never> {
   // Revoke the session server-side so re-use of the cookie is impossible
   const cookieStore = await cookies();
   const token = cookieStore.get(AUTH_SESSION_COOKIE_NAME)?.value ?? null;
+  let logoutUserId: string | null = null;
   if (token) {
+    const claims = await verifySessionToken(token).catch(() => null);
+    logoutUserId = claims?.uid ?? null;
     const tokenHash = await hashSessionToken(token);
     await prisma.authSession
       .updateMany({
@@ -96,6 +145,11 @@ export async function signOutAction(formData: FormData): Promise<never> {
       })
       .catch(() => undefined);
   }
+
+  AuditLogger.auth("user.logout", "success", {
+    userId: logoutUserId,
+    message: "User signed out",
+  });
 
   await clearAuthSessionCookie();
   redirect(`/${locale}/auth/sign-in`);

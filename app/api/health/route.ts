@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { AuditLogger, AuditCategory } from "@/lib/structured-logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -73,6 +74,15 @@ export async function GET() {
   }
 
   const healthy = Object.values(checks).every((c) => c.status === "ok");
+
+  AuditLogger.log({
+    category: AuditCategory.SYSTEM_HEALTH,
+    action: "system.health_check",
+    status: healthy ? "success" : "failure",
+    responseCode: healthy ? 200 : 503,
+    details: checks,
+    message: `Health check: ${healthy ? "healthy" : "degraded"}`,
+  });
 
   return NextResponse.json(
     {

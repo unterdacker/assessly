@@ -4,6 +4,8 @@ import fs from "fs/promises";
 import path from "path";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { logAuditEvent } from "@/lib/audit-log";
+import { AuditLogger } from "@/lib/structured-logger";
 
 const ROOT_STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
 const QUESTION_EVIDENCE_DIR = path.join(ROOT_STORAGE_DIR, "question-evidence");
@@ -80,15 +82,19 @@ export async function updateExternalVendorProfileByToken(input: {
       },
     });
 
-    await prisma.auditLog.create({
-      data: {
-        companyId: vendor.companyId,
-        action: "external.vendor_profile.updated",
-        entityType: "vendor",
-        entityId: vendor.id,
-        actorId: "external-vendor",
-        createdBy: "external-vendor",
-      },
+    await logAuditEvent({
+      companyId: vendor.companyId,
+      userId: "external-vendor",
+      action: "EXTERNAL_ASSESSMENT_UPDATED",
+      entityType: "Vendor",
+      entityId: vendor.id,
+      newValue: { context: "profile_update" },
+    });
+
+    AuditLogger.dataOp("external.vendor_profile.updated", "success", {
+      entityType: "Vendor",
+      entityId: vendor.id,
+      message: "External vendor profile updated",
     });
 
     revalidatePath(`/external/assessment/${input.token}`);
@@ -96,7 +102,12 @@ export async function updateExternalVendorProfileByToken(input: {
 
     return { ok: true };
   } catch (err) {
-    console.error("External profile update failed:", err);
+    AuditLogger.dataOp("external.vendor_profile.updated", "failure", {
+      entityType: "Vendor",
+      entityId: vendor.id,
+      error: err instanceof Error ? err : new Error(String(err)),
+      message: "External profile update failed",
+    });
     return { ok: false, error: "Failed to update profile." };
   }
 }
@@ -128,15 +139,19 @@ export async function deleteExternalAssessmentDocument(token: string) {
       },
     });
 
-    await prisma.auditLog.create({
-      data: {
-        companyId: vendor.companyId,
-        action: "external.assessment_document.deleted",
-        entityType: "vendor_assessment",
-        entityId: assessment.id,
-        actorId: "external-vendor",
-        createdBy: "external-vendor",
-      },
+    await logAuditEvent({
+      companyId: vendor.companyId,
+      userId: "external-vendor",
+      action: "EXTERNAL_ASSESSMENT_UPDATED",
+      entityType: "Assessment",
+      entityId: assessment.id,
+      newValue: { context: "document_deleted" },
+    });
+
+    AuditLogger.dataOp("external.assessment_document.deleted", "success", {
+      entityType: "Assessment",
+      entityId: assessment.id,
+      message: "External assessment document deleted",
     });
 
     revalidatePath(`/external/assessment/${token}`);
@@ -144,7 +159,11 @@ export async function deleteExternalAssessmentDocument(token: string) {
 
     return { ok: true };
   } catch (err) {
-    console.error("External document delete failed:", err);
+    AuditLogger.dataOp("external.assessment_document.deleted", "failure", {
+      entityType: "Assessment",
+      error: err instanceof Error ? err : new Error(String(err)),
+      message: "External document delete failed",
+    });
     return { ok: false, error: "Failed to delete evidence document." };
   }
 }
@@ -225,15 +244,19 @@ export async function deleteExternalAnswerEvidence(input: { token: string; answe
       await prisma.document.delete({ where: { id: answer.documentId } }).catch(() => undefined);
     }
 
-    await prisma.auditLog.create({
-      data: {
-        companyId: vendor.companyId,
-        action: "external.answer_evidence.deleted",
-        entityType: "assessment_answer",
-        entityId: answer.id,
-        actorId: "external-vendor",
-        createdBy: "external-vendor",
-      },
+    await logAuditEvent({
+      companyId: vendor.companyId,
+      userId: "external-vendor",
+      action: "EXTERNAL_ASSESSMENT_UPDATED",
+      entityType: "AssessmentAnswer",
+      entityId: answer.id,
+      newValue: { context: "evidence_deleted" },
+    });
+
+    AuditLogger.dataOp("external.answer_evidence.deleted", "success", {
+      entityType: "AssessmentAnswer",
+      entityId: answer.id,
+      message: "External answer evidence deleted",
     });
 
     revalidatePath(`/external/assessment/${input.token}`);
@@ -241,7 +264,11 @@ export async function deleteExternalAnswerEvidence(input: { token: string; answe
 
     return { ok: true, answer: updated };
   } catch (err) {
-    console.error("External answer evidence delete failed:", err);
+    AuditLogger.dataOp("external.answer_evidence.deleted", "failure", {
+      entityType: "AssessmentAnswer",
+      error: err instanceof Error ? err : new Error(String(err)),
+      message: "External answer evidence delete failed",
+    });
     return { ok: false, error: "Failed to delete answer evidence." };
   }
 }

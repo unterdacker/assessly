@@ -10,6 +10,7 @@ import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 import { sendMail } from "@/lib/mail";
 import { buildVendorInviteEmail } from "@/components/emails/vendor-invite";
 import { logAuditEvent } from "@/lib/audit-log";
+import { AuditLogger } from "@/lib/structured-logger";
 
 const ACCESS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const TEMP_PASSWORD_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#%";
@@ -139,29 +140,31 @@ export async function sendOutOfBandInviteAction(
       }
       if (!updated) throw new Error("Failed to generate a unique access code.");
 
-      await tx.auditLog.create({
-        data: {
+      await logAuditEvent(
+        {
           companyId,
-          action: "vendor.invite.sent",
-          entityType: "vendor",
+          userId: session.userId,
+          action: "INVITE_SENT",
+          entityType: "Vendor",
           entityId: vendor.id,
-          actorId: session.userId,
-          createdBy: session.userId,
-          metadata: {
+          newValue: {
             channel: "out-of-band",
-            emailDestination: email.trim(),   // destination logged, credentials are NOT
-            phoneMasked: maskPhone(phone),
             duration: resolvedDuration,
             expiresAt: codeExpiresAt.toISOString(),
           },
         },
-      });
+        { tx, captureHeaders: true },
+      );
     });
   } catch (err) {
     if (isAccessControlError(err)) {
       return { status: "error", error: "Unauthorized." };
     }
-    console.error("Out-of-band invite failed:", err);
+    AuditLogger.dataOp("vendor.invite.sent", "failure", {
+      userId: session.userId,
+      error: err instanceof Error ? err : new Error(String(err)),
+      message: "Out-of-band invite failed",
+    });
     return { status: "error", error: "Could not send invite. Please try again." };
   }
 

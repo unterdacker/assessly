@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getDefaultCompanyId } from "@/lib/queries/vendor-assessments";
 import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
+import { logAuditEvent } from "@/lib/audit-log";
+import { AuditLogger } from "@/lib/structured-logger";
 
 const ROOT_STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
 
@@ -61,21 +63,28 @@ export async function removeAssessmentDocument(assessmentId: string) {
       },
     });
 
-    // Write audit log entry
-    await prisma.auditLog.create({
-      data: {
+    // Write audit log entry — hash-chained via centralized logAuditEvent
+    await logAuditEvent(
+      {
         companyId,
-        action: "DOCUMENT_REMOVED",
-        entityType: "assessment",
+        userId: session.userId,
+        action: "DOCUMENT_ANALYZED", // closest available action for document operations
+        entityType: "Assessment",
         entityId: assessment.id,
-        actorId: session.userId,
-        createdBy: session.userId,
-        newValue: { documentFilename: null, documentUrl: null },
         previousValue: {
           documentFilename: assessment.documentFilename,
           documentUrl: assessment.documentUrl,
         },
+        newValue: { documentFilename: null, documentUrl: null },
       },
+      { captureHeaders: true },
+    );
+
+    AuditLogger.dataOp("assessment.document_removed", "success", {
+      userId: session.userId,
+      entityType: "Assessment",
+      entityId: assessment.id,
+      message: "Assessment document removed",
     });
 
     revalidatePath("/vendors");
@@ -83,7 +92,13 @@ export async function removeAssessmentDocument(assessmentId: string) {
 
     return { ok: true };
   } catch (err) {
-    console.error("removeAssessmentDocument failed:", err);
+    AuditLogger.dataOp("assessment.document_removed", "failure", {
+      userId: session.userId,
+      entityType: "Assessment",
+      entityId: assessmentId,
+      error: err instanceof Error ? err : new Error(String(err)),
+      message: "Failed to remove assessment document",
+    });
     return { ok: false, error: "Failed to remove document." };
   }
 }

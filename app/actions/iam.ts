@@ -7,6 +7,7 @@ import type { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit-log";
 import { requireAdminUser } from "@/lib/auth/server";
+import { AuditLogger } from "@/lib/structured-logger";
 
 /**
  * Updates a target user's role.
@@ -45,7 +46,7 @@ export async function updateUserRole(
     {
       companyId,
       userId: session.userId,
-      action: "ACCESS_CONTROL_CHANGE",
+      action: "USER_ROLE_CHANGED",
       entityType: "User",
       entityId: targetUserId,
       previousValue: { previous_role: targetUser.role },
@@ -53,6 +54,14 @@ export async function updateUserRole(
     },
     { captureHeaders: true },
   );
+
+  AuditLogger.accessControl("user.role_changed", "success", {
+    userId: session.userId,
+    entityType: "User",
+    entityId: targetUserId,
+    message: `Role changed from ${targetUser.role} to ${newRole}`,
+    details: { previousRole: targetUser.role, newRole },
+  });
 
   revalidatePath("/dashboard/users");
 
@@ -115,6 +124,14 @@ export async function createInternalUser(
     { captureHeaders: true },
   );
 
+  AuditLogger.accessControl("user.created", "success", {
+    userId: session.userId,
+    entityType: "User",
+    entityId: newUser.id,
+    message: `Internal user created with role ${role}`,
+    details: { role },
+  });
+
   revalidatePath("/dashboard/users");
 
   return { success: true, temporaryPassword };
@@ -174,14 +191,22 @@ export async function deleteUser(
     {
       companyId,
       userId: session.userId,
-      action: "USER_REMOVED",
+      action: "USER_DELETED",
       entityType: "User",
       entityId: targetUserId,
-      previousValue: { email: targetUser.email, role: targetUser.role },
+      previousValue: { role: targetUser.role },
       newValue: { isActive: false },
     },
     { captureHeaders: true },
   );
+
+  AuditLogger.accessControl("user.deleted", "success", {
+    userId: session.userId,
+    entityType: "User",
+    entityId: targetUserId,
+    message: `User ${targetUserId} deactivated (role: ${targetUser.role})`,
+    details: { previousRole: targetUser.role },
+  });
 
   revalidatePath("/dashboard/users");
 

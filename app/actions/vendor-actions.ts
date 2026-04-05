@@ -9,6 +9,7 @@ import { getDefaultCompanyId } from "@/lib/queries/vendor-assessments";
 import { calculateRiskLevel } from "@/lib/risk-level";
 import { logAuditEvent } from "@/lib/audit-log";
 import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
+import { AuditLogger } from "@/lib/structured-logger";
 const ACCESS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const ACCESS_CODE_SCHEMA_NOT_READY = "ACCESS_CODE_SCHEMA_NOT_READY";
 const TEMP_PASSWORD_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#%";
@@ -149,22 +150,24 @@ export async function createVendorAction(
         },
       });
 
-      await tx.auditLog.create({
-        data: {
+      await logAuditEvent(
+        {
           companyId,
-          action: "vendor.created",
-          entityType: "vendor",
+          userId: session.userId,
+          action: "VENDOR_CREATED",
+          entityType: "Vendor",
           entityId: vendor.id,
-          actorId: session.userId,
-          createdBy: session.userId,
+          newValue: { name: name.trim(), serviceType: "Pending classification" },
         },
-      });
+        { tx, captureHeaders: true },
+      );
     });
 
-    console.log(`[SIMULATED EMAIL] Assessment Invitation for ${name}`);
-    console.log(
-      "[TEMPLATE] You have been invited to an assessment. Visit avra.app/portal and use your temporary access code: [CODE].",
-    );
+    AuditLogger.dataOp("vendor.created", "success", {
+      userId: session.userId,
+      entityType: "Vendor",
+      message: `Vendor "${name.trim()}" created`,
+    });
 
     revalidatePath("/dashboard");
     revalidatePath("/vendors");
@@ -175,7 +178,11 @@ export async function createVendorAction(
     if (isAccessControlError(err)) {
       return { ok: false, error: "Unauthorized." };
     }
-    console.error("Vendor creation failed:", err);
+    AuditLogger.dataOp("vendor.created", "failure", {
+      userId: session.userId,
+      error: err instanceof Error ? err : new Error(String(err)),
+      message: "Vendor creation failed",
+    });
     return { ok: false, error: "Could not save vendor. Try again." };
   }
 }
@@ -285,7 +292,13 @@ export async function generateVendorAccessCodeAction(
     if (isAccessControlError(err)) {
       return { ok: false, error: "Unauthorized." };
     }
-    console.error("Access code generation failed:", err);
+    AuditLogger.dataOp("vendor.access_code_generated", "failure", {
+      userId: session.userId,
+      entityType: "Vendor",
+      entityId: vendorId,
+      error: err instanceof Error ? err : new Error(String(err)),
+      message: "Access code generation failed",
+    });
     if (
       (err instanceof Error && err.message === ACCESS_CODE_SCHEMA_NOT_READY) ||
       isAccessCodeSchemaMismatch(err)
@@ -344,16 +357,24 @@ export async function voidVendorAccessCodeAction(vendorId: string): Promise<Void
         },
       });
 
-      await tx.auditLog.create({
-        data: {
+      await logAuditEvent(
+        {
           companyId,
-          action: "vendor.access_code.voided",
-          entityType: "vendor",
+          userId: session.userId,
+          action: "ACCESS_CODE_VOIDED",
+          entityType: "Vendor",
           entityId: vendor.id,
-          actorId: session.userId,
-          createdBy: session.userId,
+          newValue: { isCodeActive: false },
         },
-      });
+        { tx, captureHeaders: true },
+      );
+    });
+
+    AuditLogger.dataOp("vendor.access_code.voided", "success", {
+      userId: session.userId,
+      entityType: "Vendor",
+      entityId: vendorId,
+      message: "Vendor access code voided",
     });
 
     revalidatePath("/vendors");
@@ -362,7 +383,13 @@ export async function voidVendorAccessCodeAction(vendorId: string): Promise<Void
     if (isAccessControlError(err)) {
       return { ok: false, error: "Unauthorized." };
     }
-    console.error("Void access code failed:", err);
+    AuditLogger.dataOp("vendor.access_code_voided", "failure", {
+      userId: session.userId,
+      entityType: "Vendor",
+      entityId: vendorId,
+      error: err instanceof Error ? err : new Error(String(err)),
+      message: "Void access code failed",
+    });
     if (isAccessCodeSchemaMismatch(err)) {
       return {
         ok: false,
@@ -401,17 +428,25 @@ export async function deleteVendorAction(vendorId: string): Promise<DeleteVendor
 
       await tx.vendor.delete({ where: { id: vendor.id } });
 
-      await tx.auditLog.create({
-        data: {
+      await logAuditEvent(
+        {
           companyId,
-          action: "vendor.deleted",
-          entityType: "vendor",
+          userId: session.userId,
+          action: "VENDOR_DELETED",
+          entityType: "Vendor",
           entityId: vendor.id,
-          actorId: session.userId,
-          createdBy: session.userId,
-          metadata: { vendorName: vendor.name },
+          previousValue: { name: vendor.name },
+          newValue: { deleted: true },
         },
-      });
+        { tx, captureHeaders: true },
+      );
+    });
+
+    AuditLogger.dataOp("vendor.deleted", "success", {
+      userId: session.userId,
+      entityType: "Vendor",
+      entityId: vendorId,
+      message: "Vendor deleted",
     });
 
     revalidatePath("/dashboard");
@@ -423,7 +458,13 @@ export async function deleteVendorAction(vendorId: string): Promise<DeleteVendor
     if (isAccessControlError(err)) {
       return { ok: false, error: "Unauthorized." };
     }
-    console.error("Vendor deletion failed:", err);
+    AuditLogger.dataOp("vendor.deleted", "failure", {
+      userId: session.userId,
+      entityType: "Vendor",
+      entityId: vendorId,
+      error: err instanceof Error ? err : new Error(String(err)),
+      message: "Vendor deletion failed",
+    });
     return { ok: false, error: "Could not delete vendor. Try again." };
   }
 }
@@ -459,20 +500,28 @@ export async function deleteVendorsAction(vendorIds: string[]): Promise<DeleteVe
       });
 
       for (const vendor of vendors) {
-        await tx.auditLog.create({
-          data: {
+        await logAuditEvent(
+          {
             companyId,
-            action: "vendor.deleted",
-            entityType: "vendor",
+            userId: session.userId,
+            action: "VENDOR_DELETED",
+            entityType: "Vendor",
             entityId: vendor.id,
-            actorId: session.userId,
-            createdBy: session.userId,
-            metadata: { vendorName: vendor.name, bulk: true },
+            previousValue: { name: vendor.name },
+            newValue: { deleted: true, bulk: true },
           },
-        });
+          { tx, captureHeaders: true },
+        );
       }
 
       return vendors.length;
+    });
+
+    AuditLogger.dataOp("vendor.bulk_deleted", "success", {
+      userId: session.userId,
+      entityType: "Vendor",
+      message: `${deletedCount} vendors deleted in bulk`,
+      details: { deletedCount },
     });
 
     revalidatePath("/dashboard");
@@ -484,7 +533,11 @@ export async function deleteVendorsAction(vendorIds: string[]): Promise<DeleteVe
     if (isAccessControlError(err)) {
       return { ok: false, error: "Unauthorized." };
     }
-    console.error("Bulk vendor deletion failed:", err);
+    AuditLogger.dataOp("vendor.bulk_deleted", "failure", {
+      userId: session.userId,
+      error: err instanceof Error ? err : new Error(String(err)),
+      message: "Bulk vendor deletion failed",
+    });
     return { ok: false, error: "Could not delete selected vendors. Try again." };
   }
 }

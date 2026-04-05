@@ -2,6 +2,7 @@ import { AuditLog, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { truncateIp, computeEventHash } from "@/lib/audit-sanitize";
+import { AuditLogger, AuditCategory } from "@/lib/structured-logger";
 
 // ---------------------------------------------------------------------------
 // Action type catalogue
@@ -16,6 +17,7 @@ import { truncateIp, computeEventHash } from "@/lib/audit-sanitize";
 export type AuditAction =
   // --- Vendor & Assessment (NIS2_DORA) ---
   | "VENDOR_CREATED"
+  | "VENDOR_DELETED"
   | "ASSESSMENT_OVERRIDE"
   | "ASSESSMENT_UPDATED"
   | "EXTERNAL_ASSESSMENT_UPDATED"
@@ -28,10 +30,12 @@ export type AuditAction =
   | "ACCESS_CODE_GENERATED"
   | "ACCESS_CODE_VOIDED"
   // --- Authentication (AUTH) ---
+  | "LOGIN_SUCCESS"
+  | "LOGIN_FAILED"
+  | "USER_LOGOUT"
   | "MFA_ENABLED"
   | "MFA_DISABLED"
   | "MFA_FAILED_ATTEMPT"
-  | "LOGIN_FAILED"
   // --- System configuration (CONFIG) ---
   | "SETTINGS_UPDATED"
   // --- Notifications (NOTIFY) ---
@@ -96,10 +100,11 @@ export type LogAuditEventOptions = {
 // ---------------------------------------------------------------------------
 
 const AI_ACTIONS = new Set(["AI_GENERATION", "AI_REMEDIATION_SENT", "DOCUMENT_ANALYZED"]);
-const AUTH_ACTIONS = new Set(["MFA_ENABLED", "MFA_DISABLED", "MFA_FAILED_ATTEMPT", "LOGIN_FAILED"]);
+const AUTH_ACTIONS = new Set(["LOGIN_SUCCESS", "LOGIN_FAILED", "USER_LOGOUT", "MFA_ENABLED", "MFA_DISABLED", "MFA_FAILED_ATTEMPT"]);
 const CONFIG_ACTIONS = new Set(["SETTINGS_UPDATED", "MAIL_DELIVERY_FAILED"]);
 const NIS2_DORA_ACTIONS = new Set([
   "VENDOR_CREATED",
+  "VENDOR_DELETED",
   "ACCESS_CODE_GENERATED",
   "ACCESS_CODE_VOIDED",
   "INVITE_SENT",
@@ -116,6 +121,24 @@ function deriveComplianceCategory(action: string): string {
   if (NIS2_DORA_ACTIONS.has(action)) return "NIS2_DORA";
   if (ISO27001_ACTIONS.has(action)) return "ISO27001_SOC2";
   return "OTHER";
+}
+
+// ---------------------------------------------------------------------------
+// Structured Logger Category Mapping
+// Maps compliance categories to the AuditCategory enum for the UI filter.
+// ---------------------------------------------------------------------------
+
+const COMPLIANCE_TO_AUDIT_CATEGORY: Record<string, AuditCategory> = {
+  AUTH: AuditCategory.AUTH,
+  CONFIG: AuditCategory.CONFIGURATION,
+  AI_ACT: AuditCategory.DATA_OPERATIONS,
+  NIS2_DORA: AuditCategory.DATA_OPERATIONS,
+  ISO27001_SOC2: AuditCategory.ACCESS_CONTROL,
+  OTHER: AuditCategory.DATA_OPERATIONS,
+};
+
+function toAuditCategory(complianceCategory: string): AuditCategory {
+  return COMPLIANCE_TO_AUDIT_CATEGORY[complianceCategory] ?? AuditCategory.DATA_OPERATIONS;
 }
 
 /**
@@ -381,8 +404,28 @@ export async function logAuditEvent(
   // If no transaction is provided, we open a dedicated one.  The default
   // isolation level (Read Committed) is sufficient because the advisory lock
   // provides the necessary serialisation guarantee.
-  if (options.tx) {
-    return writeChainEntry(options.tx);
-  }
-  return prisma.$transaction(writeChainEntry);
+  const result = options.tx
+    ? await writeChainEntry(options.tx)
+    : await prisma.$transaction(writeChainEntry);
+
+  // ── Emit structured JSON log for every DB audit write ────────────────────
+  AuditLogger.log({
+    category: toAuditCategory(complianceCategory),
+    action: input.action,
+    status: "success",
+    userId: input.userId,
+    sourceIp: ipAddress,
+    traceId: input.requestId ?? null,
+    entityType: input.entityType,
+    entityId: input.entityId,
+    message: `Audit event ${input.action} recorded (hash-chained)`,
+    details: {
+      complianceCategory,
+      eventHash: result.eventHash,
+      previousLogHash: result.previousLogHash,
+      reason: input.reason ?? null,
+    },
+  });
+
+  return result;
 }
