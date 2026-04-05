@@ -18,6 +18,13 @@ export type GdprErasureResult = {
   rehashedEntries: number;
 };
 
+export type GdprScrubResult = {
+  companyId: string;
+  targetUserId: string;
+  redactedEntries: number;
+  hashPreservedEntries: number;
+};
+
 function asObject(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   return value as Record<string, unknown>;
@@ -143,6 +150,82 @@ export async function redactUserFromAuditLogs(
       pseudonym,
       redactedEntries,
       rehashedEntries: logs.length,
+    };
+  });
+}
+
+/**
+ * GDPR Art. 17 scrub preserving forensic hash-chain immutability.
+ *
+ * This function deliberately does NOT modify canonical hash-bound fields
+ * (`companyId`, `userId`, `action`, `entityType`, `entityId`, `timestamp`,
+ * `previousLogHash`, `eventHash`).
+ *
+ * It redacts non-hash-bound payload fields with the marker
+ * "[REDACTED_BY_REQUEST_ART17]" so chain integrity remains fully valid.
+ */
+export async function scrubUserLogs(input: GdprErasureInput): Promise<GdprScrubResult> {
+  const REDACTION_MARKER = "[REDACTED_BY_REQUEST_ART17]";
+
+  return prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(CAST(${ADVISORY_LOCK_NAMESPACE} AS int4), hashtext(${input.companyId}))`;
+
+    const logs = await tx.auditLog.findMany({
+      where: {
+        companyId: input.companyId,
+        OR: [
+          { userId: input.targetUserId },
+          { actorId: input.targetUserId },
+          { createdBy: input.targetUserId },
+          { hitlVerifiedBy: input.targetUserId },
+        ],
+      },
+      select: {
+        id: true,
+        actorId: true,
+        createdBy: true,
+        hitlVerifiedBy: true,
+        previousValue: true,
+        newValue: true,
+        metadata: true,
+        reason: true,
+      },
+    });
+
+    for (const log of logs) {
+      const metadataObj = asObject(scrubPiiFields(log.metadata));
+
+      await tx.auditLog.update({
+        where: { id: log.id },
+        data: {
+          actorId: log.actorId === input.targetUserId ? REDACTION_MARKER : log.actorId,
+          createdBy: log.createdBy === input.targetUserId ? REDACTION_MARKER : log.createdBy,
+          hitlVerifiedBy:
+            log.hitlVerifiedBy === input.targetUserId
+              ? REDACTION_MARKER
+              : (log.hitlVerifiedBy ?? null),
+          reason: log.reason ? REDACTION_MARKER : null,
+          previousValue: toJsonInput(REDACTION_MARKER),
+          newValue: toJsonInput(REDACTION_MARKER),
+          metadata: toJsonInput({
+            ...(metadataObj ?? {}),
+            redactedPayload: REDACTION_MARKER,
+            gdprScrub: {
+              article: "GDPR Art. 17",
+              marker: REDACTION_MARKER,
+              reason: input.reason ?? "Data redacted by subject request",
+              scrubbedAt: new Date().toISOString(),
+            },
+          }),
+        },
+      });
+    }
+
+    return {
+      companyId: input.companyId,
+      targetUserId: input.targetUserId,
+      redactedEntries: logs.length,
+      hashPreservedEntries: logs.length,
     };
   });
 }

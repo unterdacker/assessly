@@ -20,12 +20,36 @@
     "legendPrefix": "Datenschutzkonformer forensischer Log — IP gekürzt (DSGVO Erw. 30), Hash-verkettet (NIS2/DORA Art. 9), KI-Identität erfasst (EU AI Act Art. 12/14).",
     "eventCount": "{count, plural, one {# Ereignis} other {# Ereignisse}}",
     "downloadBundle": "Forensik-Paket herunterladen",
+    "downloadCsv": "CSV exportieren (Admin)",
     "downloadPreparing": "Wird vorbereitet…",
+    "verifyIntegrity": "Integritaet pruefen",
+    "verifyIntegrityRunning": "Wird geprueft…",
     "noEvents": "Keine Audit-Ereignisse gefunden.",
     "paginationOf": "von",
     "paginationEntries": "Einträgen",
     "paginationPrevious": "Zurück",
     "paginationNext": "Weiter"
+  },
+  "AuditDetails": {
+    "gdprWhyRedacted": "Warum geschwaerzt?",
+    "privacy": {
+      "gdprArt5Minimization": "PII gemaess DSGVO Art. 5 Abs. 1 lit. c (Datenminimierung) geschwaerzt"
+    },
+    "userAgent": {
+      "normalized": "User Agent (normalisiert)",
+      "unknownBrowser": "Unbekannter Browser",
+      "unknownOs": "Unbekanntes Betriebssystem",
+      "on": "auf",
+      "edge": "Edge",
+      "chrome": "Chrome",
+      "firefox": "Firefox",
+      "safari": "Safari",
+      "windows": "Windows",
+      "macOs": "macOS",
+      "android": "Android",
+      "ios": "iOS",
+      "linux": "Linux"
+    }
   },
   "DashboardDesc": "Übersicht der Risikolage von Drittanbietern für NIS2-konforme Aufsicht.",
   "SupplyChainRiskScore": "Lieferkettenrisiko-Score",

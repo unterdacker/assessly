@@ -5,6 +5,8 @@
   "scripts": {
     "ready-check": "node ./scripts/ready-check.mjs",
     "audit:verify-chain": "npx tsx scripts/verify-audit-chain.ts",
+    "audit:tamper-test": "npx tsx scripts/forensic-tamper-test.ts",
+    "audit:simulate-trace": "npx tsx scripts/simulate-traceability-chain.ts",
     "clean": "node ./scripts/clean.mjs --mode=all",
     "clean:dev": "node ./scripts/clean.mjs --mode=dev",
     "clean:build": "node ./scripts/clean.mjs --mode=build",
