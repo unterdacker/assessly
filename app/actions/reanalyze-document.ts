@@ -17,7 +17,7 @@ import {
   syncAssessmentComplianceToDatabase,
 } from "@/lib/assessment-compliance";
 import { extractPdfText } from "@/lib/pdf-utils";
-import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
+import { isAccessControlError, requireAuthSession } from "@/lib/auth/server";
 
 const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
 
@@ -29,7 +29,7 @@ const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
 export async function reanalyzeStoredDocument(
   assessmentId: string,
 ): Promise<AnalyzeDocumentResponse> {
-  const session = await requireAdminUser().catch((error) => {
+  const session = await requireAuthSession().catch((error) => {
     if (isAccessControlError(error)) {
       return null;
     }
@@ -40,12 +40,20 @@ export async function reanalyzeStoredDocument(
     return { ok: false, error: "Unauthorized." };
   }
 
+  if (session.role !== "ADMIN" && session.role !== "VENDOR") {
+    return { ok: false, error: "Unauthorized." };
+  }
+
   if (!assessmentId?.trim()) {
     return { ok: false, error: "Missing assessment identifier." };
   }
 
   const assessment = await prisma.assessment.findFirst({
-    where: { id: assessmentId, companyId: session.companyId ?? undefined },
+    where: {
+      id: assessmentId,
+      ...(session.role === "ADMIN" ? { companyId: session.companyId ?? undefined } : {}),
+      ...(session.role === "VENDOR" ? { vendorId: session.vendorId ?? undefined } : {}),
+    },
     include: { vendor: true, company: true },
   });
 

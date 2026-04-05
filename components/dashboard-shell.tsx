@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
 import { useAuthSession } from "@/lib/auth/client";
-import { signOutAction } from "@/app/actions/internal-auth";
 
 const SUPPORTED_LOCALES = ["de", "en"] as const;
 
@@ -57,12 +56,15 @@ function getNav(locale: "de" | "en", role: string | null) {
     { href: "/admin/audit-logs", label: NAV_LABELS[locale].auditLogs, icon: Activity },
   ];
 
-  if (role === "ADMIN") {
+  if (role === "ADMIN" || role === "AUDITOR") {
     base.splice(2, 0, {
       href: "/settings",
       label: NAV_LABELS[locale].settings,
       icon: Settings,
     });
+  }
+
+  if (role === "ADMIN") {
     base.splice(3, 0, {
       href: "/dashboard/users",
       label: NAV_LABELS[locale].users,
@@ -79,6 +81,20 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const locale = getLocaleFromPathname(pathname);
   const normalizedPathname = stripLocale(pathname);
   const nav = getNav(locale, session?.role ?? null);
+
+  const handleSignOut = async () => {
+    try {
+      const res = await fetch("/api/auth/sign-out", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locale }),
+      });
+      const data = (await res.json()) as { ok: boolean; redirectTo?: string };
+      window.location.href = data.redirectTo ?? `/${locale}/auth/sign-in`;
+    } catch {
+      window.location.href = `/${locale}/auth/sign-in`;
+    }
+  };
 
   const isExternal = normalizedPathname.startsWith("/external/");
   const isAuth = normalizedPathname.startsWith("/auth/");
@@ -145,16 +161,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground">
               {NAV_LABELS[locale].nis2Label}
             </p>
-            <form action={signOutAction} className="mt-2">
-              <input type="hidden" name="locale" value={locale} />
-              <button
-                type="submit"
-                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
-              >
-                <LogOut className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
-                {NAV_LABELS[locale].signOut}
-              </button>
-            </form>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="mt-2 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
+            >
+              <LogOut className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+              {NAV_LABELS[locale].signOut}
+            </button>
           </div>
         </aside>
 
@@ -192,17 +206,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               </nav>
               <LanguageToggle />
               <ThemeToggle />
-              <form action={signOutAction}>
-                <input type="hidden" name="locale" value={locale} />
-                <button
-                  type="submit"
-                  title={NAV_LABELS[locale].signOut}
-                  className="flex h-8 w-8 items-center justify-center rounded-md text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
-                  aria-label={NAV_LABELS[locale].signOut}
-                >
-                  <LogOut className="h-4 w-4" aria-hidden />
-                </button>
-              </form>
+              <button
+                type="button"
+                onClick={handleSignOut}
+                title={NAV_LABELS[locale].signOut}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
+                aria-label={NAV_LABELS[locale].signOut}
+              >
+                <LogOut className="h-4 w-4" aria-hidden />
+              </button>
             </div>
           </header>
           <main

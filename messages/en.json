@@ -703,6 +703,7 @@
     "genCodeCancel": "Cancel",
     "genCodeGenerating": "Generating...",
     "genCodeGenerate": "Generate",
+    "genCodeUnexpectedError": "Could not generate access code. Please try again.",
     "confirmDeleteVendors": "Delete {count} selected vendors? This will remove linked assessments and answers.",
     "confirmVoidCode": "Void active access code for {vendorName}?",
     "copyAccessCodeAria": "Copy access code for {vendorName}",

@@ -10,7 +10,7 @@ import {
   countStrictlyCompliantAnswers,
   syncAssessmentComplianceToDatabase,
 } from "@/lib/assessment-compliance";
-import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
+import { isAccessControlError, requireAuthSession } from "@/lib/auth/server";
 import { extractPdfText, persistEvidencePdf } from "@/lib/pdf-utils";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -22,7 +22,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 export async function analyzeDocument(
   formData: FormData,
 ): Promise<AnalyzeDocumentResponse> {
-  const session = await requireAdminUser().catch((error) => {
+  const session = await requireAuthSession().catch((error) => {
     if (isAccessControlError(error)) {
       return null;
     }
@@ -36,6 +36,14 @@ export async function analyzeDocument(
   const vendorId = formData.get("vendorId");
   if (typeof vendorId !== "string" || !vendorId.trim()) {
     return { ok: false, error: "Missing vendor assessment identifier." };
+  }
+
+  if (session.role !== "ADMIN" && session.role !== "VENDOR") {
+    return { ok: false, error: "Unauthorized." };
+  }
+
+  if (session.role === "VENDOR" && session.vendorId !== vendorId) {
+    return { ok: false, error: "Unauthorized." };
   }
 
   const file = formData.get("file");
@@ -55,7 +63,10 @@ export async function analyzeDocument(
   }
 
   const assessment = await prisma.assessment.findFirst({
-    where: { vendorId, companyId: session.companyId ?? undefined },
+    where: {
+      vendorId,
+      ...(session.role === "ADMIN" ? { companyId: session.companyId ?? undefined } : {}),
+    },
     include: { vendor: true, company: true }
   });
 

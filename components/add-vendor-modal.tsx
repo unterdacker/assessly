@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2 } from "lucide-react";
-import { createVendorAction } from "@/app/actions/vendor-actions";
 
 type AddVendorModalProps = {
   trigger?: React.ReactNode;
@@ -35,17 +34,26 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
     if (!name.trim() || !email.trim()) return;
     setError(null);
     setPending(true);
-    const formData = new FormData();
-    formData.set("name", name.trim());
-    formData.set("email", email.trim());
-    const result = await createVendorAction(formData);
-    setPending(false);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const formData = new FormData();
+      formData.set("name", name.trim());
+      formData.set("email", email.trim());
+      const res = await fetch("/api/vendors/create", {
+        method: "POST",
+        body: formData,
+      });
+      const result = (await res.json()) as { ok: boolean; error?: string };
+      if (!result.ok) {
+        setError(result.error ?? "Could not save vendor. Try again.");
+        return;
+      }
+      setIsSuccess(true);
+      router.refresh();
+    } catch {
+      setError("Could not save vendor. Try again.");
+    } finally {
+      setPending(false);
     }
-    setIsSuccess(true);
-    router.refresh();
   }
 
   const handleOpenChange = (isOpen: boolean) => {

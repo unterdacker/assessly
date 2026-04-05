@@ -24,7 +24,7 @@ export function canAccessPath(role: UserRole, normalizedPathname: string): boole
   }
 
   if (normalizedPathname.startsWith("/settings")) {
-    return role === "ADMIN";
+    return role === "ADMIN" || role === "AUDITOR";
   }
 
   if (normalizedPathname.startsWith("/admin")) {

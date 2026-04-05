@@ -1,3 +1,9 @@
+import {
+  computeIncidentRetentionUntil,
+  scrubPiiFields,
+  truncateIp,
+} from "@/lib/audit-sanitize";
+
 /**
  * Centralized Structured Logger
  *
@@ -80,6 +86,10 @@ export type StructuredLogEntry = {
   error_name?: string | null;
   error_message?: string | null;
   details?: Record<string, unknown> | null;
+  retention_priority?: "HIGH" | "MEDIUM" | "LOW";
+  retention_until?: string | null;
+  legal_basis?: "LEGAL_OBLIGATION" | "LEGITIMATE_INTEREST";
+  security_incident?: boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -93,75 +103,78 @@ const ENVIRONMENT = process.env.NODE_ENV ?? "development";
 // PII field scrubbing — applied at write time, not just export
 // ---------------------------------------------------------------------------
 
-const PII_KEYS = new Set([
-  "email",
-  "password",
-  "passwordHash",
-  "password_hash",
-  "mfaSecret",
-  "mfa_secret",
-  "accessCode",
-  "access_code",
-  "inviteToken",
-  "invite_token",
-  "securityOfficerEmail",
-  "dpoEmail",
-  "recipientEmail",
-  "recipient_email",
-  "security_contact_email",
-  "apiKey",
-  "api_key",
-  "secret",
-  "token",
-  "authorization",
-  "cookie",
-  "set-cookie",
-]);
-
-const PII_PATTERNS = [
-  /password/i,
-  /secret/i,
-  /token/i,
-  /apikey/i,
-  /api_key/i,
-  /authorization/i,
-];
-
-function isPiiKey(key: string): boolean {
-  if (PII_KEYS.has(key)) return true;
-  return PII_PATTERNS.some((p) => p.test(key));
-}
-
 /**
  * Recursively scrubs PII from an object. Passwords, secrets, tokens,
  * and email fields are replaced with "[REDACTED]" before the log is
  * emitted. This ensures sensitive data is never persisted in the log.
  */
-export function scrubPii(value: unknown, depth = 0): unknown {
-  if (depth > 10) return "[MAX_DEPTH]";
-  if (value === null || value === undefined) return value;
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return value;
-
-  if (Array.isArray(value)) {
-    return value.map((item) => scrubPii(item, depth + 1));
-  }
-
-  if (typeof value === "object") {
-    const obj = value as Record<string, unknown>;
-    const result: Record<string, unknown> = {};
-    for (const [key, val] of Object.entries(obj)) {
-      if (isPiiKey(key)) {
-        result[key] = "[REDACTED]";
-      } else {
-        result[key] = scrubPii(val, depth + 1);
-      }
-    }
-    return result;
-  }
-
-  return String(value);
+export function scrubPii(value: unknown): unknown {
+  return scrubPiiFields(value);
 }
+
+function getLegalBasis(category: AuditCategory): "LEGAL_OBLIGATION" | "LEGITIMATE_INTEREST" {
+  switch (category) {
+    case AuditCategory.AUTH:
+    case AuditCategory.ACCESS_CONTROL:
+    case AuditCategory.SYSTEM_HEALTH:
+      return "LEGITIMATE_INTEREST";
+    case AuditCategory.CONFIGURATION:
+    case AuditCategory.DATA_OPERATIONS:
+      return "LEGAL_OBLIGATION";
+    default:
+      return "LEGITIMATE_INTEREST";
+  }
+}
+
+function getRetentionPolicy(
+  category: AuditCategory,
+  securityIncident: boolean,
+): { priority: "HIGH" | "MEDIUM" | "LOW"; retentionUntil: Date } {
+  const now = new Date();
+
+  if (securityIncident) {
+    return {
+      priority: "HIGH",
+      retentionUntil: computeIncidentRetentionUntil(now),
+    };
+  }
+
+  if (category === AuditCategory.AUTH || category === AuditCategory.ACCESS_CONTROL) {
+    return {
+      priority: "HIGH",
+      retentionUntil: new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000),
+    };
+  }
+
+  if (category === AuditCategory.SYSTEM_HEALTH) {
+    return {
+      priority: "LOW",
+      retentionUntil: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+    };
+  }
+
+  return {
+    priority: "MEDIUM",
+    retentionUntil: new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000),
+  };
+}
+
+type SanitizedAuditPayload = Omit<AuditLogParams, "sourceIp" | "details"> & {
+  sourceIp?: string | null;
+  details?: Record<string, unknown> | null;
+};
+
+const PrivacyProxy = {
+  sanitize(params: AuditLogParams): SanitizedAuditPayload {
+    return {
+      ...params,
+      sourceIp: truncateIp(params.sourceIp, {
+        securityIncident: Boolean(params.securityIncident),
+      }),
+      details: params.details ? (scrubPii(params.details) as Record<string, unknown>) : null,
+    };
+  },
+};
 
 // ---------------------------------------------------------------------------
 // Core emit — writes a single JSON line to stdout or stderr
@@ -214,6 +227,7 @@ export type AuditLogParams = {
   durationMs?: number | null;
   error?: Error | null;
   details?: Record<string, unknown> | null;
+  securityIncident?: boolean;
 };
 
 /**
@@ -233,30 +247,40 @@ export type AuditLogParams = {
  */
 export const AuditLogger = {
   log(params: AuditLogParams): void {
+    const sanitized = PrivacyProxy.sanitize(params);
     const level =
-      params.level ??
-      (params.status === "failure" ? LogLevel.ERROR : LogLevel.INFO);
+      sanitized.level ??
+      (sanitized.status === "failure" ? LogLevel.ERROR : LogLevel.INFO);
+
+    const retention = getRetentionPolicy(
+      sanitized.category,
+      Boolean(sanitized.securityIncident),
+    );
 
     const entry: StructuredLogEntry = {
       timestamp: new Date().toISOString(),
       level,
-      event_type: params.category,
-      action_name: params.action,
-      message: params.message,
-      user_id: params.userId ?? null,
-      role: params.role ?? null,
-      source_ip: params.sourceIp ?? null,
+      event_type: sanitized.category,
+      action_name: sanitized.action,
+      message: sanitized.message,
+      user_id: sanitized.userId ?? null,
+      role: sanitized.role ?? null,
+      source_ip: sanitized.sourceIp ?? null,
       service_name: SERVICE_NAME,
       environment: ENVIRONMENT,
-      trace_id: params.traceId ?? null,
-      status: params.status,
-      response_code: params.responseCode ?? null,
-      entity_type: params.entityType ?? null,
-      entity_id: params.entityId ?? null,
-      duration_ms: params.durationMs ?? null,
-      error_name: params.error?.name ?? null,
-      error_message: params.error?.message ?? null,
-      details: params.details ? (scrubPii(params.details) as Record<string, unknown>) : null,
+      trace_id: sanitized.traceId ?? null,
+      status: sanitized.status,
+      response_code: sanitized.responseCode ?? null,
+      entity_type: sanitized.entityType ?? null,
+      entity_id: sanitized.entityId ?? null,
+      duration_ms: sanitized.durationMs ?? null,
+      error_name: sanitized.error?.name ?? null,
+      error_message: sanitized.error?.message ?? null,
+      details: sanitized.details ?? null,
+      retention_priority: retention.priority,
+      retention_until: retention.retentionUntil.toISOString(),
+      legal_basis: getLegalBasis(sanitized.category),
+      security_incident: Boolean(sanitized.securityIncident),
     };
 
     emit(entry);

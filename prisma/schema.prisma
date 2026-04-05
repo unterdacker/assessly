@@ -203,6 +203,16 @@ model AuditLog {
   /// GDPR Art. 5(1)(b) — Purpose limitation: documented intent for sensitive operations.
   reason     String?
 
+  /// GDPR retention tier applied at write-time. HIGH=security, LOW=operational telemetry.
+  retentionPriority String?
+
+  /// Calculated expiry timestamp for retention enforcement jobs.
+  retentionUntil DateTime?
+
+  /// GDPR legal basis tag for accountability (Art. 6).
+  /// Values: LEGAL_OBLIGATION | LEGITIMATE_INTEREST
+  legalBasis String?
+
   /// NIS2/DORA: Request correlation ID to join this event with server-side API logs.
   requestId  String?
 
@@ -233,6 +243,7 @@ model AuditLog {
   @@index([timestamp])
   @@index([complianceCategory])
   @@index([requestId])
+  @@index([retentionUntil])
 }
 
 model AssessmentAnswer {

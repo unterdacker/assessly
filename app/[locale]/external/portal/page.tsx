@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ShieldCheck, KeyRound, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 
 export default function ExternalPortalPage() {
   const t = useTranslations();
+  const locale = useLocale();
   const [state, formAction, isPending] = React.useActionState(
     authenticateVendorAccessCode,
     initialPortalActionState,
@@ -37,6 +38,7 @@ export default function ExternalPortalPage() {
         </div>
 
         <form action={formAction} className="space-y-4">
+          <input type="hidden" name="locale" value={locale} />
           <div className="space-y-2">
             <label htmlFor="accessCode" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               {t("EnterAccessCode")}
