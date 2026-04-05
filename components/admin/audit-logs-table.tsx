@@ -1,26 +1,23 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
-  Eye,
   Activity,
   Cpu,
   UserRound,
   Clock3,
   Database,
-  MapPin,
-  Smartphone,
   Download,
   BrainCircuit,
   KeyRound,
   Settings2,
   ShieldAlert,
   Users,
-  Hash,
   UserCheck,
   AlertCircle,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,15 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { AuditDiffViewer } from "@/components/admin/audit-diff-viewer";
+import { AuditDetailsModal } from "@/components/admin/audit-details-modal";
 
 
 // ---------------------------------------------------------------------------
@@ -80,6 +69,7 @@ type AuditLogRow = {
 type AuditLogsTableProps = {
   logs: AuditLogRow[];
   isAdmin: boolean;
+  isAuditor: boolean;
   activeCategory?: string;
   total: number;
 };
@@ -181,16 +171,6 @@ function ComplianceBadge({ category }: { category: string | null | undefined }) 
   );
 }
 
-function HashDisplay({ label, value }: { label: string; value: string | null | undefined }) {
-  if (!value) return null;
-  return (
-    <div>
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <code className="block break-all font-mono text-[11px] text-foreground/80">{value}</code>
-    </div>
-  );
-}
-
 function formatTimestamp(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
@@ -201,64 +181,57 @@ function formatTimestamp(iso: string): string {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
+    timeZone: "UTC",
   }).format(date);
 }
 
-export function AuditLogsTable({ logs, isAdmin, activeCategory, total }: AuditLogsTableProps) {
+export function AuditLogsTable({ logs, isAdmin, isAuditor, activeCategory, total }: AuditLogsTableProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations("Audit");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [showPrompt, setShowPrompt] = useState(false);
   const [downloading, startDownload] = useTransition();
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [verifying, startVerify] = useTransition();
+  const [verifyResult, setVerifyResult] = useState<string | null>(null);
 
-  const selected = useMemo(
-    () => logs.find((entry) => entry.id === selectedId) ?? null,
-    [logs, selectedId],
-  );
+  async function ensureChainHealthyForExport(): Promise<boolean> {
+    const res = await fetch("/api/audit-logs/forensic-bundle?mode=verify", {
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setDownloadError((body as { error?: string }).error ?? `HTTP ${res.status}`);
+      return false;
+    }
 
-  const aiProvenance = useMemo(() => {
-    if (!selected?.metadata || typeof selected.metadata !== "object") return null;
-
-    const metadata = selected.metadata as Record<string, unknown>;
-    const newValue = metadata.newValue;
-    if (!newValue || typeof newValue !== "object") return null;
-
-    const ai = newValue as Record<string, unknown>;
-    const modelInfo = ai.model_info;
-    const promptSnapshot = ai.prompt_snapshot;
-    const rawAiOutput = ai.raw_ai_output;
-    const linkedGenerationId = ai.ai_generation_event_id;
-
-    const hasAiPayload =
-      typeof modelInfo === "object" ||
-      typeof promptSnapshot === "string" ||
-      typeof rawAiOutput === "string" ||
-      typeof linkedGenerationId === "string";
-
-    if (!hasAiPayload) return null;
-
-    const modelRecord =
-      modelInfo && typeof modelInfo === "object"
-        ? (modelInfo as Record<string, unknown>)
-        : null;
-
-    const provider =
-      modelRecord && typeof modelRecord.provider === "string" ? modelRecord.provider : null;
-    const modelId =
-      modelRecord && typeof modelRecord.modelId === "string" ? modelRecord.modelId : null;
-
-    return {
-      provider,
-      modelId,
-      promptSnapshot: typeof promptSnapshot === "string" ? promptSnapshot : null,
-      rawAiOutput: typeof rawAiOutput === "string" ? rawAiOutput : null,
-      linkedGenerationId:
-        typeof linkedGenerationId === "string" ? linkedGenerationId : null,
+    const body = (await res.json()) as {
+      chainIntegrity?: {
+        verified?: boolean;
+        eventsWithChain?: number;
+        verifiedChain?: number;
+        brokenAt?: string | null;
+      };
     };
-  }, [selected]);
+
+    const chainIntegrity = body.chainIntegrity;
+    if (!chainIntegrity) {
+      setDownloadError("Unable to verify chain integrity.");
+      return false;
+    }
+
+    if (!chainIntegrity.verified) {
+      setDownloadError(
+        `Export blocked: integrity mismatch detected at log ${chainIntegrity.brokenAt ?? "unknown"}.`,
+      );
+      setVerifyResult(
+        `Integrity alert: mismatch detected at log ${chainIntegrity.brokenAt ?? "unknown"}.`,
+      );
+      return false;
+    }
+
+    return true;
+  }
 
   function handleCategoryChange(value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -271,13 +244,26 @@ export function AuditLogsTable({ logs, isAdmin, activeCategory, total }: AuditLo
     router.push(`${pathname}?${params.toString()}`);
   }
 
+  function buildQueryParams(extra?: Record<string, string>): string {
+    const params = new URLSearchParams();
+    if (activeCategory) {
+      params.set("category", activeCategory);
+    }
+    if (extra) {
+      Object.entries(extra).forEach(([key, value]) => params.set(key, value));
+    }
+    return params.toString();
+  }
+
   function handleDownloadBundle() {
     startDownload(async () => {
       setDownloadError(null);
       try {
-        const url = activeCategory
-          ? `/api/audit-logs/forensic-bundle?category=${encodeURIComponent(activeCategory)}`
-          : `/api/audit-logs/forensic-bundle`;
+        const healthy = await ensureChainHealthyForExport();
+        if (!healthy) return;
+
+        const query = buildQueryParams({ format: isAuditor ? "csv" : "json" });
+        const url = `/api/audit-logs/forensic-bundle${query ? `?${query}` : ""}`;
         const res = await fetch(url);
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
@@ -288,13 +274,82 @@ export function AuditLogsTable({ logs, isAdmin, activeCategory, total }: AuditLo
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = blobUrl;
-        a.download = `avra-forensic-bundle-${Date.now()}.json`;
+        a.download = `avra-forensic-bundle-${Date.now()}.${isAuditor ? "csv" : "json"}`;
         document.body.appendChild(a);
         a.click();
         a.remove();
         URL.revokeObjectURL(blobUrl);
       } catch (err) {
         setDownloadError(err instanceof Error ? err.message : "Download failed");
+      }
+    });
+  }
+
+  function handleDownloadAdminCsv() {
+    startDownload(async () => {
+      setDownloadError(null);
+      try {
+        const healthy = await ensureChainHealthyForExport();
+        if (!healthy) return;
+
+        const query = buildQueryParams({ format: "csv", profile: "admin" });
+        const res = await fetch(`/api/audit-logs/forensic-bundle?${query}`);
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          setDownloadError((body as { error?: string }).error ?? `HTTP ${res.status}`);
+          return;
+        }
+
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = `avra-audit-logs-${Date.now()}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(blobUrl);
+      } catch (err) {
+        setDownloadError(err instanceof Error ? err.message : "Download failed");
+      }
+    });
+  }
+
+  function handleVerifyIntegrity() {
+    startVerify(async () => {
+      setDownloadError(null);
+      setVerifyResult(null);
+      try {
+        const query = buildQueryParams({ mode: "verify" });
+        const res = await fetch(`/api/audit-logs/forensic-bundle?${query}`);
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          setDownloadError((body as { error?: string }).error ?? `HTTP ${res.status}`);
+          return;
+        }
+
+        const body = (await res.json()) as {
+          chainIntegrity?: {
+            verified?: boolean;
+            eventsWithChain?: number;
+            verifiedChain?: number;
+            brokenAt?: string | null;
+          };
+        };
+
+        if (!body.chainIntegrity) {
+          setVerifyResult("Unable to verify chain integrity.");
+          return;
+        }
+
+        const { verified, eventsWithChain, verifiedChain, brokenAt } = body.chainIntegrity;
+        setVerifyResult(
+          verified
+            ? `Chain verified (${verifiedChain ?? 0}/${eventsWithChain ?? 0} hashed events).`
+            : `Integrity alert: mismatch detected at log ${brokenAt ?? "unknown"}.`,
+        );
+      } catch (err) {
+        setDownloadError(err instanceof Error ? err.message : "Verification failed");
       }
     });
   }
@@ -327,19 +382,53 @@ export function AuditLogsTable({ logs, isAdmin, activeCategory, total }: AuditLo
           </Select>
         </div>
 
-        {isAdmin && (
+        {(isAdmin || isAuditor) && (
           <div className="flex flex-col items-end gap-1 sm:ml-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadBundle}
-              disabled={downloading}
-              aria-label="Download signed forensic bundle for external auditors"
-              className="gap-1.5 border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
-            >
-              <Download className="h-4 w-4" aria-hidden />
-              {downloading ? t("downloadPreparing") : t("downloadBundle")}
-            </Button>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {isAuditor && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleVerifyIntegrity}
+                  disabled={verifying}
+                  className="gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                >
+                  <ShieldCheck className="h-4 w-4" aria-hidden />
+                  {verifying ? t("verifyIntegrityRunning") : t("verifyIntegrity")}
+                </Button>
+              )}
+
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadAdminCsv}
+                  disabled={downloading}
+                  className="gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <Download className="h-4 w-4" aria-hidden />
+                  {downloading ? t("downloadPreparing") : t("downloadCsv")}
+                </Button>
+              )}
+
+              {isAuditor && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadBundle}
+                  disabled={downloading}
+                  aria-label="Download signed forensic bundle"
+                  className="gap-1.5 border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
+                >
+                  <Download className="h-4 w-4" aria-hidden />
+                  {downloading ? t("downloadPreparing") : t("downloadBundle")}
+                </Button>
+              )}
+            </div>
+
+            {verifyResult && (
+              <p className="text-xs text-emerald-700 dark:text-emerald-300">{verifyResult}</p>
+            )}
             {downloadError && (
               <p className="flex items-center gap-1 text-xs text-rose-600 dark:text-rose-400">
                 <AlertCircle className="h-3.5 w-3.5" aria-hidden />
@@ -416,222 +505,7 @@ export function AuditLogsTable({ logs, isAdmin, activeCategory, total }: AuditLo
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedId(log.id);
-                          setShowPrompt(false);
-                        }}
-                      >
-                        <Eye className="h-4 w-4" aria-hidden />
-                        Details
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-h-[85vh] max-w-5xl overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>Audit Event Details</DialogTitle>
-                        <DialogDescription>
-                          Complete forensic record — NIS2 · DORA · EU AI Act · ISO 27001 · GDPR
-                        </DialogDescription>
-                      </DialogHeader>
-
-                      {selected ? (
-                        <div className="space-y-5">
-                          {/* ── Core event fields ── */}
-                          <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900/40 sm:grid-cols-2">
-                            <div>
-                              <p className="text-xs uppercase tracking-wide text-muted-foreground">Timestamp</p>
-                              <p className="font-mono">{formatTimestamp(selected.timestamp)}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs uppercase tracking-wide text-muted-foreground">User ID</p>
-                              <p className="break-all font-mono text-xs">{selected.userId}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs uppercase tracking-wide text-muted-foreground">Action</p>
-                              <p className="font-semibold">{selected.action}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs uppercase tracking-wide text-muted-foreground">Framework</p>
-                              <ComplianceBadge category={selected.complianceCategory} />
-                            </div>
-                            <div>
-                              <p className="text-xs uppercase tracking-wide text-muted-foreground">Entity</p>
-                              <p className="font-mono text-xs">
-                                {selected.entityType}/{selected.entityId}
-                              </p>
-                            </div>
-                            {selected.requestId && (
-                              <div>
-                                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                                  Request ID (NIS2/DORA correlation)
-                                </p>
-                                <code className="break-all font-mono text-xs">{selected.requestId}</code>
-                              </div>
-                            )}
-                            {selected.reason && (
-                              <div className="col-span-full">
-                                <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                                  Purpose / Reason (GDPR Art. 5(1)(b))
-                                </p>
-                                <p className="rounded border border-amber-200 bg-amber-50/40 px-2 py-1 text-xs dark:border-amber-800 dark:bg-amber-950/20">
-                                  {selected.reason}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* ── Forensic metadata ── */}
-                          {(selected.ipAddress || selected.userAgent) && (
-                            <div className="rounded-md border border-indigo-200 bg-indigo-50/40 p-4 dark:border-indigo-900 dark:bg-indigo-950/20">
-                              <h3 className="mb-3 text-sm font-semibold text-indigo-800 dark:text-indigo-300">
-                                Forensic Metadata (BSI Grundschutz / ISO 27001 A.12.4)
-                              </h3>
-                              <div className="space-y-2 text-sm">
-                                {selected.ipAddress && (
-                                  <div className="flex items-start gap-2">
-                                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
-                                    <div>
-                                      <p className="text-xs font-semibold text-indigo-900 dark:text-indigo-100">
-                                        IP Address{" "}
-                                        <span className="font-normal text-indigo-600 dark:text-indigo-300">
-                                          (truncated — GDPR Rec. 30)
-                                        </span>
-                                      </p>
-                                      <code className="block text-xs text-indigo-800 dark:text-indigo-200">
-                                        {selected.ipAddress}
-                                      </code>
-                                    </div>
-                                  </div>
-                                )}
-                                {selected.userAgent && (
-                                  <div className="flex items-start gap-2">
-                                    <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
-                                    <div>
-                                      <p className="text-xs font-semibold text-indigo-900 dark:text-indigo-100">
-                                        User Agent
-                                      </p>
-                                      <code className="block max-w-sm overflow-auto text-xs text-indigo-800 dark:text-indigo-200">
-                                        {selected.userAgent}
-                                      </code>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* ── NIS2/DORA hash-chain ── */}
-                          {(selected.eventHash || selected.previousLogHash) && (
-                            <div className="rounded-md border border-emerald-200 bg-emerald-50/40 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
-                              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-emerald-900 dark:text-emerald-200">
-                                <Hash className="h-4 w-4" aria-hidden />
-                                Hash-Chain Integrity (NIS2 / DORA Art. 9)
-                              </h3>
-                              <div className="space-y-2 text-sm">
-                                <HashDisplay label="Event Hash (SHA-256)" value={selected.eventHash} />
-                                <HashDisplay
-                                  label="Previous Log Hash"
-                                  value={selected.previousLogHash ?? "GENESIS"}
-                                />
-                              </div>
-                            </div>
-                          )}
-
-                          {/* ── EU AI Act traceability ── */}
-                          {(selected.aiModelId ||
-                            selected.aiProviderName ||
-                            selected.inputContextHash ||
-                            selected.hitlVerifiedBy ||
-                            aiProvenance) && (
-                            <div className="rounded-md border border-cyan-200 bg-cyan-50/40 p-4 dark:border-cyan-900 dark:bg-cyan-950/20">
-                              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-cyan-900 dark:text-cyan-200">
-                                <BrainCircuit className="h-4 w-4" aria-hidden />
-                                AI Traceability (EU AI Act Art. 12/14)
-                              </h3>
-                              <div className="grid gap-2 text-sm sm:grid-cols-2">
-                                {selected.aiModelId && (
-                                  <div>
-                                    <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
-                                      Model Identity
-                                    </p>
-                                    <code className="font-mono text-xs text-cyan-900 dark:text-cyan-100">
-                                      {selected.aiModelId}
-                                      {selected.aiProviderName ? ` / ${selected.aiProviderName}` : ""}
-                                    </code>
-                                  </div>
-                                )}
-                                {selected.inputContextHash && (
-                                  <div className="col-span-full">
-                                    <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
-                                      Input Context Hash (SHA-256 — no raw PII stored)
-                                    </p>
-                                    <code className="block break-all font-mono text-xs text-cyan-900 dark:text-cyan-100">
-                                      {selected.inputContextHash}
-                                    </code>
-                                  </div>
-                                )}
-                                {selected.hitlVerifiedBy && (
-                                  <div className="col-span-full">
-                                    <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
-                                      Human-in-the-Loop Reviewer (Art. 14)
-                                    </p>
-                                    <div className="flex items-center gap-1.5">
-                                      <UserCheck className="h-4 w-4 text-cyan-600 dark:text-cyan-400" aria-hidden />
-                                      <code className="font-mono text-xs text-cyan-900 dark:text-cyan-100">
-                                        {selected.hitlVerifiedBy}
-                                      </code>
-                                    </div>
-                                  </div>
-                                )}
-                                {aiProvenance?.linkedGenerationId && (
-                                  <div>
-                                    <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
-                                      Linked Generation Event
-                                    </p>
-                                    <code className="font-mono text-xs text-cyan-900 dark:text-cyan-100">
-                                      {aiProvenance.linkedGenerationId}
-                                    </code>
-                                  </div>
-                                )}
-                                {aiProvenance?.promptSnapshot && (
-                                  <div className="col-span-full">
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => setShowPrompt((prev) => !prev)}
-                                    >
-                                      {showPrompt ? "Hide Prompt Snapshot" : "View Prompt Snapshot"}
-                                    </Button>
-                                    {showPrompt && (
-                                      <pre className="mt-2 max-h-52 overflow-auto rounded bg-white/80 p-2 text-xs leading-relaxed text-cyan-950 dark:bg-slate-950 dark:text-cyan-100">
-                                        {aiProvenance.promptSnapshot}
-                                      </pre>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* ── Field diff ── */}
-                          <div>
-                            <h3 className="mb-3 text-sm font-semibold">
-                              Field Changes (ISO 27001 A.12.4 / SOC2 CC7)
-                            </h3>
-                            <AuditDiffViewer
-                              previousValue={selected.previousValue}
-                              newValue={selected.newValue}
-                            />
-                          </div>
-                        </div>
-                      ) : null}
-                    </DialogContent>
-                  </Dialog>
+                  <AuditDetailsModal log={log} />
                 </TableCell>
               </TableRow>
             ))

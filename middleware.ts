@@ -12,6 +12,7 @@ import {
 import { AUTH_SESSION_COOKIE_NAME, shouldSecureCookie, verifySessionToken } from "@/lib/auth/token";
 
 const handleI18nRouting = createMiddleware(routing);
+const SAFE_HTTP_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 // ---------------------------------------------------------------------------
 // Edge-compatible structured logger (no Node.js crypto dependency)
@@ -109,14 +110,52 @@ function stripLocaleFromPathname(pathname: string): string {
  * Security headers are applied to every response via applySecurityHeaders().
  */
 async function _middleware(request: NextRequest): Promise<NextResponse> {
+  const localeFromPath = getLocaleFromPathname(request.nextUrl.pathname);
+  const normalizedPathname = stripLocaleFromPathname(request.nextUrl.pathname);
+  const isSafeMethod = SAFE_HTTP_METHODS.has(request.method.toUpperCase());
+
   // Server Actions are POSTs with a Next-Action header. Locale routing (rewrites
   // / redirects) must be skipped so Next.js can resolve the action by its hash.
   if (request.headers.get("Next-Action")) {
+    const authToken = request.cookies.get(AUTH_SESSION_COOKIE_NAME)?.value || null;
+    const authSession = await verifySessionToken(authToken);
+
+    if (!authSession) {
+      return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
+    }
+
+    if (!canAccessPath(authSession.role, normalizedPathname)) {
+      emitMiddlewareLog({
+        event_type: "ACCESS_CONTROL",
+        action_name: "middleware.server_action.access_denied",
+        status: "failure",
+        user_id: authSession.uid,
+        role: authSession.role,
+        pathname: normalizedPathname,
+        source_ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+        message: `Role ${authSession.role} denied server action access to ${normalizedPathname}`,
+        response_code: 403,
+      });
+      return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+    }
+
+    if (authSession.role === "AUDITOR" && !isSafeMethod) {
+      emitMiddlewareLog({
+        event_type: "ACCESS_CONTROL",
+        action_name: "middleware.server_action.auditor_write_blocked",
+        status: "failure",
+        user_id: authSession.uid,
+        role: authSession.role,
+        pathname: normalizedPathname,
+        source_ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+        message: `Blocked non-read server action method ${request.method.toUpperCase()} for AUDITOR on ${normalizedPathname}`,
+        response_code: 403,
+      });
+      return NextResponse.json({ error: "FORBIDDEN_READ_ONLY" }, { status: 403 });
+    }
+
     return NextResponse.next();
   }
-
-  const localeFromPath = getLocaleFromPathname(request.nextUrl.pathname);
-  const normalizedPathname = stripLocaleFromPathname(request.nextUrl.pathname);
 
   const localeFromCookie = request.cookies.get("NEXT_LOCALE")?.value;
   const activeLocale = hasLocale(routing.locales, localeFromPath)
@@ -202,11 +241,33 @@ async function _middleware(request: NextRequest): Promise<NextResponse> {
         response_code: 403,
       });
       const url = request.nextUrl.clone();
+      const isAuditLogsPath =
+        normalizedPathname === "/admin/audit-logs" ||
+        normalizedPathname.startsWith("/admin/audit-logs/");
       url.pathname = withLocalePath(
-        authSession.role === "VENDOR" ? "/external/portal" : "/unauthorized",
+        authSession.role === "VENDOR"
+          ? "/external/portal"
+          : isAuditLogsPath
+            ? "/dashboard"
+            : "/unauthorized",
         activeLocale,
       );
       return NextResponse.redirect(url);
+    }
+
+    if (authSession.role === "AUDITOR" && !isSafeMethod) {
+      emitMiddlewareLog({
+        event_type: "ACCESS_CONTROL",
+        action_name: "middleware.auditor_write_blocked",
+        status: "failure",
+        user_id: authSession.uid,
+        role: authSession.role,
+        pathname: normalizedPathname,
+        source_ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+        message: `Blocked non-read method ${request.method.toUpperCase()} for AUDITOR on ${normalizedPathname}`,
+        response_code: 403,
+      });
+      return NextResponse.json({ error: "FORBIDDEN_READ_ONLY" }, { status: 403 });
     }
 
     if (vendorToken && authSession.role !== "VENDOR") {

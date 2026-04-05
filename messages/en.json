@@ -20,12 +20,36 @@
     "legendPrefix": "Privacy-first forensic log — IP truncated (GDPR Rec. 30), hash-chained (NIS2/DORA Art. 9), AI identity tracked (EU AI Act Art. 12/14).",
     "eventCount": "{count, plural, one {# event} other {# events}}",
     "downloadBundle": "Download Forensic Bundle",
+    "downloadCsv": "Export CSV (Admin)",
     "downloadPreparing": "Preparing…",
+    "verifyIntegrity": "Verify Integrity",
+    "verifyIntegrityRunning": "Verifying…",
     "noEvents": "No audit events found.",
     "paginationOf": "of",
     "paginationEntries": "entries",
     "paginationPrevious": "Previous",
     "paginationNext": "Next"
+  },
+  "AuditDetails": {
+    "gdprWhyRedacted": "Why redacted?",
+    "privacy": {
+      "gdprArt5Minimization": "PII redacted per GDPR Art. 5(1)(c): Data minimization"
+    },
+    "userAgent": {
+      "normalized": "User Agent (normalized)",
+      "unknownBrowser": "Unknown Browser",
+      "unknownOs": "Unknown OS",
+      "on": "on",
+      "edge": "Edge",
+      "chrome": "Chrome",
+      "firefox": "Firefox",
+      "safari": "Safari",
+      "windows": "Windows",
+      "macOs": "macOS",
+      "android": "Android",
+      "ios": "iOS",
+      "linux": "Linux"
+    }
   },
   "DashboardDesc": "Third-party risk posture overview for NIS2-aligned oversight.",
   "SupplyChainRiskScore": "Supply chain risk score",

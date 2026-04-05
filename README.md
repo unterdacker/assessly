@@ -29,7 +29,11 @@ Security officers often manage third-party assessments in fragmented spreadsheet
 - AI document audit workflow for PDF evidence.
 - Manual answer override with justification and supplemental evidence support.
 - Privacy-First Forensic Logging: cryptographic hash-chain audit log covering EU AI Act, NIS2/DORA, ISO 27001/SOC2, BSI Grundschutz, and GDPR requirements.
-- Compliance filter and Forensic Bundle export (Admin-only, HMAC-SHA256 signed JSON) in the Audit Logs view.
+- Compliance filter and Forensic Bundle export (role-aware CSV/JSON, HMAC-SHA256 signed) in the Audit Logs view.
+- Audit Event Details modal with live per-row hash verification (`VALID`/`INVALID`) and trace correlation.
+- Related Events view for request/trace-linked actions (EU AI Act traceability evidence).
+- Export guardrail: Forensic bundle download is blocked when chain integrity verification fails.
+- GDPR/DSGVO explainability in the details modal (localized legal-basis tooltip for redactions).
 
 ### Enterprise & Compliance
 
@@ -78,7 +82,43 @@ The `AuditLog` table implements a cryptographic hash-chain and multi-framework c
 | `inputContextHash` | SHA-256 of the AI prompt — never the raw text |
 | `hitlVerifiedBy` | Human-in-the-Loop reviewer ID (EU AI Act Art. 14) |
 
-The `/api/audit-logs/forensic-bundle` endpoint (Admin-only) exports a company-scoped, HMAC-SHA256 signed JSON bundle with a `chainIntegrity` verification report suitable for BaFin, BSI, or EU AI Office audits.
+The `/api/audit-logs/forensic-bundle` endpoint exports company-scoped forensic bundles with chain verification and role-aware masking:
+
+- `ADMIN`: JSON bundle or CSV export for operational analysis.
+- `AUDITOR`: signed CSV forensic export with privacy-masked fields.
+
+The `/api/audit-logs/[id]/details` endpoint powers the details modal with:
+
+- real-time row integrity re-check (`?verify=1`),
+- trace/correlation ID extraction,
+- related events list across the same request chain,
+- role-based masking for sensitive fields.
+
+### Forensic Stress-Test Utilities
+
+AVRA includes scripted stress-tests for tamper detection and traceability verification:
+
+```bash
+# 1) Simulate direct DB tampering of an audit row
+npm run audit:tamper-test -- --company <companyId>
+
+# 2) Simulate a 3-step correlated trace chain
+npm run audit:simulate-trace -- --company <companyId> --user <userId>
+
+# 3) Verify full hash-chain state for a company
+npm run audit:verify-chain -- --company <companyId>
+```
+
+Detailed walkthrough and expected results are documented in `docs/AUDIT_STRESS_TEST.md`.
+
+### GDPR Art. 17 Utilities
+
+`lib/gdpr-erasure.ts` provides two remediation modes:
+
+- `redactUserFromAuditLogs(...)`: pseudonymizes identifiers and re-hashes chain entries.
+- `scrubUserLogs(...)`: redacts non-hash-bound sensitive fields with `[REDACTED_BY_REQUEST_ART17]` while preserving existing `previousLogHash` and `eventHash` values.
+
+`scrubUserLogs(...)` is intended for strict forensic-preservation workflows where chain immutability must remain unchanged.
 
 ### Getting Started (Local Development)
 

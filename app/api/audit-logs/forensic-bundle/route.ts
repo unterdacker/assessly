@@ -22,6 +22,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getAuthSessionFromRequest } from "@/lib/auth/server";
+import { AuditLogger } from "@/lib/structured-logger";
 import {
   pseudonymizeUserId,
   scrubPiiFields,
@@ -30,11 +31,114 @@ import {
   computeEventHash,
 } from "@/lib/audit-sanitize";
 
+const REDACTED_FOR_PRIVACY = "[REDACTED_FOR_PRIVACY]";
+
+type ChainIntegrityResult = {
+  verified: boolean;
+  brokenAt: string | null;
+  totalEvents: number;
+  eventsWithChain: number;
+  verifiedChain: number;
+  genesisEvents: number;
+  integrityRate: number | null;
+};
+
+function escapeCsvValue(value: string): string {
+  if (value.includes(",") || value.includes("\n") || value.includes("\"")) {
+    return `"${value.replace(/\"/g, '""')}"`;
+  }
+  return value;
+}
+
+function toCsvRows(rows: Array<Record<string, unknown>>): string {
+  if (rows.length === 0) {
+    return "id,timestamp,action,entityType,entityId,eventHash,previousLogHash";
+  }
+
+  const columns = Object.keys(rows[0]);
+  const lines = rows.map((row) =>
+    columns
+      .map((col) => {
+        const value = row[col];
+        if (value === null || value === undefined) return "";
+        if (typeof value === "string") return escapeCsvValue(value);
+        return escapeCsvValue(JSON.stringify(value));
+      })
+      .join(","),
+  );
+
+  return [columns.join(","), ...lines].join("\n");
+}
+
+function verifyChain(rawLogs: Array<{
+  id: string;
+  companyId: string;
+  userId: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  timestamp: Date;
+  previousLogHash: string | null;
+  eventHash: string | null;
+}>): ChainIntegrityResult {
+  let chainVerified = 0;
+  let chainBrokenAt: string | null = null;
+  let genesisEvents = 0;
+
+  for (let i = 0; i < rawLogs.length; i++) {
+    const log = rawLogs[i];
+
+    if (!log.eventHash) {
+      genesisEvents++;
+      continue;
+    }
+
+    const expectedHash = computeEventHash({
+      companyId: log.companyId,
+      userId: log.userId,
+      action: log.action,
+      entityType: log.entityType,
+      entityId: log.entityId,
+      timestamp: log.timestamp.toISOString(),
+      previousLogHash: log.previousLogHash,
+    });
+
+    if (expectedHash === log.eventHash) {
+      chainVerified++;
+    } else if (!chainBrokenAt) {
+      chainBrokenAt = log.id;
+    }
+  }
+
+  const totalWithChain = rawLogs.filter((log) => Boolean(log.eventHash)).length;
+  const hasAnyHash = totalWithChain > 0;
+
+  return {
+    verified: chainBrokenAt === null && hasAnyHash,
+    brokenAt: chainBrokenAt,
+    totalEvents: rawLogs.length,
+    eventsWithChain: totalWithChain,
+    verifiedChain: chainVerified,
+    genesisEvents,
+    integrityRate: totalWithChain > 0 ? Math.round((chainVerified / totalWithChain) * 100) : null,
+  };
+}
+
 export async function GET(request: NextRequest) {
-  // --- Access control ---
   const session = await getAuthSessionFromRequest(request);
-  if (!session || session.role !== "ADMIN") {
-    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 403 });
+  if (!session || (session.role !== "ADMIN" && session.role !== "AUDITOR")) {
+    AuditLogger.accessControl("api.audit_logs.forensic_bundle.forbidden", "failure", {
+      role: session?.role ?? null,
+      userId: session?.userId ?? null,
+      sourceIp: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+      message: "Forbidden forensic export attempt",
+      responseCode: 403,
+      details: {
+        pathname: request.nextUrl.pathname,
+        method: request.method,
+      },
+    });
+    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
   const companyId = session.companyId;
@@ -42,11 +146,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "No company context." }, { status: 400 });
   }
 
-  // --- Optional compliance category filter from query param ---
   const { searchParams } = new URL(request.url);
   const categoryFilter = searchParams.get("category") || undefined;
+  const requestedFormat = (searchParams.get("format") || "").toLowerCase();
+  const mode = (searchParams.get("mode") || "").toLowerCase();
+  const profile = (searchParams.get("profile") || "").toLowerCase();
+  const isAuditor = session.role === "AUDITOR";
+  const format = requestedFormat === "json" || requestedFormat === "csv"
+    ? requestedFormat
+    : isAuditor
+      ? "csv"
+      : "json";
 
-  /** Maps base UI filter keys to DB complianceCategory values. */
   const categoryToDb: Record<string, string[]> = {
     auth: ["AUTH"],
     access: ["ISO27001_SOC2"],
@@ -82,7 +193,6 @@ export async function GET(request: NextRequest) {
     return { complianceCategory: { in: dbCategories } } satisfies Prisma.AuditLogWhereInput;
   })();
 
-  // --- Fetch all logs for this company, oldest first (chain order) ---
   const rawLogs = await prisma.auditLog.findMany({
     where: {
       companyId,
@@ -113,80 +223,64 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  // --- Hash-chain verification ---
-  let chainVerified = 0;
-  let chainBrokenAt: string | null = null;
-  let genesisEvents = 0;
+  const chainIntegrity = verifyChain(rawLogs);
 
-  for (let i = 0; i < rawLogs.length; i++) {
-    const log = rawLogs[i];
-
-    if (!log.eventHash) {
-      // Pre-upgrade log; no chain data
-      genesisEvents++;
-      continue;
-    }
-
-    // Re-compute the expected hash to verify integrity
-    const expectedHash = computeEventHash({
-      companyId: log.companyId,
-      userId: log.userId,
-      action: log.action,
-      entityType: log.entityType,
-      entityId: log.entityId,
-      timestamp: log.timestamp.toISOString(),
-      previousLogHash: log.previousLogHash,
-    });
-
-    if (expectedHash === log.eventHash) {
-      chainVerified++;
-    } else if (!chainBrokenAt) {
-      chainBrokenAt = log.id;
-    }
+  if (mode === "verify") {
+    return NextResponse.json(
+      {
+        ok: true,
+        generatedAt: new Date().toISOString(),
+        companyId,
+        chainIntegrity,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+          Pragma: "no-cache",
+        },
+      },
+    );
   }
 
-  const totalWithChain = rawLogs.filter((l) => l.eventHash).length;
-
-  // --- GDPR-compliant sanitization for export ---
-  const sanitizedLogs = rawLogs.map((log) => {
-    // Re-extract IP from metadata if stored there
+  const exportedLogs = rawLogs.map((log) => {
     const meta = log.metadata as Record<string, unknown> | null;
     const storedIp =
       (meta?.forensics as Record<string, unknown> | undefined)?.ipAddress ??
       meta?.ipAddress ??
       null;
 
+    const userId = isAuditor ? pseudonymizeUserId(log.userId, "export") : log.userId;
+    const hitlVerifiedBy = log.hitlVerifiedBy
+      ? isAuditor
+        ? pseudonymizeUserId(log.hitlVerifiedBy, "export")
+        : log.hitlVerifiedBy
+      : null;
+    const reason = isAuditor ? REDACTED_FOR_PRIVACY : (log.reason ?? null);
+    const requestId = isAuditor ? REDACTED_FOR_PRIVACY : (log.requestId ?? null);
+
     return {
       id: log.id,
       timestamp: log.timestamp.toISOString(),
       createdAt: log.createdAt.toISOString(),
-      // GDPR Art. 4(5): Pseudonymize user IDs for external auditors
-      userId: pseudonymizeUserId(log.userId, "export"),
+      userId,
       action: log.action,
       entityType: log.entityType,
       entityId: log.entityId,
       complianceCategory: log.complianceCategory ?? "OTHER",
-      reason: log.reason ?? null,
-      requestId: log.requestId ?? null,
-      // NIS2/DORA hash-chain fields
+      reason,
+      requestId,
       previousLogHash: log.previousLogHash ?? null,
       eventHash: log.eventHash ?? null,
-      // EU AI Act fields
       aiModelId: log.aiModelId ?? null,
       aiProviderName: log.aiProviderName ?? null,
       inputContextHash: log.inputContextHash ?? null,
-      // HITL field pseudonymized
-      hitlVerifiedBy: log.hitlVerifiedBy
-        ? pseudonymizeUserId(log.hitlVerifiedBy, "export")
-        : null,
-      // GDPR: truncate IP, scrub PII fields from previousValue / newValue
+      hitlVerifiedBy,
       ipAddress: truncateIp(typeof storedIp === "string" ? storedIp : null),
       previousValue: scrubPiiFields(log.previousValue),
       newValue: scrubPiiFields(log.newValue),
     };
   });
 
-  // --- Build canonical bundle ---
   const bundleId = `bundle-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const generatedAt = new Date().toISOString();
 
@@ -196,24 +290,57 @@ export async function GET(request: NextRequest) {
     generatedBy: pseudonymizeUserId(session.userId, "export"),
     companyId,
     exportScope: categoryFilter ?? "ALL",
-    chainIntegrity: {
-      verified: chainBrokenAt === null && genesisEvents < rawLogs.length,
-      brokenAt: chainBrokenAt,
-      totalEvents: rawLogs.length,
-      eventsWithChain: totalWithChain,
-      verifiedChain: chainVerified,
-      genesisEvents,
-      integrityRate:
-        totalWithChain > 0
-          ? Math.round((chainVerified / totalWithChain) * 100)
-          : null,
-    },
-    logs: sanitizedLogs,
+    profile: isAuditor ? "AUDITOR" : "ADMIN",
+    chainIntegrity,
+    logs: exportedLogs,
   };
 
-  // --- HMAC-SHA256 signature (NIS2/DORA tamper evidence) ---
   const canonicalJson = JSON.stringify(bundleContent);
   const signature = signBundle(canonicalJson);
+
+  if (format === "csv") {
+    const csvRows = exportedLogs.map((log) => {
+      if (isAuditor) return log;
+
+      if (profile === "admin") {
+        return {
+          id: log.id,
+          timestamp: log.timestamp,
+          action: log.action,
+          entityType: log.entityType,
+          entityId: log.entityId,
+          complianceCategory: log.complianceCategory,
+          reason: log.reason,
+          requestId: log.requestId,
+          eventHash: log.eventHash,
+          previousLogHash: log.previousLogHash,
+        };
+      }
+
+      return log;
+    });
+
+    const csvBody = toCsvRows(csvRows as Array<Record<string, unknown>>);
+    const signedPreamble = isAuditor
+      ? [
+          `# AVRA Forensic Export Signature: ${signature}`,
+          `# Generated At: ${generatedAt}`,
+          `# Chain Verified: ${String(chainIntegrity.verified)}`,
+          `# Integrity Rate: ${chainIntegrity.integrityRate ?? "n/a"}`,
+          "",
+        ].join("\n")
+      : "";
+
+    return new NextResponse(`${signedPreamble}${csvBody}`, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="avra-forensic-bundle-${Date.now()}.csv"`,
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+      },
+    });
+  }
 
   const signedBundle = {
     ...bundleContent,

@@ -2,9 +2,12 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { ShieldAlert } from "lucide-react";
 import { AuditLogsTable } from "@/components/admin/audit-logs-table";
-import { requirePageRole } from "@/lib/auth/server";
+import { getOptionalAuthSession } from "@/lib/auth/server";
+import { withLocalePath } from "@/lib/auth/permissions";
+import { pseudonymizeUserId, scrubPiiFields, truncateIp } from "@/lib/audit-sanitize";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -134,11 +137,23 @@ type AuditLogsPageProps = {
   searchParams: Promise<{ page?: string; category?: string }>;
 };
 
+const REDACTED_FOR_PRIVACY = "[REDACTED_FOR_PRIVACY]";
+
 export default async function AuditLogsPage({ params, searchParams }: AuditLogsPageProps) {
   const { locale } = await params;
   const { page: pageParam, category: rawCategory } = await searchParams;
-  const session = await requirePageRole(["ADMIN", "AUDITOR"], locale);
+  const session = await getOptionalAuthSession();
+  if (!session) {
+    redirect(withLocalePath("/auth/sign-in", locale));
+  }
+
+  if (session.role !== "ADMIN" && session.role !== "AUDITOR") {
+    redirect(withLocalePath("/dashboard", locale));
+  }
+
   const t = await getTranslations("Audit");
+  const isAdmin = session.role === "ADMIN";
+  const isAuditor = session.role === "AUDITOR";
 
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
   const skip = (page - 1) * AUDIT_LOG_PAGE_SIZE;
@@ -202,37 +217,66 @@ export default async function AuditLogsPage({ params, searchParams }: AuditLogsP
     const isHumanOversight = Boolean(oversightAction);
     const isAiGovernance = !isHumanOversight && entry.complianceCategory === "AI_ACT";
 
+    const maskedUserId = isAuditor ? pseudonymizeUserId(entry.actorId, "export") : entry.actorId;
+    const maskedPreviousValue = isAuditor
+      ? scrubPiiFields(
+          metadata && typeof metadata === "object" && "previousValue" in metadata
+            ? (metadata as Record<string, unknown>).previousValue
+            : null,
+        )
+      : metadata && typeof metadata === "object" && "previousValue" in metadata
+        ? (metadata as Record<string, unknown>).previousValue
+        : null;
+    const maskedNewValue = isAuditor
+      ? scrubPiiFields(
+          metadata && typeof metadata === "object" && "newValue" in metadata
+            ? (metadata as Record<string, unknown>).newValue
+            : null,
+        )
+      : metadata && typeof metadata === "object" && "newValue" in metadata
+        ? (metadata as Record<string, unknown>).newValue
+        : null;
+
     return {
       id: entry.id,
       timestamp: entry.createdAt.toISOString(),
-      userId: entry.actorId,
+      userId: maskedUserId,
       action: oversightAction ?? entry.action,
       entityType: entry.entityType,
       entityId: isAiGovernance && modelDisplay ? modelDisplay : entry.entityId,
-      previousValue:
-        metadata && typeof metadata === "object" && "previousValue" in metadata
-          ? (metadata as Record<string, unknown>).previousValue
+      previousValue: maskedPreviousValue,
+      newValue: maskedNewValue,
+      ipAddress:
+        typeof ipAddress === "string"
+          ? isAuditor
+            ? truncateIp(ipAddress)
+            : ipAddress
           : null,
-      newValue:
-        metadata && typeof metadata === "object" && "newValue" in metadata
-          ? (metadata as Record<string, unknown>).newValue
+      userAgent:
+        typeof userAgent === "string"
+          ? isAuditor
+            ? REDACTED_FOR_PRIVACY
+            : userAgent
           : null,
-      ipAddress: typeof ipAddress === "string" ? ipAddress : null,
-      userAgent: typeof userAgent === "string" ? userAgent : null,
-      metadata,
+      metadata: isAuditor ? (scrubPiiFields(metadata) as Record<string, unknown> | null) : metadata,
       // Compliance fields
       complianceCategory:
         isAiGovernance || isHumanOversight
           ? "AI_ACT"
           : (entry.complianceCategory ?? "OTHER"),
-      reason: entry.reason ?? null,
-      requestId: entry.requestId ?? null,
+      reason: isAuditor ? REDACTED_FOR_PRIVACY : (entry.reason ?? null),
+      requestId: isAuditor ? REDACTED_FOR_PRIVACY : (entry.requestId ?? null),
       previousLogHash: entry.previousLogHash ?? null,
       eventHash: entry.eventHash ?? null,
       aiModelId: entry.aiModelId ?? null,
       aiProviderName: entry.aiProviderName ?? null,
       inputContextHash: entry.inputContextHash ?? null,
-      hitlVerifiedBy: entry.hitlVerifiedBy ?? null,
+      hitlVerifiedBy:
+        entry.hitlVerifiedBy === null
+          ? null
+          : isAuditor
+            ? REDACTED_FOR_PRIVACY
+            : entry.hitlVerifiedBy,
     };
   });
 
@@ -252,7 +296,7 @@ export default async function AuditLogsPage({ params, searchParams }: AuditLogsP
         </div>
       </header>
 
-      <AuditLogsTable logs={tableRows} isAdmin={session.role === "ADMIN"} activeCategory={activeCategory} total={total} />
+      <AuditLogsTable logs={tableRows} isAdmin={isAdmin} isAuditor={isAuditor} activeCategory={activeCategory} total={total} />
 
       {total > AUDIT_LOG_PAGE_SIZE && (
         <nav aria-label="Audit log pagination" className="flex items-center justify-between border-t border-slate-200 pt-4 text-sm dark:border-slate-800">
