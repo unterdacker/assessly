@@ -1,7 +1,12 @@
 import { AuditLog, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
-import { truncateIp, computeEventHash } from "@/lib/audit-sanitize";
+import {
+  computeIncidentRetentionUntil,
+  computeEventHash,
+  scrubPiiFields,
+  truncateIp,
+} from "@/lib/audit-sanitize";
 import { AuditLogger, AuditCategory } from "@/lib/structured-logger";
 
 // ---------------------------------------------------------------------------
@@ -88,6 +93,11 @@ export type LogAuditEventInput = {
    * (e.g. USER_DELETED, SETTINGS_UPDATED). Required for GDPR accountability principle.
    */
   reason?: string | null;
+  /**
+   * Set true only for active security incident investigations where full source IP
+   * is required for containment/forensics. Retention is shortened automatically.
+   */
+  securityIncident?: boolean;
 };
 
 export type LogAuditEventOptions = {
@@ -139,6 +149,53 @@ const COMPLIANCE_TO_AUDIT_CATEGORY: Record<string, AuditCategory> = {
 
 function toAuditCategory(complianceCategory: string): AuditCategory {
   return COMPLIANCE_TO_AUDIT_CATEGORY[complianceCategory] ?? AuditCategory.DATA_OPERATIONS;
+}
+
+function deriveLegalBasis(category: AuditCategory): "LEGAL_OBLIGATION" | "LEGITIMATE_INTEREST" {
+  switch (category) {
+    case AuditCategory.AUTH:
+    case AuditCategory.ACCESS_CONTROL:
+    case AuditCategory.SYSTEM_HEALTH:
+      return "LEGITIMATE_INTEREST";
+    case AuditCategory.CONFIGURATION:
+    case AuditCategory.DATA_OPERATIONS:
+      return "LEGAL_OBLIGATION";
+    default:
+      return "LEGITIMATE_INTEREST";
+  }
+}
+
+function deriveRetentionPolicy(
+  category: AuditCategory,
+  securityIncident: boolean,
+): { retentionPriority: "HIGH" | "MEDIUM" | "LOW"; retentionUntil: Date } {
+  const now = new Date();
+
+  if (securityIncident) {
+    return {
+      retentionPriority: "HIGH",
+      retentionUntil: computeIncidentRetentionUntil(now),
+    };
+  }
+
+  if (category === AuditCategory.AUTH || category === AuditCategory.ACCESS_CONTROL) {
+    return {
+      retentionPriority: "HIGH",
+      retentionUntil: new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000),
+    };
+  }
+
+  if (category === AuditCategory.SYSTEM_HEALTH) {
+    return {
+      retentionPriority: "LOW",
+      retentionUntil: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+    };
+  }
+
+  return {
+    retentionPriority: "MEDIUM",
+    retentionUntil: new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000),
+  };
 }
 
 /**
@@ -273,25 +330,46 @@ export async function logAuditEvent(
 ): Promise<AuditLog> {
   // ── Pre-flight: work that can safely run before the transaction ─────────────
 
+  const sanitizedPrevious = scrubPiiFields(input.previousValue) as Prisma.InputJsonValue | null;
+  const sanitizedNew = scrubPiiFields(input.newValue) as Prisma.InputJsonValue | null;
+  const sanitizedReason =
+    typeof input.reason === "string"
+      ? (scrubPiiFields(input.reason) as string)
+      : (input.reason ?? null);
+  const securityIncident = Boolean(input.securityIncident);
+
   // GDPR Recital 30: Truncate IP so it no longer qualifies as personal data.
-  let ipAddress = truncateIp(input.ipAddress) ?? null;
-  let userAgent = input.userAgent ?? null;
+  let ipAddress =
+    truncateIp(input.ipAddress, { securityIncident }) ?? null;
+  let userAgent =
+    typeof input.userAgent === "string"
+      ? (scrubPiiFields(input.userAgent) as string)
+      : (input.userAgent ?? null);
 
   if (options.captureHeaders) {
     const hdrs = await extractHeadersForForensics();
     // Only overwrite if the caller did not supply values directly.
-    ipAddress = ipAddress ?? truncateIp(hdrs.ipAddress);
+    ipAddress =
+      ipAddress ??
+      truncateIp(hdrs.ipAddress, { securityIncident });
     userAgent = userAgent ?? hdrs.userAgent;
   }
 
   // Compute the structural diff outside the transaction — pure CPU work.
-  const diff = computeFieldDiff(input.previousValue, input.newValue);
+  const diff = computeFieldDiff(sanitizedPrevious, sanitizedNew);
   // Auto-derive compliance category from the action name.
   const complianceCategory = deriveComplianceCategory(input.action);
+  const auditCategory = toAuditCategory(complianceCategory);
+  const legalBasis = deriveLegalBasis(auditCategory);
+  const retentionPolicy = deriveRetentionPolicy(auditCategory, securityIncident);
   // Fix the timestamp before the transaction; all derived values use this.
   const timestamp = input.timestamp ?? new Date();
 
-  const forensicsObj: Record<string, unknown> = { capturedAt: new Date().toISOString() };
+  const forensicsObj: Record<string, unknown> = {
+    capturedAt: new Date().toISOString(),
+    securityIncident,
+    retentionUntil: retentionPolicy.retentionUntil.toISOString(),
+  };
   if (ipAddress) forensicsObj.ipAddress = ipAddress;
   if (userAgent) forensicsObj.userAgent = userAgent;
 
@@ -365,12 +443,19 @@ export async function logAuditEvent(
         newValue: diff.current ?? null,
         ...(ipAddress !== null ? { ipAddress } : {}),
         ...(userAgent !== null ? { userAgent } : {}),
+        legalBasis,
+        retentionPriority: retentionPolicy.retentionPriority,
+        retentionUntil: retentionPolicy.retentionUntil.toISOString(),
+        securityIncident,
         forensics: forensicsObj,
       } as Record<string, unknown>,
       createdBy: input.userId,
       // --- Compliance fields ---
       complianceCategory,
-      reason: input.reason ?? null,
+      reason: sanitizedReason,
+      retentionPriority: retentionPolicy.retentionPriority,
+      retentionUntil: retentionPolicy.retentionUntil,
+      legalBasis,
       requestId: input.requestId ?? null,
       previousLogHash,
       eventHash,
@@ -410,20 +495,24 @@ export async function logAuditEvent(
 
   // ── Emit structured JSON log for every DB audit write ────────────────────
   AuditLogger.log({
-    category: toAuditCategory(complianceCategory),
+    category: auditCategory,
     action: input.action,
     status: "success",
     userId: input.userId,
     sourceIp: ipAddress,
+    securityIncident,
     traceId: input.requestId ?? null,
     entityType: input.entityType,
     entityId: input.entityId,
     message: `Audit event ${input.action} recorded (hash-chained)`,
     details: {
       complianceCategory,
+      legalBasis,
+      retentionPriority: retentionPolicy.retentionPriority,
+      retentionUntil: retentionPolicy.retentionUntil.toISOString(),
       eventHash: result.eventHash,
       previousLogHash: result.previousLogHash,
-      reason: input.reason ?? null,
+      reason: sanitizedReason,
     },
   });
 

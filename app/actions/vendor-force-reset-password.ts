@@ -3,15 +3,24 @@
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { hasLocale } from "next-intl";
 import { prisma } from "@/lib/prisma";
 import type { PortalActionState } from "@/lib/types/vendor-auth";
 import { AUTH_SESSION_COOKIE_NAME } from "@/lib/auth/token";
+import { routing } from "@/i18n/routing";
+import { withLocalePath } from "@/lib/auth/permissions";
+
+function resolveActionLocale(raw: FormDataEntryValue | null): string {
+  const locale = typeof raw === "string" ? raw : "";
+  return hasLocale(routing.locales, locale) ? locale : routing.defaultLocale;
+}
 
 export async function forceResetVendorPasswordAction(
   _prevState: PortalActionState,
   formData: FormData,
 ): Promise<PortalActionState> {
   const cookieStore = await cookies();
+  const locale = resolveActionLocale(formData.get("locale"));
 
   const setupToken = cookieStore.get("avra-vendor-setup")?.value;
   if (!setupToken) {
@@ -70,5 +79,5 @@ export async function forceResetVendorPasswordAction(
     return { error: "Could not update password. Please try again." };
   }
 
-  redirect("/external/portal");
+  redirect(withLocalePath("/external/portal", locale));
 }

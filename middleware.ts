@@ -164,7 +164,7 @@ async function _middleware(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  if (normalizedPathname.startsWith("/auth/sign-in") && authSession) {
+  if (normalizedPathname.startsWith("/auth/sign-in") && authSession && authSession.role !== "VENDOR") {
     const url = request.nextUrl.clone();
     url.pathname = withLocalePath(getRoleLandingPath(authSession.role), activeLocale);
     return NextResponse.redirect(url);
@@ -216,6 +216,15 @@ async function _middleware(request: NextRequest): Promise<NextResponse> {
   }
 
   if (isExternalPath(normalizedPathname) && authSession && authSession.role !== "VENDOR") {
+    const isInternalPreviewPath =
+      normalizedPathname === "/external/portal" ||
+      normalizedPathname.startsWith("/external/assessment/") ||
+      normalizedPathname.startsWith("/external/force-password-change");
+
+    if (isInternalPreviewPath && (authSession.role === "ADMIN" || authSession.role === "AUDITOR")) {
+      return response;
+    }
+
     const url = request.nextUrl.clone();
     url.pathname = withLocalePath(getRoleLandingPath(authSession.role), activeLocale);
     return NextResponse.redirect(url);

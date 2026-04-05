@@ -1,5 +1,10 @@
 import { redirect } from "next/navigation";
 
-export default function PortalAliasPage() {
-  redirect("/external/portal");
+type PortalAliasPageProps = {
+  params: Promise<{ locale: string }>;
+};
+
+export default async function PortalAliasPage({ params }: PortalAliasPageProps) {
+  const { locale } = await params;
+  redirect(`/${locale}/external/portal`);
 }

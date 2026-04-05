@@ -14,6 +14,10 @@
 
 import { createHash, createHmac } from "crypto";
 
+type TruncateIpOptions = {
+  securityIncident?: boolean;
+};
+
 // ---------------------------------------------------------------------------
 // IP Address Anonymization
 // ---------------------------------------------------------------------------
@@ -23,15 +27,23 @@ import { createHash, createHmac } from "crypto";
  * or the last 64 bits of an IPv6 address per GDPR Recital 30.
  * Returns the original string unchanged if it cannot be parsed.
  */
-export function truncateIp(ip: string | null | undefined): string | null {
+export function truncateIp(
+  ip: string | null | undefined,
+  options: TruncateIpOptions = {},
+): string | null {
   if (!ip) return null;
 
   const trimmed = ip.trim();
+  if (!trimmed) return null;
+
+  if (options.securityIncident) {
+    return trimmed;
+  }
 
   // IPv4
   const ipv4 = trimmed.match(/^(\d{1,3}\.\d{1,3}\.\d{1,3})\.\d{1,3}$/);
   if (ipv4) {
-    return `${ipv4[1]}.xxx`;
+    return `${ipv4[1]}.0`;
   }
 
   // IPv6: zero out last 4 groups (64 bits)
@@ -46,6 +58,13 @@ export function truncateIp(ip: string | null | undefined): string | null {
   }
 
   return trimmed;
+}
+
+/**
+ * For high-risk security incidents, use a short retention horizon for full-IP data.
+ */
+export function computeIncidentRetentionUntil(now = new Date()): Date {
+  return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 }
 
 // ---------------------------------------------------------------------------
@@ -220,7 +239,14 @@ export function computeEventHash(fields: {
 /** Fields that are considered PII and must be scrubbed in export mode. */
 const PII_FIELD_NAMES = new Set([
   "email",
+  "fullName",
+  "full_name",
+  "firstName",
+  "lastName",
+  "displayName",
+  "name",
   "passwordHash",
+  "password",
   "mfaSecret",
   "accessCode",
   "inviteToken",
@@ -229,7 +255,92 @@ const PII_FIELD_NAMES = new Set([
   "recipientEmail",
   "recipient_email",
   "security_contact_email",
+  "token",
+  "secret",
+  "credit_card",
+  "creditCard",
+  "iban",
+  "authorization",
+  "cookie",
+  "set-cookie",
 ]);
+
+const PII_FIELD_PATTERNS = [
+  /password/i,
+  /token/i,
+  /secret/i,
+  /credit[_-]?card/i,
+  /iban/i,
+  /email/i,
+  /authorization/i,
+  /cookie/i,
+];
+
+const SPECIAL_CATEGORY_KEYWORDS = [
+  "health",
+  "medical",
+  "diagnosis",
+  "religion",
+  "faith",
+  "political",
+  "union",
+  "biometric",
+  "genetic",
+  "sexual",
+  "ethnicity",
+  "race",
+];
+
+const SPECIAL_CATEGORY_VALUE_PATTERNS = [
+  /\b(diabetes|cancer|hiv|depression|anxiety|diagnosed)\b/i,
+  /\b(christian|muslim|jewish|hindu|buddhist|atheist)\b/i,
+  /\b(left-wing|right-wing|party member|political affiliation)\b/i,
+  /\b(fingerprint|facial scan|iris scan|biometric)\b/i,
+  /\b(genetic profile|dna)\b/i,
+];
+
+const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
+
+function hasSpecialCategoryKeyword(key: string): boolean {
+  const lowered = key.toLowerCase();
+  return SPECIAL_CATEGORY_KEYWORDS.some((kw) => lowered.includes(kw));
+}
+
+function hasSpecialCategoryValue(text: string): boolean {
+  return SPECIAL_CATEGORY_VALUE_PATTERNS.some((pattern) => pattern.test(text));
+}
+
+function isPiiKey(key: string): boolean {
+  if (PII_FIELD_NAMES.has(key)) return true;
+  return PII_FIELD_PATTERNS.some((pattern) => pattern.test(key));
+}
+
+function pseudonymizeIdentifier(value: string): string {
+  const key =
+    process.env.AUDIT_PSEUDONYMIZATION_KEY ||
+    process.env.AUDIT_EXPORT_KEY ||
+    "avra-gdpr-pseudonymization";
+  const hmac = createHmac("sha256", key).update(value, "utf8").digest("hex");
+  return `pid-${hmac.slice(0, 16)}`;
+}
+
+function sanitizeStringValue(key: string, raw: string): string {
+  const trimmed = raw.trim();
+
+  if (hasSpecialCategoryKeyword(key) || hasSpecialCategoryValue(trimmed)) {
+    return "[BLOCKED_SPECIAL_CATEGORY_ART9]";
+  }
+
+  if (EMAIL_PATTERN.test(trimmed)) {
+    return pseudonymizeIdentifier(trimmed.toLowerCase());
+  }
+
+  if (/name/i.test(key) && trimmed.length > 0) {
+    return pseudonymizeIdentifier(trimmed);
+  }
+
+  return raw;
+}
 
 /**
  * Recursively strips PII fields from a JSON-serializable object.
@@ -237,6 +348,9 @@ const PII_FIELD_NAMES = new Set([
  */
 export function scrubPiiFields(value: unknown): unknown {
   if (value === null || value === undefined) return value;
+  if (typeof value === "string") {
+    return sanitizeStringValue("value", value);
+  }
   if (typeof value !== "object") return value;
 
   if (Array.isArray(value)) {
@@ -247,8 +361,12 @@ export function scrubPiiFields(value: unknown): unknown {
   const result: Record<string, unknown> = {};
 
   for (const [key, val] of Object.entries(obj)) {
-    if (PII_FIELD_NAMES.has(key)) {
+    if (hasSpecialCategoryKeyword(key)) {
+      result[key] = "[BLOCKED_SPECIAL_CATEGORY_ART9]";
+    } else if (isPiiKey(key)) {
       result[key] = "[REDACTED]";
+    } else if (typeof val === "string") {
+      result[key] = sanitizeStringValue(key, val);
     } else {
       result[key] = scrubPiiFields(val);
     }

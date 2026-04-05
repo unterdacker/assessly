@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { KeyRound, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { initialPortalActionState } from "@/lib/types/vendor-auth";
 
 export default function ForcePasswordChangePage() {
   const t = useTranslations();
+  const locale = useLocale();
   const [state, formAction, isPending] = React.useActionState(
     forceResetVendorPasswordAction,
     initialPortalActionState,
@@ -43,6 +44,7 @@ export default function ForcePasswordChangePage() {
         </div>
 
         <form action={formAction} className="space-y-4">
+          <input type="hidden" name="locale" value={locale} />
           <div className="space-y-2">
             <label htmlFor="newPassword" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               {t("NewPassword")}

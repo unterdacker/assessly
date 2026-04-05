@@ -10,12 +10,7 @@ import { AddVendorModal } from "@/components/add-vendor-modal";
 import { InviteVendorModal } from "@/components/admin/invite-vendor-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  deleteVendorsAction,
-  generateVendorAccessCodeAction,
-  voidVendorAccessCodeAction,
-  type AccessCodeDuration,
-} from "@/app/actions/vendor-actions";
+import type { AccessCodeDuration } from "@/app/actions/vendor-actions";
 import {
   Dialog,
   DialogContent,
@@ -309,17 +304,27 @@ export function VendorsTableSection({
     if (!confirmed) return;
 
     setIsBulkDeleting(true);
-    const result = await deleteVendorsAction(Array.from(selectedVendorIds));
+    try {
+      const res = await fetch("/api/vendors/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vendorIds: Array.from(selectedVendorIds) }),
+      });
+      const result = (await res.json()) as { ok: boolean; error?: string };
 
-    if (!result.ok) {
-      window.alert(result.error);
+      if (!result.ok) {
+        window.alert(result.error ?? t("genCodeUnexpectedError"));
+        setIsBulkDeleting(false);
+        return;
+      }
+
+      setSelectedVendorIds(new Set());
+      router.refresh();
+    } catch {
+      window.alert(t("genCodeUnexpectedError"));
+    } finally {
       setIsBulkDeleting(false);
-      return;
     }
-
-    setSelectedVendorIds(new Set());
-    router.refresh();
-    setIsBulkDeleting(false);
   };
 
   const handleCopyAccessCode = async (vendorId: string, accessCode: string | null) => {
@@ -347,20 +352,49 @@ export function VendorsTableSection({
   const handleGenerateCode = async () => {
     if (!codeDialogVendorId) return;
     setCodeActionVendorId(codeDialogVendorId);
-    const result = await generateVendorAccessCodeAction(codeDialogVendorId, selectedDuration);
-    if (!result.ok) {
-      window.alert(result.error);
-      setCodeActionVendorId(null);
-      return;
-    }
+    try {
+      const res = await fetch("/api/vendors/access-code", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          vendorId: codeDialogVendorId,
+          duration: selectedDuration,
+        }),
+      });
 
-    setCodeActionVendorId(null);
-    setCodeDialogVendorId(null);
-    setGeneratedCredentials({
-      accessCode: result.accessCode,
-      tempPassword: result.tempPassword,
-      codeExpiresAt: result.codeExpiresAt,
-    });
+      const result = (await res.json()) as {
+        ok: boolean;
+        error?: string;
+        accessCode?: string;
+        tempPassword?: string;
+        codeExpiresAt?: string;
+      };
+
+      if (!result.ok) {
+        window.alert(result.error ?? t("genCodeUnexpectedError"));
+        setCodeActionVendorId(null);
+        return;
+      }
+
+      if (!result.accessCode || !result.tempPassword || !result.codeExpiresAt) {
+        window.alert(t("genCodeUnexpectedError"));
+        setCodeActionVendorId(null);
+        return;
+      }
+
+      setCodeActionVendorId(null);
+      setCodeDialogVendorId(null);
+      setGeneratedCredentials({
+        accessCode: result.accessCode,
+        tempPassword: result.tempPassword,
+        codeExpiresAt: result.codeExpiresAt,
+      });
+    } catch (error) {
+      window.alert(t("genCodeUnexpectedError"));
+      setCodeActionVendorId(null);
+    }
   };
 
   const handleVoidCode = async (vendor: VendorAssessment) => {
@@ -368,15 +402,26 @@ export function VendorsTableSection({
     if (!confirmed) return;
 
     setCodeActionVendorId(vendor.id);
-    const result = await voidVendorAccessCodeAction(vendor.id);
-    if (!result.ok) {
-      window.alert(result.error);
-      setCodeActionVendorId(null);
-      return;
-    }
+    try {
+      const res = await fetch("/api/vendors/void-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vendorId: vendor.id }),
+      });
+      const result = (await res.json()) as { ok: boolean; error?: string };
 
-    setCodeActionVendorId(null);
-    router.refresh();
+      if (!result.ok) {
+        window.alert(result.error ?? t("genCodeUnexpectedError"));
+        setCodeActionVendorId(null);
+        return;
+      }
+
+      setCodeActionVendorId(null);
+      router.refresh();
+    } catch {
+      window.alert(t("genCodeUnexpectedError"));
+      setCodeActionVendorId(null);
+    }
   };
 
   return (

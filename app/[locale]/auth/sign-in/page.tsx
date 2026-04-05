@@ -13,7 +13,7 @@ export default async function SignInPage({ params, searchParams }: SignInPagePro
   const [{ locale }, { next }] = await Promise.all([params, searchParams]);
   const session = await getOptionalAuthSession();
 
-  if (session) {
+  if (session && session.role !== "VENDOR") {
     redirect(`/${locale}${getRoleLandingPath(session.role)}`);
   }
 

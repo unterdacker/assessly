@@ -14,12 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  sendOutOfBandInviteAction,
-} from "@/app/actions/send-invite";
-import {
-  initialSendInviteState,
-} from "@/lib/types/vendor-auth";
+import type { SendInviteState } from "@/lib/types/vendor-auth";
 
 type Props = {
   vendorId: string;
@@ -36,14 +31,33 @@ export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", tri
     return t.has(fullKey) ? t(fullKey, values) : fallback;
   };
   const [open, setOpen] = React.useState(false);
-  const [state, formAction, isPending] = React.useActionState(
-    sendOutOfBandInviteAction,
-    initialSendInviteState,
-  );
+  const [state, setState] = React.useState<SendInviteState>({ status: "idle", error: null });
+  const [isPending, setIsPending] = React.useState(false);
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
+    if (!isOpen) {
+      setState({ status: "idle", error: null });
+    }
   };
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setIsPending(true);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const res = await fetch("/api/vendors/send-invite", {
+        method: "POST",
+        body: formData,
+      });
+      const result = (await res.json()) as SendInviteState;
+      setState(result);
+    } catch {
+      setState({ status: "error", error: "Could not send invite. Try again." });
+    } finally {
+      setIsPending(false);
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -119,7 +133,7 @@ export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", tri
               </DialogDescription>
             </DialogHeader>
 
-            <form action={formAction} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <input type="hidden" name="vendorId" value={vendorId} />
 
               <div className="space-y-2">

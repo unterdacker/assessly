@@ -4,10 +4,13 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { hasLocale } from "next-intl";
 import { prisma } from "@/lib/prisma";
 import type { PortalActionState } from "@/lib/types/vendor-auth";
 import { createSessionForUser, setAuthSessionCookie } from "@/lib/auth/server";
 import { shouldSecureCookie } from "@/lib/auth/token";
+import { routing } from "@/i18n/routing";
+import { withLocalePath } from "@/lib/auth/permissions";
 
 const MAX_CONSECUTIVE_FAILURES = 3;
 const BLOCK_MS = 15 * 60 * 1000;
@@ -68,12 +71,18 @@ async function failWithDelay(): Promise<PortalActionState> {
   return { error: "Invalid credentials." };
 }
 
+function resolveActionLocale(raw: FormDataEntryValue | null): string {
+  const locale = typeof raw === "string" ? raw : "";
+  return hasLocale(routing.locales, locale) ? locale : routing.defaultLocale;
+}
+
 export async function authenticateVendorAccessCode(
   _prevState: PortalActionState,
   formData: FormData,
 ): Promise<PortalActionState> {
   const cookieStore = await cookies();
   const headerStore = await headers();
+  const locale = resolveActionLocale(formData.get("locale"));
 
   let clientId = cookieStore.get("avra-portal-client")?.value;
   if (!clientId) {
@@ -182,7 +191,7 @@ export async function authenticateVendorAccessCode(
       path: "/",
       maxAge: 60 * 30,
     });
-    redirect("/external/force-password-change");
+    redirect(withLocalePath("/external/force-password-change", locale));
   }
 
   const now = new Date();
@@ -266,5 +275,5 @@ export async function authenticateVendorAccessCode(
   });
   await setAuthSessionCookie(token, expiresAt);
 
-  redirect(`/external/assessment/${inviteToken}`);
+  redirect(withLocalePath(`/external/assessment/${inviteToken}`, locale));
 }

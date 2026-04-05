@@ -703,6 +703,7 @@
     "genCodeCancel": "Abbrechen",
     "genCodeGenerating": "Wird generiert...",
     "genCodeGenerate": "Generieren",
+    "genCodeUnexpectedError": "Zugangscode konnte nicht generiert werden. Bitte erneut versuchen.",
     "confirmDeleteVendors": "{count} ausgew\u00e4hlte Anbieter l\u00f6schen? Dadurch werden alle verkn\u00fcpften Bewertungen und Antworten entfernt.",
     "confirmVoidCode": "Aktiven Zugangscode f\u00fcr {vendorName} ung\u00fcltig machen?",
     "copyAccessCodeAria": "Zugangscode f\u00fcr {vendorName} kopieren",
