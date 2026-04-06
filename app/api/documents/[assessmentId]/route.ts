@@ -3,6 +3,7 @@ import fs from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/prisma";
 import { getAuthSessionFromRequest } from "@/lib/auth/server";
+import { logErrorReport } from "@/lib/logger";
 
 const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
 
@@ -64,7 +65,8 @@ export async function GET(
   let buffer: Buffer;
   try {
     buffer = await fs.readFile(resolved);
-  } catch {
+  } catch (err) {
+    logErrorReport("api.documents.read-file", err);
     return NextResponse.json({ error: "Document file not found on server." }, { status: 404 });
   }
 

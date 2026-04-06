@@ -37,6 +37,8 @@ export enum AuditCategory {
   DATA_OPERATIONS = "DATA_OPERATIONS",
   /** Critical errors, service restarts, middleware failures */
   SYSTEM_HEALTH = "SYSTEM_HEALTH",
+  /** AI model invocations, LLM response validation, and compliance inference events (EU AI Act / NIS2 Art. 21) */
+  AI_ACT = "AI_ACT",
 }
 
 // ---------------------------------------------------------------------------
@@ -121,6 +123,8 @@ function getLegalBasis(category: AuditCategory): "LEGAL_OBLIGATION" | "LEGITIMAT
     case AuditCategory.CONFIGURATION:
     case AuditCategory.DATA_OPERATIONS:
       return "LEGAL_OBLIGATION";
+    case AuditCategory.AI_ACT:
+      return "LEGAL_OBLIGATION";
     default:
       return "LEGITIMATE_INTEREST";
   }
@@ -150,6 +154,13 @@ function getRetentionPolicy(
     return {
       priority: "LOW",
       retentionUntil: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+    };
+  }
+
+  if (category === AuditCategory.AI_ACT) {
+    return {
+      priority: "MEDIUM",
+      retentionUntil: new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000),
     };
   }
 
@@ -329,5 +340,14 @@ export const AuditLogger = {
     ctx?: Partial<Omit<AuditLogParams, "category" | "action" | "status">>,
   ): void {
     this.log({ category: AuditCategory.SYSTEM_HEALTH, action, status, ...ctx });
+  },
+
+  /** Shorthand: log an AI_ACT event */
+  aiAct(
+    action: string,
+    status: "success" | "failure",
+    ctx?: Partial<Omit<AuditLogParams, "category" | "action" | "status">>,
+  ): void {
+    this.log({ category: AuditCategory.AI_ACT, action, status, ...ctx });
   },
 };

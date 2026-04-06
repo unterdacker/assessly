@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { voidVendorAccessCodeAction } from "@/app/actions/vendor-actions";
+import { logErrorReport } from "@/lib/logger";
 
 type VoidCodeBody = {
   vendorId?: string;
@@ -24,7 +25,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(result, { status: 200 });
-  } catch {
+  } catch (err) {
+    logErrorReport("api.vendors.void-code", err);
     return NextResponse.json(
       { ok: false, error: "Could not void access code. Try again." },
       { status: 500 },

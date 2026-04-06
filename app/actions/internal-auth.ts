@@ -18,6 +18,7 @@ import { AuditLogger, AuditCategory } from "@/lib/structured-logger";
 import { logAuditEvent } from "@/lib/audit-log";
 import { truncateIp } from "@/lib/audit-sanitize";
 import { headers } from "next/headers";
+import { isRateLimited, registerFailure, resetFailures, readClientIp } from "@/lib/rate-limit";
 
 export async function authenticateInternalUser(
   _prevState: InternalSignInState,
@@ -30,6 +31,21 @@ export async function authenticateInternalUser(
 
   if (!email || !password) {
     return { error: "REQUIRED" };
+  }
+
+  const headerStore = await headers();
+  const rawIp = readClientIp(headerStore);
+  const sourceIp = truncateIp(rawIp);
+  const rlKey = `ial:${rawIp}`;
+
+  if (isRateLimited(rlKey)) {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    AuditLogger.auth("rate_limit.exceeded", "failure", {
+      sourceIp,
+      message: "Internal login: per-IP rate limit exceeded",
+      details: { key: rlKey },
+    });
+    return { error: "TOO_MANY_REQUESTS" };
   }
 
   const user = await withDbRetry(() =>
@@ -51,16 +67,8 @@ export async function authenticateInternalUser(
     }),
   );
 
-  // Extract IP for forensic logging
-  let sourceIp: string | null = null;
-  try {
-    const hdrs = await headers();
-    sourceIp = truncateIp(
-      hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ?? hdrs.get("x-real-ip"),
-    );
-  } catch { /* headers unavailable */ }
-
   if (!user?.passwordHash) {
+    registerFailure(rlKey, { maxFailures: 10, blockMs: 15 * 60 * 1000 });
     AuditLogger.auth("user.login_failed", "failure", {
       message: "Login failed: unknown email",
       sourceIp,
@@ -71,6 +79,7 @@ export async function authenticateInternalUser(
 
   const passwordOk = await bcrypt.compare(password, user.passwordHash);
   if (!passwordOk) {
+    registerFailure(rlKey, { maxFailures: 10, blockMs: 15 * 60 * 1000 });
     AuditLogger.auth("user.login_failed", "failure", {
       userId: user.id,
       role: user.role,
@@ -113,6 +122,8 @@ export async function authenticateInternalUser(
   const target = safeNextPath && canAccessPath(user.role, safeNextPath)
     ? safeNextPath
     : getLocalizedLandingPath(user.role, locale);
+
+  resetFailures(rlKey);
 
   AuditLogger.auth("user.login", "success", {
     userId: user.id,

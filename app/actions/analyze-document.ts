@@ -100,6 +100,14 @@ export async function analyzeDocument(
     return { ok: false, error: "Uploaded PDF contains no extractable text." };
   }
 
+  // Prompt-stuffing guard: cap document input to prevent context-window abuse
+  // and injection via oversized documents. 40 000 chars ≈ ~10 000 tokens,
+  // well within the NIS2 analysis prompt budget while removing the attack surface.
+  const MAX_DOCUMENT_CHARS = 40_000;
+  if (extractedText.length > MAX_DOCUMENT_CHARS) {
+    extractedText = extractedText.slice(0, MAX_DOCUMENT_CHARS);
+  }
+
   // 4. Call the LLM
   const questionPayload = questions.map(q => ({
     id: q.id,
@@ -160,7 +168,11 @@ export async function analyzeDocument(
       console.error(`[Prisma Error] Failed updating question ${res.questionId}:`, {
         message: prismaErr.message,
         code: prismaErr.code,
-        dataSent: aiWriteFields,
+        dataSent: {
+          questionId:      res.questionId,
+          statusAttempted: aiCalculatedStatus,
+          fieldsWritten:   Object.keys(aiWriteFields),  // field names only, no content
+        },
       });
       
       try {

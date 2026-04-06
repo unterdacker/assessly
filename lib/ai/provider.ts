@@ -1,18 +1,17 @@
 import { Mistral } from '@mistralai/mistralai';
 import { buildNis2DocumentAnalysisSystemPrompt, buildNis2DocumentAnalysisUserPayload } from "../nis2-document-analysis-prompt";
-import type { Nis2QuestionAnalysis } from "../nis2-question-analysis";
+import { parseNis2AnalysisResults, Nis2AnalysisParseError, type Nis2QuestionAnalysis } from "../nis2-question-analysis";
 import { prisma } from "../prisma";
 import { decrypt } from "../crypto";
+import { AuditLogger, AuditCategory, LogLevel } from "../structured-logger";
 
 function logMistralError(error: unknown) {
-  if (error instanceof Error) {
-    console.error("MISTRAL ERROR:", {
-      message: error.message,
-      stack: error.stack,
-    });
-  } else {
-    console.error("MISTRAL ERROR (non-Error):", error);
-  }
+  const err = error instanceof Error ? error : undefined;
+  AuditLogger.systemHealth("ai.mistral.inference", "failure", {
+    level: LogLevel.ERROR,
+    message: err?.message ?? String(error),
+    error: err,
+  });
 }
 
 function toModelContentString(content: unknown): string {
@@ -119,9 +118,11 @@ function parseLlmJson(rawContent: unknown): unknown {
     }
   }
 
-  // Log truncated raw output to help debug future failures
-  const preview = normalized.slice(0, 500);
-  console.error("[parseLlmJson] Failed to parse model output. Preview:", preview);
+  AuditLogger.systemHealth("ai.inference.parse", "failure", {
+    level: LogLevel.ERROR,
+    message: "Failed to parse model output as JSON.",
+    details: { content_length: normalized.length },  // structural only — no model content
+  });
   throw new SyntaxError("Unable to parse model response as valid JSON.");
 }
 
@@ -152,18 +153,23 @@ function aggressiveJsonExtract(input: string): string | null {
 }
 
 function normalizeAnalysisResult(parsed: unknown): Nis2QuestionAnalysis[] {
-  if (Array.isArray(parsed)) {
-    return parsed as Nis2QuestionAnalysis[];
+  try {
+    return parseNis2AnalysisResults(parsed);
+  } catch (error: unknown) {
+    AuditLogger.log({
+      category: AuditCategory.AI_ACT,
+      action: "ai.response.validation",
+      status: "failure",
+      level: LogLevel.ERROR,
+      message: "LLM response did not conform to the expected NIS2 analysis schema.",
+      details: {
+        // Structural metadata only — no model output content to prevent PII leakage
+        zodIssueCount: error instanceof Nis2AnalysisParseError ? error.zodIssueCount : 1,
+        zodPaths:      error instanceof Nis2AnalysisParseError ? error.zodPaths      : [],
+      },
+    });
+    throw new Error("invalid_response");
   }
-
-  if (parsed && typeof parsed === "object") {
-    const maybeResults = (parsed as { results?: unknown }).results;
-    if (Array.isArray(maybeResults)) {
-      return maybeResults as Nis2QuestionAnalysis[];
-    }
-  }
-
-  throw new Error("Model response was not an analysis array.");
 }
 
 export type Nis2QuestionPromptItem = {
@@ -217,7 +223,16 @@ export async function runNis2AnalysisWithTrace(
   if (provider === "mistral") {
     let dbMistralKey: string | null = null;
     if (config.mistralApiKey) {
-      try { dbMistralKey = decrypt(config.mistralApiKey); } catch { dbMistralKey = null; }
+      try {
+        dbMistralKey = decrypt(config.mistralApiKey);
+      } catch (err) {
+        AuditLogger.systemHealth("ai.key-decrypt", "failure", {
+          level: LogLevel.WARN,
+          message: "Failed to decrypt stored AI API key; falling back to env var.",
+          error: err instanceof Error ? err : undefined,
+        });
+        dbMistralKey = null;
+      }
     }
     const cleanKey = (process.env.MISTRAL_API_KEY || dbMistralKey)?.trim();
     if (!cleanKey) {
@@ -253,6 +268,7 @@ export async function runNis2AnalysisWithTrace(
       };
     } catch (error: unknown) {
       logMistralError(error);
+      if (error instanceof Error && error.message === "invalid_response") throw error;
       const msg = error instanceof Error ? error.message : "Unknown error";
       throw new Error(`Mistral inference failed: ${msg}`);
     }
@@ -321,6 +337,7 @@ export async function runNis2AnalysisWithTrace(
     ) {
       throw new Error("On-premise AI offline");
     }
+    if (error instanceof Error && error.message === "invalid_response") throw error;
     const msg = error instanceof Error ? error.message : "Unknown error";
     throw new Error(`Local inference failed: ${msg}`);
   }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createVendorAction } from "@/app/actions/vendor-actions";
+import { logErrorReport } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +13,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(result, { status: 200 });
-  } catch {
+  } catch (err) {
+    logErrorReport("api.vendors.create", err);
     return NextResponse.json(
       { ok: false, error: "Could not save vendor. Try again." },
       { status: 500 },

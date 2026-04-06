@@ -748,7 +748,9 @@
     "submitButton": "Anmelden",
     "signingIn": "Anmeldung l\u00e4uft\u2026",
     "errorRequired": "E-Mail und Passwort sind erforderlich.",
-    "errorInvalidCredentials": "Ung\u00fcltige Anmeldedaten."  },
+    "errorInvalidCredentials": "Ung\u00fcltige Anmeldedaten.",
+    "errorTooManyRequests": "Zu viele Anmeldeversuche. Bitte warten Sie 15 Minuten und versuchen Sie es erneut."
+  },
   "UserManagement": {
     "pageTitle": "Benutzerverwaltung",
     "pageDesc": "Interne Admin- und Auditor-Konten verwalten.",

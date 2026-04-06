@@ -11,19 +11,11 @@ import { createSessionForUser, setAuthSessionCookie } from "@/lib/auth/server";
 import { shouldSecureCookie } from "@/lib/auth/token";
 import { routing } from "@/i18n/routing";
 import { withLocalePath } from "@/lib/auth/permissions";
+import { isRateLimited, registerFailure, resetFailures, readClientIp } from "@/lib/rate-limit";
+import { AuditLogger } from "@/lib/structured-logger";
+import { truncateIp } from "@/lib/audit-sanitize";
 
-const MAX_CONSECUTIVE_FAILURES = 3;
-const BLOCK_MS = 15 * 60 * 1000;
 const FAIL_DELAY_MS = 3_000;
-
-type RateLimitState = {
-  consecutiveFailures: number;
-  blockedUntil: number;
-};
-
-const g = globalThis as typeof globalThis & { __avraPortalRateLimit?: Map<string, RateLimitState> };
-const rateLimitStore: Map<string, RateLimitState> = g.__avraPortalRateLimit ?? new Map();
-g.__avraPortalRateLimit = rateLimitStore;
 
 function sanitizeAccessCode(raw: unknown): string {
   if (typeof raw !== "string") return "";
@@ -33,37 +25,6 @@ function sanitizeAccessCode(raw: unknown): string {
 function formatAccessCode(code8: string): string {
   if (code8.length !== 8) return "";
   return `${code8.slice(0, 4)}-${code8.slice(4)}`;
-}
-
-function readClientIp(headerValue: string | null): string {
-  if (!headerValue) return "unknown";
-  return headerValue.split(",")[0]?.trim() || "unknown";
-}
-
-function takeRateLimitKey(ip: string): string {
-  return `ip:${ip}`;
-}
-
-function getRateLimitState(key: string): RateLimitState {
-  return rateLimitStore.get(key) || { consecutiveFailures: 0, blockedUntil: 0 };
-}
-
-function isBlocked(state: RateLimitState): boolean {
-  return state.blockedUntil > Date.now();
-}
-
-function registerFailure(key: string): void {
-  const state = getRateLimitState(key);
-  const nextFailures = state.consecutiveFailures + 1;
-  const blockedUntil = nextFailures >= MAX_CONSECUTIVE_FAILURES ? Date.now() + BLOCK_MS : state.blockedUntil;
-  rateLimitStore.set(key, {
-    consecutiveFailures: nextFailures,
-    blockedUntil,
-  });
-}
-
-function resetFailures(key: string): void {
-  rateLimitStore.set(key, { consecutiveFailures: 0, blockedUntil: 0 });
 }
 
 async function failWithDelay(): Promise<PortalActionState> {
@@ -83,6 +44,8 @@ export async function authenticateVendorAccessCode(
   const cookieStore = await cookies();
   const headerStore = await headers();
   const locale = resolveActionLocale(formData.get("locale"));
+  const rawIp = readClientIp(headerStore);
+  const ipKey = `vpi:${rawIp}`;
 
   let clientId = cookieStore.get("avra-portal-client")?.value;
   if (!clientId) {
@@ -96,22 +59,34 @@ export async function authenticateVendorAccessCode(
     });
   }
 
-  const ip = readClientIp(headerStore.get("x-forwarded-for"));
-  const key = takeRateLimitKey(ip);
-  const state = getRateLimitState(key);
-
-  if (isBlocked(state)) {
+  if (isRateLimited(ipKey)) {
+    AuditLogger.auth("rate_limit.exceeded", "failure", {
+      sourceIp: truncateIp(rawIp),
+      message: "Vendor portal login: per-IP rate limit exceeded",
+      details: { key: ipKey },
+    });
     return failWithDelay();
   }
 
   const normalized = sanitizeAccessCode(formData.get("accessCode"));
   const formatted = formatAccessCode(normalized);
+  const codeKey = `vpc:${normalized || "EMPTY"}`;
+
+  if (isRateLimited(codeKey)) {
+    AuditLogger.auth("rate_limit.exceeded", "failure", {
+      sourceIp: truncateIp(rawIp),
+      message: "Vendor portal login: per-code rate limit exceeded",
+      details: { key: codeKey },
+    });
+    return failWithDelay();
+  }
 
   const rawPassword = formData.get("password");
   const password = typeof rawPassword === "string" ? rawPassword : "";
 
   if (!formatted || !password) {
-    registerFailure(key);
+    registerFailure(ipKey);
+    registerFailure(codeKey, { maxFailures: 5, blockMs: 10 * 60 * 1000 });
     return failWithDelay();
   }
 
@@ -132,7 +107,8 @@ export async function authenticateVendorAccessCode(
   });
 
   if (!vendor) {
-    registerFailure(key);
+    registerFailure(ipKey);
+    registerFailure(codeKey, { maxFailures: 5, blockMs: 10 * 60 * 1000 });
     return failWithDelay();
   }
 
@@ -155,24 +131,28 @@ export async function authenticateVendorAccessCode(
       },
     });
 
-    registerFailure(key);
+    registerFailure(ipKey);
+    registerFailure(codeKey, { maxFailures: 5, blockMs: 10 * 60 * 1000 });
     return failWithDelay();
   }
 
   // Verify password — must have a hash (requires code regeneration after MFA upgrade)
   const passwordHash = vendor.passwordHash;
   if (!passwordHash) {
-    registerFailure(key);
+    registerFailure(ipKey);
+    registerFailure(codeKey, { maxFailures: 5, blockMs: 10 * 60 * 1000 });
     return failWithDelay();
   }
 
   const passwordOk = await bcrypt.compare(password, passwordHash);
   if (!passwordOk) {
-    registerFailure(key);
+    registerFailure(ipKey);
+    registerFailure(codeKey, { maxFailures: 5, blockMs: 10 * 60 * 1000 });
     return failWithDelay();
   }
 
-  resetFailures(key);
+  resetFailures(ipKey);
+  resetFailures(codeKey);
 
   // If this is the vendor's first login, redirect to force-change-password flow
   const isFirstLogin = vendor.isFirstLogin;
