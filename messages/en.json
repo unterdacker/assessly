@@ -748,7 +748,8 @@
     "submitButton": "Sign In",
     "signingIn": "Signing in\u2026",
     "errorRequired": "Email and password are required.",
-    "errorInvalidCredentials": "Invalid credentials."
+    "errorInvalidCredentials": "Invalid credentials.",
+    "errorTooManyRequests": "Too many sign-in attempts. Please wait 15 minutes and try again."
   },
   "UserManagement": {
     "pageTitle": "User Management",

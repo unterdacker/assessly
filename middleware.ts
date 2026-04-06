@@ -53,21 +53,42 @@ function emitMiddlewareLog(entry: {
 // Security headers applied to every page response
 // ---------------------------------------------------------------------------
 
-const CSP_DIRECTIVES = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
-  "font-src 'self' data:",
-  "connect-src 'self'",
-  "worker-src 'self' blob:",
-  "frame-ancestors 'none'",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-].join("; ");
+/**
+ * Generates a cryptographically random 16-byte nonce, base64-encoded.
+ * Uses crypto.getRandomValues() which is available in the Edge Runtime.
+ */
+export function generateNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return btoa(Array.from(bytes, (b) => String.fromCharCode(b)).join(""));
+}
 
-function applySecurityHeaders(response: NextResponse): NextResponse {
+/**
+ * Builds the Content-Security-Policy header value for a given per-request nonce.
+ * 'unsafe-inline' is intentionally omitted from script-src; the nonce is used instead.
+ */
+export function buildCspHeader(nonce: string): string {
+  return [
+    "default-src 'self'",
+    // TODO: Remove 'unsafe-eval' once verified unnecessary in production.
+    //       Required by Next.js development mode (HMR / fast-refresh eval-based source maps)
+    //       but production builds should not need it. Gate behind NODE_ENV in a future pass.
+    `script-src 'self' 'nonce-${nonce}' 'unsafe-eval'`,
+    // TODO: Replace 'unsafe-inline' with a style nonce in a future pass.
+    //       Currently required for Tailwind CSS utility classes injected at runtime.
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self' data:",
+    "connect-src 'self'",
+    "worker-src 'self' blob:",
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; ");
+}
+
+function applySecurityHeaders(response: NextResponse, nonce: string): NextResponse {
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("X-Content-Type-Options", "nosniff");
   // Disable the legacy broken XSS auditor (modern browsers use CSP instead)
@@ -77,7 +98,10 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=(), payment=()",
   );
-  response.headers.set("Content-Security-Policy", CSP_DIRECTIVES);
+  response.headers.set("Content-Security-Policy", buildCspHeader(nonce));
+  // x-nonce response header: also forwarded as a request header (see _middleware).
+  // Single-use per request; safe to expose in the response.
+  response.headers.set("x-nonce", nonce);
   if (process.env.NODE_ENV === "production") {
     response.headers.set(
       "Strict-Transport-Security",
@@ -109,7 +133,7 @@ function stripLocaleFromPathname(pathname: string): string {
  * Ensures that external vendor requests stay isolated within the /external/ route tree.
  * Security headers are applied to every response via applySecurityHeaders().
  */
-async function _middleware(request: NextRequest): Promise<NextResponse> {
+async function _middleware(request: NextRequest, nonce: string): Promise<NextResponse> {
   const localeFromPath = getLocaleFromPathname(request.nextUrl.pathname);
   const normalizedPathname = stripLocaleFromPathname(request.nextUrl.pathname);
   const isSafeMethod = SAFE_HTTP_METHODS.has(request.method.toUpperCase());
@@ -117,6 +141,12 @@ async function _middleware(request: NextRequest): Promise<NextResponse> {
   // Server Actions are POSTs with a Next-Action header. Locale routing (rewrites
   // / redirects) must be skipped so Next.js can resolve the action by its hash.
   if (request.headers.get("Next-Action")) {
+    // Auth pages (sign-in, MFA verify) submit server actions while the user has
+    // no session yet — let them through without an auth check.
+    if (normalizedPathname.startsWith("/auth/")) {
+      return NextResponse.next();
+    }
+
     const authToken = request.cookies.get(AUTH_SESSION_COOKIE_NAME)?.value || null;
     const authSession = await verifySessionToken(authToken);
 
@@ -174,7 +204,37 @@ async function _middleware(request: NextRequest): Promise<NextResponse> {
     }
   }
 
-  const response = handleI18nRouting(request);
+  // For non-redirect responses, forward the nonce as a request header so server
+  // components can read it via `import { headers } from 'next/headers'; headers().get('x-nonce')`.
+  const i18nResponse = handleI18nRouting(request);
+  let response: NextResponse;
+
+  if (i18nResponse.status >= 300 && i18nResponse.status < 400) {
+    // Locale redirect — no page is rendered, nonce forwarding is not needed.
+    response = i18nResponse;
+  } else {
+    // Pass-through to a page. Create a new response that forwards the nonce
+    // as a request header, then copy next-intl's locale cookies and headers.
+    const headersWithNonce = new Headers(request.headers);
+    headersWithNonce.set("x-nonce", nonce);
+    response = NextResponse.next({ request: { headers: headersWithNonce } });
+    // Copy locale cookies next-intl may have set (e.g. NEXT_LOCALE).
+    i18nResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
+    // Copy non-routing response headers from the i18n response.
+    // next-intl propagates the active locale through the URL prefix and the NEXT_LOCALE
+    // cookie — not through x-middleware-request-* / x-middleware-override-headers.
+    // Excluding those headers preserves the nonce forwarding we've already written
+    // without silently dropping locale context.
+    i18nResponse.headers.forEach((value, key) => {
+      if (
+        !key.startsWith("x-middleware-request-") &&
+        key !== "x-middleware-override-headers" &&
+        key.toLowerCase() !== "set-cookie"
+      ) {
+        response.headers.set(key, value);
+      }
+    });
+  }
   const authToken = request.cookies.get(AUTH_SESSION_COOKIE_NAME)?.value || null;
 
   const authSession = await verifySessionToken(authToken);
@@ -295,7 +355,8 @@ async function _middleware(request: NextRequest): Promise<NextResponse> {
 }
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
-  return applySecurityHeaders(await _middleware(request));
+  const nonce = generateNonce();
+  return applySecurityHeaders(await _middleware(request, nonce), nonce);
 }
 
 // See "Matching Paths" below to learn more

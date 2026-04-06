@@ -1,6 +1,7 @@
 import { Mistral } from "@mistralai/mistralai";
 import { prisma } from "@/lib/prisma";
 import { decrypt } from "@/lib/crypto";
+import { AuditLogger, LogLevel } from "@/lib/structured-logger";
 import {
   DASHBOARD_CATEGORY_ORDER,
   type DashboardCategoryKey,
@@ -283,7 +284,16 @@ async function runProviderPrompt(args: {
   if (provider === "mistral") {
     let dbApiKey = "";
     if (config.mistralApiKey) {
-      try { dbApiKey = decrypt(config.mistralApiKey); } catch { dbApiKey = ""; }
+      try {
+        dbApiKey = decrypt(config.mistralApiKey);
+      } catch (err) {
+        AuditLogger.systemHealth("ai.key-decrypt", "failure", {
+          level: LogLevel.WARN,
+          message: "Failed to decrypt stored AI API key; falling back to env var.",
+          error: err instanceof Error ? err : undefined,
+        });
+        dbApiKey = "";
+      }
     }
     const apiKey = (process.env.MISTRAL_API_KEY || dbApiKey).trim();
     if (!apiKey) {
@@ -315,7 +325,11 @@ async function runProviderPrompt(args: {
 
   const modelId = (process.env.LOCAL_AI_MODEL || config.localAiModel?.trim() || "ministral-3:8b").trim();
   const fullUrl = `${endpoint}/v1/chat/completions`;
-  console.log("[AI] Requesting executive summary from:", fullUrl, "model:", modelId);
+  AuditLogger.systemHealth("ai.executive-summary.request", "success", {
+    level: LogLevel.INFO,
+    message: "Requesting executive summary from local AI.",
+    details: { endpoint: fullUrl, modelId },
+  });
 
   const response = await fetch(fullUrl, {
     method: "POST",
@@ -371,7 +385,11 @@ export async function generateDashboardExecutiveSummary(
       source: "ai",
     };
   } catch (error) {
-    console.warn("[dashboard-executive-summary] Falling back to deterministic summary.", error);
+    AuditLogger.systemHealth("ai.executive-summary.fallback", "failure", {
+      level: LogLevel.WARN,
+      message: "AI executive summary failed; falling back to deterministic summary.",
+      error: error instanceof Error ? error : undefined,
+    });
     return getFallbackSummary(args);
   }
 }

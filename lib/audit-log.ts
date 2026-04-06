@@ -37,6 +37,7 @@ export type AuditAction =
   // --- Authentication (AUTH) ---
   | "LOGIN_SUCCESS"
   | "LOGIN_FAILED"
+  | "RATE_LIMIT_EXCEEDED"
   | "USER_LOGOUT"
   | "MFA_ENABLED"
   | "MFA_DISABLED"
@@ -110,7 +111,7 @@ export type LogAuditEventOptions = {
 // ---------------------------------------------------------------------------
 
 const AI_ACTIONS = new Set(["AI_GENERATION", "AI_REMEDIATION_SENT", "DOCUMENT_ANALYZED"]);
-const AUTH_ACTIONS = new Set(["LOGIN_SUCCESS", "LOGIN_FAILED", "USER_LOGOUT", "MFA_ENABLED", "MFA_DISABLED", "MFA_FAILED_ATTEMPT"]);
+const AUTH_ACTIONS = new Set(["LOGIN_SUCCESS", "LOGIN_FAILED", "RATE_LIMIT_EXCEEDED", "USER_LOGOUT", "MFA_ENABLED", "MFA_DISABLED", "MFA_FAILED_ATTEMPT"]);
 const CONFIG_ACTIONS = new Set(["SETTINGS_UPDATED", "MAIL_DELIVERY_FAILED"]);
 const NIS2_DORA_ACTIONS = new Set([
   "VENDOR_CREATED",

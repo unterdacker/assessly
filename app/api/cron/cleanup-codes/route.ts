@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { logErrorReport } from "@/lib/logger";
 
 function isAuthorized(request: NextRequest): boolean {
   const secret = process.env.CRON_SECRET;
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
       cleanedAt: now.toISOString(),
     });
   } catch (error) {
-    console.error("Access code cleanup failed:", error);
+    logErrorReport("cron.cleanup-codes", error);
     return NextResponse.json(
       { ok: false, error: "Failed to clean expired access codes." },
       { status: 500 },

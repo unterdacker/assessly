@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { deleteVendorsAction } from "@/app/actions/vendor-actions";
+import { logErrorReport } from "@/lib/logger";
 
 type DeleteVendorsBody = {
   vendorIds?: string[];
@@ -24,7 +25,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(result, { status: 200 });
-  } catch {
+  } catch (err) {
+    logErrorReport("api.vendors.delete", err);
     return NextResponse.json(
       { ok: false, error: "Could not delete selected vendors. Try again." },
       { status: 500 },

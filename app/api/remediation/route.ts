@@ -6,6 +6,8 @@ import { logAuditEvent } from "@/lib/audit-log";
 import enMessages from "@/messages/en.json";
 import deMessages from "@/messages/de.json";
 import { getAuthSessionFromRequest } from "@/lib/auth/server";
+import { AuditLogger, LogLevel } from "@/lib/structured-logger";
+import { logErrorReport } from "@/lib/logger";
 
 type SupportedLocale = "en" | "de";
 
@@ -371,7 +373,16 @@ async function generateRemediationDraft(args: {
   if (provider === "mistral") {
     let dbApiKey = "";
     if (config.mistralApiKey) {
-      try { dbApiKey = decrypt(config.mistralApiKey); } catch { dbApiKey = ""; }
+      try {
+        dbApiKey = decrypt(config.mistralApiKey);
+      } catch (err) {
+        AuditLogger.systemHealth("ai.key-decrypt", "failure", {
+          level: LogLevel.WARN,
+          message: "Failed to decrypt stored AI API key; falling back to env var.",
+          error: err instanceof Error ? err : undefined,
+        });
+        dbApiKey = "";
+      }
     }
     const apiKey = (process.env.MISTRAL_API_KEY || dbApiKey).trim();
     if (!apiKey) {
@@ -414,7 +425,11 @@ async function generateRemediationDraft(args: {
       .replace(/\/$/, "")) + "/v1";
 
   const remediationModelId = (process.env.LOCAL_AI_MODEL || config.localAiModel?.trim() || "ministral-3:8b").trim();
-  console.log("[AI] Requesting remediation from:", `${endpoint}/chat/completions`, "model:", remediationModelId);
+  AuditLogger.systemHealth("ai.remediation.request", "success", {
+    level: LogLevel.INFO,
+    message: "Requesting remediation draft from local AI.",
+    details: { endpoint: `${endpoint}/chat/completions`, modelId: remediationModelId },
+  });
 
   const response = await fetch(`${endpoint}/chat/completions`, {
     method: "POST",
@@ -490,8 +505,11 @@ export async function GET(request: NextRequest) {
       gaps: result.gaps,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    logErrorReport("api.remediation.get", error);
+    return NextResponse.json(
+      { ok: false, error: "Remediation request failed. Please try again." },
+      { status: 500 },
+    );
   }
 }
 
@@ -606,7 +624,8 @@ export async function POST(request: NextRequest) {
         { captureHeaders: false },
       );
       aiGenerationEventId = auditRow?.id ?? null;
-    } catch {
+    } catch (err) {
+      logErrorReport("remediation.audit-event-creation", err);
       aiGenerationEventId = null;
     }
 
@@ -622,7 +641,10 @@ export async function POST(request: NextRequest) {
       originalAiOutput: generated.rawAiOutput,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    logErrorReport("api.remediation.post", error);
+    return NextResponse.json(
+      { ok: false, error: "Remediation request failed. Please try again." },
+      { status: 500 },
+    );
   }
 }

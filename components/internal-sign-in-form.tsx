@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 const errorKeyMap: Record<string, string> = {
   REQUIRED: "errorRequired",
   INVALID_CREDENTIALS: "errorInvalidCredentials",
+  TOO_MANY_REQUESTS: "errorTooManyRequests",
 };
 
 const initialState: InternalSignInState = { error: null };

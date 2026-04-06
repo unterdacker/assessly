@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { clearAuthSessionCookie } from "@/lib/auth/server";
 import { AUTH_SESSION_COOKIE_NAME, hashSessionToken, verifySessionToken } from "@/lib/auth/token";
 import { AuditLogger } from "@/lib/structured-logger";
+import { logErrorReport } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +23,9 @@ export async function POST(request: NextRequest) {
           where: { tokenHash, revokedAt: null },
           data: { revokedAt: new Date() },
         })
-        .catch(() => undefined);
+        .catch((dbErr) => {
+          logErrorReport("api.auth.sign-out.revoke", dbErr);
+        });
     }
 
     AuditLogger.auth("user.logout", "success", {
@@ -33,7 +36,8 @@ export async function POST(request: NextRequest) {
     await clearAuthSessionCookie();
 
     return NextResponse.json({ ok: true, redirectTo: `/${locale}/auth/sign-in` });
-  } catch {
+  } catch (err) {
+    logErrorReport("api.auth.sign-out", err);
     return NextResponse.json(
       { ok: false, error: "Sign-out failed." },
       { status: 500 },
