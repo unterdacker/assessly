@@ -35,7 +35,7 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const session = await getOptionalAuthSession();
   const localeCookie = cookieStore.get("NEXT_LOCALE")?.value;
-  const htmlLang = localeCookie === "de" || localeCookie === "en" ? localeCookie : "de";
+  const htmlLang = localeCookie === "de" || localeCookie === "en" ? localeCookie : "en";
 
   return (
     <html lang={htmlLang} suppressHydrationWarning>

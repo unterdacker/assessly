@@ -30,7 +30,7 @@ export default async function AssessmentPage({ params }: PageProps) {
           {t("assessment.page.notFound.description")}
         </p>
         <Button asChild variant="secondary">
-          <Link href="/vendors">{t("assessment.page.notFound.returnToVendors")}</Link>
+          <Link href={`/${locale}/vendors`}>{t("assessment.page.notFound.returnToVendors")}</Link>
         </Button>
       </div>
     );

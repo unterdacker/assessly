@@ -15,6 +15,7 @@ const EMPTY_VENDOR_ASSESSMENT: VendorAssessment = {
   codeExpiresAt: null,
   isCodeActive: false,
   inviteSentAt: null,
+  inviteTokenExpires: null,
   isFirstLogin: false,
   email: "",
   serviceType: "",

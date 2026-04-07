@@ -67,8 +67,8 @@ services:
 
       # HMAC-SHA256 signing key for forensic audit bundle exports (≥32 chars).
       AUDIT_BUNDLE_SECRET: "${AUDIT_BUNDLE_SECRET:-d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4}"
-      AUDIT_EXPORT_KEY: "${AUDIT_EXPORT_KEY:-}"
-      AUDIT_PSEUDONYMIZATION_KEY: "${AUDIT_PSEUDONYMIZATION_KEY:-}"
+      AUDIT_EXPORT_KEY: "${AUDIT_EXPORT_KEY:-c5b6a7f2e3d4c5b6a7f2e3d4c5b6a7f2e3d4c5b6a7f2e3d4c5b6a7f2e3d4c5b6}"
+      AUDIT_PSEUDONYMIZATION_KEY: "${AUDIT_PSEUDONYMIZATION_KEY:-b6a7f2e3d4c5b6a7f2e3d4c5b6a7f2e3d4c5b6a7f2e3d4c5b6a7f2e3d4c5b6a7}"
 
       # HMAC-SHA256 session signing key (≥32 chars).
       # The hex fallback below is a DOCKER-LOCAL-DEV-ONLY default. It satisfies

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import type { UserRole } from "@prisma/client";
 import { ArrowLeft } from "lucide-react";
 import type { AssessmentAnswer } from "@prisma/client";
@@ -43,6 +43,7 @@ export function AssessmentWorkspace({
   role,
 }: AssessmentWorkspaceProps) {
   const t = useTranslations("assessment.workspace");
+  const locale = useLocale();
   const insightLines = buildVendorAssessmentInsightLines(vendorAssessment);
   const isAdmin = role === "ADMIN";
   const isReadOnly = role !== "ADMIN";
@@ -58,7 +59,7 @@ export function AssessmentWorkspace({
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <Button variant="ghost" size="sm" className="-ml-2 w-fit gap-1" asChild>
-            <Link href="/vendors">
+            <Link href={`/${locale}/vendors`}>
               <ArrowLeft className="h-4 w-4" aria-hidden />
               {t("backToVendors")}
             </Link>

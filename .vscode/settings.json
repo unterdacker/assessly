@@ -38,6 +38,22 @@
         "/^node -e \"const p=require\\('\\./package-lock\\.json'\\);console\\.log\\(p\\.name, p\\.version\\)\"$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^node -e \"const f = require\\('fs'\\); const data = JSON\\.parse\\(f\\.readFileSync\\('messages/en\\.json'\\)\\); console\\.log\\('legendPrefix:', data\\.Audit\\.legendPrefix\\); console\\.log\\('WithinAcceptableBand:', data\\.WithinAcceptableBand\\); console\\.log\\('MailSettingsBackLink:', data\\.MailSettingsBackLink\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^node -e \"\nconst fs = require\\('fs'\\);\n\n// CP1252 special chars \\(0x80-0x9F range\\) mapping Unicode CP → CP1252 byte\nconst unicodeToCp1252 = new Map\\(\\);\n// Standard Latin-1 range \\(same in CP1252 for 0x00-0x7F and 0xA0-0xFF\\)\nfor \\(let i = 0; i <= 0xFF; i\\+\\+\\) \\{\n  if \\(i >= 0x80 && i <= 0x9F\\) continue;\n  unicodeToCp1252\\.set\\(i, i\\);\n\\}\n// CP1252-specific \\(0x80-0x9F\\)\nconst special = \\[\\[0x80,0x20AC\\],\\[0x82,0x201A\\],\\[0x83,0x0192\\],\\[0x84,0x201E\\],\\[0x85,0x2026\\],\n  \\[0x86,0x2020\\],\\[0x87,0x2021\\],\\[0x88,0x02C6\\],\\[0x89,0x2030\\],\\[0x8A,0x0160\\],\\[0x8B,0x2039\\],\n  \\[0x8C,0x0152\\],\\[0x8E,0x017D\\],\\[0x91,0x2018\\],\\[0x92,0x2019\\],\\[0x93,0x201C\\],\\[0x94,0x201D\\],\n  \\[0x95,0x2022\\],\\[0x96,0x2013\\],\\[0x97,0x2014\\],\\[0x98,0x02DC\\],\\[0x99,0x2122\\],\\[0x9A,0x0161\\],\n  \\[0x9B,0x203A\\],\\[0x9C,0x0153\\],\\[0x9E,0x017E\\],\\[0x9F,0x0178\\]\\];\nfor \\(const \\[b, u\\] of special\\) unicodeToCp1252\\.set\\(u, b\\);\n\nfunction fixMojibake\\(str\\) \\{\n  const bytes = \\[\\];\n  for \\(const char of str\\) \\{\n    const cp = char\\.codePointAt\\(0\\);\n    if \\(unicodeToCp1252\\.has\\(cp\\)\\) \\{\n      bytes\\.push\\(unicodeToCp1252\\.get\\(cp\\)\\);\n    \\} else if \\(cp > 0xFF\\) \\{\n      // Not CP1252 range — write as UTF-8 bytes as-is\n      const buf = Buffer\\.from\\(char, 'utf8'\\);\n      for \\(const b of buf\\) bytes\\.push\\(b\\);\n    \\} else \\{\n      bytes\\.push\\(cp\\);\n    \\}\n  \\}\n  return Buffer\\.from\\(bytes\\)\\.toString\\('utf8'\\);\n\\}\n\nfor \\(const file of \\['messages/en\\.json', 'messages/de\\.json'\\]\\) \\{\n  const raw = fs\\.readFileSync\\(file, 'utf8'\\)\\.replace\\(/\\^\\\\uFEFF/, ''\\);\n  const fixed = fixMojibake\\(raw\\);\n  // Validate JSON\n  JSON\\.parse\\(fixed\\);\n  fs\\.writeFileSync\\(file, fixed, 'utf8'\\);\n  console\\.log\\('Fixed:', file\\);\n\\}\n\"\n$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^node -e \"\nconst fs = require\\('fs'\\);\nconst en = JSON\\.parse\\(fs\\.readFileSync\\('messages/en\\.json','utf8'\\)\\);\nconst de = JSON\\.parse\\(fs\\.readFileSync\\('messages/de\\.json','utf8'\\)\\);\nconsole\\.log\\('EN legendPrefix:', en\\.Audit\\.legendPrefix\\);\nconsole\\.log\\('EN WithinAcceptableBand:', en\\.WithinAcceptableBand\\);\nconsole\\.log\\('EN MailSettingsBackLink:', en\\.MailSettingsBackLink\\);\nconsole\\.log\\('DE DashboardDesc:', de\\.DashboardDesc\\);\nconsole\\.log\\('DE paginationPrevious:', de\\.Audit\\.paginationPrevious\\);\nconsole\\.log\\('DE paginationEntries:', de\\.Audit\\.paginationEntries\\);\n\"\n$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^node -e \"\nconst fs = require\\('fs'\\);\nconst de = JSON\\.parse\\(fs\\.readFileSync\\('messages/de\\.json','utf8'\\)\\);\n\n// Find all leaf strings that look like phonetic substitutes\nfunction findPhonetic\\(obj, path\\) \\{\n  for \\(const \\[k, v\\] of Object\\.entries\\(obj\\)\\) \\{\n    const p = path \\? path \\+ '\\.' \\+ k : k;\n    if \\(typeof v === 'string'\\) \\{\n      if \\(/\\[aou\\]e\\|ss\\(\\?!\\[a-zA-Z\\]\\)\\|ue\\[\\^\\\\w\\]\\|ae\\[\\^\\\\w\\]\\|oe\\[\\^\\\\w\\]/i\\.test\\(v\\) &&\n          /zurueck\\|ueberp\\|oeffen\\|koennen\\|ueberein\\|ausfuehr\\|gegenueber\\|ausgewae\\|faehig\\|oeffen\\|plaen\\|straen\\|veraend\\|uebernah\\|Schluessel\\|Massnahme\\|gleichmaess\\|abgeschloss/i\\.test\\(v\\)\\) \\{\n        console\\.log\\(p \\+ ' = ' \\+ JSON\\.stringify\\(v\\)\\);\n      \\}\n    \\} else if \\(typeof v === 'object' && v !== null\\) \\{\n      findPhonetic\\(v, p\\);\n    \\}\n  \\}\n\\}\nfindPhonetic\\(de, ''\\);\n\"\n$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

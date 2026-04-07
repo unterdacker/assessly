@@ -23,7 +23,7 @@ vi.mock("@/lib/audit-sanitize", () => ({
   computeEventHash: vi.fn(() => "hash"),
 }));
 
-import { escapeCsvValue, toCsvRows } from "@/app/api/audit-logs/forensic-bundle/route";
+import { escapeCsvValue, toCsvRows } from "@/lib/csv-utils";
 
 // ---------------------------------------------------------------------------
 // escapeCsvValue — CSV injection prevention (OWASP)
