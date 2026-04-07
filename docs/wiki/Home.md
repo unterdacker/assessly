@@ -25,6 +25,7 @@ Assessly replaces disconnected spreadsheets and inboxes with one auditable works
 | [Deployment](Deployment) | Docker Compose, production hardening, key generation |
 | [Environment Variables Reference](Environment-Variables-Reference) | Full variable list with requirements |
 | [Scripts Reference](Scripts-Reference) | All npm scripts explained |
+| [Product Roadmap](Product-Roadmap) | Strategic roadmap for platform growth and commercial expansion |
 
 ---
 
