@@ -17,12 +17,12 @@ import "@/lib/env";
  */
 export const metadata: Metadata = {
   title: {
-    default: "AVRA — Automated Vendor Risk Assessment",
-    template: "%s | AVRA",
+    default: "Assessly — Sovereign Vendor Risk Assessment",
+    template: "%s | Assessly",
   },
   description:
     "NIS2-aligned third-party risk assessments for IT security officers. Designed for EU enterprise security: self-hosted assets, data minimization in telemetry, and EU-based AI routing when enabled.",
-  applicationName: "AVRA",
+  applicationName: "Assessly",
   referrer: "strict-origin-when-cross-origin",
   robots: { index: true, follow: true },
 };

@@ -4,11 +4,11 @@ import { AUTH_SESSION_COOKIE_NAME } from "@/lib/auth/token";
 
 /**
  * API route to securely terminate an external vendor session.
- * Clears the 'avra-vendor-token' cookie and redirects to the home page.
+ * Clears the 'assessly-vendor-token' cookie and redirects to the home page.
  */
 export async function GET() {
   const cookieStore = await cookies();
-  cookieStore.delete("avra-vendor-token");
+  cookieStore.delete("assessly-vendor-token");
   cookieStore.delete(AUTH_SESSION_COOKIE_NAME);
   
   // Redirect to a neutral external exit page, not the internal admin console.

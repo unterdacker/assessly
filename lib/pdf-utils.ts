@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 const MAX_TEXT_LENGTH = 20_000;
 /** Local-disk evidence store — mirrors the path used by the document GET route. */
-const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
+const STORAGE_DIR = path.join(process.cwd(), ".assessly-storage");
 
 function textItemToString(item: unknown): string {
   if (
@@ -50,7 +50,7 @@ export async function extractPdfText(buffer: Buffer): Promise<string> {
 }
 
 /**
- * Persist a validated PDF buffer to .avra-storage/ and create a Document record.
+ * Persist a validated PDF buffer to .assessly-storage/ and create a Document record.
  * Non-throwing — logs errors and returns gracefully so analysis can still proceed.
  */
 export async function persistEvidencePdf(

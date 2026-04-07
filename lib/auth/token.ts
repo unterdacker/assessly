@@ -1,9 +1,9 @@
 import type { UserRole } from "@prisma/client";
 
-export const AUTH_SESSION_COOKIE_NAME = "avra-session";
+export const AUTH_SESSION_COOKIE_NAME = "assessly-session";
 
 export type SessionClaims = {
-  type: "avra-session";
+  type: "assessly-session";
   sid: string;
   uid: string;
   role: UserRole;
@@ -21,7 +21,7 @@ function getSessionSecret(): string {
     if (process.env.NODE_ENV === "production") {
       throw new Error("AUTH_SESSION_SECRET env variable is required in production.");
     }
-    return "dev-only-avra-session-secret-change-me";
+    return "dev-only-assessly-session-secret-change-me";
   }
   if (secret.length < 32) {
     throw new Error(
@@ -85,7 +85,7 @@ export async function verifySessionToken(token: string | null | undefined): Prom
     if (!isValid) return null;
 
     const claims = JSON.parse(decoder.decode(decodeBase64Url(payload))) as SessionClaims;
-    if (claims.type !== "avra-session" || claims.exp <= Date.now()) return null;
+    if (claims.type !== "assessly-session" || claims.exp <= Date.now()) return null;
 
     return claims;
   } catch {

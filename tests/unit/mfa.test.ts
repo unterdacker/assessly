@@ -69,14 +69,14 @@ describe("generateTotpSecret", () => {
 describe("generateTotpUri", () => {
   it("delegates to otplib generateURI and returns the result", () => {
     mockGenerateUri.mockReturnValue(
-      "otpauth://totp/AVRA:test@example.com?secret=ABC&issuer=AVRA",
+      "otpauth://totp/Assessly:test@example.com?secret=ABC&issuer=Assessly",
     );
 
     const result = generateTotpUri("test@example.com", "ABC");
 
-    expect(result).toBe("otpauth://totp/AVRA:test@example.com?secret=ABC&issuer=AVRA");
+    expect(result).toBe("otpauth://totp/Assessly:test@example.com?secret=ABC&issuer=Assessly");
     expect(mockGenerateUri).toHaveBeenCalledWith({
-      issuer: "AVRA",
+      issuer: "Assessly",
       label: "test@example.com",
       secret: "ABC",
     });

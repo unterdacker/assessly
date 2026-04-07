@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Copyright 2026 AVRA Contributors
+// Copyright 2026 Assessly Contributors
 // See LICENSE for full license text
 "use server";
 
@@ -19,7 +19,7 @@ import {
 import { extractPdfText } from "@/lib/pdf-utils";
 import { isAccessControlError, requireAuthSession } from "@/lib/auth/server";
 
-const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
+const STORAGE_DIR = path.join(process.cwd(), ".assessly-storage");
 
 /**
  * Re-run AI analysis on a previously stored PDF evidence document.

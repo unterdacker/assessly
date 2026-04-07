@@ -22,12 +22,12 @@ export async function forceResetVendorPasswordAction(
   const cookieStore = await cookies();
   const locale = resolveActionLocale(formData.get("locale"));
 
-  const setupToken = cookieStore.get("avra-vendor-setup")?.value;
+  const setupToken = cookieStore.get("assessly-vendor-setup")?.value;
   if (!setupToken) {
     return { error: "Session expired. Please log in again." };
   }
 
-  const vendorId = cookieStore.get("avra-vendor-id")?.value;
+  const vendorId = cookieStore.get("assessly-vendor-id")?.value;
   if (!vendorId) {
     return { error: "Session expired. Please log in again." };
   }
@@ -69,10 +69,10 @@ export async function forceResetVendorPasswordAction(
     });
 
     // Clear setup and session cookies — vendor must do a full re-login
-    cookieStore.delete("avra-vendor-setup");
-    cookieStore.delete("avra-vendor-id");
-    cookieStore.delete("avra-vendor-token");
-    cookieStore.delete("avra-vendor-code-exp");
+    cookieStore.delete("assessly-vendor-setup");
+    cookieStore.delete("assessly-vendor-id");
+    cookieStore.delete("assessly-vendor-token");
+    cookieStore.delete("assessly-vendor-code-exp");
     cookieStore.delete(AUTH_SESSION_COOKIE_NAME);
   } catch (err) {
     console.error("Force password reset failed:", err);

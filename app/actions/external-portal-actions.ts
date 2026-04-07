@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit-log";
 import { AuditLogger } from "@/lib/structured-logger";
 
-const ROOT_STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
+const ROOT_STORAGE_DIR = path.join(process.cwd(), ".assessly-storage");
 const QUESTION_EVIDENCE_DIR = path.join(ROOT_STORAGE_DIR, "question-evidence");
 const EXPIRY_GRACE_PERIOD_MS = 2 * 60 * 1000;
 

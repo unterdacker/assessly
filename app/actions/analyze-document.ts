@@ -17,7 +17,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 /**
  * AI-powered document analysis action.
- * PDFs are persisted to .avra-storage/ for long-term audit traceability.
+ * PDFs are persisted to .assessly-storage/ for long-term audit traceability.
  */
 export async function analyzeDocument(
   formData: FormData,

@@ -86,7 +86,7 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
                 Vendor <strong>{name}</strong> has been created.
                 Generate a temporary access code in the Vendors list and share:
                 <br />
-                <span className="font-semibold">avra.app/portal</span>
+                <span className="font-semibold">assessly.app/portal</span>
               </DialogDescription>
             </DialogHeader>
 
@@ -102,7 +102,7 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
               <DialogTitle>Invite vendor</DialogTitle>
               <DialogDescription>
                 Send an assessment invitation. The vendor will receive NIS2-aligned
-                security questions via AVRA. Data is stored in your AVRA database.
+                security questions via Assessly. Data is stored in your Assessly database.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-2">

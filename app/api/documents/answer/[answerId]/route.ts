@@ -5,15 +5,15 @@ import { prisma } from "@/lib/prisma";
 import { getAuthSessionFromRequest } from "@/lib/auth/server";
 import { logErrorReport } from "@/lib/logger";
 
-const ROOT_STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
-const STORAGE_DIR = path.join(process.cwd(), ".avra-storage", "question-evidence");
+const ROOT_STORAGE_DIR = path.join(process.cwd(), ".assessly-storage");
+const STORAGE_DIR = path.join(process.cwd(), ".assessly-storage", "question-evidence");
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ answerId: string }> },
 ) {
   const { answerId } = await params;
-  const vendorToken = req.cookies.get("avra-vendor-token")?.value || null;
+  const vendorToken = req.cookies.get("assessly-vendor-token")?.value || null;
   const session = await getAuthSessionFromRequest(req);
 
   if (vendorToken) {

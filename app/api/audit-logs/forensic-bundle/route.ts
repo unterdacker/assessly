@@ -340,7 +340,7 @@ export async function GET(request: NextRequest) {
     const csvBody = toCsvRows(csvRows as Array<Record<string, unknown>>);
     const signedPreamble = isAuditor
       ? [
-          `# AVRA Forensic Export Signature: ${signature}`,
+          `# Assessly Forensic Export Signature: ${signature}`,
           `# Generated At: ${generatedAt}`,
           `# Chain Verified: ${String(chainIntegrity.verified)}`,
           `# Integrity Rate: ${chainIntegrity.integrityRate ?? "n/a"}`,
@@ -352,7 +352,7 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="avra-forensic-bundle-${Date.now()}.csv"`,
+        "Content-Disposition": `attachment; filename="assessly-forensic-bundle-${Date.now()}.csv"`,
         "Cache-Control": "no-store, no-cache, must-revalidate",
         Pragma: "no-cache",
       },
@@ -362,7 +362,7 @@ export async function GET(request: NextRequest) {
   const signedBundle = {
     ...bundleContent,
     _meta: {
-      format: "avra-forensic-bundle-v2",
+      format: "assessly-forensic-bundle-v2",
       frameworks: ["NIS2", "DORA", "EU_AI_ACT", "ISO27001", "SOC2", "GDPR"],
       signatureAlgorithm: "HMAC-SHA256",
       signatureNote:
@@ -373,7 +373,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json(signedBundle, {
     headers: {
-      "Content-Disposition": `attachment; filename="avra-forensic-bundle-${Date.now()}.json"`,
+      "Content-Disposition": `attachment; filename="assessly-forensic-bundle-${Date.now()}.json"`,
       "Content-Type": "application/json",
       // Security: prevent caching of sensitive audit data
       "Cache-Control": "no-store, no-cache, must-revalidate",

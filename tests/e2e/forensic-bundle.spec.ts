@@ -7,7 +7,7 @@
  * Scenarios:
  *   1.  JSON export — HTTP 200 and correct Content-Type header.
  *   2.  JSON export — Content-Disposition filename contains a current
- *       Unix-epoch timestamp (avra-forensic-bundle-{ts}.json).
+ *       Unix-epoch timestamp (assessly-forensic-bundle-{ts}.json).
  *   3.  JSON export — response body contains the top-level _meta.signature
  *       field (HMAC-SHA256 bundle integrity check, NIS2/DORA Art. 9).
  *   4.  JSON export — response body structure: ok, generatedAt, profile,
@@ -16,7 +16,7 @@
  *       (last IPv4 octet zeroed; IPv6 masked).
  *   6.  CSV export — HTTP 200 and Content-Type: text/csv.
  *   7.  CSV export — Content-Disposition filename contains a current
- *       Unix-epoch timestamp (avra-forensic-bundle-{ts}.csv).
+ *       Unix-epoch timestamp (assessly-forensic-bundle-{ts}.csv).
  *   8.  CSV export — PII fields (ipAddress column) contain truncated values
  *       rather than full IP addresses.
  *   9.  Unauthenticated requests are rejected with HTTP 403.
@@ -36,7 +36,7 @@ import { test, expect, type Page } from "@playwright/test";
 /** Sign in as the seeded ADMIN user and wait for the dashboard redirect. */
 async function signInAsAdmin(page: Page): Promise<void> {
   await page.goto("/en/auth/sign-in");
-  await page.getByLabel(/email/i).fill("admin@demo.avra.dev");
+  await page.getByLabel(/email/i).fill("admin@demo.assessly.dev");
   await page.getByLabel(/password/i).fill("Admin1234!");
   await page.getByRole("button", { name: /sign in/i }).click();
   await page.waitForURL(/\/en\/dashboard/);
@@ -44,14 +44,14 @@ async function signInAsAdmin(page: Page): Promise<void> {
 
 /**
  * Returns the Unix-epoch timestamp embedded in an
- * "avra-forensic-bundle-{timestamp}.{ext}" Content-Disposition filename,
+ * "assessly-forensic-bundle-{timestamp}.{ext}" Content-Disposition filename,
  * or null if the header is missing or does not match the expected pattern.
  */
 function extractTimestampFromDisposition(
   disposition: string | null,
 ): number | null {
   if (!disposition) return null;
-  const match = disposition.match(/avra-forensic-bundle-(\d+)\.(json|csv)/);
+  const match = disposition.match(/assessly-forensic-bundle-(\d+)\.(json|csv)/);
   if (!match) return null;
   return parseInt(match[1], 10);
 }
@@ -98,7 +98,7 @@ test.describe("Forensic Bundle — JSON format", () => {
     const ts = extractTimestampFromDisposition(disposition);
     expect(
       ts,
-      `Content-Disposition "${disposition}" does not contain the expected avra-forensic-bundle-{timestamp}.json pattern`,
+      `Content-Disposition "${disposition}" does not contain the expected assessly-forensic-bundle-{timestamp}.json pattern`,
     ).not.toBeNull();
 
     // Timestamp must fall within the test window (+/- a few seconds for CI
@@ -254,7 +254,7 @@ test.describe("Forensic Bundle — CSV format", () => {
     const ts = extractTimestampFromDisposition(disposition);
     expect(
       ts,
-      `Content-Disposition "${disposition}" does not contain the expected avra-forensic-bundle-{timestamp}.csv pattern`,
+      `Content-Disposition "${disposition}" does not contain the expected assessly-forensic-bundle-{timestamp}.csv pattern`,
     ).not.toBeNull();
 
     expect(ts!).toBeGreaterThanOrEqual(before - 60_000);

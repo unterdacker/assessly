@@ -47,18 +47,6 @@ export async function authenticateVendorAccessCode(
   const rawIp = readClientIp(headerStore);
   const ipKey = `vpi:${rawIp}`;
 
-  let clientId = cookieStore.get("avra-portal-client")?.value;
-  if (!clientId) {
-    clientId = crypto.randomUUID();
-    cookieStore.set("avra-portal-client", clientId, {
-      httpOnly: true,
-      sameSite: "strict",
-      secure: shouldSecureCookie(),
-      path: "/",
-      maxAge: 60 * 60 * 24,
-    });
-  }
-
   if (isRateLimited(ipKey)) {
     AuditLogger.auth("rate_limit.exceeded", "failure", {
       sourceIp: truncateIp(rawIp),
@@ -157,14 +145,14 @@ export async function authenticateVendorAccessCode(
   // If this is the vendor's first login, redirect to force-change-password flow
   const isFirstLogin = vendor.isFirstLogin;
   if (isFirstLogin) {
-    cookieStore.set("avra-vendor-setup", crypto.randomUUID(), {
+    cookieStore.set("assessly-vendor-setup", crypto.randomUUID(), {
       httpOnly: true,
       sameSite: "strict",
       secure: shouldSecureCookie(),
       path: "/",
       maxAge: 60 * 30, // 30 minutes
     });
-    cookieStore.set("avra-vendor-id", vendor.id, {
+    cookieStore.set("assessly-vendor-id", vendor.id, {
       httpOnly: true,
       sameSite: "strict",
       secure: shouldSecureCookie(),
@@ -197,8 +185,8 @@ export async function authenticateVendorAccessCode(
   const codeMaxAgeSeconds  = Math.max(0, Math.floor((codeExpiresAt.getTime() - Date.now()) / 1000));
   const isSecure = shouldSecureCookie();
 
-  // avra-vendor-id — identifies which vendor record backs this session.
-  cookieStore.set("avra-vendor-id", vendor.id, {
+  // assessly-vendor-id — identifies which vendor record backs this session.
+  cookieStore.set("assessly-vendor-id", vendor.id, {
     httpOnly: true,
     sameSite: "lax",
     secure: isSecure,
@@ -206,10 +194,10 @@ export async function authenticateVendorAccessCode(
     maxAge: tokenMaxAgeSeconds,
   });
 
-  // avra-vendor-token — the opaque invite token used to authenticate portal actions.
+  // assessly-vendor-token — the opaque invite token used to authenticate portal actions.
   // SameSite=Lax: sent on top-level navigations (click a link) but NOT on
   // cross-site sub-resource requests or cross-site POST, preventing CSRF.
-  cookieStore.set("avra-vendor-token", inviteToken, {
+  cookieStore.set("assessly-vendor-token", inviteToken, {
     httpOnly: true,
     sameSite: "lax",
     secure: isSecure,
@@ -217,8 +205,8 @@ export async function authenticateVendorAccessCode(
     maxAge: tokenMaxAgeSeconds,
   });
 
-  // avra-vendor-code-exp — expiry timestamp surfaced to the UI countdown clock.
-  cookieStore.set("avra-vendor-code-exp", codeExpiresAt.toISOString(), {
+  // assessly-vendor-code-exp — expiry timestamp surfaced to the UI countdown clock.
+  cookieStore.set("assessly-vendor-code-exp", codeExpiresAt.toISOString(), {
     httpOnly: true,
     sameSite: "lax",
     secure: isSecure,

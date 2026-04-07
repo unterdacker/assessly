@@ -1,11 +1,11 @@
 /**
- * AVRA Universal Mail Utility
+ * Assessly Universal Mail Utility
  *
  * Strategy resolution order:
  *   1. SystemSettings table (DB) — configured via Admin › Settings › Mail
  *   2. Environment variables (legacy / default fallback):
  *        MAIL_STRATEGY=smtp|resend|log
- *        MAIL_FROM="AVRA Compliance <noreply@yourdomain.com>"
+ *        MAIL_FROM="Assessly <noreply@yourdomain.com>"
  *        SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD
  *        RESEND_API_KEY
  */
@@ -50,7 +50,7 @@ async function resolveMailConfig(): Promise<ResolvedConfig> {
           ? settings.mailFromName
             ? `${settings.mailFromName} <${settings.mailFrom}>`
             : settings.mailFrom
-          : "AVRA Compliance <noreply@avra.local>";
+          : "Assessly <noreply@assessly.local>";
 
       const smtpPass = settings.smtpPassword
         ? decrypt(settings.smtpPassword)
@@ -79,7 +79,7 @@ async function resolveMailConfig(): Promise<ResolvedConfig> {
   return {
     strategy: (process.env.MAIL_STRATEGY ?? "log").toLowerCase().trim(),
     from:
-      process.env.MAIL_FROM ?? "AVRA Compliance <noreply@avra.local>",
+      process.env.MAIL_FROM ?? "Assessly <noreply@assessly.local>",
     smtp: {
       host: process.env.SMTP_HOST ?? "",
       port: parseInt(process.env.SMTP_PORT ?? "587", 10),
@@ -110,7 +110,7 @@ export async function sendMail(payload: MailPayload): Promise<MailResult> {
       return logSimulatedEmail({ ...payload, from: resolvedFrom });
     default:
       console.warn(
-        `[AVRA Mail] Unknown mail strategy "${config.strategy}". ` +
+        `[Assessly Mail] Unknown mail strategy "${config.strategy}". ` +
           `Valid values: smtp | resend | log. Falling back to "log".`,
       );
       return logSimulatedEmail({ ...payload, from: resolvedFrom });
@@ -127,7 +127,7 @@ async function sendViaSMTP(
 
   if (!host || !user || !pass) {
     console.warn(
-      "[AVRA Mail] SMTP strategy selected but host / user / password are not configured. " +
+      "[Assessly Mail] SMTP strategy selected but host / user / password are not configured. " +
         "Falling back to simulated log.",
     );
     return logSimulatedEmail(payload);
@@ -151,7 +151,7 @@ async function sendViaSMTP(
     return { ok: true };
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
-    console.error("[AVRA Mail] SMTP delivery failed:", error);
+    console.error("[Assessly Mail] SMTP delivery failed:", error);
     return { ok: false, error };
   }
 }
@@ -164,7 +164,7 @@ async function sendViaResend(
 ): Promise<MailResult> {
   if (!apiKey) {
     console.warn(
-      "[AVRA Mail] Resend strategy selected but API key is not configured. " +
+      "[Assessly Mail] Resend strategy selected but API key is not configured. " +
         "Falling back to simulated log.",
     );
     return logSimulatedEmail(payload);
@@ -180,14 +180,14 @@ async function sendViaResend(
     });
 
     if (error) {
-      console.error("[AVRA Mail] Resend delivery failed:", error.message);
+      console.error("[Assessly Mail] Resend delivery failed:", error.message);
       return { ok: false, error: error.message };
     }
 
     return { ok: true };
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
-    console.error("[AVRA Mail] Resend delivery failed:", error);
+    console.error("[Assessly Mail] Resend delivery failed:", error);
     return { ok: false, error };
   }
 }
@@ -198,7 +198,7 @@ function logSimulatedEmail(payload: Required<MailPayload>): MailResult {
   console.log(
     `\n╔═══════════════════════════════════════════════════════════`,
   );
-  console.log(`║  [AVRA Mail · SIMULATED — set MAIL_STRATEGY to send for real]`);
+  console.log(`║  [Assessly Mail · SIMULATED — set MAIL_STRATEGY to send for real]`);
   console.log(`║  To:      ${payload.to}`);
   console.log(`║  From:    ${payload.from}`);
   console.log(`║  Subject: ${payload.subject}`);

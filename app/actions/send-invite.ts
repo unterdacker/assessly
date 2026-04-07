@@ -197,7 +197,7 @@ export async function sendOutOfBandInviteAction(
 
   const { subject, html } = buildVendorInviteEmail({
     locale,
-    companyName: process.env.MAIL_COMPANY_NAME ?? "AVRA Compliance",
+    companyName: process.env.MAIL_COMPANY_NAME ?? "Assessly",
     vendorName,
     accessCode,
     portalUrl,
@@ -231,7 +231,7 @@ export async function sendOutOfBandInviteAction(
   // await twilioClient.messages.create({
   //   from: process.env.TWILIO_PHONE_NUMBER,
   //   to: phone,
-  //   body: `AVRA Security Portal: Your temporary password is: ${tempPassword}. ` +
+  //   body: `Assessly Security Portal: Your temporary password is: ${tempPassword}. ` +
   //         `Log in with your emailed Access Code and change this password immediately.`,
   // });
   console.log(`[SIMULATED SMS -> ${maskPhone(phone)}]`);
