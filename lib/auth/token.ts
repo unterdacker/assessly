@@ -16,11 +16,19 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 function getSessionSecret(): string {
-  return (
-    process.env.AUTH_SESSION_SECRET ||
-    process.env.NEXTAUTH_SECRET ||
-    "dev-only-avra-session-secret-change-me"
-  );
+  const secret = process.env.AUTH_SESSION_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("AUTH_SESSION_SECRET env variable is required in production.");
+    }
+    return "dev-only-avra-session-secret-change-me";
+  }
+  if (secret.length < 32) {
+    throw new Error(
+      "AUTH_SESSION_SECRET must be at least 32 characters (256 bits) long.",
+    );
+  }
+  return secret;
 }
 
 function encodeBase64Url(input: Uint8Array): string {
@@ -60,7 +68,9 @@ export async function verifySessionToken(token: string | null | undefined): Prom
     return null;
   }
 
-  const [payload, signature] = token.split(".");
+  const parts = token.split(".");
+  if (parts.length !== 2) return null;
+  const [payload, signature] = parts;
   if (!payload || !signature) return null;
 
   try {

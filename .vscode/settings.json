@@ -30,6 +30,10 @@
         "ConvertFrom-Json": true,
         "ConvertTo-Json": true,
         "npx eslint": true,
-        "docker-compose": true
+        "docker-compose": true,
+        "/^node -e \"const o = require\\('otplib'\\); const s = o\\.generateSecret\\(\\); const token = o\\.generateSync\\(\\{ secret: s, type: 'totp' \\}\\); const r = o\\.verifySync\\(\\{ token, secret: s \\}\\); console\\.log\\(JSON\\.stringify\\(r\\)\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }
