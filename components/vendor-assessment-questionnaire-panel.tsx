@@ -27,7 +27,16 @@ export function VendorAssessmentQuestionnairePanel({
   onSelectQuestion,
 }: VendorAssessmentQuestionnairePanelProps) {
   const t = useTranslations("assessment.questionnaire");
+  const tRoot = useTranslations();
   const tQuestions = useTranslations("externalAssessment.questions");
+
+  const questionText = React.useCallback(
+    (q: { id: string; text: string }) => {
+      const key = `externalAssessment.questions.${q.id}.text` as Parameters<typeof tRoot>[0];
+      return tRoot.has(key) ? tQuestions(`${q.id}.text` as Parameters<typeof tQuestions>[0]) : q.text;
+    },
+    [tRoot, tQuestions],
+  );
 
   const numberById = React.useMemo(() => {
     const m: Record<string, number> = {};
@@ -63,7 +72,7 @@ export function VendorAssessmentQuestionnairePanel({
                 {questions.map((q) => {
                   const answer = answers.find((a) => a.questionId === q.id);
                   const isSelected = selectedQuestionId === q.id;
-                  const questionText = tQuestions(`${q.id}.text`);
+                  const qText = questionText(q);
 
                   return (
                     <li
@@ -81,7 +90,7 @@ export function VendorAssessmentQuestionnairePanel({
                           <span className="font-medium text-muted-foreground pr-1">
                             {numberById[q.id]}.
                           </span>
-                          {questionText}
+                          {qText}
                         </div>
                         <div className="shrink-0 pt-0.5">
                           <Badge

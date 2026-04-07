@@ -23,6 +23,7 @@ export type DashboardOverviewProps = {
   vendorAssessments: VendorAssessment[];
   riskPosture: DashboardRiskPostureOverview;
   role: UserRole;
+  locale: string;
   translations: {
     Dashboard: string;
     DashboardDesc: string;
@@ -103,6 +104,7 @@ export function DashboardOverview({
   vendorAssessments,
   riskPosture,
   role,
+  locale,
   translations,
 }: DashboardOverviewProps) {
   const score = supplyChainRiskScore(vendorAssessments);
@@ -171,7 +173,7 @@ export function DashboardOverview({
           </p>
         </div>
         <Button variant="secondary" asChild className="w-full sm:w-auto">
-          <Link href="/vendors">{translations.ManageVendors}</Link>
+          <Link href={`/${locale}/vendors`}>{translations.ManageVendors}</Link>
         </Button>
       </div>
 

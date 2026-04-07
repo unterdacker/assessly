@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import type { UserRole } from "@prisma/client";
 import { Search, ChevronUp, ChevronDown, Copy, SendHorizonal, ShieldAlert, ShieldCheck, RefreshCw } from "lucide-react";
 import { AddVendorModal } from "@/components/add-vendor-modal";
@@ -136,6 +136,7 @@ function VendorActions({
   role: UserRole;
 }) {
   const t = useTranslations("vendors");
+  const locale = useLocale();
   const canManage = role === "ADMIN";
 
   const showResendInvite = canManage && Boolean(vendorAssessment.inviteTokenExpires);
@@ -175,7 +176,7 @@ function VendorActions({
         />
       ) : null}
       <Button variant="outline" size="sm" className="h-8" asChild>
-        <Link href={`/vendors/${vendorAssessment.id}/assessment`}>
+        <Link href={`/${locale}/vendors/${vendorAssessment.id}/assessment`}>
           {t("openAssessment")}
         </Link>
       </Button>

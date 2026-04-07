@@ -336,6 +336,7 @@ async function runProviderPrompt(args: {
     headers: {
       "Content-Type": "application/json",
     },
+    signal: AbortSignal.timeout(15_000),
     body: JSON.stringify({
       model: modelId,
       temperature: 0.2,

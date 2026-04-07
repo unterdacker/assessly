@@ -111,6 +111,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
       vendorAssessments={vendorAssessments}
       riskPosture={riskPosture}
       role={session.role}
+      locale={locale}
       translations={translations}
     />
   );

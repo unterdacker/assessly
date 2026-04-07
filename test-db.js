@@ -3,7 +3,7 @@ const p = new PrismaClient();
 p.$connect()
   .then(() => {
     console.log("DB_OK");
-    return p.user.findFirst({ where: { email: "admin@avra.local" }, select: { id: true, email: true, role: true, isActive: true, mfaEnabled: true } });
+    return p.user.findFirst({ where: { email: "admin@assessly.local" }, select: { id: true, email: true, role: true, isActive: true, mfaEnabled: true } });
   })
   .then((user) => {
     console.log("USER:", JSON.stringify(user));

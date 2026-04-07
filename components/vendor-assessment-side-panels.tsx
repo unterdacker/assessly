@@ -524,6 +524,7 @@ export function VendorAssessmentSidePanels({
   readOnly,
 }: VendorAssessmentSidePanelsProps) {
   const t = useTranslations("assessment.sidePanels");
+  const tRoot = useTranslations();
   const tQuestions = useTranslations("externalAssessment.questions");
   
   const selectedAnswer = selectedQuestionId
@@ -533,8 +534,15 @@ export function VendorAssessmentSidePanels({
   const selectedQuestion = selectedQuestionId
     ? nis2Questions.find((q) => q.id === selectedQuestionId)
     : null;
-  
-  const selectedQuestionText = selectedQuestion ? tQuestions(`${selectedQuestion.id}.text`) : undefined;
+
+  const rawKey = selectedQuestion
+    ? (`externalAssessment.questions.${selectedQuestion.id}.text` as Parameters<typeof tRoot>[0])
+    : null;
+  const selectedQuestionText = selectedQuestion
+    ? (rawKey && tRoot.has(rawKey)
+        ? tQuestions(`${selectedQuestion.id}.text` as Parameters<typeof tQuestions>[0])
+        : selectedQuestion.text)
+    : undefined;
 
   return (
     <div className="space-y-3 lg:sticky lg:top-20">
