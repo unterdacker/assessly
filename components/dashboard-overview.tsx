@@ -249,11 +249,13 @@ export function DashboardOverview({
               </p>
             </CardHeader>
             <CardContent className="pt-6">
-              <CategoryComplianceRadarChartLazy
-                data={radarData}
-                legendLabel={translations.AverageComplianceLegend}
-                emptyLabel={translations.NoVendorData}
-              />
+              <div className="min-h-[320px]">
+                <CategoryComplianceRadarChartLazy
+                  data={radarData}
+                  legendLabel={translations.AverageComplianceLegend}
+                  emptyLabel={translations.NoVendorData}
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -266,11 +268,13 @@ export function DashboardOverview({
                 </p>
               </CardHeader>
               <CardContent className="pt-6">
-                <VendorsByRiskBarChartLazy
-                  data={barData}
-                  legendLabel={translations.VendorCountLegend}
-                  emptyLabel={translations.NoVendorData}
-                />
+                <div className="min-h-[320px]">
+                  <VendorsByRiskBarChartLazy
+                    data={barData}
+                    legendLabel={translations.VendorCountLegend}
+                    emptyLabel={translations.NoVendorData}
+                  />
+                </div>
               </CardContent>
             </Card>
 

@@ -1,4 +1,5 @@
 ﻿![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buy-me-a-coffee)](https://buymeacoffee.com/assessly)
 
 # Assessly - Sovereign Vendor Risk Assessment Platform
 

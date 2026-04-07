@@ -255,7 +255,7 @@ export function VendorQuestionnaireWizard({
             key={q.id}
             className={cn(
               "group overflow-hidden rounded-xl border transition-all duration-200",
-              isOpen ? "border-indigo-400 bg-white ring-1 ring-indigo-400/20 dark:border-indigo-500/50" : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900",
+              isOpen ? "border-indigo-400 bg-white ring-1 ring-indigo-400/20 dark:border-indigo-500/50 dark:bg-slate-900 dark:ring-indigo-500/10" : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900",
               isFilled && !isOpen && "border-emerald-100 bg-emerald-50/10 dark:border-emerald-900/10 dark:bg-emerald-950/2",
               isAiPending && !isOpen && "border-amber-200 bg-amber-50/5 dark:border-amber-900/10 shadow-[0_0_15px_-5px_rgba(245,158,11,0.2)]"
             )}
@@ -398,9 +398,9 @@ export function VendorQuestionnaireWizard({
                     className="grid grid-cols-1 gap-3 sm:grid-cols-3"
                   >
                     {[
-                      { id: "COMPLIANT", label: tw("option.compliant", "Compliant"), icon: ShieldCheck, color: "hover:border-emerald-400 hover:bg-emerald-50 text-emerald-700", active: "border-emerald-500 bg-emerald-50/50" },
-                      { id: "NON_COMPLIANT", label: tw("option.nonCompliant", "Non-compliant"), icon: XCircle, color: "hover:border-red-400 hover:bg-red-50 text-red-700", active: "border-red-500 bg-red-50/50" },
-                      { id: "NOT_APPLICABLE", label: tw("option.notApplicable", "Not applicable"), icon: Info, color: "hover:border-slate-400 hover:bg-slate-50 text-slate-700", active: "border-slate-500 bg-slate-50/50" }
+                      { id: "COMPLIANT", label: tw("option.compliant", "Compliant"), icon: ShieldCheck, color: "hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400", active: "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 dark:border-emerald-500/60" },
+                      { id: "NON_COMPLIANT", label: tw("option.nonCompliant", "Non-compliant"), icon: XCircle, color: "hover:border-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 text-red-700 dark:text-red-400", active: "border-red-500 bg-red-50/50 dark:bg-red-950/30 dark:border-red-500/60" },
+                      { id: "NOT_APPLICABLE", label: tw("option.notApplicable", "Not applicable"), icon: Info, color: "hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-400", active: "border-slate-500 bg-slate-50/50 dark:bg-slate-800 dark:border-slate-500/60" }
                     ].map((opt) => {
                       const isSuggested = isAiPending && answer?.aiSuggestedStatus === opt.id;
                       return (

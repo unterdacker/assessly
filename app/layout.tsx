@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
@@ -33,6 +33,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
+  const requestHeaders = await headers();
+  const nonce = requestHeaders.get("x-nonce") ?? undefined;
   const session = await getOptionalAuthSession();
   const localeCookie = cookieStore.get("NEXT_LOCALE")?.value;
   const htmlLang = localeCookie === "de" || localeCookie === "en" ? localeCookie : "en";
@@ -49,6 +51,7 @@ export default async function RootLayout({
           Skip to main content
         </a>
         <Providers
+          nonce={nonce}
           session={session ? {
             userId: session.userId,
             role: session.role,
