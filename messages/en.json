@@ -682,6 +682,8 @@
     "expires": "Expires",
     "viewPdf": "View PDF",
     "sendInvite": "Send invite",
+    "resendInvite": "Resend invite",
+    "resendInviteTooltip": "Token expires soon or has expired \u2014 resend to issue a new invite without creating a new vendor record.",
     "openAssessment": "Open assessment",
     "noVendorsFound": "No vendors found",
     "deleteSelected": "Delete selected",

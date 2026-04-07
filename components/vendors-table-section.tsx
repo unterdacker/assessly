@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { UserRole } from "@prisma/client";
-import { Search, ChevronUp, ChevronDown, Copy, SendHorizonal, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Search, ChevronUp, ChevronDown, Copy, SendHorizonal, ShieldAlert, ShieldCheck, RefreshCw } from "lucide-react";
 import { AddVendorModal } from "@/components/add-vendor-modal";
 import { InviteVendorModal } from "@/components/admin/invite-vendor-modal";
 import { Button } from "@/components/ui/button";
@@ -137,6 +137,9 @@ function VendorActions({
 }) {
   const t = useTranslations("vendors");
   const canManage = role === "ADMIN";
+
+  const showResendInvite = canManage && Boolean(vendorAssessment.inviteTokenExpires);
+
   return (
     <div className="flex justify-end gap-2">
       {canManage ? (
@@ -148,6 +151,25 @@ function VendorActions({
             <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground">
               <SendHorizonal className="h-3.5 w-3.5" aria-hidden />
               {t("sendInvite")}
+            </Button>
+          }
+        />
+      ) : null}
+      {showResendInvite ? (
+        <InviteVendorModal
+          vendorId={vendorAssessment.id}
+          vendorName={vendorAssessment.name}
+          prefillEmail={vendorAssessment.email}
+          forceRefresh
+          trigger={
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1 text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
+              title={t("resendInviteTooltip")}
+            >
+              <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+              {t("resendInvite")}
             </Button>
           }
         />
