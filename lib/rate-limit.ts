@@ -49,11 +49,11 @@ type RateLimitState = {
 // ---------------------------------------------------------------------------
 
 const g = globalThis as typeof globalThis & {
-  __avraRateLimit?: Map<string, RateLimitState>;
+  __assesslyRateLimit?: Map<string, RateLimitState>;
 };
 const rateLimitStore: Map<string, RateLimitState> =
-  g.__avraRateLimit ?? new Map<string, RateLimitState>();
-g.__avraRateLimit = rateLimitStore;
+  g.__assesslyRateLimit ?? new Map<string, RateLimitState>();
+g.__assesslyRateLimit = rateLimitStore;
 
 // ---------------------------------------------------------------------------
 // Cleanup interval

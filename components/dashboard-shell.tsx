@@ -125,7 +125,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <ShieldCheck className="h-4 w-4" aria-hidden />
             </div>
             <div className="leading-tight">
-              <p className="text-sm font-semibold tracking-tight">AVRA</p>
+              <p className="text-sm font-semibold tracking-tight">Assessly</p>
               <p className="text-[10px] text-muted-foreground">
                 {session?.role === "ADMIN" ? "Admin workspace" : session?.role === "AUDITOR" ? "Auditor workspace" : "Vendor risk"}
               </p>
@@ -178,7 +178,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <div className="flex h-8 w-8 items-center justify-center rounded-md bg-indigo-600 text-white">
                 <ShieldCheck className="h-4 w-4" aria-hidden />
               </div>
-              <span className="truncate text-sm font-semibold">AVRA</span>
+              <span className="truncate text-sm font-semibold">Assessly</span>
             </div>
             <div className="hidden md:block" />
             <div className="flex items-center gap-2">

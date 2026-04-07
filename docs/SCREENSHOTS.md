@@ -1,4 +1,4 @@
-# AVRA Screenshots Guide
+# Assessly Screenshots Guide
 
 This directory contains screenshots for the README.md documentation. Place your screenshot files here following this naming convention:
 

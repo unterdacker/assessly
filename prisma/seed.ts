@@ -6,10 +6,10 @@ const prisma = new PrismaClient();
 
 const SEED_ACTOR = "system-seed";
 const COMPANY_SLUG = "default";
-const DEFAULT_ADMIN_EMAIL = process.env.AVRA_ADMIN_EMAIL || "admin@avra.local";
-const DEFAULT_ADMIN_PASSWORD = process.env.AVRA_ADMIN_PASSWORD || "admin123";
-const DEFAULT_AUDITOR_EMAIL = process.env.AVRA_AUDITOR_EMAIL || "auditor@avra.local";
-const DEFAULT_AUDITOR_PASSWORD = process.env.AVRA_AUDITOR_PASSWORD || "auditor123";
+const DEFAULT_ADMIN_EMAIL = process.env.ASSESSLY_ADMIN_EMAIL || "admin@assessly.local";
+const DEFAULT_ADMIN_PASSWORD = process.env.ASSESSLY_ADMIN_PASSWORD || "admin123";
+const DEFAULT_AUDITOR_EMAIL = process.env.ASSESSLY_AUDITOR_EMAIL || "auditor@assessly.local";
+const DEFAULT_AUDITOR_PASSWORD = process.env.ASSESSLY_AUDITOR_PASSWORD || "auditor123";
 
 type DemoVendor = {
   name: string;
@@ -89,7 +89,7 @@ async function main() {
       {
         companyId: company.id,
         email: DEFAULT_ADMIN_EMAIL,
-        displayName: "AVRA Admin",
+        displayName: "Assessly Admin",
         passwordHash: adminPasswordHash,
         role: UserRole.ADMIN,
         createdBy: SEED_ACTOR,
@@ -97,7 +97,7 @@ async function main() {
       {
         companyId: company.id,
         email: DEFAULT_AUDITOR_EMAIL,
-        displayName: "AVRA Auditor",
+        displayName: "Assessly Auditor",
         passwordHash: auditorPasswordHash,
         role: UserRole.AUDITOR,
         createdBy: SEED_ACTOR,

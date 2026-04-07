@@ -22,7 +22,7 @@ import { test, expect, type Page } from "@playwright/test";
 /** Sign in as the seeded admin user. */
 async function signInAsAdmin(page: Page) {
   await page.goto("/en/auth/sign-in");
-  await page.getByLabel(/email/i).fill("admin@demo.avra.dev");
+  await page.getByLabel(/email/i).fill("admin@demo.assessly.dev");
   await page.getByLabel(/password/i).fill("Admin1234!");
   await page.getByRole("button", { name: /sign in/i }).click();
   await page.waitForURL(/\/en\/dashboard/);

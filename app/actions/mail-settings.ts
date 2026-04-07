@@ -165,14 +165,14 @@ export async function testMailConfig(
   const resolvedFrom =
     mailFromName && mailFrom
       ? `${mailFromName} <${mailFrom}>`
-      : mailFrom || "AVRA Compliance <noreply@avra.local>";
+      : mailFrom || "Assessly <noreply@assessly.local>";
 
   const testHtml = `
     <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;border:1px solid #e5e7eb;border-radius:8px;">
-      <h2 style="color:#1e40af;margin-bottom:8px;">✅ AVRA Mail Configuration Test</h2>
+      <h2 style="color:#1e40af;margin-bottom:8px;">✅ Assessly Mail Configuration Test</h2>
       <p style="color:#374151;">This test email confirms that your mail delivery settings are working correctly.</p>
       <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
-      <p style="color:#6b7280;font-size:12px;">Sent from AVRA Compliance Platform · System Settings</p>
+      <p style="color:#6b7280;font-size:12px;">Sent from Assessly Platform · System Settings</p>
     </div>
   `;
 
@@ -213,7 +213,7 @@ export async function testMailConfig(
       await transporter.sendMail({
         from: resolvedFrom,
         to: testEmail,
-        subject: "Hello from AVRA — Test Email",
+        subject: "Hello from Assessly — Test Email",
         html: testHtml,
       });
 
@@ -250,7 +250,7 @@ export async function testMailConfig(
       const { error } = await resend.emails.send({
         from: resolvedFrom,
         to: [testEmail],
-        subject: "Hello from AVRA — Test Email",
+        subject: "Hello from Assessly — Test Email",
         html: testHtml,
       });
 

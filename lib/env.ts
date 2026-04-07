@@ -1,5 +1,5 @@
 /**
- * AVRA — Runtime environment validation
+ * Assessly — Runtime environment validation
  *
  * This module validates every environment variable declared in .env.example
  * using Zod at server startup.  It is the single source of truth for the
@@ -112,8 +112,8 @@ const rawEnvSchema = z.object({
 
   // ── Mail ──────────────────────────────────────────────────────────────────
   MAIL_STRATEGY: z.enum(["log", "smtp", "resend"]).default("log"),
-  MAIL_FROM: z.string().default("AVRA Compliance <noreply@avra.local>"),
-  MAIL_COMPANY_NAME: z.string().default("AVRA Compliance"),
+  MAIL_FROM: z.string().default("Assessly <noreply@assessly.local>"),
+  MAIL_COMPANY_NAME: z.string().default("Assessly"),
   SMTP_HOST: z.string().optional(),
   /** Validated as a numeric port string. Consumers should parseInt(). */
   SMTP_PORT: z
@@ -138,6 +138,7 @@ const rawEnvSchema = z.object({
   AUDIT_BUNDLE_SECRET: z.string().optional(),
   /** HMAC key for pseudonymising user IDs in exports (GDPR Art. 5). */
   AUDIT_EXPORT_KEY: z.string().optional(),
+  AUDIT_PSEUDONYMIZATION_KEY: z.string().optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -241,6 +242,44 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
     }
   }
 
+  // ── AUDIT_EXPORT_KEY ──────────────────────────────────────────────────────
+  if (
+    require(
+      "AUDIT_EXPORT_KEY",
+      data.AUDIT_EXPORT_KEY,
+      "AUDIT_EXPORT_KEY is required in production. Omitting this key severs GDPR audit-trail pseudonym linkability for exported bundles.",
+    ) &&
+    data.AUDIT_EXPORT_KEY
+  ) {
+    if (data.AUDIT_EXPORT_KEY.length < 32) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["AUDIT_EXPORT_KEY"],
+        message:
+          `AUDIT_EXPORT_KEY must be at least 32 characters (got ${data.AUDIT_EXPORT_KEY.length}).`,
+      });
+    }
+  }
+
+  // ── AUDIT_PSEUDONYMIZATION_KEY ───────────────────────────────────────────
+  if (
+    require(
+      "AUDIT_PSEUDONYMIZATION_KEY",
+      data.AUDIT_PSEUDONYMIZATION_KEY,
+      "AUDIT_PSEUDONYMIZATION_KEY is required in production. Omitting this key severs GDPR audit-trail pseudonym linkability for pseudonymized exports.",
+    ) &&
+    data.AUDIT_PSEUDONYMIZATION_KEY
+  ) {
+    if (data.AUDIT_PSEUDONYMIZATION_KEY.length < 32) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["AUDIT_PSEUDONYMIZATION_KEY"],
+        message:
+          `AUDIT_PSEUDONYMIZATION_KEY must be at least 32 characters (got ${data.AUDIT_PSEUDONYMIZATION_KEY.length}).`,
+      });
+    }
+  }
+
   // ── AUTH_SESSION_SECRET ───────────────────────────────────────────────────
   const authSecret = data.AUTH_SESSION_SECRET ?? data.NEXTAUTH_SECRET;
   if (!authSecret) {
@@ -260,7 +299,7 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
     });
   } else if (
     isPlaceholder(authSecret) ||
-    authSecret === "dev-only-avra-session-secret-change-me"
+    authSecret === "dev-only-assessly-session-secret-change-me"
   ) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -301,7 +340,7 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
         path: ["NEXT_PUBLIC_APP_URL"],
         message:
           "NEXT_PUBLIC_APP_URL must not point to localhost in production. " +
-          "Set it to your public-facing domain (e.g. https://avra.example.com).",
+          "Set it to your public-facing domain (e.g. https://assessly.example.com).",
       });
     } else if (!data.NEXT_PUBLIC_APP_URL.startsWith("https://")) {
       ctx.addIssue({
@@ -309,19 +348,9 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
         path: ["NEXT_PUBLIC_APP_URL"],
         message:
           "NEXT_PUBLIC_APP_URL must use HTTPS in production " +
-          "(e.g. https://avra.example.com). HTTP is not permitted.",
+          "(e.g. https://assessly.example.com). HTTP is not permitted.",
       });
     }
-  }
-
-  // ── AUDIT_EXPORT_KEY length ────────────────────────────────────────────────
-  if (data.AUDIT_EXPORT_KEY && data.AUDIT_EXPORT_KEY.length < 32) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["AUDIT_EXPORT_KEY"],
-      message:
-        `AUDIT_EXPORT_KEY must be at least 32 characters if set (got ${data.AUDIT_EXPORT_KEY.length}).`,
-    });
   }
 });
 
@@ -346,7 +375,7 @@ function formatErrors(error: z.ZodError): string {
 
 const FATAL_HEADER = `
 ╔══════════════════════════════════════════════════════════════╗
-║   AVRA — FATAL: Invalid or missing environment variables     ║
+║   Assessly — FATAL: Invalid or missing environment variables ║
 ╚══════════════════════════════════════════════════════════════╝
 
 The following configuration errors must be resolved before the
@@ -373,7 +402,7 @@ are resolved. Set the variables in your deployment environment
  */
 function devFallbackKey(variableName: string): string {
   return createHash("sha256")
-    .update(`avra-dev-insecure:${variableName}:do-not-use-in-production`)
+    .update(`assessly-dev-insecure:${variableName}:do-not-use-in-production`)
     .digest("hex");
 }
 
@@ -424,6 +453,14 @@ function validateEnv(): Env {
   if (!data.AUDIT_BUNDLE_SECRET) {
     data.AUDIT_BUNDLE_SECRET = devFallbackKey("AUDIT_BUNDLE_SECRET");
     fallbacksUsed.push("AUDIT_BUNDLE_SECRET");
+  }
+  if (!data.AUDIT_EXPORT_KEY) {
+    data.AUDIT_EXPORT_KEY = devFallbackKey("AUDIT_EXPORT_KEY");
+    fallbacksUsed.push("AUDIT_EXPORT_KEY");
+  }
+  if (!data.AUDIT_PSEUDONYMIZATION_KEY) {
+    (data as Record<string, unknown>).AUDIT_PSEUDONYMIZATION_KEY = devFallbackKey("AUDIT_PSEUDONYMIZATION_KEY");
+    fallbacksUsed.push("AUDIT_PSEUDONYMIZATION_KEY");
   }
   if (!data.AUTH_SESSION_SECRET && !data.NEXTAUTH_SECRET) {
     data.AUTH_SESSION_SECRET = devFallbackKey("AUTH_SESSION_SECRET");
@@ -505,7 +542,7 @@ export const auditEnv = {
 
 /** Application-level runtime settings. */
 export const appEnv = {
-  /** Canonical public-facing URL, e.g. https://avra.example.com. */
+  /** Canonical public-facing URL, e.g. https://assessly.example.com. */
   url: env.NEXT_PUBLIC_APP_URL,
   /** Bearer token for /api/cron/* route protection. */
   cronSecret: env.CRON_SECRET,

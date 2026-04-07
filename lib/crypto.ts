@@ -1,5 +1,5 @@
 /**
- * AVRA Settings Encryption Utility
+ * Assessly Settings Encryption Utility
  *
  * AES-256-GCM helpers for encrypting sensitive configuration values
  * (SMTP passwords, API keys) before persisting them in the database.
@@ -31,7 +31,7 @@ function getEncryptionKey(): Buffer {
     // Dev-only deterministic fallback — NEVER use in production.
     return crypto
       .createHash("sha256")
-      .update("dev-only-avra-settings-key-not-for-production")
+      .update("dev-only-assessly-settings-key-not-for-production")
       .digest();
   }
 

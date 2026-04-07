@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * AVRA — Build-time environment variable validator
+ * Assessly — Build-time environment variable validator
  *
  * Runs before `next build` via the prebuild script:
  *   "prebuild": "npm run ready-check && npm run env:validate && ..."
@@ -62,7 +62,7 @@ async function loadEnv() {
 // ---------------------------------------------------------------------------
 function devFallbackKey(variableName) {
   return createHash("sha256")
-    .update(`avra-dev-insecure:${variableName}:do-not-use-in-production`)
+    .update(`assessly-dev-insecure:${variableName}:do-not-use-in-production`)
     .digest("hex");
 }
 
@@ -234,7 +234,7 @@ const schema = z
       });
     } else if (
       PLACEHOLDER_RE.test(authSecret) ||
-      authSecret === "dev-only-avra-session-secret-change-me"
+      authSecret === "dev-only-assessly-session-secret-change-me"
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -277,7 +277,7 @@ const schema = z
           path: ["NEXT_PUBLIC_APP_URL"],
           message:
             "NEXT_PUBLIC_APP_URL must not point to localhost in production. " +
-            "Set it to your public-facing domain (e.g. https://avra.example.com).",
+            "Set it to your public-facing domain (e.g. https://assessly.example.com).",
         });
       } else if (!data.NEXT_PUBLIC_APP_URL.startsWith("https://")) {
         ctx.addIssue({
@@ -285,7 +285,7 @@ const schema = z
           path: ["NEXT_PUBLIC_APP_URL"],
           message:
             "NEXT_PUBLIC_APP_URL must use HTTPS in production " +
-            "(e.g. https://avra.example.com). HTTP is not permitted.",
+            "(e.g. https://assessly.example.com). HTTP is not permitted.",
         });
       }
     }
@@ -322,7 +322,7 @@ function formatIssues(issues) {
 
 const FATAL_HEADER = `
 ${RED}${BOLD}╔══════════════════════════════════════════════════════════════╗
-║   AVRA — env-check: FATAL environment configuration errors   ║
+║   Assessly — env-check: FATAL environment configuration errors   ║
 ╚══════════════════════════════════════════════════════════════╝${RESET}
 
 The following errors must be resolved before the build can continue.
@@ -357,7 +357,7 @@ async function main() {
 
     // Development/test — schema error (e.g. bad DATABASE_URL format), warn and continue.
     process.stderr.write(
-      `\n${YELLOW}${BOLD}⚠  AVRA ${tag} — environment warnings` +
+      `\n${YELLOW}${BOLD}⚠  Assessly ${tag} — environment warnings` +
         ` (these are fatal errors in production):${RESET}\n\n` +
         formatted +
         `\n\n  See ${BOLD}.env.example${RESET} for documentation and key-generation commands.\n\n`,

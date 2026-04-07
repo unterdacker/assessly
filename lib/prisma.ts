@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 if (!process.env.DATABASE_URL) {
   throw new Error(
     "DATABASE_URL is not set. Add it to your .env file.\n" +
-    'Example: DATABASE_URL="postgresql://postgres:postgres@localhost:5432/avra?schema=public"',
+    'Example: DATABASE_URL="postgresql://postgres:postgres@localhost:5432/assessly?schema=public"',
   );
 }
 

@@ -319,7 +319,7 @@ function buildRemediationPrompt(args: {
     .join("\n\n");
 
   return [
-    `You are a Senior GRC Officer for AVRA. The current user interface is set to ${locale}. You MUST generate the remediation plan and the email draft entirely in ${localeLabel}.`,
+    `You are a Senior GRC Officer for Assessly. The current user interface is set to ${locale}. You MUST generate the remediation plan and the email draft entirely in ${localeLabel}.`,
     "When raw question IDs or control categories appear in source data, map them to professional, localized NIS2 control terminology in the output.",
     "Tone requirements: professional, polite, and firm.",
     "Required structure:",
@@ -368,7 +368,7 @@ async function generateRemediationDraft(args: {
   const provider = (process.env.AI_PROVIDER || config.aiProvider || "mistral").toLowerCase();
 
   const localeLabel = args.locale === "de" ? "German" : "English";
-  const localeSystemPrompt = `You are a Senior GRC Officer for AVRA. The current user interface is set to ${args.locale}. You MUST generate the remediation plan and the email draft entirely in ${localeLabel}. Ensure NIS2 terminology is professionally translated.`;
+  const localeSystemPrompt = `You are a Senior GRC Officer for Assessly. The current user interface is set to ${args.locale}. You MUST generate the remediation plan and the email draft entirely in ${localeLabel}. Ensure NIS2 terminology is professionally translated.`;
 
   if (provider === "mistral") {
     let dbApiKey = "";
@@ -555,7 +555,7 @@ export async function POST(request: NextRequest) {
       const fallback =
         locale === "de"
           ? [
-              "Betreff: AVRA NIS2 Pruefung - Bestaetigung der Kontrollabdeckung",
+              "Betreff: Assessly NIS2 Pruefung - Bestaetigung der Kontrollabdeckung",
               "",
               `Sehr geehrtes ${result.vendorName}-Sicherheitsteam,`,
               "",
@@ -564,10 +564,10 @@ export async function POST(request: NextRequest) {
               `Bitte halten Sie Ihre Kontrollen weiterhin aufrecht und melden Sie wesentliche Aenderungen bis ${deadlineDate}, damit die NIS2-Nachweisfuehrung vollstaendig bleibt.`,
               "",
               "Mit freundlichen Gruessen",
-              "AVRA GRC Team",
+              "Assessly GRC Team",
             ].join("\n")
           : [
-              "Subject: AVRA NIS2 Review - Confirmation of Control Coverage",
+              "Subject: Assessly NIS2 Review - Confirmation of Control Coverage",
               "",
               `Dear ${result.vendorName} Security Team,`,
               "",
@@ -576,7 +576,7 @@ export async function POST(request: NextRequest) {
               `Please continue maintaining your controls and provide any major control updates by ${deadlineDate} so the record remains complete for NIS2 oversight.`,
               "",
               "Kind regards,",
-              "AVRA GRC Team",
+              "Assessly GRC Team",
             ].join("\n");
 
       return NextResponse.json({

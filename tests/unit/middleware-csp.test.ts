@@ -47,7 +47,7 @@ vi.mock("@/lib/auth/permissions", () => ({
   withLocalePath: vi.fn((p: string) => p),
 }));
 vi.mock("@/lib/auth/token", () => ({
-  AUTH_SESSION_COOKIE_NAME: "avra-session",
+  AUTH_SESSION_COOKIE_NAME: "assessly-session",
   shouldSecureCookie: vi.fn(() => false),
   verifySessionToken: vi.fn(() => null),
 }));

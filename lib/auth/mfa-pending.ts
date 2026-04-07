@@ -3,11 +3,11 @@ import "server-only";
 import { cookies } from "next/headers";
 import { shouldSecureCookie } from "@/lib/auth/token";
 
-export const MFA_PENDING_COOKIE = "avra-mfa-pending";
+export const MFA_PENDING_COOKIE = "assessly-mfa-pending";
 const MFA_PENDING_TTL_SECONDS = 5 * 60; // 5 minutes
 
 export type MfaPendingClaims = {
-  type: "avra-mfa-pending";
+  type: "assessly-mfa-pending";
   uid: string;
   locale: string;
   next: string;
@@ -20,7 +20,7 @@ function getSigningSecret(): string {
   return (
     process.env.AUTH_SESSION_SECRET ||
     process.env.NEXTAUTH_SECRET ||
-    "dev-only-avra-session-secret-change-me"
+    "dev-only-assessly-session-secret-change-me"
   );
 }
 
@@ -82,7 +82,7 @@ async function verifyClaims(token: string): Promise<MfaPendingClaims | null> {
     const claims = JSON.parse(
       new TextDecoder().decode(decodeBase64Url(payload)),
     ) as MfaPendingClaims;
-    if (claims.type !== "avra-mfa-pending") return null;
+    if (claims.type !== "assessly-mfa-pending") return null;
     if (claims.exp < Date.now()) return null;
     return claims;
   } catch {
@@ -97,7 +97,7 @@ export async function setMfaPendingCookie(
   nextPath: string,
 ): Promise<void> {
   const claims: MfaPendingClaims = {
-    type: "avra-mfa-pending",
+    type: "assessly-mfa-pending",
     uid: userId,
     locale,
     next: nextPath,

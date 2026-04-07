@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getAuthSessionFromRequest } from "@/lib/auth/server";
 import { logErrorReport } from "@/lib/logger";
 
-const STORAGE_DIR = path.join(process.cwd(), ".avra-storage");
+const STORAGE_DIR = path.join(process.cwd(), ".assessly-storage");
 
 export async function GET(
   req: NextRequest,
@@ -13,7 +13,7 @@ export async function GET(
 ) {
   const { assessmentId } = await params;
   const session = await getAuthSessionFromRequest(req);
-  const vendorToken = req.cookies.get("avra-vendor-token")?.value || null;
+  const vendorToken = req.cookies.get("assessly-vendor-token")?.value || null;
 
   // Verify this assessment actually has a stored document
   const assessment = await prisma.assessment.findUnique({

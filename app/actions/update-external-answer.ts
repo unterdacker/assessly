@@ -18,7 +18,7 @@ const ALLOWED_EVIDENCE_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
 ]);
-const EVIDENCE_STORAGE_DIR = path.join(process.cwd(), ".avra-storage", "question-evidence");
+const EVIDENCE_STORAGE_DIR = path.join(process.cwd(), ".assessly-storage", "question-evidence");
 
 function sanitizeJustificationText(raw: string): string {
   return sanitizeHtml(raw, {
@@ -139,7 +139,7 @@ export async function updateExternalAnswer(formData: FormData) {
 
   // ── Authentication: validate vendor portal token ──────────────────────────
   const cookieStore = await cookies();
-  const vendorToken = cookieStore.get("avra-vendor-token")?.value;
+  const vendorToken = cookieStore.get("assessly-vendor-token")?.value;
   if (!vendorToken) {
     return { ok: false, error: "Session expired. Please reload the portal." };
   }

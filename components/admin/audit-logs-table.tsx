@@ -274,7 +274,7 @@ export function AuditLogsTable({ logs, isAdmin, isAuditor, activeCategory, total
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = blobUrl;
-        a.download = `avra-forensic-bundle-${Date.now()}.${isAuditor ? "csv" : "json"}`;
+        a.download = `assessly-forensic-bundle-${Date.now()}.${isAuditor ? "csv" : "json"}`;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -304,7 +304,7 @@ export function AuditLogsTable({ logs, isAdmin, isAuditor, activeCategory, total
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = blobUrl;
-        a.download = `avra-audit-logs-${Date.now()}.csv`;
+        a.download = `assessly-audit-logs-${Date.now()}.csv`;
         document.body.appendChild(a);
         a.click();
         a.remove();

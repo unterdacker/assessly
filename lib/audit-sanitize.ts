@@ -87,7 +87,7 @@ export function pseudonymizeUserId(
   if (!userId) return "system";
   if (mode === "internal") return userId;
 
-  const key = exportKey || process.env.AUDIT_EXPORT_KEY || "avra-audit-pseudonymize";
+  const key = exportKey || process.env.AUDIT_EXPORT_KEY || "assessly-audit-pseudonymize";
   const hmac = createHmac("sha256", key).update(userId).digest("hex");
   // Return a short, readable prefix to aid correlation without revealing identity
   return `uid-${hmac.slice(0, 16)}`;
@@ -319,7 +319,7 @@ function pseudonymizeIdentifier(value: string): string {
   const key =
     process.env.AUDIT_PSEUDONYMIZATION_KEY ||
     process.env.AUDIT_EXPORT_KEY ||
-    "avra-gdpr-pseudonymization";
+    "assessly-gdpr-pseudonymization";
   const hmac = createHmac("sha256", key).update(value, "utf8").digest("hex");
   return `pid-${hmac.slice(0, 16)}`;
 }
@@ -388,7 +388,7 @@ export function signBundle(canonicalContent: string): string {
   const secret =
     process.env.AUDIT_BUNDLE_SECRET ||
     process.env.CRON_SECRET ||
-    "avra-forensic-bundle-unsigned";
+    "assessly-forensic-bundle-unsigned";
 
   return createHmac("sha256", secret).update(canonicalContent, "utf8").digest("hex");
 }

@@ -281,7 +281,7 @@ export async function generateVendorAccessCodeAction(
 
       console.log(`[SIMULATED EMAIL] Assessment Invitation for ${vendor.name}`);
       console.log(
-        `[TEMPLATE] You have been invited to an assessment. Visit avra.app/portal and use your temporary access code: ${accessCode}.`,
+        `[TEMPLATE] You have been invited to an assessment. Visit assessly.app/portal and use your temporary access code: ${accessCode}.`,
       );
       console.log(`[EXPIRY] ${codeExpiresAt.toISOString()}`);
     });

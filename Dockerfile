@@ -1,5 +1,5 @@
 # =============================================================================
-# AVRA — Multi-stage Dockerfile
+# Assessly — Multi-stage Dockerfile
 # Base: node:20-alpine (small footprint, musl libc)
 # =============================================================================
 

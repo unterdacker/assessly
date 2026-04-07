@@ -34,6 +34,10 @@
         "/^node -e \"const o = require\\('otplib'\\); const s = o\\.generateSecret\\(\\); const token = o\\.generateSync\\(\\{ secret: s, type: 'totp' \\}\\); const r = o\\.verifySync\\(\\{ token, secret: s \\}\\); console\\.log\\(JSON\\.stringify\\(r\\)\\);\"$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^node -e \"const p=require\\('\\./package-lock\\.json'\\);console\\.log\\(p\\.name, p\\.version\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

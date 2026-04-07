@@ -22,7 +22,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       attribute="class"
       defaultTheme="system"
       enableSystem
-      storageKey="avra-theme"
+      storageKey="assessly-theme"
       disableTransitionOnChange
     >
       <ThemeProviderBridge>{children}</ThemeProviderBridge>

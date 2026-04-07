@@ -4,25 +4,25 @@ services:
   # ---------------------------------------------------------------------------
   db:
     image: postgres:16-alpine
-    container_name: avra-postgres
+    container_name: assessly-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: avra
+      POSTGRES_DB: assessly
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d avra"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d assessly"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
 
   # ---------------------------------------------------------------------------
-  # AVRA web application
+  # Assessly web application
   # The web container is held back by `depends_on` until the database passes
   # its health check, preventing Prisma connection errors on cold start.
   # ---------------------------------------------------------------------------
@@ -35,7 +35,7 @@ services:
       # `prisma generate` does not open a live connection.
       args:
         DATABASE_URL: "postgresql://build:build@localhost:5432/builddb?schema=public"
-    container_name: avra-web
+    container_name: assessly-web
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -44,7 +44,7 @@ services:
       # This is intentionally NOT interpolated from .env: the .env file holds
       # DATABASE_URL=...@localhost:... for local dev, which would break the
       # container if Docker Compose substituted it here.
-      DATABASE_URL: "postgresql://postgres:postgres@db:5432/avra?schema=public"
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/assessly?schema=public"
 
       # -----------------------------------------------------------------------
       # Security secrets — ${VAR:-default} reads from your .env file first;
@@ -67,6 +67,8 @@ services:
 
       # HMAC-SHA256 signing key for forensic audit bundle exports (≥32 chars).
       AUDIT_BUNDLE_SECRET: "${AUDIT_BUNDLE_SECRET:-d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4}"
+      AUDIT_EXPORT_KEY: "${AUDIT_EXPORT_KEY:-}"
+      AUDIT_PSEUDONYMIZATION_KEY: "${AUDIT_PSEUDONYMIZATION_KEY:-}"
 
       # HMAC-SHA256 session signing key (≥32 chars).
       # The hex fallback below is a DOCKER-LOCAL-DEV-ONLY default. It satisfies
