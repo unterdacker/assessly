@@ -15,7 +15,7 @@
 ### 1 — Clone and install
 
 ```bash
-git clone https://github.com/unterdacker/assessly.git
+git clone https://github.com/Assessly-AI/assessly.git
 cd assessly
 npm install
 ```
