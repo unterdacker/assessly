@@ -32,4 +32,3 @@ Assessly replaces disconnected spreadsheets and inboxes with one auditable works
 
 - **Live demo accounts:** `admin@assessly.local / admin123` · `auditor@assessly.local / auditor123`
 - **License:** Apache 2.0
-- **Support the project:** [Buy Me A Coffee](https://buymeacoffee.com/assessly)
