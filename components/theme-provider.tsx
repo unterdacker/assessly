@@ -16,7 +16,7 @@ type ThemeContextValue = {
 
 const ThemeContext = React.createContext<ThemeContextValue | null>(null);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export function ThemeProvider({ children, nonce }: { children: React.ReactNode; nonce?: string }) {
   return (
     <NextThemesProvider
       attribute="class"
@@ -24,6 +24,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       enableSystem
       storageKey="assessly-theme"
       disableTransitionOnChange
+      nonce={nonce}
     >
       <ThemeProviderBridge>{children}</ThemeProviderBridge>
     </NextThemesProvider>

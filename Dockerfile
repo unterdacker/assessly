@@ -20,6 +20,10 @@ WORKDIR /app
 COPY package*.json ./
 # Copy the schema so `prisma generate` can run immediately after install.
 COPY prisma ./prisma/
+# Copy scripts needed by the postinstall hook (compute-themes-hash.mjs).
+COPY scripts ./scripts/
+# The postinstall script writes lib/csp-hashes.ts; ensure the directory exists.
+RUN mkdir -p ./lib
 
 RUN npm install
 

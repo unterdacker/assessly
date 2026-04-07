@@ -2,6 +2,7 @@ import createMiddleware from "next-intl/middleware";
 import { hasLocale } from "next-intl";
 import { NextResponse, NextRequest } from "next/server";
 import { routing } from "@/i18n/routing";
+import { NEXT_THEMES_FOUC_HASH } from "@/lib/csp-hashes";
 import {
   canAccessPath,
   getRoleLandingPath,
@@ -73,7 +74,7 @@ export function buildCspHeader(nonce: string): string {
     // TODO: Remove 'unsafe-eval' once verified unnecessary in production.
     //       Required by Next.js development mode (HMR / fast-refresh eval-based source maps)
     //       but production builds should not need it. Gate behind NODE_ENV in a future pass.
-    `script-src 'self' 'nonce-${nonce}' 'unsafe-eval'`,
+    `script-src 'self' 'nonce-${nonce}' ${NEXT_THEMES_FOUC_HASH} 'unsafe-eval'`,
     // TODO: Replace 'unsafe-inline' with a style nonce in a future pass.
     //       Currently required for Tailwind CSS utility classes injected at runtime.
     "style-src 'self' 'unsafe-inline'",
@@ -141,9 +142,15 @@ async function _middleware(request: NextRequest, nonce: string): Promise<NextRes
   // Server Actions are POSTs with a Next-Action header. Locale routing (rewrites
   // / redirects) must be skipped so Next.js can resolve the action by its hash.
   if (request.headers.get("Next-Action")) {
-    // Auth pages (sign-in, MFA verify) submit server actions while the user has
-    // no session yet — let them through without an auth check.
-    if (normalizedPathname.startsWith("/auth/")) {
+    // Auth pages (sign-in, MFA verify) and the vendor first-login setup page
+    // submit server actions while the user has no session yet — let them through
+    // without an auth check. The actions themselves validate any required tokens
+    // (e.g. assessly-vendor-setup cookie for force-password-change).
+    if (
+      normalizedPathname.startsWith("/auth/") ||
+      normalizedPathname === "/external/portal" ||
+      normalizedPathname.startsWith("/external/force-password-change")
+    ) {
       return NextResponse.next();
     }
 

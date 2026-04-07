@@ -38,6 +38,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LanguageToggle } from "@/components/language-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type ExternalAssessmentWorkspaceProps = {
   vendorAssessment: VendorAssessment;
@@ -232,7 +233,8 @@ export function ExternalAssessmentWorkspace({
   if (isSubmitted && sessionExpired) {
     return (
       <div className="relative flex min-h-[60vh] items-center justify-center">
-        <div className="fixed right-4 top-4 z-[130]">
+        <div className="fixed right-4 top-4 z-[130] flex items-center gap-2">
+          <ThemeToggle />
           <LanguageToggle />
         </div>
         <div className="max-w-md space-y-6 rounded-xl border border-emerald-100 bg-white p-8 text-center shadow-sm dark:border-emerald-900/30 dark:bg-slate-900">
@@ -259,7 +261,8 @@ export function ExternalAssessmentWorkspace({
   if (view === "welcome") {
     return (
       <div className="relative mx-auto max-w-2xl space-y-8 py-12">
-        <div className="fixed right-4 top-4 z-[130]">
+        <div className="fixed right-4 top-4 z-[130] flex items-center gap-2">
+          <ThemeToggle />
           <LanguageToggle />
         </div>
         <div className="flex flex-col items-center text-center space-y-4">
@@ -319,7 +322,8 @@ export function ExternalAssessmentWorkspace({
 
   return (
     <div className="space-y-10 pb-20">
-      <div className="fixed right-4 top-4 z-[130]">
+      <div className="fixed right-4 top-4 z-[130] flex items-center gap-2">
+        <ThemeToggle />
         <LanguageToggle />
       </div>
       {/* Header & Progress Bar */}
