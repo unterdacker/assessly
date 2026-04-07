@@ -15,6 +15,28 @@ Assessly helps security and compliance teams manage third-party vendor risk in l
 
 **Stack:** Next.js 15 · React 19 · TypeScript · Prisma · PostgreSQL 16 · Tailwind CSS · Radix UI
 
+## Screenshots
+
+### Dashboard — Supply chain risk overview
+Mission-control view of your vendor portfolio: aggregated compliance score, assessment status counters, NIS2 category radar, vendors-by-risk bar chart, and an AI-generated executive summary.
+
+![Dashboard overview](docs/screenshots/dashboard.png)
+
+### Vendors — Manage your third-party ecosystem
+Search, invite, and monitor all vendors in one table. Each row shows access code status, compliance score, risk level, and quick actions to resend invites or open the assessment workspace.
+
+![Vendors table](docs/screenshots/vendors.png)
+
+### Vendor Assessment Portal — Questionnaire workspace
+The vendor-facing portal where suppliers answer NIS2 controls, upload evidence documents, and fill in their company profile — all in a clean step-by-step interface.
+
+![Vendor assessment workspace](docs/screenshots/external-assessment.png)
+
+### Audit Trail — Cryptographic chain of custody
+Every compliance event is hash-chained (NIS2 / DORA Art. 9), AI actions are traced per EU AI Act Art. 12/14, and field-level diffs follow ISO 27001 A.12.4. Each record is exportable for regulators.
+
+![Audit trail details](docs/screenshots/audit-trail.png)
+
 ## Quick Start
 
 **Prerequisites:** Node.js 20+, npm 10+, Docker Desktop
