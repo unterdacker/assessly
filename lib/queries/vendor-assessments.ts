@@ -10,9 +10,10 @@ import { requireInternalReadUser } from "@/lib/auth/server";
  * Explicit vendor column selection — omits sensitive fields that must never
  * leave the database in a list or detail context:
  *   - passwordHash  : bcrypt digest  — login-flow only
- *   - inviteToken   : single-use URL token
- *   - inviteTokenExpires : paired expiry
+ *   - inviteToken   : single-use URL token  — secret value
  *   - vendorServiceTypeCustom : internal classification scratch-pad, not displayed
+ * Note: inviteTokenExpires (the expiry date, not the token) is intentionally
+ * included so the UI can show the "Resend Invite" affordance.
  */
 const VENDOR_SELECT = {
   id: true,
@@ -37,6 +38,7 @@ const VENDOR_SELECT = {
   isCodeActive: true,
   isFirstLogin: true,
   inviteSentAt: true,
+  inviteTokenExpires: true,
 } as const;
 
 async function cleanupExpiredVendorCodes(where?: { companyId?: string; vendorId?: string }) {

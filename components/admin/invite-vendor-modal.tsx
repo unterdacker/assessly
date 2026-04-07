@@ -21,10 +21,12 @@ type Props = {
   vendorName: string;
   /** Pre-fill the email field from the vendor's security contact. */
   prefillEmail?: string;
+  /** When true, injects a hidden forceRefresh=true field so the server bypasses the valid-token guard. */
+  forceRefresh?: boolean;
   trigger: React.ReactNode;
 };
 
-export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", trigger }: Props) {
+export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", forceRefresh, trigger }: Props) {
   const t = useTranslations();
   const tr = (key: string, fallback: string, values?: Record<string, string | number>) => {
     const fullKey = `inviteVendorModal.${key}`;
@@ -135,6 +137,9 @@ export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", tri
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <input type="hidden" name="vendorId" value={vendorId} />
+              {forceRefresh && (
+                <input type="hidden" name="forceRefresh" value="true" />
+              )}
 
               <div className="space-y-2">
                 <label

@@ -59,6 +59,8 @@ export async function sendOutOfBandInviteAction(
   const locale   = typeof formData.get("locale") === "string"
     ? (formData.get("locale") as string)
     : "en";
+  // Strict string equality prevents "1"/"yes"/boolean-coerced values from enabling force.
+  const forceRefresh = formData.get("forceRefresh") === "true";
 
   if (typeof vendorId !== "string" || !vendorId.trim()) {
     return { status: "error", error: "Invalid vendor." };
@@ -107,9 +109,19 @@ export async function sendOutOfBandInviteAction(
     await prisma.$transaction(async (tx) => {
       const vendor = await tx.vendor.findFirst({
         where: { id: vendorId.trim(), companyId },
-        select: { id: true, name: true },
+        select: { id: true, name: true, inviteTokenExpires: true },
       });
       if (!vendor) throw new Error("Vendor not found.");
+
+      // Guard: block re-invite when a still-valid token exists and forceRefresh was not requested.
+      const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1_000);
+      if (
+        !forceRefresh &&
+        vendor.inviteTokenExpires instanceof Date &&
+        vendor.inviteTokenExpires > oneHourFromNow
+      ) {
+        throw new Error("INVITE_STILL_VALID");
+      }
 
       vendorName = vendor.name;
 
@@ -144,13 +156,17 @@ export async function sendOutOfBandInviteAction(
         {
           companyId,
           userId: session.userId,
-          action: "INVITE_SENT",
+          // Log VENDOR_INVITE_REFRESHED whenever the admin explicitly forced renewal
+          // (even if the prior token was already expired) so auditors can distinguish
+          // a deliberate resend from a routine first invite.
+          action: forceRefresh ? "VENDOR_INVITE_REFRESHED" : "INVITE_SENT",
           entityType: "Vendor",
           entityId: vendor.id,
           newValue: {
             channel: "out-of-band",
             duration: resolvedDuration,
             expiresAt: codeExpiresAt.toISOString(),
+            ...(forceRefresh && { priorTokenActive: vendor.inviteTokenExpires instanceof Date && vendor.inviteTokenExpires > new Date() }),
           },
         },
         { tx, captureHeaders: true },
@@ -159,6 +175,12 @@ export async function sendOutOfBandInviteAction(
   } catch (err) {
     if (isAccessControlError(err)) {
       return { status: "error", error: "Unauthorized." };
+    }
+    if (err instanceof Error && err.message === "INVITE_STILL_VALID") {
+      return {
+        status: "error",
+        error: "Vendor already has a valid invite (expires in more than 1 hour). Use the Resend button to override.",
+      };
     }
     AuditLogger.dataOp("vendor.invite.sent", "failure", {
       userId: session.userId,

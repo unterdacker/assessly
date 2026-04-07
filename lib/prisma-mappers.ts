@@ -25,6 +25,7 @@ export type VendorDomainMapper = Pick<
   | "codeExpiresAt"
   | "isCodeActive"
   | "inviteSentAt"
+  | "inviteTokenExpires"
   | "isFirstLogin"
   | "officialName"
   | "registrationId"
@@ -95,6 +96,7 @@ export function toVendorAssessment(
     codeExpiresAt: vendor.codeExpiresAt ? vendor.codeExpiresAt.toISOString() : null,
     isCodeActive: vendor.isCodeActive,
     inviteSentAt: vendor.inviteSentAt ? vendor.inviteSentAt.toISOString() : null,
+    inviteTokenExpires: vendor.inviteTokenExpires ? vendor.inviteTokenExpires.toISOString() : null,
     isFirstLogin: vendor.isFirstLogin,
     email: vendor.email,
     serviceType: vendor.serviceType,

@@ -682,6 +682,8 @@
     "expires": "L\u00e4uft ab",
     "viewPdf": "PDF anzeigen",
     "sendInvite": "Einladung senden",
+    "resendInvite": "Einladung erneut senden",
+    "resendInviteTooltip": "Token l\u00e4uft bald ab oder ist abgelaufen \u2013 erneut senden, um eine neue Einladung ohne neuen Anbieterdatensatz auszustellen.",
     "openAssessment": "Bewertung \u00f6ffnen",
     "noVendorsFound": "Keine Anbieter gefunden",
     "deleteSelected": "Ausgew\u00e4hlte l\u00f6schen",

@@ -15,6 +15,8 @@ export type VendorAssessment = {
   isCodeActive: boolean;
   /** ISO timestamp of the last out-of-band invite send, or null if never sent. */
   inviteSentAt: string | null;
+  /** ISO timestamp when the invite token expires, or null if no token has been issued. */
+  inviteTokenExpires: string | null;
   /** True until the vendor completes the forced password-change on first login. */
   isFirstLogin: boolean;
   /** Business security contact — minimize exposure in logs and exports. */

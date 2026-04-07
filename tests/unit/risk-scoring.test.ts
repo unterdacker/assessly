@@ -219,6 +219,7 @@ describe("supplyChainRiskScore", () => {
       codeExpiresAt: null,
       isCodeActive: false,
       inviteSentAt: null,
+      inviteTokenExpires: null,
       isFirstLogin: false,
       email: "v@example.com",
       serviceType: "IT",
