@@ -12,7 +12,7 @@ export default defineConfig({
   ],
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
-    trace: "on-first-retry",
+    trace: process.env.CI ? "off" : "on-first-retry",
     screenshot: "only-on-failure",
     locale: "en",
   },
