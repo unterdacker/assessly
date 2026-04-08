@@ -26,6 +26,11 @@ export const metadata: Metadata = {
   applicationName: "Assessly",
   referrer: "strict-origin-when-cross-origin",
   robots: { index: true, follow: true },
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default async function RootLayout({
