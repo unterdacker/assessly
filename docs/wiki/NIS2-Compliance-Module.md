@@ -14,17 +14,17 @@ The active questionnaire catalogue is versioned as **`2026.1`** (`lib/nis2-quest
 
 ### 20 NIS2-Aligned Questions
 
-The catalogue contains 20 questions across 6 compliance categories:
+The catalogue contains 20 questions across 7 compliance categories:
 
 | Category | Questions | IDs |
 |----------|-----------|-----|
 | Governance & Risk Management | 3 | q1, q2, q3 |
 | Access & Identity | 3 | q4, q5, q6 |
 | Data Protection & Privacy | 3 | q7, q8, q9 |
-| Cryptography | 2 | q10, q11 |
+| Cryptography & Key Management | 2 | q10, q11 |
 | Operations & Monitoring | 3 | q12, q13, q14 |
-| Incident Response & Continuity | 3 | q15, q16, q17 |
-| Supply Chain Security | 3 | q18, q19, q20 |
+| Incident & Business Continuity | 3 | q15, q16, q17 |
+| Supply Chain & Development | 3 | q18, q19, q20 |
 
 ### Example Questions
 
@@ -32,9 +32,9 @@ The catalogue contains 20 questions across 6 compliance categories:
 |----|----------|---------|
 | q1 | Governance | Does the vendor maintain a documented information security policy approved by management? |
 | q4 | Access | Is multi-factor authentication enforced for all administrative and remote access? |
-| q10 | Cryptography | Is data encrypted at rest and in transit using industry-standard algorithms? |
-| q15 | Incident | Is there a documented incident response plan with defined notification timelines? |
-| q18 | Supply Chain | Does the vendor maintain a register of its own critical subprocessors/subcontractors? |
+| q10 | Cryptography & Key Management | Are cryptographic keys generated, stored, and rotated according to a defined process? |
+| q15 | Incident & Business Continuity | Does the vendor maintain an incident response plan with customer notification clauses? |
+| q18 | Supply Chain & Development | Is secure SDLC practiced (threat modeling, code review, dependency scanning)? |
 
 Each question optionally carries `guidance` text visible to the vendor during completion.
 
@@ -122,7 +122,7 @@ The dossier completion score (0–100) is shown in the vendor card and used as a
 
 ## Category Compliance Radar Chart
 
-The dashboard includes a radar chart (`CategoryComplianceRadarChart`) that visualises compliance scores across the 6 NIS2 categories, providing an at-a-glance view of where the supply chain has the most exposure.
+The dashboard includes a radar chart (`CategoryComplianceRadarChart`) that visualises compliance scores across the 7 NIS2 categories, providing an at-a-glance view of where the supply chain has the most exposure.
 
 ---
 

@@ -53,13 +53,17 @@ All secrets must be generated with `crypto.randomBytes()`. Never use placeholder
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `MAIL_STRATEGY` | `log` | `smtp` \| `resend` \| `log`. Overridden by SystemSettings DB row when set |
+| `MAIL_STRATEGY` | `log` | `smtp` \| `resend` \| `log` \| `mailpit`. `mailpit` routes to a local Mailpit SMTP trap and is **blocked at runtime if `NODE_ENV=production`**. `mailhog` is accepted as a backward-compat alias for `mailpit`. Overridden by SystemSettings DB row when set |
 | `MAIL_FROM` | `Assessly <noreply@assessly.local>` | Sender address and display name |
 | `SMTP_HOST` | — | SMTP server hostname |
 | `SMTP_PORT` | `587` | SMTP port |
 | `SMTP_USER` | — | SMTP authentication username |
 | `SMTP_PASSWORD` | — | SMTP password (plaintext in env var; stored encrypted in DB when configured via UI) |
 | `RESEND_API_KEY` | — | Resend API key |
+| `MAILPIT_SMTP_HOST` | `localhost` | Mailpit SMTP hostname. Must be a plain hostname (no `http://` prefix). Docker Compose overrides this to `assessly-mailpit` |
+| `MAILPIT_SMTP_PORT` | `1025` | Mailpit SMTP port (1–65535). Consumers should `parseInt()` this value |
+
+> The Mailpit web UI is accessible at `http://localhost:8025` when running the Docker Compose stack. All captured messages are ephemeral and lost on container restart.
 
 ---
 

@@ -99,6 +99,7 @@ Every entry includes the **5-Ws**:
 | `USER_CREATED` | ISO27001_SOC2 | Internal user added |
 | `USER_DELETED` | ISO27001_SOC2 | Internal user removed |
 | `USER_ROLE_CHANGED` | ISO27001_SOC2 | Role assignment changed |
+| `OTHER` | OTHER | System fallback for unrecognised action strings. **Must not be used for intentional events.** |
 
 ---
 
