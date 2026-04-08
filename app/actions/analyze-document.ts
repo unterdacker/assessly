@@ -82,6 +82,18 @@ export async function analyzeDocument(
     // Non-fatal: continue with AI analysis even if disk write fails
   }
 
+  // No AI Mode: evidence upload stays functional, but AI analysis is skipped.
+  if (assessment.company.aiDisabled) {
+    revalidatePath("/vendors");
+    revalidatePath(`/vendors/${vendorId}/assessment`);
+    return {
+      ok: true,
+      results: [],
+      aiSkipped: true,
+      message: "Document uploaded. AI analysis is disabled.",
+    };
+  }
+
   // 2. Fetch the NIS2 questions from the DB
   const questions = await prisma.question.findMany({
     orderBy: { sortOrder: 'asc' }

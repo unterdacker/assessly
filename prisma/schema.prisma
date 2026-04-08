@@ -40,6 +40,7 @@ model Company {
   name      String
   slug      String   @unique
   aiProvider String @default("local")
+  aiDisabled  Boolean  @default(true)
   mistralApiKey String?
   localAiEndpoint String? @default("http://localhost:11434")
   localAiModel String? @default("ministral-3:8b")

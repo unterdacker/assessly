@@ -75,6 +75,7 @@ async function main() {
     data: {
       name: "Demo Enterprise (EU)",
       slug: COMPANY_SLUG,
+      aiDisabled: true,
       createdBy: SEED_ACTOR,
     },
   });

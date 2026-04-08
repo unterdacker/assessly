@@ -6,6 +6,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { getOptionalAuthSession } from "@/lib/auth/server";
+import { prisma } from "@/lib/prisma";
 // Triggers Zod validation of all environment variables at server startup.
 // In production the process will throw here (before serving any request) if
 // any required variable is absent, too short, or set to a placeholder value.
@@ -36,6 +37,13 @@ export default async function RootLayout({
   const requestHeaders = await headers();
   const nonce = requestHeaders.get("x-nonce") ?? undefined;
   const session = await getOptionalAuthSession();
+  const companyId = session?.companyId;
+  const aiDisabled = companyId
+    ? ((await prisma.company.findUnique({
+        where: { id: companyId },
+        select: { aiDisabled: true },
+      }))?.aiDisabled ?? true)
+    : true;
   const localeCookie = cookieStore.get("NEXT_LOCALE")?.value;
   const htmlLang = localeCookie === "de" || localeCookie === "en" ? localeCookie : "en";
 
@@ -52,6 +60,7 @@ export default async function RootLayout({
         </a>
         <Providers
           nonce={nonce}
+          aiDisabled={aiDisabled}
           session={session ? {
             userId: session.userId,
             role: session.role,

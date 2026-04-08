@@ -219,7 +219,7 @@ export function DashboardOverview({
       </div>
 
       <section className="space-y-4">
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-slate-300/80 bg-slate-100/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
               <Radar className="h-3.5 w-3.5" aria-hidden />
@@ -232,12 +232,14 @@ export function DashboardOverview({
               {translations.RiskPostureOverviewDesc}
             </p>
           </div>
-          <div className="rounded-full border border-slate-300/80 bg-white/80 px-3 py-1 text-xs text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+          <div className="flex items-center gap-2">
+            <div className="rounded-full border border-slate-300/80 bg-white/80 px-3 py-1 text-xs text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
               {summarySourceLabel}
             </div>
             <RefreshAiSummaryButton
               labels={{ idle: translations.RefreshAISummary, pending: translations.RefreshAISummaryPending }}
             />
+          </div>
         </div>
 
         <div className="grid gap-4 xl:grid-cols-[1.25fr_1fr]">

@@ -65,6 +65,11 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
     LocalAIModelPlaceholder: t("LocalAIModelPlaceholder"),
     SaveConfiguration: t("SaveConfiguration"),
     SettingsUpdatedSuccess: t("SettingsUpdatedSuccess"),
+    noAiMode: t("noAiMode"),
+    noAiModeDesc: t("noAiModeDesc"),
+    aiFeaturesDisabled: t("aiFeaturesDisabled"),
+    aiFeaturesDisabledDesc: t("aiFeaturesDisabledDesc"),
+    aiDisabledBadge: t("aiDisabledBadge"),
   };
 
   return (

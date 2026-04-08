@@ -85,10 +85,13 @@ export async function ensureDemoData(): Promise<string> {
 
     const company = await tx.company.upsert({
       where: { slug: DEFAULT_COMPANY_SLUG },
-      update: {},
+      update: {
+        aiDisabled: true,
+      },
       create: {
         name: DEMO_COMPANY_NAME,
         slug: DEFAULT_COMPANY_SLUG,
+        aiDisabled: true,
         createdBy: DEMO_DATA_ACTOR,
       },
       select: { id: true },

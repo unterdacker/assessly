@@ -160,6 +160,10 @@ export const SaveAssessmentAnswerSchema = z.object({
 export const UpdateAiSettingsSchema = z.object({
   companyId: cuid,
   aiProvider: z.enum(["mistral", "local"]),
+  aiDisabled: z.preprocess(
+    (v) => v === "on" || v === "true" || v === true,
+    z.boolean()
+  ).optional(),
   mistralApiKey: z.string().max(512).optional(),
   localAiEndpoint: z.string().url("Must be a valid URL").max(500).optional(),
   localAiModel: z.string().trim().max(100).optional(),

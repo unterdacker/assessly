@@ -1,8 +1,10 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import {
+  AlertTriangle,
   CheckCircle2,
   Eye,
   FileText,
@@ -37,6 +39,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useAiMode } from "@/lib/ai/ai-mode-context";
 import { cn } from "@/lib/utils";
 
 type PdfUploadZoneProps = {
@@ -87,6 +90,7 @@ export function PdfUploadZone({
 }: PdfUploadZoneProps) {
   const t = useTranslations("pdfUpload");
   const router = useRouter();
+  const { aiDisabled } = useAiMode();
   const requiresConsent = !isAdminView;
 
   const [fileName, setFileName] = React.useState<string | null>(null);
@@ -120,7 +124,8 @@ export function PdfUploadZone({
   const displayFileName = fileName ?? storedDocumentFilename ?? null;
   const displayFileSize = hasLocalSelection ? fileSize : storedDocumentSize;
   const formattedAuditTimestamp = formatAuditTimestamp(lastAuditedAt);
-  const isAuditActionDisabled = readOnly || isPending || isReanalyzing || (requiresConsent && !isConsented);
+  const isAuditActionDisabled =
+    readOnly || isPending || isReanalyzing || (requiresConsent && !isConsented);
 
   function assignFile(file: File | null) {
     if (!file) {
@@ -244,7 +249,7 @@ export function PdfUploadZone({
       if (!response.ok) {
         setErrorMessage(response.error || t("aiAuditFailed"));
       } else {
-        setStatusMessage(t("analysisComplete"));
+        setStatusMessage(response.aiSkipped ? (response.message ?? t("analysisComplete")) : t("analysisComplete"));
         setSelectedFile(null);
         router.refresh();
       }
@@ -381,7 +386,7 @@ export function PdfUploadZone({
                 </Button>
               ) : null}
 
-              {hasStoredDocument && !hasLocalSelection && assessmentId ? (
+              {hasStoredDocument && !hasLocalSelection && assessmentId && !aiDisabled ? (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -404,28 +409,44 @@ export function PdfUploadZone({
                   </Tooltip>
                 </TooltipProvider>
               ) : (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="inline-flex">
-                        <Button
-                          type="submit"
-                          size="sm"
-                          className="h-7 gap-1 bg-indigo-600 px-3 text-[11px] text-white hover:bg-indigo-700"
-                          disabled={!selectedFile || isAuditActionDisabled}
-                        >
-                          {isPending ? (
-                            <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
-                          ) : (
-                            <Sparkles className="h-3 w-3" aria-hidden />
-                          )}
-                          {isPending ? t("runningAnalysis") : t("runAiAudit")}
-                        </Button>
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent>{t("aiTooltip")}</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <div className="flex items-center gap-1.5">
+                  {aiDisabled ? (
+                    <div className="inline-flex max-w-xs items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-200">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                      <p className="leading-snug">
+                        {t("aiFeaturesDisabled")}{" "}
+                        <Link href="/settings" className="font-semibold underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-100">
+                          {t("settingsLink")}
+                        </Link>
+                        .
+                      </p>
+                    </div>
+                  ) : null}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex">
+                          <Button
+                            type="submit"
+                            size="sm"
+                            className="h-7 gap-1 bg-indigo-600 px-3 text-[11px] text-white hover:bg-indigo-700"
+                            disabled={!selectedFile || isAuditActionDisabled}
+                          >
+                            {isPending ? (
+                              <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+                            ) : aiDisabled ? (
+                              <UploadCloud className="h-3 w-3" aria-hidden />
+                            ) : (
+                              <Sparkles className="h-3 w-3" aria-hidden />
+                            )}
+                            {isPending ? t("runningAnalysis") : aiDisabled ? t("uploadPdfNoAi") : t("runAiAudit")}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      {!aiDisabled ? <TooltipContent>{t("aiTooltip")}</TooltipContent> : null}
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               )}
             </div>
           </div>
