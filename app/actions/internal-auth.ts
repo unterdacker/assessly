@@ -27,6 +27,8 @@ export async function authenticateInternalUser(
   const email = String(formData.get("email") || "").trim().toLowerCase();
   const password = String(formData.get("password") || "");
   const locale = String(formData.get("locale") || "de").trim() || "de";
+  const ALLOWED_LOCALES = ["de", "en"] as const;
+  const safeLocale = (ALLOWED_LOCALES as readonly string[]).includes(locale) ? locale : "de";
   const nextPath = String(formData.get("next") || "").trim();
 
   if (!email || !password) {
@@ -106,8 +108,8 @@ export async function authenticateInternalUser(
 
   // If MFA is enrolled, gate the session behind a TOTP verification step.
   if (user.mfaEnabled) {
-    await setMfaPendingCookie(user.id, locale, nextPath);
-    redirect(`/${locale}/auth/mfa-verify`);
+    await setMfaPendingCookie(user.id, safeLocale, nextPath);
+    redirect(`/${safeLocale}/auth/mfa-verify`);
   }
 
   const { token, expiresAt } = await createSessionForUser({
@@ -119,9 +121,10 @@ export async function authenticateInternalUser(
   await setAuthSessionCookie(token, expiresAt);
 
   const safeNextPath = nextPath.startsWith("/") ? nextPath : "";
-  const target = safeNextPath && canAccessPath(user.role, safeNextPath)
-    ? safeNextPath
-    : getLocalizedLandingPath(user.role, locale);
+  const localeAwareTarget = safeNextPath ? `/${safeLocale}${safeNextPath}` : null;
+  const target = localeAwareTarget && canAccessPath(user.role, safeNextPath)
+    ? localeAwareTarget
+    : getLocalizedLandingPath(user.role, safeLocale);
 
   resetFailures(rlKey);
 
@@ -139,7 +142,9 @@ export async function authenticateInternalUser(
 }
 
 export async function signOutAction(formData: FormData): Promise<never> {
-  const locale = String(formData.get("locale") || "en").trim() || "en";
+  const ALLOWED_LOCALES_SIGN_OUT = ["de", "en"] as const;
+  const rawLocale = String(formData.get("locale") || "en").trim();
+  const safeLocale = (ALLOWED_LOCALES_SIGN_OUT as readonly string[]).includes(rawLocale) ? rawLocale : "en";
 
   // Revoke the session server-side so re-use of the cookie is impossible
   const cookieStore = await cookies();
@@ -163,5 +168,5 @@ export async function signOutAction(formData: FormData): Promise<never> {
   });
 
   await clearAuthSessionCookie();
-  redirect(`/${locale}/auth/sign-in`);
+  redirect(`/${safeLocale}/auth/sign-in`);
 }

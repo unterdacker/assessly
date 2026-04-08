@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { DashboardOverview } from "@/components/dashboard-overview";
 import { getDashboardRiskPostureOverview } from "@/lib/queries/dashboard-risk-posture";
 import { listVendorAssessments } from "@/lib/queries/vendor-assessments";
@@ -7,7 +7,9 @@ import { requirePageRole } from "@/lib/auth/server";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({ params }: DashboardPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations();
   return {
     title: t("Dashboard"),
@@ -21,6 +23,7 @@ type DashboardPageProps = {
 
 export default async function DashboardPage({ params }: DashboardPageProps) {
   const { locale: routeLocale } = await params;
+  setRequestLocale(routeLocale);
   const session = await requirePageRole(["ADMIN", "AUDITOR"], routeLocale);
   const t = await getTranslations();
   const locale = (await getLocale()) as "en" | "de";
