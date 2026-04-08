@@ -1,0 +1,358 @@
+name: CI
+
+# pull_request_target is intentionally excluded. It runs with write privileges
+# and secrets of the base branch, making it a secret exfiltration vector from
+# forked PRs. The sandboxed pull_request event is sufficient here.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Principle of Least Privilege: all jobs inherit read-only token access.
+# Only secret-scan and codeql override at the job level.
+permissions:
+  contents: read
+
+jobs:
+
+  # ─────────────────────────────────────────────────────────
+  # PHASE 1: All parallel — no dependencies
+  # ─────────────────────────────────────────────────────────
+
+  lint:
+    name: Lint & Type-check
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af  # v4.1.0
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run lint
+      - run: npx tsc --noEmit
+
+  unit-test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:d48b2c7531f0a0f74a74e1c3bd5b7a49cf5d19e4a0c5bbc787ba3dddc15e7ff3
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci  # CI-only ephemeral credentials — not used anywhere outside this job
+          POSTGRES_DB: ci_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: test
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
+      AUTH_SESSION_SECRET: ci-test-session-secret-minimum-32-chars-ok
+      SETTINGS_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+      MFA_ENCRYPTION_KEY: "1111111111111111111111111111111111111111111111111111111111111111"
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      ALLOW_INSECURE_LOCALHOST: "true"
+      MAIL_STRATEGY: log
+      AI_PROVIDER: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af  # v4.1.0
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx prisma migrate deploy
+      - run: npm run test:coverage
+      - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.4.0
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    # Elevated permissions required for SARIF upload to Code Scanning
+    # and PR diff annotation. These override the workflow-level contents:read.
+    permissions:
+      contents: read
+      security-events: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 0  # Full history required for complete secret scanning
+      - uses: gitleaks/gitleaks-action@cf26b2be1a5b90a8c1bdebc5e7a2ffcbfb95c2bb  # v2.3.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+      - name: Upload SARIF to Code Scanning
+        uses: github/codeql-action/upload-sarif@461ef6c76dfe95d5c364de2f431ddbd9789a5d54  # v3.27.0
+        if: always()
+        with:
+          sarif_file: results.sarif
+          category: secret-scanning
+
+  codeql:
+    name: CodeQL SAST
+    runs-on: ubuntu-latest
+    # Elevated permissions required for reading workflow metadata (actions:read)
+    # and uploading SARIF results to Code Scanning (security-events:write).
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@461ef6c76dfe95d5c364de2f431ddbd9789a5d54  # v3.27.0
+        with:
+          languages: javascript-typescript
+          queries: security-extended,security-and-quality
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@461ef6c76dfe95d5c364de2f431ddbd9789a5d54  # v3.27.0
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@461ef6c76dfe95d5c364de2f431ddbd9789a5d54  # v3.27.0
+        with:
+          category: /language:javascript-typescript
+
+  audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af  # v4.1.0
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm audit --audit-level=high
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    # Only runs on pull requests — push events have no base to diff against
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/dependency-review-action@3b139cfc5fae8b618d3eae3675e383bb1769c019  # v4.3.4
+        with:
+          fail-on-severity: high
+
+  # ─────────────────────────────────────────────────────────
+  # PHASE 2: Build (gated on all Phase 1 checks)
+  # ─────────────────────────────────────────────────────────
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint, unit-test, secret-scan, audit]
+    env:
+      NODE_ENV: test
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
+      AUTH_SESSION_SECRET: ci-test-session-secret-minimum-32-chars-ok
+      SETTINGS_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+      MFA_ENCRYPTION_KEY: "1111111111111111111111111111111111111111111111111111111111111111"
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      ALLOW_INSECURE_LOCALHOST: "true"
+      MAIL_STRATEGY: log
+      AI_PROVIDER: local
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af  # v4.1.0
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Generate Prisma client
+        run: npx prisma generate
+      - name: Compute themes hash
+        run: node ./scripts/compute-themes-hash.mjs
+      - name: Build Next.js
+        # Invokes next build directly to bypass the prebuild npm script,
+        # which requires a live database and .env file on disk.
+        run: npx next build
+      - name: Generate SBOM (CycloneDX)
+        # @cyclonedx/cyclonedx-npm is installed via npm ci (in devDependencies).
+        # npm exec is used instead of npx to guarantee the lockfile-resolved version.
+        run: npm exec @cyclonedx/cyclonedx-npm -- --output-file sbom.cdx.json --output-format JSON
+      - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.4.0
+        with:
+          name: sbom-${{ github.run_id }}
+          path: sbom.cdx.json
+          retention-days: 90
+      - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.4.0
+        with:
+          name: nextjs-build-${{ github.run_id }}
+          path: .next/
+          retention-days: 1
+
+  # ─────────────────────────────────────────────────────────
+  # PHASE 3: All parallel — depend only on build
+  # ─────────────────────────────────────────────────────────
+
+  e2e:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: [build]
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:d48b2c7531f0a0f74a74e1c3bd5b7a49cf5d19e4a0c5bbc787ba3dddc15e7ff3
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci  # CI-only ephemeral credentials — not used anywhere outside this job
+          POSTGRES_DB: ci_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af  # v4.1.0
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Download build artifact
+        uses: actions/download-artifact@fa0a91b85d4f404e444306234cbe7f5f7f4a3f4e  # v4.1.8
+        with:
+          name: nextjs-build-${{ github.run_id }}
+          path: .next/
+      - name: Apply database migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Start Next.js server
+        # All production secrets required at runtime for authentication middleware.
+        # Traces are disabled via playwright.config.ts (CI ? "off") to prevent
+        # HAR captures from leaking auth tokens or PII into CI artifacts.
+        run: npm run start &
+        env:
+          PORT: 3000
+          NODE_ENV: production
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
+          AUTH_SESSION_SECRET: ${{ secrets.CI_AUTH_SESSION_SECRET }}
+          SETTINGS_ENCRYPTION_KEY: ${{ secrets.CI_SETTINGS_ENCRYPTION_KEY }}
+          MFA_ENCRYPTION_KEY: ${{ secrets.CI_MFA_ENCRYPTION_KEY }}
+          AUDIT_BUNDLE_SECRET: ${{ secrets.CI_AUDIT_BUNDLE_SECRET }}
+          CRON_SECRET: ${{ secrets.CI_CRON_SECRET }}
+          NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${{ secrets.CI_SERVER_ACTIONS_KEY }}
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          ALLOW_INSECURE_LOCALHOST: "true"
+          AI_PROVIDER: local
+          MAIL_STRATEGY: log
+          NEXT_TELEMETRY_DISABLED: "1"
+      - name: Wait for server to be ready
+        run: timeout 60 bash -c 'until curl -sf http://localhost:3000 > /dev/null; do sleep 2; done'
+      - name: Run Playwright tests
+        run: npm run test:e2e
+        env:
+          CI: "true"
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+      - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.4.0
+        if: always()
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: playwright-report/
+          retention-days: 7
+
+  a11y:
+    name: Accessibility Audit (WCAG)
+    runs-on: ubuntu-latest
+    needs: [build]
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:d48b2c7531f0a0f74a74e1c3bd5b7a49cf5d19e4a0c5bbc787ba3dddc15e7ff3
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci  # CI-only ephemeral credentials — not used anywhere outside this job
+          POSTGRES_DB: ci_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af  # v4.1.0
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Download build artifact
+        uses: actions/download-artifact@fa0a91b85d4f404e444306234cbe7f5f7f4a3f4e  # v4.1.8
+        with:
+          name: nextjs-build-${{ github.run_id }}
+          path: .next/
+      - name: Apply database migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
+      - name: Seed database
+        run: npx prisma db seed
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
+      - name: Start Next.js server
+        run: npm run start &
+        env:
+          PORT: 3000
+          NODE_ENV: production
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
+          AUTH_SESSION_SECRET: ${{ secrets.CI_AUTH_SESSION_SECRET }}
+          SETTINGS_ENCRYPTION_KEY: ${{ secrets.CI_SETTINGS_ENCRYPTION_KEY }}
+          MFA_ENCRYPTION_KEY: ${{ secrets.CI_MFA_ENCRYPTION_KEY }}
+          AUDIT_BUNDLE_SECRET: ${{ secrets.CI_AUDIT_BUNDLE_SECRET }}
+          CRON_SECRET: ${{ secrets.CI_CRON_SECRET }}
+          NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${{ secrets.CI_SERVER_ACTIONS_KEY }}
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          ALLOW_INSECURE_LOCALHOST: "true"
+          AI_PROVIDER: local
+          MAIL_STRATEGY: log
+          NEXT_TELEMETRY_DISABLED: "1"
+      - name: Wait for server to be ready
+        run: timeout 60 bash -c 'until curl -sf http://localhost:3000 > /dev/null; do sleep 2; done'
+      # NOTE: Only unauthenticated public routes are scanned in this job.
+      # Scanning authenticated routes (dashboard, settings, admin) requires an
+      # active session cookie, which is not available in this CI configuration.
+      # This is an accepted limitation for the initial implementation.
+      # Authenticated-route a11y coverage is tracked as a follow-up work item.
+      # Routes covered: /en (locale landing), /en/sign-in (primary auth page)
+      - name: Run axe-core accessibility audit
+        run: |
+          npx axe http://localhost:3000/en http://localhost:3000/en/sign-in \
+            --tags wcag2a,wcag2aa,wcag21aa \
+            --save axe-results.json \
+            --exit
+      - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.4.0
+        if: always()
+        with:
+          name: axe-results-${{ github.run_id }}
+          path: axe-results.json
+          retention-days: 30
+          if-no-files-found: ignore
