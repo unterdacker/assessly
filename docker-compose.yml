@@ -22,6 +22,21 @@ services:
       start_period: 10s
 
   # ---------------------------------------------------------------------------
+  # Mailpit v1.26.1 — local dev SMTP trap (actively maintained MailHog replacement)
+  # Enable: set MAIL_STRATEGY=mailpit in .env   ("mailhog" is also accepted as an alias)
+  # Web UI: http://localhost:8025  |  SMTP: localhost:1025
+  # Inbox is EPHEMERAL — all messages are lost on container restart.
+  # Ports are loopback-bound (127.0.0.1) — not exposed to the network.
+  # ---------------------------------------------------------------------------
+  mailpit:
+    image: axllent/mailpit:v1.26.1
+    container_name: assessly-mailpit
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+
+  # ---------------------------------------------------------------------------
   # Assessly web application
   # The web container is held back by `depends_on` until the database passes
   # its health check, preventing Prisma connection errors on cold start.
@@ -103,9 +118,29 @@ services:
       # Allows http://localhost:3000 as NEXT_PUBLIC_APP_URL even when
       # NODE_ENV=production. Set to "false" (or omit) in real deployments.
       ALLOW_INSECURE_LOCALHOST: "${ALLOW_INSECURE_LOCALHOST:-true}"
+
+      # Mail strategy: smtp | resend | log | mailpit | mailhog (default: log)
+      # Set MAIL_STRATEGY=mailpit in .env to route email through local Mailpit.
+      # "mailhog" is also accepted as a backward-compatible alias for "mailpit".
+      MAIL_STRATEGY: "${MAIL_STRATEGY:-log}"
+      # Mailpit local dev SMTP trap (used when MAIL_STRATEGY=mailpit or mailhog).
+      # Inside Docker Compose, the SMTP hostname is the service name "assessly-mailpit".
+      MAILPIT_SMTP_HOST: "${MAILPIT_SMTP_HOST:-assessly-mailpit}"
+      MAILPIT_SMTP_PORT: "${MAILPIT_SMTP_PORT:-1025}"
+      # Backward-compat aliases — kept so existing .env files with MAILHOG_* still work.
+      MAILHOG_SMTP_HOST: "${MAILHOG_SMTP_HOST:-assessly-mailpit}"
+      MAILHOG_SMTP_PORT: "${MAILHOG_SMTP_PORT:-1025}"
+      # Set to "true" to bypass DB mail config and force env-var resolution.
+      # SECURITY: Only safe in dev. The guard requires NODE_ENV=production to
+      # activate — ensure your production deployment always sets NODE_ENV=production.
+      # NEVER set to "true" in a production deployment.
+      MAIL_FORCE_ENV: "${MAIL_FORCE_ENV:-false}"
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
+        required: false
 
 volumes:
   postgres_data:
