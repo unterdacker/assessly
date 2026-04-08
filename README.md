@@ -1,4 +1,4 @@
-﻿![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
+﻿![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg) ![Version](https://img.shields.io/badge/version-0.1.0-informational)
 
 # Assessly - Sovereign Vendor Risk Assessment Platform
 
@@ -12,7 +12,7 @@ Assessly helps security and compliance teams manage third-party vendor risk in l
 - **Cryptographic audit trail** — tamper-evident chain-of-custody for all compliance events, exportable for auditors and regulators.
 - **Air-gap capable** — fully self-hostable with no mandatory external dependencies.
 
-**Stack:** Next.js 15 · React 19 · TypeScript · Prisma · PostgreSQL 16 · Tailwind CSS · Radix UI
+**Stack:** Next.js 15.1 · React 19 · TypeScript 5.7 · Prisma 6 · PostgreSQL 16 · Tailwind CSS 3 · Radix UI · next-intl 4
 
 ## Screenshots
 
@@ -56,8 +56,11 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/assessly?schema=publ
 docker-compose up -d
 npx prisma generate
 npx prisma db push
+npx prisma db seed
 npm run dev
 ```
+
+> ⚠️ **Development only.** `npx prisma db seed` creates demo accounts with default passwords (`admin123`, `auditor123`). Never run this against a production database. Set `ASSESSLY_ADMIN_PASSWORD` and `ASSESSLY_AUDITOR_PASSWORD` environment variables to override the defaults before seeding.
 
 Open `http://localhost:3000`.
 

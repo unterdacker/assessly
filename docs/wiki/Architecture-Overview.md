@@ -6,8 +6,8 @@
 |-------|-----------|---------|---------|
 | Framework | Next.js | 15 | Full-stack React, App Router, Server Actions |
 | UI | React | 19 | Component rendering |
-| Language | TypeScript | 5 | End-to-end type safety |
-| ORM | Prisma | 6 | Database access layer |
+| Language | TypeScript | 5.7 | End-to-end type safety |
+| ORM | Prisma | 6.x (6.19.3) | Database access layer |
 | Database | PostgreSQL | 16 | Primary persistent store |
 | Styling | Tailwind CSS | 3 | Utility-first CSS |
 | Component library | Radix UI | — | Accessible headless components |
