@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { useActionState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { LockKeyhole, ShieldCheck } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 import { authenticateInternalUser } from "@/app/actions/internal-auth";
 import type { InternalSignInState } from "@/app/actions/internal-auth.types";
 import { Button } from "@/components/ui/button";
@@ -39,9 +40,7 @@ export function InternalSignInForm({ locale, nextPath }: { locale: string; nextP
   return (
     <Card className="mx-auto w-full max-w-md border-border bg-card shadow-sm">
       <CardHeader className="space-y-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
-          <ShieldCheck className="h-5 w-5" aria-hidden />
-        </div>
+        <Image src="/logo.png" alt="Assessly logo" width={40} height={40} className="rounded-full" priority />
         <div>
           <CardTitle className="text-foreground">{t("title")}</CardTitle>
           <CardDescription>{t("description")}</CardDescription>

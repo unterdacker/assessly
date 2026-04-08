@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, LayoutDashboard, ShieldCheck, Users, Activity, LogOut } from "lucide-react";
+import { Settings, LayoutDashboard, Users, Activity, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -121,9 +122,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           aria-label="Workspace navigation"
         >
           <div className="flex h-14 items-center gap-2 border-b border-slate-200 px-4 dark:border-slate-800">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-indigo-600 text-white dark:bg-indigo-500">
-              <ShieldCheck className="h-4 w-4" aria-hidden />
-            </div>
+            <Image src="/logo.png" alt="Assessly logo" width={32} height={32} className="rounded-md" priority />
             <div className="leading-tight">
               <p className="text-sm font-semibold tracking-tight">Assessly</p>
               <p className="text-[10px] text-muted-foreground">
@@ -175,9 +174,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur-sm dark:border-slate-800 dark:bg-card/95 md:px-6">
             <div className="flex min-w-0 items-center gap-3 md:hidden">
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-indigo-600 text-white">
-                <ShieldCheck className="h-4 w-4" aria-hidden />
-              </div>
+              <Image src="/logo.png" alt="Assessly logo" width={32} height={32} className="rounded-md" priority />
               <span className="truncate text-sm font-semibold">Assessly</span>
             </div>
             <div className="hidden md:block" />
