@@ -8,6 +8,7 @@ import deMessages from "@/messages/de.json";
 import { getAuthSessionFromRequest } from "@/lib/auth/server";
 import { AuditLogger, LogLevel } from "@/lib/structured-logger";
 import { logErrorReport } from "@/lib/logger";
+import { RemediationPostSchema } from "@/lib/validation/schemas";
 
 type SupportedLocale = "en" | "de";
 
@@ -342,18 +343,23 @@ async function generateRemediationDraft(args: {
   companyId: string;
   prompt: string;
   locale: SupportedLocale;
-}): Promise<{
-  draft: string;
-  modelInfo: {
-    provider: string;
-    modelId: string;
-    endpoint?: string;
-  };
-  rawAiOutput: string;
-}> {
+}): Promise<
+  | {
+      ok: true;
+      draft: string;
+      modelInfo: {
+        provider: string;
+        modelId: string;
+        endpoint?: string;
+      };
+      rawAiOutput: string;
+    }
+  | { ok: false; reason: "ai-disabled" }
+> {
   const config = await prisma.company.findUnique({
     where: { id: args.companyId },
     select: {
+      aiDisabled: true,
       aiProvider: true,
       mistralApiKey: true,
       localAiEndpoint: true,
@@ -363,6 +369,10 @@ async function generateRemediationDraft(args: {
 
   if (!config) {
     throw new Error("Company configuration not found.");
+  }
+
+  if (config.aiDisabled) {
+    return { ok: false, reason: "ai-disabled" as const };
   }
 
   const provider = (process.env.AI_PROVIDER || config.aiProvider || "mistral").toLowerCase();
@@ -410,6 +420,7 @@ async function generateRemediationDraft(args: {
       throw new Error("Received empty response from Mistral.");
     }
     return {
+      ok: true,
       draft: content,
       modelInfo: {
         provider: "mistral",
@@ -463,6 +474,7 @@ async function generateRemediationDraft(args: {
   }
 
   return {
+    ok: true,
     draft: content,
     modelInfo: {
       provider: "local",
@@ -520,20 +532,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 403 });
     }
 
-    const body = (await request.json()) as {
-      vendorId?: string;
-      locale?: string;
-      deadlineDays?: number;
-    };
-
-    const locale = detectLocale(request, body.locale);
-    const vendorId = body.vendorId?.trim();
-    if (!vendorId) {
-      return NextResponse.json(
-        { ok: false, error: "vendorId is required." },
-        { status: 400 },
-      );
+    const parsed = RemediationPostSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json({ ok: false, error: "Invalid request body." }, { status: 400 });
     }
+    const { vendorId, locale: bodyLocale, deadlineDays } = parsed.data;
+    const locale = detectLocale(request, bodyLocale);
 
     const result = await getVendorGaps(vendorId, locale, session.companyId ?? "");
     if (!result) {
@@ -543,10 +547,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const deadlineDays =
-      typeof body.deadlineDays === "number" && body.deadlineDays > 0
-        ? body.deadlineDays
-        : 14;
     const deadlineDateObj = new Date();
     deadlineDateObj.setDate(deadlineDateObj.getDate() + deadlineDays);
     const deadlineDate = deadlineDateObj.toISOString().slice(0, 10);
@@ -602,6 +602,13 @@ export async function POST(request: NextRequest) {
       prompt,
       locale,
     });
+
+    if (!generated.ok) {
+      return NextResponse.json(
+        { ok: false, error: "AI features are disabled for this organization." },
+        { status: 403 },
+      );
+    }
 
     let aiGenerationEventId: string | null = null;
     try {

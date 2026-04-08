@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAiMode } from "@/lib/ai/ai-mode-context";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -48,6 +50,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
   const tGlobal = useTranslations();
   const t = useTranslations("remediationModal");
   const locale = useLocale();
+  const { aiDisabled } = useAiMode();
 
   const localizeStatus = React.useCallback(
     (status: string) => {
@@ -320,6 +323,24 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
             </DialogDescription>
           </DialogHeader>
 
+          {aiDisabled ? (
+            <div
+              className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200"
+              role="status"
+            >
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+              <div className="space-y-1">
+                <p className="font-medium">{tGlobal("aiFeaturesDisabled")}</p>
+                <p>
+                  {tGlobal("aiFeaturesDisabledDesc")}{" "}
+                  <Link href="/settings" className="font-semibold underline underline-offset-2">
+                    {tGlobal("Settings")}
+                  </Link>
+                </p>
+              </div>
+            </div>
+          ) : null}
+
           <div className="rounded-lg border border-border bg-card p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
@@ -390,27 +411,29 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              onClick={handleGeneratePlan}
-              disabled={generating || loadingGaps}
-              className="gap-2 bg-cyan-600 text-white hover:bg-cyan-500"
-            >
-              {generating ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-              ) : (
-                <Sparkles className="h-4 w-4" aria-hidden />
-              )}
-              {generating ? t("generating") : t("generateButton")}
-            </Button>
+          {aiDisabled ? null : (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                onClick={handleGeneratePlan}
+                disabled={generating || loadingGaps}
+                className="gap-2 bg-cyan-600 text-white hover:bg-cyan-500"
+              >
+                {generating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                ) : (
+                  <Sparkles className="h-4 w-4" aria-hidden />
+                )}
+                {generating ? t("generating") : t("generateButton")}
+              </Button>
 
-            {deadlineDate ? (
-              <span className="rounded-md border border-border bg-muted px-2 py-1 text-xs text-muted-foreground">
-                {t("deadlineLabel", { date: deadlineDate })}
-              </span>
-            ) : null}
-          </div>
+              {deadlineDate ? (
+                <span className="rounded-md border border-border bg-muted px-2 py-1 text-xs text-muted-foreground">
+                  {t("deadlineLabel", { date: deadlineDate })}
+                </span>
+              ) : null}
+            </div>
+          )}
 
           <AnimatePresence>
             {error ? (

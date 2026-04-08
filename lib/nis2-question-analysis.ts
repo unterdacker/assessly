@@ -21,7 +21,12 @@ export const Nis2QuestionAnalysisSchema = z.object({
 export type Nis2QuestionAnalysis = z.infer<typeof Nis2QuestionAnalysisSchema>;
 
 export const AnalyzeDocumentResponseSchema = z.discriminatedUnion("ok", [
-  z.object({ ok: z.literal(true),  results: z.array(Nis2QuestionAnalysisSchema) }),
+  z.object({
+    ok: z.literal(true),
+    results: z.array(Nis2QuestionAnalysisSchema),
+    aiSkipped: z.boolean().optional(),
+    message: z.string().optional(),
+  }),
   z.object({ ok: z.literal(false), error:   z.string() }),
 ]);
 export type AnalyzeDocumentResponse = z.infer<typeof AnalyzeDocumentResponseSchema>;

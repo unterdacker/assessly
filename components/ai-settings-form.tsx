@@ -13,6 +13,7 @@ import { useActionState } from "react";
 interface Company {
   id: string;
   aiProvider: string;
+  aiDisabled: boolean;
   mistralApiKey: string | null;
   localAiEndpoint: string | null;
   localAiModel: string | null;
@@ -31,10 +32,16 @@ interface Translations {
   LocalAIModelPlaceholder: string;
   SaveConfiguration: string;
   SettingsUpdatedSuccess: string;
+  noAiMode: string;
+  noAiModeDesc: string;
+  aiFeaturesDisabled: string;
+  aiFeaturesDisabledDesc: string;
+  aiDisabledBadge: string;
 }
 
 export function AiSettingsForm({ company, companyId, translations }: { company: Company; companyId: string; translations: Translations }) {
   const [aiProvider, setAiProvider] = useState(company.aiProvider);
+  const [aiDisabledState, setAiDisabledState] = useState(company.aiDisabled);
 
   const [state, formAction] = useActionState(updateAiSettings, null);
 
@@ -53,6 +60,36 @@ export function AiSettingsForm({ company, companyId, translations }: { company: 
         <form action={formAction} className="space-y-6">
           <input type="hidden" name="companyId" value={companyId} />
           <input type="hidden" name="aiProvider" value={aiProvider} />
+          <input type="hidden" name="aiDisabled" value={aiDisabledState ? "on" : "false"} />
+
+          <div className="rounded-lg border p-4 space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="aiDisabled" className="text-sm font-medium">
+                {translations.noAiModeDesc}
+              </Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                id="aiDisabled"
+                type="checkbox"
+                checked={aiDisabledState}
+                onChange={(event) => setAiDisabledState(event.target.checked)}
+                className="h-4 w-4 rounded border-slate-300"
+              />
+              <Label htmlFor="aiDisabled" className="text-sm">
+                {translations.noAiMode}
+              </Label>
+            </div>
+          </div>
+
+          {aiDisabledState && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+              <p className="text-xs font-semibold uppercase tracking-wide">{translations.aiDisabledBadge}</p>
+              <p className="text-sm font-medium">{translations.aiFeaturesDisabled}</p>
+              <p className="text-xs text-amber-800 dark:text-amber-300">{translations.aiFeaturesDisabledDesc}</p>
+            </div>
+          )}
+
           <RadioGroup value={aiProvider} onValueChange={setAiProvider}>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="mistral" id="mistral" />

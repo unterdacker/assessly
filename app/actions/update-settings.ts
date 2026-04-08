@@ -50,6 +50,11 @@ export async function updateAiSettings(
   const mistralApiKey = formData.get("mistralApiKey") as string | null;
   const localAiEndpoint = formData.get("localAiEndpoint") as string | null;
   const localAiModel = formData.get("localAiModel") as string | null;
+  const aiDisabledRaw = formData.get("aiDisabled");
+  const aiDisabled =
+    aiDisabledRaw !== null
+      ? aiDisabledRaw === "on" || aiDisabledRaw === "true"
+      : undefined;
 
   if (!companyId) {
     return { success: false, error: "Company ID is required." };
@@ -96,10 +101,16 @@ export async function updateAiSettings(
   }
 
   try {
+    const existingSettings = await prisma.company.findUnique({
+      where: { id: companyId },
+      select: { aiDisabled: true },
+    });
+
     await prisma.company.update({
       where: { id: companyId },
       data: {
         aiProvider,
+        ...(aiDisabled !== undefined ? { aiDisabled } : {}),
         ...(aiProvider === "mistral"
           ? encryptedMistralApiKey !== undefined
             ? { mistralApiKey: encryptedMistralApiKey }
@@ -118,8 +129,12 @@ export async function updateAiSettings(
         action: "SETTINGS_UPDATED",
         entityType: "company_settings",
         entityId: companyId,
+        previousValue: {
+          aiDisabled: existingSettings?.aiDisabled ?? null,
+        },
         newValue: {
           aiProvider,
+          aiDisabled,
           localAiEndpoint: aiProvider === "local" ? localAiEndpoint : null,
           localAiModel: aiProvider === "local" ? localAiModel : null,
         },
