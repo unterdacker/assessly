@@ -480,7 +480,7 @@ export function VendorsTableSection({
             <AddVendorModal
               trigger={
                 <Button type="button" className="w-full sm:w-auto" disabled={isBulkDeleting}>
-                  {t("inviteVendor")}
+                  {t("addVendor")}
                 </Button>
               }
             />

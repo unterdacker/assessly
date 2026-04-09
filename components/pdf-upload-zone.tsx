@@ -53,7 +53,7 @@ type PdfUploadZoneProps = {
   lastAuditedAt?: string | null;
 };
 
-const MAX_UPLOAD_SIZE_BYTES = 20 * 1024 * 1024;
+const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024;
 
 function formatFileSize(size: number | null, fallbackLabel: string): string {
   if (!size || size <= 0) return fallbackLabel;

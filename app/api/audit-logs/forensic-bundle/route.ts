@@ -259,6 +259,7 @@ export async function GET(request: NextRequest) {
   const generatedAt = new Date().toISOString();
 
   const bundleContent = {
+    ok: true,
     bundleId,
     generatedAt,
     generatedBy: pseudonymizeUserId(session.userId, "export"),
