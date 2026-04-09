@@ -231,7 +231,7 @@ test.describe("Assessment Completion — External portal (expired token)", () =>
     await page.goto("/en/external/assessment/");
     // Should redirect to portal login or show 404
     await expect(
-      page.getByText(/access code|not found|portal/i),
+      page.getByText(/access code|not found|portal/i).first(),
     ).toBeVisible({ timeout: 8000 });
   });
 });

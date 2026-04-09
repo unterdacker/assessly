@@ -417,7 +417,7 @@ export function AuditLogsTable({ logs, isAdmin, isAuditor, activeCategory, total
                   size="sm"
                   onClick={handleDownloadBundle}
                   disabled={downloading}
-                  aria-label="Download signed forensic bundle"
+                  aria-label="Download Forensic Bundle"
                   className="gap-1.5 border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
                 >
                   <Download className="h-4 w-4" aria-hidden />

@@ -224,7 +224,8 @@ test.describe("GDPR Erasure — forensic bundle reflects deletion events", () =>
         for (const entry of deletionEntries) {
           // entityId is the deleted user's primary key — must be a UUID.
           expect(entry.entityId).toMatch(
-            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+            // Accept UUID v4 or Prisma CUID2 (the project uses cuid() as the User PK)
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$|^[a-z][a-z0-9]{20,30}$/i,
           );
         }
       }

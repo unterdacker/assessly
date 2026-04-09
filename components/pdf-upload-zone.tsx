@@ -127,7 +127,7 @@ export function PdfUploadZone({
   const isAuditActionDisabled =
     readOnly || isPending || isReanalyzing || (requiresConsent && !isConsented);
 
-  function assignFile(file: File | null) {
+  async function assignFile(file: File | null) {
     if (!file) {
       setSelectedFile(null);
       setFileName(null);
@@ -136,6 +136,21 @@ export function PdfUploadZone({
     }
 
     if (file.type !== "application/pdf") {
+      setSelectedFile(null);
+      setErrorMessage(t("pdfOnly"));
+      return;
+    }
+
+    // Validate PDF magic bytes (%PDF-) to reject MIME-spoofed uploads
+    const header = await file.slice(0, 5).arrayBuffer();
+    const bytes = new Uint8Array(header);
+    if (
+      bytes[0] !== 0x25 || // %
+      bytes[1] !== 0x50 || // P
+      bytes[2] !== 0x44 || // D
+      bytes[3] !== 0x46 || // F
+      bytes[4] !== 0x2d    // -
+    ) {
       setSelectedFile(null);
       setErrorMessage(t("pdfOnly"));
       return;
@@ -153,7 +168,7 @@ export function PdfUploadZone({
     setFileSize(file.size);
   }
 
-  const onDrop = (event: React.DragEvent<HTMLDivElement>) => {
+  const onDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
     setDragOver(false);
@@ -163,7 +178,7 @@ export function PdfUploadZone({
     const dropped = event.dataTransfer.files?.[0];
     if (!dropped) return;
 
-    assignFile(dropped);
+    await assignFile(dropped);
 
     if (fileInputRef.current) {
       const dataTransfer = new DataTransfer();
@@ -172,10 +187,10 @@ export function PdfUploadZone({
     }
   };
 
-  const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (requiresConsent && !isConsented) return;
     const file = event.target.files?.[0];
-    assignFile(file ?? null);
+    await assignFile(file ?? null);
   };
 
   async function handleRemove() {
