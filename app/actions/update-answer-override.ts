@@ -21,7 +21,12 @@ async function saveAnswerEvidencePdf(
   await fs.mkdir(STORAGE_DIR, { recursive: true });
   const safeName = originalFilename.replace(/[^a-zA-Z0-9._-]/g, "_");
   const storedName = `answer__${answerId}__${safeName}`;
-  await fs.writeFile(path.join(STORAGE_DIR, storedName), buffer);
+  const resolvedStorage = path.resolve(STORAGE_DIR);
+  const targetPath = path.resolve(resolvedStorage, storedName);
+  if (!targetPath.startsWith(resolvedStorage + path.sep)) {
+    throw new Error("Invalid file path: path traversal detected");
+  }
+  await fs.writeFile(targetPath, buffer);
   return `/api/documents/answer/${encodeURIComponent(answerId)}?filename=${encodeURIComponent(safeName)}`;
 }
 
