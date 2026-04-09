@@ -27,20 +27,12 @@
  *   ISO 27001 A.12.4, SOC2 CC7.2, GDPR Art. 5/25, GDPR Recital 30
  */
 
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
+import { signInAsAdmin } from "./helpers/auth";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/** Sign in as the seeded ADMIN user and wait for the dashboard redirect. */
-async function signInAsAdmin(page: Page): Promise<void> {
-  await page.goto("/en/auth/sign-in");
-  await page.getByLabel(/email/i).fill("admin@demo.assessly.dev");
-  await page.getByLabel(/password/i).fill("Admin1234!");
-  await page.getByRole("button", { name: /sign in/i }).click();
-  await page.waitForURL(/\/en\/dashboard/);
-}
 
 /**
  * Returns the Unix-epoch timestamp embedded in an

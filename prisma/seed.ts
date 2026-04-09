@@ -1,8 +1,17 @@
 import bcrypt from "bcryptjs";
-import { PrismaClient, AssessmentStatus, RiskLevel, UserRole } from "@prisma/client";
+import { Prisma, PrismaClient, AssessmentStatus, RiskLevel, UserRole } from "@prisma/client";
 import { nis2Questions } from "../lib/nis2-questions";
 
 const prisma = new PrismaClient();
+
+async function tryDeleteMany(fn: () => Promise<unknown>): Promise<void> {
+  try {
+    await fn();
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2021") return;
+    throw e;
+  }
+}
 
 const SEED_ACTOR = "system-seed";
 const COMPANY_SLUG = "default";
@@ -63,13 +72,13 @@ const demoVendors: DemoVendor[] = [
 ];
 
 async function main() {
-  await prisma.authSession.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.auditLog.deleteMany();
-  await prisma.assessment.deleteMany();
-  await prisma.vendor.deleteMany();
-  await prisma.question.deleteMany();
-  await prisma.company.deleteMany();
+  await tryDeleteMany(() => prisma.authSession.deleteMany());
+  await tryDeleteMany(() => prisma.user.deleteMany());
+  await tryDeleteMany(() => prisma.auditLog.deleteMany());
+  await tryDeleteMany(() => prisma.assessment.deleteMany());
+  await tryDeleteMany(() => prisma.vendor.deleteMany());
+  await tryDeleteMany(() => prisma.question.deleteMany());
+  await tryDeleteMany(() => prisma.company.deleteMany());
 
   const company = await prisma.company.create({
     data: {

@@ -13,20 +13,12 @@
  *   6. Access code field enforces maximum length (9 chars)
  */
 
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
+import { signInAsAdmin } from "./helpers/auth";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/** Sign in as the seeded admin user. */
-async function signInAsAdmin(page: Page) {
-  await page.goto("/en/auth/sign-in");
-  await page.getByLabel(/email/i).fill("admin@demo.assessly.dev");
-  await page.getByLabel(/password/i).fill("Admin1234!");
-  await page.getByRole("button", { name: /sign in/i }).click();
-  await page.waitForURL(/\/en\/dashboard/);
-}
 
 // ---------------------------------------------------------------------------
 // Admin — adding a vendor and sending an invitation
