@@ -55,6 +55,23 @@ model Company {
   auditLogs                  AuditLog[]
   customVendorServiceTypes   CustomVendorServiceType[]
   users                      User[]
+  oidcConfig                 OidcConfig?
+}
+
+model OidcConfig {
+  id                     String   @id @default(cuid())
+  companyId              String   @unique
+  company                Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  issuerUrl              String
+  clientId               String
+  clientSecretEncrypted  String
+  isEnabled              Boolean  @default(false)
+  jitProvisioning        Boolean  @default(false)
+  jitAllowedEmailDomains String[] @default([])
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([companyId])
 }
 
 model User {
@@ -66,6 +83,7 @@ model User {
   email        String?       @unique
   displayName  String?
   passwordHash String?
+  ssoProviderId String?
   role         UserRole      @default(VENDOR)
   isActive     Boolean       @default(true)
   mfaEnabled   Boolean       @default(false)
@@ -78,6 +96,7 @@ model User {
 
   @@index([companyId])
   @@index([role])
+  @@unique([companyId, ssoProviderId])
 }
 
 model AuthSession {

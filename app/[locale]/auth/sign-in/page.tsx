@@ -6,11 +6,11 @@ import { getRoleLandingPath } from "@/lib/auth/permissions";
 
 type SignInPageProps = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; error?: string }>;
 };
 
 export default async function SignInPage({ params, searchParams }: SignInPageProps) {
-  const [{ locale }, { next }] = await Promise.all([params, searchParams]);
+  const [{ locale }, { next, error }] = await Promise.all([params, searchParams]);
   const session = await getOptionalAuthSession();
 
   if (session && session.role !== "VENDOR") {
@@ -34,7 +34,11 @@ export default async function SignInPage({ params, searchParams }: SignInPagePro
             {t("isolationNotice")}
           </p>
         </div>
-        <InternalSignInForm locale={locale} nextPath={nextPath} />
+        <InternalSignInForm
+          locale={locale}
+          nextPath={nextPath}
+          initialError={typeof error === "string" ? error : null}
+        />
       </div>
     </main>
   );

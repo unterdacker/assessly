@@ -139,6 +139,10 @@ export async function requireAuthSession(): Promise<AuthSession> {
   return session;
 }
 
+export async function getAuthSession(): Promise<AuthSession> {
+  return requireAuthSession();
+}
+
 export async function requireUserRole(allowedRoles: UserRole[]): Promise<AuthSession> {
   const session = await requireAuthSession();
   if (!allowedRoles.includes(session.role)) {
