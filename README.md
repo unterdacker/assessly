@@ -1,4 +1,4 @@
-﻿![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg) ![Version](https://img.shields.io/badge/version-0.1.0-informational)
+﻿![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg) ![Version](https://img.shields.io/badge/version-0.1.0-informational) [![CI](https://github.com/unterdacker/assessly/actions/workflows/ci.yml/badge.svg)](https://github.com/unterdacker/assessly/actions/workflows/ci.yml)
 
 # Assessly - Sovereign Vendor Risk Assessment Platform
 
