@@ -233,3 +233,34 @@ describe("computeFieldDiff", () => {
     });
   });
 });
+
+// Additional tests for computeFieldDiff array/edge cases
+describe("computeFieldDiff — additional edge cases", () => {
+  it("returns scalar inputs when either input is an array", () => {
+    expect(computeFieldDiff([1, 2], [3, 4])).toEqual({
+      previous: [1, 2],
+      current: [3, 4],
+    });
+  });
+
+  it("returns when previous is array and current is object", () => {
+    expect(computeFieldDiff([1, 2], { a: 1 })).toEqual({
+      previous: [1, 2],
+      current: { a: 1 },
+    });
+  });
+
+  it("handles new key only in current", () => {
+    expect(computeFieldDiff({ a: 1 }, { a: 1, b: 2 })).toEqual({
+      previous: null,
+      current: { b: 2 },
+    });
+  });
+
+  it("handles key only in previous (deleted)", () => {
+    expect(computeFieldDiff({ a: 1, b: 2 }, { a: 1 })).toEqual({
+      previous: { b: 2 },
+      current: null,
+    });
+  });
+});

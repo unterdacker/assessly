@@ -281,3 +281,49 @@ describe("scrubPiiFields", () => {
     expect(scrubPiiFields(42)).toBe(42);
   });
 });
+
+describe("scrubPiiFields — special category Art.9 keywords", () => {
+  it("blocks fields with special-category key keywords", () => {
+    const result = scrubPiiFields({ healthStatus: "value" }) as Record<string, unknown>;
+    expect(result.healthStatus).toBe("[BLOCKED_SPECIAL_CATEGORY_ART9]");
+  });
+
+  it("blocks fields with biometric key keyword", () => {
+    const result = scrubPiiFields({ biometricScan: "fingerprint data" }) as Record<string, unknown>;
+    expect(result.biometricScan).toBe("[BLOCKED_SPECIAL_CATEGORY_ART9]");
+  });
+
+  it("passes through non-special-category, non-PII strings unchanged", () => {
+    const result = scrubPiiFields({ description: "generic text without pii" }) as Record<string, unknown>;
+    expect(result.description).toBe("generic text without pii");
+  });
+
+  it("redacts email-like strings at the object value level", () => {
+    const result = scrubPiiFields({ notes: "contact a@b.com for details" }) as Record<string, unknown>;
+    // Email-pattern match pseudonymizes the whole string value
+    expect(result.notes).not.toBe("contact a@b.com for details");
+  });
+});
+
+describe("scrubPiiFields — string and array inputs", () => {
+  it("pseudonymizes an email address passed as top-level string", () => {
+    const result = scrubPiiFields("user@example.com");
+    expect(result).not.toBe("user@example.com");
+    expect(typeof result).toBe("string");
+  });
+
+  it("passes through a plain string with no PII unchanged", () => {
+    const result = scrubPiiFields("plain text no pii here");
+    expect(result).toBe("plain text no pii here");
+  });
+
+  it("scrubs email fields in arrays of objects", () => {
+    const result = scrubPiiFields([
+      { email: "a@b.com", score: 5 },
+      { name: "test", score: 10 },
+    ]) as Array<Record<string, unknown>>;
+    expect(result[0].email).toBe("[REDACTED]");
+    expect(result[0].score).toBe(5);
+    expect(result[1].score).toBe(10);
+  });
+});
