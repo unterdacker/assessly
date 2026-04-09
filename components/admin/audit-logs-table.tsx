@@ -385,7 +385,7 @@ export function AuditLogsTable({ logs, isAdmin, isAuditor, activeCategory, total
         {(isAdmin || isAuditor) && (
           <div className="flex flex-col items-end gap-1 sm:ml-auto">
             <div className="flex flex-wrap items-center justify-end gap-2">
-              {isAuditor && (
+              {(isAdmin || isAuditor) && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -411,7 +411,7 @@ export function AuditLogsTable({ logs, isAdmin, isAuditor, activeCategory, total
                 </Button>
               )}
 
-              {isAuditor && (
+              {(isAdmin || isAuditor) && (
                 <Button
                   variant="outline"
                   size="sm"

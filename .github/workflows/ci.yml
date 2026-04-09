@@ -389,6 +389,8 @@ jobs:
       # This is an accepted limitation for the initial implementation.
       # Authenticated-route a11y coverage is tracked as a follow-up work item.
       # Routes covered: /en (locale landing), /en/sign-in (primary auth page)
+      - name: Sync Chrome and ChromeDriver versions
+        run: npx browser-driver-manager install chrome
       - name: Run axe-core accessibility audit
         run: |
           npx axe http://localhost:3000/en http://localhost:3000/en/sign-in \
