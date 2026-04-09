@@ -13,7 +13,13 @@ import {
   signSessionClaims,
   verifySessionToken,
 } from "@/lib/auth/token";
-import { getRoleLandingPath, withLocalePath } from "@/lib/auth/permissions";
+import {
+  ADMIN_ONLY_ROLES,
+  INTERNAL_READ_ROLES,
+  INTERNAL_WRITE_ROLES,
+  getRoleLandingPath,
+  withLocalePath,
+} from "@/lib/auth/permissions";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 12;
 
@@ -139,6 +145,10 @@ export async function requireAuthSession(): Promise<AuthSession> {
   return session;
 }
 
+export async function getAuthSession(): Promise<AuthSession> {
+  return requireAuthSession();
+}
+
 export async function requireUserRole(allowedRoles: UserRole[]): Promise<AuthSession> {
   const session = await requireAuthSession();
   if (!allowedRoles.includes(session.role)) {
@@ -148,11 +158,19 @@ export async function requireUserRole(allowedRoles: UserRole[]): Promise<AuthSes
 }
 
 export async function requireAdminUser(): Promise<AuthSession> {
-  return requireUserRole(["ADMIN"]);
+  return requireUserRole(ADMIN_ONLY_ROLES);
 }
 
 export async function requireInternalReadUser(): Promise<AuthSession> {
-  return requireUserRole(["ADMIN", "AUDITOR"]);
+  return requireUserRole(INTERNAL_READ_ROLES);
+}
+
+export async function requireInternalWriteUser(): Promise<AuthSession> {
+  return requireUserRole(INTERNAL_WRITE_ROLES);
+}
+
+export async function requireSuperAdminUser(): Promise<AuthSession> {
+  return requireUserRole(["SUPER_ADMIN"]);
 }
 
 export function isAccessControlError(error: unknown): boolean {

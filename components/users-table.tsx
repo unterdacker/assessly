@@ -52,8 +52,18 @@ type UsersTableProps = {
 
 function RoleBadge({ role }: { role: UserRole }) {
   const t = useTranslations("UserManagement");
+  if (role === "SUPER_ADMIN") {
+    return (
+      <Badge className="border-transparent bg-violet-100 text-violet-900 dark:bg-violet-950 dark:text-violet-200">
+        {t("roleSuperAdmin")}
+      </Badge>
+    );
+  }
   if (role === "ADMIN") {
     return <Badge variant="high">{t("roleAdmin")}</Badge>;
+  }
+  if (role === "RISK_REVIEWER") {
+    return <Badge variant="medium">{t("roleRiskReviewer")}</Badge>;
   }
   return <Badge variant="default">{t("roleAuditor")}</Badge>;
 }

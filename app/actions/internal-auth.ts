@@ -55,7 +55,7 @@ export async function authenticateInternalUser(
       where: {
         email,
         isActive: true,
-        role: { in: ["ADMIN", "AUDITOR"] },
+        role: { in: ["ADMIN", "AUDITOR", "VENDOR"] },
       },
       select: {
         id: true,

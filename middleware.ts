@@ -6,6 +6,8 @@ import { NEXT_THEMES_FOUC_HASH } from "@/lib/csp-hashes";
 import {
   canAccessPath,
   getRoleLandingPath,
+  INTERNAL_READ_ROLES,
+  INTERNAL_WRITE_ROLES,
   isExternalPath,
   isProtectedInternalPath,
   withLocalePath,
@@ -176,16 +178,16 @@ async function _middleware(request: NextRequest, nonce: string): Promise<NextRes
       return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
     }
 
-    if (authSession.role === "AUDITOR" && !isSafeMethod) {
+    if (!INTERNAL_WRITE_ROLES.includes(authSession.role) && !isSafeMethod) {
       emitMiddlewareLog({
         event_type: "ACCESS_CONTROL",
-        action_name: "middleware.server_action.auditor_write_blocked",
+        action_name: "middleware.server_action.read_only_write_blocked",
         status: "failure",
         user_id: authSession.uid,
         role: authSession.role,
         pathname: normalizedPathname,
         source_ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
-        message: `Blocked non-read server action method ${request.method.toUpperCase()} for AUDITOR on ${normalizedPathname}`,
+        message: `Blocked non-read server action method ${request.method.toUpperCase()} for read-only role ${authSession.role} on ${normalizedPathname}`,
         response_code: 403,
       });
       return NextResponse.json({ error: "FORBIDDEN_READ_ONLY" }, { status: 403 });
@@ -322,16 +324,16 @@ async function _middleware(request: NextRequest, nonce: string): Promise<NextRes
       return NextResponse.redirect(url);
     }
 
-    if (authSession.role === "AUDITOR" && !isSafeMethod) {
+    if (!INTERNAL_WRITE_ROLES.includes(authSession.role) && !isSafeMethod) {
       emitMiddlewareLog({
         event_type: "ACCESS_CONTROL",
-        action_name: "middleware.auditor_write_blocked",
+        action_name: "middleware.read_only_write_blocked",
         status: "failure",
         user_id: authSession.uid,
         role: authSession.role,
         pathname: normalizedPathname,
         source_ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
-        message: `Blocked non-read method ${request.method.toUpperCase()} for AUDITOR on ${normalizedPathname}`,
+        message: `Blocked non-read method ${request.method.toUpperCase()} for read-only role ${authSession.role} on ${normalizedPathname}`,
         response_code: 403,
       });
       return NextResponse.json({ error: "FORBIDDEN_READ_ONLY" }, { status: 403 });
@@ -349,7 +351,7 @@ async function _middleware(request: NextRequest, nonce: string): Promise<NextRes
       normalizedPathname.startsWith("/external/assessment/") ||
       normalizedPathname.startsWith("/external/force-password-change");
 
-    if (isInternalPreviewPath && (authSession.role === "ADMIN" || authSession.role === "AUDITOR")) {
+    if (isInternalPreviewPath && INTERNAL_READ_ROLES.includes(authSession.role)) {
       return response;
     }
 

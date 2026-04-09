@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useActionState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { LockKeyhole } from "lucide-react";
@@ -17,14 +18,37 @@ const errorKeyMap: Record<string, string> = {
   TOO_MANY_REQUESTS: "errorTooManyRequests",
 };
 
+const ssoErrorKeyMap: Record<string, string> = {
+  SSO_STATE_EXPIRED: "errorSsoSessionExpired",
+  SSO_INVALID_CALLBACK: "errorSsoSessionExpired",
+  SSO_CSRF_MISMATCH: "errorSsoSessionExpired",
+  SSO_IDP_UNAVAILABLE: "errorSsoIdpUnavailable",
+  SSO_TOKEN_FAILED: "errorSsoTokenFailed",
+  SSO_ACCOUNT_NOT_LINKED: "errorSsoAccountNotLinked",
+  SSO_FORBIDDEN: "errorSsoForbidden",
+  SSO_NOT_CONFIGURED: "errorSsoNotConfigured",
+  SSO_INTERNAL_ERROR: "errorSsoInternalError",
+};
+
 const initialState: InternalSignInState = { error: null };
 
-export function InternalSignInForm({ locale, nextPath }: { locale: string; nextPath: string }) {
+export function InternalSignInForm({
+  locale,
+  nextPath,
+  initialError,
+}: {
+  locale: string;
+  nextPath: string;
+  initialError: string | null;
+}) {
   const t = useTranslations("SignIn");
   const [state, formAction, isPending] = useActionState(
     authenticateInternalUser,
     initialState,
   );
+  const errorMessageKey = state.error
+    ? (errorKeyMap[state.error] ?? state.error)
+    : (initialError ? ssoErrorKeyMap[initialError] : null);
 
   // Fix: perform a hard navigation on success to bust the Next.js RSC router
   // cache. A soft redirect() from the server action leaves the root layout
@@ -64,14 +88,27 @@ export function InternalSignInForm({ locale, nextPath }: { locale: string; nextP
             </div>
           </div>
 
-          {state.error ? (
+          {errorMessageKey ? (
             <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {t(errorKeyMap[state.error] ?? state.error)}
+              {t(errorMessageKey)}
             </p>
           ) : null}
 
           <Button type="submit" className="w-full" disabled={isPending || isRedirecting}>
             {isPending ? t("signingIn") : t("submitButton")}
+          </Button>
+
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center" aria-hidden>
+              <div className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">or</span>
+            </div>
+          </div>
+
+          <Button asChild variant="outline" className="w-full">
+            <Link href={`/${locale}/auth/sso`}>{t("ssoButton")}</Link>
           </Button>
         </form>
       </CardContent>

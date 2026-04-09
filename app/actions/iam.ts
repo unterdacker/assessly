@@ -177,6 +177,7 @@ export async function deleteUser(
         isActive: false,
         email: anonymizedEmail,
         passwordHash: null,
+        ssoProviderId: null,
       },
     });
 
