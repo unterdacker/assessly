@@ -21,7 +21,7 @@ type PageProps = {
 
 export default async function MailSettingsPage({ params }: PageProps) {
   const { locale } = await params;
-  await requirePageRole(["ADMIN"], locale);
+  await requirePageRole(["SUPER_ADMIN", "ADMIN"], locale);
   const t = await getTranslations();
 
   const settings = await prisma.systemSettings.findUnique({
