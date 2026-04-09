@@ -274,8 +274,8 @@ jobs:
         with:
           name: nextjs-build-${{ github.run_id }}
           path: .next/
-      - name: Apply database migrations
-        run: npx prisma migrate deploy
+      - name: Apply database schema
+        run: npx prisma db push
         env:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
       - name: Seed database with E2E test fixtures
@@ -353,8 +353,8 @@ jobs:
         with:
           name: nextjs-build-${{ github.run_id }}
           path: .next/
-      - name: Apply database migrations
-        run: npx prisma migrate deploy
+      - name: Apply database schema
+        run: npx prisma db push
         env:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
       - name: Seed database
