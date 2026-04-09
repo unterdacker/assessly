@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
-import { ShieldCheck, Server, Globe, Mail, ChevronRight } from "lucide-react";
+import { ShieldCheck, Server, Globe, Mail, ChevronRight, Ban } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AiSettingsForm } from "@/components/ai-settings-form";
@@ -44,6 +44,11 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   }
 
   const isLocal = company?.aiProvider === "local";
+  const isNoAi = company?.aiProvider === "no-ai" || company?.aiDisabled === true;
+  const providerDisplayName =
+    company?.aiProvider === "mistral" ? "Mistral AI"
+    : company?.aiProvider === "local" ? "Local Server"
+    : "No AI Mode";
 
   // Never send the encrypted key value to the browser — pass null so the form
   // shows an empty password field.  The action preserves the existing encrypted
@@ -59,10 +64,12 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
     LocalServer: t("LocalServer"),
     noAiMode: t("noAiMode"),
     noAiModeDesc: t("noAiModeDesc"),
+    noAiConfirmMessage: t("noAiConfirmMessage"),
     aiFeaturesDisabled: t("aiFeaturesDisabled"),
     aiFeaturesDisabledDesc: t("aiFeaturesDisabledDesc"),
     aiDisabledBadge: t("aiDisabledBadge"),
     MistralAPIKey: t("MistralAPIKey"),
+    KeyAlreadyConfigured: t("KeyAlreadyConfigured"),
     EnterMistralAPIKey: t("EnterMistralAPIKey"),
     LocalAIEndpoint: t("LocalAIEndpoint"),
     LocalAIEndpointPlaceholder: t("LocalAIEndpointPlaceholder"),
@@ -105,7 +112,12 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
                 </div>
 
                 <div className="flex flex-col items-end gap-2">
-                  {isLocal ? (
+                  {isNoAi ? (
+                    <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-700">
+                      <Ban className="h-3.5 w-3.5" />
+                      {t("DataProcessingDisabled")}
+                    </Badge>
+                  ) : isLocal ? (
                     <Badge variant="outline" className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800">
                       <Server className="h-3.5 w-3.5" />
                       {t("DataProcessingLocal")}
@@ -117,7 +129,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
                     </Badge>
                   )}
                   <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-                    {t("Provider")}: {company.aiProvider}
+                    {t("Provider")}: {providerDisplayName}
                   </span>
                 </div>
               </div>

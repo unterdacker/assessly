@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Sparkles, Globe, Server } from "lucide-react";
+import { Sparkles, Globe, Server, Ban } from "lucide-react";
 import { updateAiSettings } from "@/app/actions/update-settings";
 import { useActionState } from "react";
 
@@ -25,6 +25,7 @@ interface Translations {
   MistralAI: string;
   LocalServer: string;
   MistralAPIKey: string;
+  KeyAlreadyConfigured: string;
   EnterMistralAPIKey: string;
   LocalAIEndpoint: string;
   LocalAIEndpointPlaceholder: string;
@@ -34,14 +35,14 @@ interface Translations {
   SettingsUpdatedSuccess: string;
   noAiMode: string;
   noAiModeDesc: string;
+  noAiConfirmMessage: string;
   aiFeaturesDisabled: string;
   aiFeaturesDisabledDesc: string;
   aiDisabledBadge: string;
 }
 
 export function AiSettingsForm({ company, companyId, translations }: { company: Company; companyId: string; translations: Translations }) {
-  const [aiProvider, setAiProvider] = useState(company.aiProvider);
-  const [aiDisabledState, setAiDisabledState] = useState(company.aiDisabled);
+  const [aiProvider, setAiProvider] = useState(company.aiDisabled ? "no-ai" : company.aiProvider);
 
   const [state, formAction] = useActionState(updateAiSettings, null);
 
@@ -57,32 +58,19 @@ export function AiSettingsForm({ company, companyId, translations }: { company: 
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={formAction} className="space-y-6">
+        <form action={formAction} className="space-y-6" onSubmit={(e) => {
+          if (
+            !company.aiDisabled &&
+            aiProvider === "no-ai" &&
+            !window.confirm(translations.noAiConfirmMessage)
+          ) {
+            e.preventDefault();
+          }
+        }}>
           <input type="hidden" name="companyId" value={companyId} />
           <input type="hidden" name="aiProvider" value={aiProvider} />
-          <input type="hidden" name="aiDisabled" value={aiDisabledState ? "on" : "false"} />
 
-          <div className="rounded-lg border p-4 space-y-3">
-            <div className="space-y-1">
-              <Label htmlFor="aiDisabled" className="text-sm font-medium">
-                {translations.noAiModeDesc}
-              </Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                id="aiDisabled"
-                type="checkbox"
-                checked={aiDisabledState}
-                onChange={(event) => setAiDisabledState(event.target.checked)}
-                className="h-4 w-4 rounded border-slate-300"
-              />
-              <Label htmlFor="aiDisabled" className="text-sm">
-                {translations.noAiMode}
-              </Label>
-            </div>
-          </div>
-
-          {aiDisabledState && (
+          {aiProvider === "no-ai" && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
               <p className="text-xs font-semibold uppercase tracking-wide">{translations.aiDisabledBadge}</p>
               <p className="text-sm font-medium">{translations.aiFeaturesDisabled}</p>
@@ -90,17 +78,24 @@ export function AiSettingsForm({ company, companyId, translations }: { company: 
             </div>
           )}
 
-          <RadioGroup value={aiProvider} onValueChange={setAiProvider}>
+          <RadioGroup value={aiProvider} onValueChange={setAiProvider} className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="no-ai" id="no-ai" />
+              <Label htmlFor="no-ai" className="flex items-center gap-2 cursor-pointer text-sm font-medium">
+                <Ban className="h-4 w-4" />
+                {translations.noAiMode}
+              </Label>
+            </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="mistral" id="mistral" />
-              <Label htmlFor="mistral" className="flex items-center gap-2">
+              <Label htmlFor="mistral" className="flex items-center gap-2 cursor-pointer text-sm font-medium">
                 <Globe className="h-4 w-4" />
                 {translations.MistralAI}
               </Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="local" id="local" />
-              <Label htmlFor="local" className="flex items-center gap-2">
+              <Label htmlFor="local" className="flex items-center gap-2 cursor-pointer text-sm font-medium">
                 <Server className="h-4 w-4" />
                 {translations.LocalServer}
               </Label>
@@ -116,7 +111,7 @@ export function AiSettingsForm({ company, companyId, translations }: { company: 
                 type="password"
                 placeholder={
                   company.mistralApiKey === ""
-                    ? (translations as unknown as Record<string, string>)["KeyAlreadyConfigured"] ?? "Leave blank to keep the existing key"
+                    ? translations.KeyAlreadyConfigured
                     : translations.EnterMistralAPIKey
                 }
                 defaultValue=""

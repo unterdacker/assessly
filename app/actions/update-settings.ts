@@ -1,11 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { encrypt } from "@/lib/crypto";
 import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 import { logAuditEvent } from "@/lib/audit-log";
 import { AuditLogger } from "@/lib/structured-logger";
+import { RISK_POSTURE_CACHE_TAG } from "@/lib/queries/dashboard-risk-posture";
 
 // ---------------------------------------------------------------------------
 // SSRF block-list: deny well-known cloud metadata and link-local endpoints.
@@ -50,11 +51,7 @@ export async function updateAiSettings(
   const mistralApiKey = formData.get("mistralApiKey") as string | null;
   const localAiEndpoint = formData.get("localAiEndpoint") as string | null;
   const localAiModel = formData.get("localAiModel") as string | null;
-  const aiDisabledRaw = formData.get("aiDisabled");
-  const aiDisabled =
-    aiDisabledRaw !== null
-      ? aiDisabledRaw === "on" || aiDisabledRaw === "true"
-      : undefined;
+  const derivedAiDisabled = aiProvider === "no-ai";
 
   if (!companyId) {
     return { success: false, error: "Company ID is required." };
@@ -64,7 +61,7 @@ export async function updateAiSettings(
     return { success: false, error: "Unauthorized." };
   }
 
-  if (!aiProvider || !["mistral", "local"].includes(aiProvider)) {
+  if (!aiProvider || !["mistral", "local", "no-ai"].includes(aiProvider)) {
     return { ok: false, error: "Invalid AI provider selected." };
   }
 
@@ -110,7 +107,7 @@ export async function updateAiSettings(
       where: { id: companyId },
       data: {
         aiProvider,
-        ...(aiDisabled !== undefined ? { aiDisabled } : {}),
+        aiDisabled: derivedAiDisabled,
         ...(aiProvider === "mistral"
           ? encryptedMistralApiKey !== undefined
             ? { mistralApiKey: encryptedMistralApiKey }
@@ -134,7 +131,7 @@ export async function updateAiSettings(
         },
         newValue: {
           aiProvider,
-          aiDisabled,
+          aiDisabled: derivedAiDisabled,
           localAiEndpoint: aiProvider === "local" ? localAiEndpoint : null,
           localAiModel: aiProvider === "local" ? localAiModel : null,
         },
@@ -147,11 +144,12 @@ export async function updateAiSettings(
       userId: session.userId,
       entityType: "company_settings",
       entityId: companyId,
-      message: `AI Provider switched to ${aiProvider === "mistral" ? "Mistral AI" : "Local Server"}`,
+      message: `AI Provider switched to ${aiProvider === "mistral" ? "Mistral AI" : aiProvider === "local" ? "Local Server" : "No AI Mode"}`,
       details: { aiProvider },
     });
 
     revalidatePath('/settings');
+    revalidateTag(RISK_POSTURE_CACHE_TAG);
     return { success: true };
   } catch (error) {
     if (isAccessControlError(error)) {
