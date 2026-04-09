@@ -381,10 +381,12 @@ export function scrubPiiFields(value: unknown): unknown {
  * has not been tampered with in transit.
  */
 export function signBundle(canonicalContent: string): string {
-  const secret =
-    process.env.AUDIT_BUNDLE_SECRET ||
-    process.env.CRON_SECRET ||
-    "assessly-forensic-bundle-unsigned";
+  const secret = process.env.AUDIT_BUNDLE_SECRET || process.env.CRON_SECRET;
+  if (!secret) {
+    throw new Error(
+      "signBundle: AUDIT_BUNDLE_SECRET or CRON_SECRET must be set — refusing to sign with a known fallback key"
+    );
+  }
 
   return createHmac("sha256", secret).update(canonicalContent, "utf8").digest("hex");
 }
