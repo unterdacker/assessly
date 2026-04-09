@@ -141,9 +141,9 @@ describe("mfa-pending cookie", () => {
     expect(token).toBeTruthy();
 
     const [payload, signature] = (token as string).split(".");
-    const last = signature[signature.length - 1];
-    const flipped = last === "A" ? "B" : "A";
-    const badSignature = `${signature.slice(0, -1)}${flipped}`;
+    const first = signature[0];
+    const flipped = first === "A" ? "B" : "A";
+    const badSignature = `${flipped}${signature.slice(1)}`;
 
     cookieStore.set(MFA_PENDING_COOKIE, `${payload}.${badSignature}`);
 

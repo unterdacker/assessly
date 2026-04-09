@@ -33,7 +33,7 @@ jobs:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af  # v4.1.0
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"
           cache: npm
@@ -72,7 +72,7 @@ jobs:
       AI_PROVIDER: local
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af  # v4.1.0
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"
           cache: npm
@@ -80,7 +80,7 @@ jobs:
       - run: npx prisma generate
       - run: npx prisma migrate deploy
       - run: npm run test:coverage
-      - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.4.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         if: always()
         with:
           name: coverage-report
@@ -102,7 +102,7 @@ jobs:
           fetch-depth: 0  # Full history required for complete secret scanning
       - name: Install gitleaks
         run: |
-          GITLEAKS_VERSION="8.18.4"
+          GITLEAKS_VERSION="8.30.1"
           curl -sSfL \
             "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
             -o /tmp/gitleaks.tar.gz
@@ -117,7 +117,7 @@ jobs:
             --report-path=results.sarif \
             --log-opts=-1
       - name: Upload SARIF to Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@5c8a8a642e79153f5d047b10ec1cba1d1cc65699  # v3
         if: always()
         with:
           sarif_file: results.sarif
@@ -135,14 +135,14 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@5c8a8a642e79153f5d047b10ec1cba1d1cc65699  # v3
         with:
           languages: javascript-typescript
           queries: security-extended,security-and-quality
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@5c8a8a642e79153f5d047b10ec1cba1d1cc65699  # v3
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@5c8a8a642e79153f5d047b10ec1cba1d1cc65699  # v3
         with:
           category: /language:javascript-typescript
 
@@ -151,23 +151,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af  # v4.1.0
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"
           cache: npm
       - run: npm ci --ignore-scripts
-      - run: npm audit --audit-level=high
+      - name: Run audit and save report
+        run: npm audit --audit-level=high --json > npm-audit.json || true
+      - name: Fail on high/critical vulnerabilities
+        run: npm audit --audit-level=high
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        if: always()
+        with:
+          name: npm-audit-${{ github.run_id }}
+          path: npm-audit.json
+          retention-days: 30
+          if-no-files-found: ignore
 
   dependency-review:
     name: Dependency Review
     runs-on: ubuntu-latest
     # Only runs on pull requests — push events have no base to diff against
     if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/dependency-review-action@3b139cfc5fae8b618d3eae3675e383bb1769c019  # v4.3.4
+      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48  # v4.9.0
         with:
           fail-on-severity: high
+          fail-on-scopes: runtime
+          comment-summary-in-pr: always
+          show-openssf-scorecard: true
 
   # ─────────────────────────────────────────────────────────
   # PHASE 2: Build (gated on all Phase 1 checks)
@@ -204,7 +220,7 @@ jobs:
       AI_PROVIDER: local
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af  # v4.1.0
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"
           cache: npm
@@ -220,7 +236,7 @@ jobs:
       - name: Verify build output
         run: |
           test -f .next/BUILD_ID && echo "Build successful" || (echo "Build failed: .next/BUILD_ID not found" >&2; exit 1)
-      - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.4.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         with:
           name: nextjs-build-${{ github.run_id }}
           path: .next/
@@ -233,7 +249,7 @@ jobs:
         # continue-on-error: SBOM is informational and must never block test runs.
         continue-on-error: true
         run: npm exec @cyclonedx/cyclonedx-npm -- --output-file sbom.cdx.json --output-format JSON
-      - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.4.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         continue-on-error: true
         with:
           name: sbom-${{ github.run_id }}
@@ -264,13 +280,13 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af  # v4.1.0
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"
           cache: npm
       - run: npm ci
       - name: Download build artifact
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e  # v4.1.7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
         with:
           name: nextjs-build-${{ github.run_id }}
           path: .next/
@@ -316,12 +332,19 @@ jobs:
         env:
           CI: "true"
           PLAYWRIGHT_BASE_URL: http://localhost:3000
-      - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.4.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         if: always()
         with:
           name: playwright-report-${{ github.run_id }}
           path: playwright-report/
           retention-days: 7
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        if: always()
+        with:
+          name: playwright-test-results-${{ github.run_id }}
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
 
   a11y:
     name: Accessibility Audit (WCAG)
@@ -343,13 +366,13 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af  # v4.1.0
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"
           cache: npm
       - run: npm ci
       - name: Download build artifact
-        uses: actions/download-artifact@65a9edc5881444af0b9093a5e628f2fe47ea3b2e  # v4.1.7
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
         with:
           name: nextjs-build-${{ github.run_id }}
           path: .next/
@@ -394,10 +417,10 @@ jobs:
       - name: Run axe-core accessibility audit
         run: |
           npx axe http://localhost:3000/en http://localhost:3000/en/sign-in \
-            --tags wcag2a,wcag2aa,wcag21aa \
+            --tags wcag2a,wcag2aa,wcag21aa,wcag22aa \
             --save axe-results.json \
             --exit
-      - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.4.0
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         if: always()
         with:
           name: axe-results-${{ github.run_id }}
