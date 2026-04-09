@@ -66,6 +66,9 @@ const rawEnvSchema = z.object({
   AUTH_SESSION_SECRET: z.string().optional(),
   /** Legacy alias — AUTH_SESSION_SECRET takes precedence. */
   NEXTAUTH_SECRET: z.string().optional(),
+  OIDC_STATE_SECRET: z.string().min(32),
+
+  APP_URL: z.string().url(),
 
   // ── Encryption keys ───────────────────────────────────────────────────────
   /**
@@ -376,6 +379,20 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
     });
   }
 
+    // ── OIDC_STATE_SECRET ────────────────────────────────────────────────────
+    if (
+      isPlaceholder(data.OIDC_STATE_SECRET) ||
+      data.OIDC_STATE_SECRET === "dev-only-assessly-oidc-state-secret-change-me"
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["OIDC_STATE_SECRET"],
+        message:
+          "OIDC_STATE_SECRET is set to a known weak or placeholder value. " +
+          "Generate a real secret before deploying.",
+      });
+    }
+
   // ── CRON_SECRET ───────────────────────────────────────────────────────────
   if (
     require(
@@ -414,6 +431,27 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
         path: ["NEXT_PUBLIC_APP_URL"],
         message:
           "NEXT_PUBLIC_APP_URL must use HTTPS in production " +
+          "(e.g. https://assessly.example.com). HTTP is not permitted.",
+      });
+    }
+  }
+
+  // ── APP_URL ──────────────────────────────────────────────────────────────
+  if (data.APP_URL && data.ALLOW_INSECURE_LOCALHOST !== "true") {
+    if (/localhost|127\.0\.0\.1/.test(data.APP_URL)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["APP_URL"],
+        message:
+          "APP_URL must not point to localhost in production. " +
+          "Set it to your public-facing domain (e.g. https://assessly.example.com).",
+      });
+    } else if (!data.APP_URL.startsWith("https://")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["APP_URL"],
+        message:
+          "APP_URL must use HTTPS in production " +
           "(e.g. https://assessly.example.com). HTTP is not permitted.",
       });
     }

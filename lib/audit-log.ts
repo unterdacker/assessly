@@ -38,6 +38,8 @@ export type AuditAction =
   // --- Authentication (AUTH) ---
   | "LOGIN_SUCCESS"
   | "LOGIN_FAILED"
+  | "SSO_LOGIN_SUCCESS"
+  | "SSO_LOGIN_FAILED"
   | "RATE_LIMIT_EXCEEDED"
   | "USER_LOGOUT"
   | "MFA_ENABLED"
@@ -51,6 +53,8 @@ export type AuditAction =
   | "USER_CREATED"
   | "USER_DELETED"
   | "USER_ROLE_CHANGED"
+  | "SSO_USER_PROVISIONED"
+  | "OIDC_CONFIG_UPDATED"
   // --- Fallback ---
   | "OTHER";
 
@@ -112,8 +116,8 @@ export type LogAuditEventOptions = {
 // ---------------------------------------------------------------------------
 
 const AI_ACTIONS = new Set(["AI_GENERATION", "AI_REMEDIATION_SENT", "DOCUMENT_ANALYZED"]);
-const AUTH_ACTIONS = new Set(["LOGIN_SUCCESS", "LOGIN_FAILED", "RATE_LIMIT_EXCEEDED", "USER_LOGOUT", "MFA_ENABLED", "MFA_DISABLED", "MFA_FAILED_ATTEMPT"]);
-const CONFIG_ACTIONS = new Set(["SETTINGS_UPDATED", "MAIL_DELIVERY_FAILED"]);
+const AUTH_ACTIONS = new Set(["LOGIN_SUCCESS", "LOGIN_FAILED", "SSO_LOGIN_SUCCESS", "SSO_LOGIN_FAILED", "RATE_LIMIT_EXCEEDED", "USER_LOGOUT", "MFA_ENABLED", "MFA_DISABLED", "MFA_FAILED_ATTEMPT"]);
+const CONFIG_ACTIONS = new Set(["SETTINGS_UPDATED", "OIDC_CONFIG_UPDATED", "MAIL_DELIVERY_FAILED"]);
 const NIS2_DORA_ACTIONS = new Set([
   "VENDOR_CREATED",
   "VENDOR_DELETED",
@@ -125,7 +129,7 @@ const NIS2_DORA_ACTIONS = new Set([
   "ASSESSMENT_UPDATED",
   "EXTERNAL_ASSESSMENT_UPDATED",
 ]);
-const ISO27001_ACTIONS = new Set(["USER_CREATED", "USER_DELETED", "USER_ROLE_CHANGED"]);
+const ISO27001_ACTIONS = new Set(["USER_CREATED", "USER_DELETED", "USER_ROLE_CHANGED", "SSO_USER_PROVISIONED"]);
 
 function deriveComplianceCategory(action: string): string {
   if (AI_ACTIONS.has(action)) return "AI_ACT";
