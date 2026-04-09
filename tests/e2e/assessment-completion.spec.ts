@@ -142,8 +142,11 @@ test.describe("Assessment Completion — PDF upload validation", () => {
   });
 
   test("rejects a file over the 5 MB limit", async ({ page }) => {
-    // Create a 6 MB fake PDF (starts with %PDF- but is oversized)
-    const oversizedPath = path.join(os.tmpdir(), `assessly-oversize-${Date.now()}.pdf`);
+    // Create a 6 MB fake PDF (starts with %PDF- but is oversized).
+    // Use mkdtempSync so the directory (and file inside it) is created
+    // atomically with restricted permissions — avoids CWE-377/CWE-378.
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "assessly-oversize-"));
+    const oversizedPath = path.join(tmpDir, "oversize.pdf");
     const header = "%PDF-1.4\n";
     const padding = Buffer.alloc(6 * 1024 * 1024, "A");
     fs.writeFileSync(oversizedPath, header + padding.toString("utf8"));
@@ -154,7 +157,7 @@ test.describe("Assessment Completion — PDF upload validation", () => {
       page.getByText(/exceeds|too large|maximum.*size|size.*limit/i),
     ).toBeVisible({ timeout: 10000 });
 
-    fs.rmSync(oversizedPath, { force: true });
+    fs.rmSync(tmpDir, { force: true, recursive: true });
   });
 
   test("accepts a valid minimal PDF without immediate errors", async ({ page }) => {
