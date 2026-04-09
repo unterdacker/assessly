@@ -203,6 +203,8 @@ jobs:
         # Invokes next build directly to bypass the prebuild npm script,
         # which requires a live database and .env file on disk.
         run: npx next build
+      - name: Verify build output
+        run: test -d .next && echo "Build successful" || (echo "Build failed" >&2; exit 1)
       - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.4.0
         with:
           name: nextjs-build-${{ github.run_id }}
