@@ -96,6 +96,7 @@ type RiskPostureRawData = {
   aiAuditEvents: Array<{ action: string; metadata: unknown }>;
   totalAuditCount: number;
   lastAiSummary: string | null;
+  aiDisabled: boolean;
   aiSummaryUpdatedAt: string | null; // ISO string
 };
 
@@ -128,7 +129,7 @@ async function fetchRiskPostureRawData(companyId: string): Promise<RiskPostureRa
       prisma.auditLog.count({ where: { companyId } }),
       prisma.company.findUnique({
         where: { id: companyId },
-        select: { lastAiSummary: true, aiSummaryUpdatedAt: true },
+        select: { lastAiSummary: true, aiSummaryUpdatedAt: true, aiDisabled: true },
       }),
     ]);
 
@@ -143,6 +144,7 @@ async function fetchRiskPostureRawData(companyId: string): Promise<RiskPostureRa
     aiAuditEvents,
     totalAuditCount,
     lastAiSummary: companyCache?.lastAiSummary ?? null,
+    aiDisabled: companyCache?.aiDisabled ?? true,
     aiSummaryUpdatedAt: companyCache?.aiSummaryUpdatedAt?.toISOString() ?? null,
   };
 }
@@ -333,17 +335,38 @@ export async function getDashboardRiskPostureOverview(
   // Check cache before calling the LLM
   let executiveSummary: DashboardExecutiveSummaryResult;
 
-  const cachedAt = companyCache?.aiSummaryUpdatedAt;
-  const cacheAge = cachedAt ? Date.now() - cachedAt.getTime() : Infinity;
-  const cacheHit =
-    !bypassCache &&
-    companyCache?.lastAiSummary &&
-    cacheAge < AI_SUMMARY_CACHE_TTL_MS;
+  if (raw.aiDisabled) {
+    executiveSummary = {
+      systemicRisk:
+        locale === "de"
+          ? "KI-Modus ist deaktiviert. Aktivieren Sie einen KI-Anbieter in den Einstellungen."
+          : "AI mode is disabled. Enable an AI provider in Settings.",
+      averageRemediationTimeDays,
+      recommendedCategoryKey: null,
+      source: "fallback",
+    };
+  } else {
+    const cachedAt = companyCache?.aiSummaryUpdatedAt;
+    const cacheAge = cachedAt ? Date.now() - cachedAt.getTime() : Infinity;
+    const cacheHit =
+      !bypassCache &&
+      companyCache?.lastAiSummary &&
+      cacheAge < AI_SUMMARY_CACHE_TTL_MS;
 
-  if (cacheHit) {
-    const cached = parseCachedSummary(companyCache.lastAiSummary!);
-    if (cached) {
-      executiveSummary = cached;
+    if (cacheHit) {
+      const cached = parseCachedSummary(companyCache.lastAiSummary!);
+      if (cached) {
+        executiveSummary = cached;
+      } else {
+        executiveSummary = await generateDashboardExecutiveSummary({
+          companyId,
+          locale,
+          categoryMetrics,
+          vendorSummaries,
+          riskBuckets,
+          averageRemediationTimeDays,
+        });
+      }
     } else {
       executiveSummary = await generateDashboardExecutiveSummary({
         companyId,
@@ -353,26 +376,17 @@ export async function getDashboardRiskPostureOverview(
         riskBuckets,
         averageRemediationTimeDays,
       });
+      // Persist to cache (fire-and-forget — don't block the response)
+      prisma.company.update({
+        where: { id: companyId },
+        data: {
+          lastAiSummary: JSON.stringify({ ...executiveSummary, cachedAt: new Date().toISOString() }),
+          aiSummaryUpdatedAt: new Date(),
+        },
+      }).catch((err: unknown) => {
+        console.warn("[dashboard-risk-posture] Failed to persist AI summary cache:", err);
+      });
     }
-  } else {
-    executiveSummary = await generateDashboardExecutiveSummary({
-      companyId,
-      locale,
-      categoryMetrics,
-      vendorSummaries,
-      riskBuckets,
-      averageRemediationTimeDays,
-    });
-    // Persist to cache (fire-and-forget — don't block the response)
-    prisma.company.update({
-      where: { id: companyId },
-      data: {
-        lastAiSummary: JSON.stringify({ ...executiveSummary, cachedAt: new Date().toISOString() }),
-        aiSummaryUpdatedAt: new Date(),
-      },
-    }).catch((err: unknown) => {
-      console.warn("[dashboard-risk-posture] Failed to persist AI summary cache:", err);
-    });
   }
 
   const aiGenerationCount = aiAuditEvents.filter(
