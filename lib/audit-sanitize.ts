@@ -244,7 +244,6 @@ const PII_FIELD_NAMES = new Set([
   "firstName",
   "lastName",
   "displayName",
-  "name",
   "passwordHash",
   "password",
   "mfaSecret",
