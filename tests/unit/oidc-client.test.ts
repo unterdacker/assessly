@@ -51,11 +51,14 @@ import {
 } from "@/lib/oidc/client";
 
 const MOCK_CONFIG = {
+  id: "config-1",
   companyId: "company-1",
   clientId: "client-id",
   clientSecret: "client-secret",
   issuerUrl: "https://idp.example.com",
   isEnabled: true,
+  jitProvisioning: false,
+  jitAllowedEmailDomains: [] as string[],
   createdAt: new Date(),
   updatedAt: new Date(),
 };
