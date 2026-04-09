@@ -226,6 +226,7 @@ jobs:
           path: .next/
           retention-days: 3
           if-no-files-found: error
+          include-hidden-files: true
       - name: Generate SBOM (CycloneDX)
         # @cyclonedx/cyclonedx-npm is installed via npm ci (in devDependencies).
         # npm exec is used instead of npx to guarantee the lockfile-resolved version.
