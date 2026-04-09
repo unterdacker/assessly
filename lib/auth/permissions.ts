@@ -11,7 +11,8 @@ export function canAccessPath(role: UserRole, normalizedPathname: string): boole
   if (
     normalizedPathname === "/" ||
     normalizedPathname === "/unauthorized" ||
-    normalizedPathname.startsWith("/auth/sign-in")
+    normalizedPathname.startsWith("/auth/sign-in") ||
+    normalizedPathname.startsWith("/auth/sso")
   ) {
     return true;
   }
