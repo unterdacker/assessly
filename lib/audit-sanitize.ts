@@ -34,7 +34,7 @@ export function truncateIp(
   if (!ip) return null;
 
   const trimmed = ip.trim();
-  if (!trimmed) return null;
+  if (!trimmed) return trimmed;
 
   if (options.securityIncident) {
     return trimmed;
@@ -43,7 +43,7 @@ export function truncateIp(
   // IPv4
   const ipv4 = trimmed.match(/^(\d{1,3}\.\d{1,3}\.\d{1,3})\.\d{1,3}$/);
   if (ipv4) {
-    return `${ipv4[1]}.0`;
+    return `${ipv4[1]}.xxx`;
   }
 
   // IPv6: zero out last 4 groups (64 bits)
@@ -335,9 +335,6 @@ function sanitizeStringValue(key: string, raw: string): string {
     return pseudonymizeIdentifier(trimmed.toLowerCase());
   }
 
-  if (/name/i.test(key) && trimmed.length > 0) {
-    return pseudonymizeIdentifier(trimmed);
-  }
 
   return raw;
 }
