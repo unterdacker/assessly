@@ -3,6 +3,7 @@ import "server-only";
 import type { OidcConfig } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { decrypt } from "@/lib/crypto";
+import { INTERNAL_READ_ROLES } from "@/lib/auth/permissions";
 
 export type DecryptedOidcConfig = Omit<OidcConfig, "clientSecretEncrypted"> & {
   clientSecret: string;
@@ -32,7 +33,7 @@ export async function getOidcConfigForEmail(
   const user = await prisma.user.findFirst({
     where: {
       email,
-      role: { in: ["ADMIN", "AUDITOR"] },
+      role: { in: INTERNAL_READ_ROLES },
       isActive: true,
     },
     select: { companyId: true },

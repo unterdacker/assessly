@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   RATE_LIMIT_DEFAULTS,
   isRateLimited,
@@ -103,5 +103,55 @@ describe("readClientIp", () => {
     };
 
     expect(readClientIp(headers)).toBe("198.51.100.25");
+  });
+});
+
+describe("FIFO eviction and expiry", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("evicts oldest entry when store is at capacity", () => {
+    const store = (globalThis as { __assesslyRateLimit?: Map<string, unknown> }).__assesslyRateLimit!;
+    for (let i = store.size; i < 100_000; i += 1) {
+      store.set(`fill-${i}`, { consecutiveFailures: 0, blockedUntil: 0 });
+    }
+    const firstKey = store.keys().next().value as string;
+
+    registerFailure("brand-new-eviction-test-key");
+
+    expect(store.has(firstKey)).toBe(false);
+    expect(store.has("brand-new-eviction-test-key")).toBe(true);
+    expect(store.size).toBe(100_000);
+  });
+
+  it("does not evict when updating an existing key at capacity", () => {
+    const store = (globalThis as { __assesslyRateLimit?: Map<string, unknown> }).__assesslyRateLimit!;
+    store.clear();
+
+    const existingKey = "existing-at-capacity";
+    store.set(existingKey, { consecutiveFailures: 0, blockedUntil: 0 });
+    for (let i = store.size; i < 100_000; i += 1) {
+      store.set(`fill-${i}`, { consecutiveFailures: 0, blockedUntil: 0 });
+    }
+    const sizeBefore = store.size;
+
+    registerFailure(existingKey);
+
+    expect(store.size).toBe(sizeBefore);
+  });
+
+  it("isRateLimited returns false after blockedUntil has passed", () => {
+    vi.useFakeTimers();
+    const key = "ip:time-expiry-test";
+
+    for (let i = 0; i < 5; i += 1) {
+      registerFailure(key);
+    }
+    expect(isRateLimited(key)).toBe(true);
+
+    vi.advanceTimersByTime(600_001);
+
+    expect(isRateLimited(key)).toBe(false);
   });
 });

@@ -10,7 +10,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    include: ["tests/unit/**/*.test.ts"],
+    include: ["tests/unit/**/*.test.ts", "lib/**/*.test.ts"],
     exclude: ["tests/e2e/**", "node_modules/**"],
     coverage: {
       provider: "v8",
@@ -22,7 +22,6 @@ export default defineConfig({
         "lib/mail.ts",
         "lib/pdf-utils.ts",
         "lib/ai/**",
-        "lib/auth/server.ts",
         "lib/queries/**",
         "lib/ensure-demo-data.ts",
         "lib/audit-middleware.ts",

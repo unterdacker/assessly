@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { UserRole } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { createSessionForUser, setAuthSessionCookie } from "@/lib/auth/server";
-import { getRoleLandingPath } from "@/lib/auth/permissions";
+import { INTERNAL_READ_ROLES, getRoleLandingPath } from "@/lib/auth/permissions";
 import { getOidcConfig } from "@/lib/oidc/config";
 import { discoverOidcClient, exchangeOidcCode } from "@/lib/oidc/client";
 import {
@@ -74,13 +74,11 @@ async function resolveOrProvisionUser(input: {
   ipAddress: string;
   locale: string;
 }): Promise<{ user: CallbackUser | null; errorCode?: string }> {
-  const internalRoles: UserRole[] = ["ADMIN", "AUDITOR"];
-
   let user = await prisma.user.findFirst({
     where: {
       companyId: input.companyId,
       ssoProviderId: input.subject,
-      role: { in: internalRoles },
+      role: { in: INTERNAL_READ_ROLES },
       isActive: true,
     },
     select: {
@@ -97,7 +95,7 @@ async function resolveOrProvisionUser(input: {
       where: {
         companyId: input.companyId,
         email: input.email,
-        role: { in: internalRoles },
+        role: { in: INTERNAL_READ_ROLES },
         isActive: true,
       },
       select: {

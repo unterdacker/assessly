@@ -818,6 +818,8 @@
     "colActions": "Actions",
     "roleAdmin": "Admin",
     "roleAuditor": "Auditor",
+    "roleSuperAdmin": "Super Admin",
+    "roleRiskReviewer": "Risk Reviewer",
     "noUsers": "No internal users found.",
     "changeRole": "Change role",
     "changeRoleToAdmin": "Change role to Admin",

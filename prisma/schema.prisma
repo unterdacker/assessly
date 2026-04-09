@@ -24,7 +24,9 @@ enum RiskLevel {
 }
 
 enum UserRole {
+  SUPER_ADMIN
   ADMIN
+  RISK_REVIEWER
   AUDITOR
   VENDOR
 }
