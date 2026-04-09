@@ -266,6 +266,7 @@ export async function GET(request: NextRequest) {
     companyId,
     exportScope: categoryFilter ?? "ALL",
     profile: isAuditor ? "AUDITOR" : "ADMIN",
+    totalEvents: chainIntegrity.totalEvents,
     chainIntegrity,
     logs: exportedLogs,
   };

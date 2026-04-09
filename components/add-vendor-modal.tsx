@@ -149,7 +149,7 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
                 Cancel
               </Button>
               <Button type="submit" disabled={pending}>
-                {pending ? "Saving…" : "Send invite"}
+                {pending ? "Saving…" : "Add Vendor"}
               </Button>
             </DialogFooter>
           </form>
