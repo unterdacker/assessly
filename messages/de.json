@@ -856,6 +856,8 @@
     "colActions": "Aktionen",
     "roleAdmin": "Admin",
     "roleAuditor": "Prüfer",
+    "roleSuperAdmin": "Super Admin",
+    "roleRiskReviewer": "Risikoprüfer",
     "noUsers": "Keine internen Benutzer gefunden.",
     "changeRole": "Rolle ändern",
     "changeRoleToAdmin": "Rolle zu Admin ändern",

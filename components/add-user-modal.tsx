@@ -31,7 +31,7 @@ export function AddUserModal() {
   const t = useTranslations("UserManagement");
   const [open, setOpen] = React.useState(false);
   const [email, setEmail] = React.useState("");
-  const [role, setRole] = React.useState<Extract<UserRole, "ADMIN" | "AUDITOR">>("AUDITOR");
+  const [role, setRole] = React.useState<Extract<UserRole, "SUPER_ADMIN" | "ADMIN" | "RISK_REVIEWER" | "AUDITOR">>("AUDITOR");
   const [isPending, startTransition] = useTransition();
 
   function handleOpenChange(next: boolean) {
@@ -104,7 +104,7 @@ export function AddUserModal() {
             <Select
               value={role}
               onValueChange={(v) =>
-                setRole(v as Extract<UserRole, "ADMIN" | "AUDITOR">)
+                setRole(v as Extract<UserRole, "SUPER_ADMIN" | "ADMIN" | "RISK_REVIEWER" | "AUDITOR">)
               }
               disabled={isPending}
             >
@@ -114,6 +114,8 @@ export function AddUserModal() {
               <SelectContent>
                 <SelectItem value="AUDITOR">{t("roleAuditor")}</SelectItem>
                 <SelectItem value="ADMIN">{t("roleAdmin")}</SelectItem>
+                <SelectItem value="RISK_REVIEWER">{t("roleRiskReviewer")}</SelectItem>
+                <SelectItem value="SUPER_ADMIN">{t("roleSuperAdmin")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
