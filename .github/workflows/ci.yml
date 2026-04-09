@@ -218,12 +218,13 @@ jobs:
         # which requires a live database and .env file on disk.
         run: npx next build
       - name: Verify build output
-        run: test -d .next && echo "Build successful" || (echo "Build failed" >&2; exit 1)
+        run: test -f .next/BUILD_ID && echo "Build successful" || (echo "Build failed: .next/BUILD_ID not found" >&2; exit 1)
       - uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b  # v4.4.0
         with:
           name: nextjs-build-${{ github.run_id }}
           path: .next/
           retention-days: 3
+          if-no-files-found: error
       - name: Generate SBOM (CycloneDX)
         # @cyclonedx/cyclonedx-npm is installed via npm ci (in devDependencies).
         # npm exec is used instead of npx to guarantee the lockfile-resolved version.
