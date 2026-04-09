@@ -20,7 +20,8 @@
  *   10. Submitting with an expired token is blocked server-side
  */
 
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
+import { signInAsAdmin } from "./helpers/auth";
 import path from "path";
 import fs from "fs";
 import os from "os";
@@ -28,14 +29,6 @@ import os from "os";
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-async function signInAsAdmin(page: Page) {
-  await page.goto("/en/auth/sign-in");
-  await page.getByLabel(/email/i).fill("admin@demo.assessly.dev");
-  await page.getByLabel(/password/i).fill("Admin1234!");
-  await page.getByRole("button", { name: /sign in/i }).click();
-  await page.waitForURL(/\/en\/dashboard/);
-}
 
 /** Creates a minimal but valid PDF file on disk and returns its path. */
 function createMinimalPdf(sizeBytes = 1024): string {

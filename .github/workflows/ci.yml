@@ -278,6 +278,12 @@ jobs:
         run: npx prisma migrate deploy
         env:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
+      - name: Seed database with E2E test fixtures
+        run: npx prisma db seed
+        env:
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
+          ASSESSLY_ADMIN_EMAIL: admin@demo.assessly.dev
+          ASSESSLY_ADMIN_PASSWORD: Admin1234!
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - name: Start Next.js server
@@ -289,19 +295,22 @@ jobs:
           PORT: 3000
           NODE_ENV: production
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
-          AUTH_SESSION_SECRET: ${{ secrets.CI_AUTH_SESSION_SECRET }}
-          SETTINGS_ENCRYPTION_KEY: ${{ secrets.CI_SETTINGS_ENCRYPTION_KEY }}
-          MFA_ENCRYPTION_KEY: ${{ secrets.CI_MFA_ENCRYPTION_KEY }}
-          AUDIT_BUNDLE_SECRET: ${{ secrets.CI_AUDIT_BUNDLE_SECRET }}
-          CRON_SECRET: ${{ secrets.CI_CRON_SECRET }}
-          NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${{ secrets.CI_SERVER_ACTIONS_KEY }}
+          # CI-only ephemeral keys — structurally valid but intentionally non-production.
+          # All-zero/all-one hex keys match the pattern already used in build/unit-test jobs.
+          AUTH_SESSION_SECRET: "ci-assessly-auth-session-secret-32-chars-ok"
+          SETTINGS_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+          MFA_ENCRYPTION_KEY: "1111111111111111111111111111111111111111111111111111111111111111"
+          AUDIT_BUNDLE_SECRET: "ci-assessly-audit-bundle-secret-minimum-32-chars"
+          AUDIT_EXPORT_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+          AUDIT_PSEUDONYMIZATION_KEY: "1111111111111111111111111111111111111111111111111111111111111111"
+          CRON_SECRET: "ci-assessly-cron-secret-minimum-32-chars-here-ok"
           NEXT_PUBLIC_APP_URL: http://localhost:3000
           ALLOW_INSECURE_LOCALHOST: "true"
           AI_PROVIDER: local
           MAIL_STRATEGY: log
           NEXT_TELEMETRY_DISABLED: "1"
       - name: Wait for server to be ready
-        run: timeout 60 bash -c 'until curl -sf http://localhost:3000 > /dev/null; do sleep 2; done'
+        run: timeout 90 bash -c 'until curl -sf http://localhost:3000/en/auth/sign-in > /dev/null; do sleep 2; done'
       - name: Run Playwright tests
         run: npm run test:e2e
         env:
@@ -358,19 +367,22 @@ jobs:
           PORT: 3000
           NODE_ENV: production
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
-          AUTH_SESSION_SECRET: ${{ secrets.CI_AUTH_SESSION_SECRET }}
-          SETTINGS_ENCRYPTION_KEY: ${{ secrets.CI_SETTINGS_ENCRYPTION_KEY }}
-          MFA_ENCRYPTION_KEY: ${{ secrets.CI_MFA_ENCRYPTION_KEY }}
-          AUDIT_BUNDLE_SECRET: ${{ secrets.CI_AUDIT_BUNDLE_SECRET }}
-          CRON_SECRET: ${{ secrets.CI_CRON_SECRET }}
-          NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${{ secrets.CI_SERVER_ACTIONS_KEY }}
+          # CI-only ephemeral keys — structurally valid but intentionally non-production.
+          # All-zero/all-one hex keys match the pattern already used in build/unit-test jobs.
+          AUTH_SESSION_SECRET: "ci-assessly-auth-session-secret-32-chars-ok"
+          SETTINGS_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+          MFA_ENCRYPTION_KEY: "1111111111111111111111111111111111111111111111111111111111111111"
+          AUDIT_BUNDLE_SECRET: "ci-assessly-audit-bundle-secret-minimum-32-chars"
+          AUDIT_EXPORT_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+          AUDIT_PSEUDONYMIZATION_KEY: "1111111111111111111111111111111111111111111111111111111111111111"
+          CRON_SECRET: "ci-assessly-cron-secret-minimum-32-chars-here-ok"
           NEXT_PUBLIC_APP_URL: http://localhost:3000
           ALLOW_INSECURE_LOCALHOST: "true"
           AI_PROVIDER: local
           MAIL_STRATEGY: log
           NEXT_TELEMETRY_DISABLED: "1"
       - name: Wait for server to be ready
-        run: timeout 60 bash -c 'until curl -sf http://localhost:3000 > /dev/null; do sleep 2; done'
+        run: timeout 90 bash -c 'until curl -sf http://localhost:3000/en/auth/sign-in > /dev/null; do sleep 2; done'
       # NOTE: Only unauthenticated public routes are scanned in this job.
       # Scanning authenticated routes (dashboard, settings, admin) requires an
       # active session cookie, which is not available in this CI configuration.

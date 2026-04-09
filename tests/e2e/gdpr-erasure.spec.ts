@@ -20,19 +20,11 @@
  */
 
 import { test, expect, type Page } from "@playwright/test";
+import { signInAsAdmin } from "./helpers/auth";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/** Sign in as the seeded ADMIN user and wait for the dashboard redirect. */
-async function signInAsAdmin(page: Page): Promise<void> {
-  await page.goto("/en/auth/sign-in");
-  await page.getByLabel(/email/i).fill("admin@demo.assessly.dev");
-  await page.getByLabel(/password/i).fill("Admin1234!");
-  await page.getByRole("button", { name: /sign in/i }).click();
-  await page.waitForURL(/\/en\/dashboard/);
-}
 
 /**
  * Creates a vendor via the REST API endpoint.
