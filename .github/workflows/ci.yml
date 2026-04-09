@@ -228,7 +228,7 @@ jobs:
     needs: [build]
     services:
       postgres:
-        image: postgres:16-alpine@sha256:d48b2c7531f0a0f74a74e1c3bd5b7a49cf5d19e4a0c5bbc787ba3dddc15e7ff3
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci  # CI-only ephemeral credentials — not used anywhere outside this job
@@ -298,7 +298,7 @@ jobs:
     needs: [build]
     services:
       postgres:
-        image: postgres:16-alpine@sha256:d48b2c7531f0a0f74a74e1c3bd5b7a49cf5d19e4a0c5bbc787ba3dddc15e7ff3
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci  # CI-only ephemeral credentials — not used anywhere outside this job
