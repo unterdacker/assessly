@@ -14,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2 } from "lucide-react";
 
 type AddVendorModalProps = {
   trigger?: React.ReactNode;
@@ -25,14 +24,34 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
   const [open, setOpen] = React.useState(false);
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
-  const [error, setError] = React.useState<string | null>(null);
+  const [nameError, setNameError] = React.useState<string | null>(null);
+  const [emailError, setEmailError] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState(false);
-  const [isSuccess, setIsSuccess] = React.useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!name.trim() || !email.trim()) return;
-    setError(null);
+
+    let hasError = false;
+    if (!name.trim()) {
+      setNameError("Organization name is required.");
+      hasError = true;
+    } else {
+      setNameError(null);
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      setEmailError("Security contact email is required.");
+      hasError = true;
+    } else if (!emailRegex.test(email.trim())) {
+      setEmailError("Please enter a valid email address.");
+      hasError = true;
+    } else {
+      setEmailError(null);
+    }
+
+    if (hasError) return;
+
     setPending(true);
     try {
       const formData = new FormData();
@@ -44,13 +63,13 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
       });
       const result = (await res.json()) as { ok: boolean; error?: string };
       if (!result.ok) {
-        setError(result.error ?? "Could not save vendor. Try again.");
+        setEmailError(result.error ?? "Could not save vendor. Try again.");
         return;
       }
-      setIsSuccess(true);
       router.refresh();
+      handleOpenChange(false);
     } catch {
-      setError("Could not save vendor. Try again.");
+      setEmailError("Could not save vendor. Try again.");
     } finally {
       setPending(false);
     }
@@ -61,10 +80,10 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
     if (!isOpen) {
       // Clear states on close
       setTimeout(() => {
-        setIsSuccess(false);
         setName("");
         setEmail("");
-        setError(null);
+        setNameError(null);
+        setEmailError(null);
       }, 300);
     }
   };
@@ -75,85 +94,71 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
         {trigger ?? <Button type="button">Invite vendor</Button>}
       </DialogTrigger>
       <DialogContent>
-        {isSuccess ? (
-          <div className="space-y-6 py-4">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="h-5 w-5" />
-                Invitation Sent
-              </DialogTitle>
-              <DialogDescription>
-                Vendor <strong>{name}</strong> has been created.
-                Generate a temporary access code in the Vendors list and share:
-                <br />
-                <span className="font-semibold">assessly.app/portal</span>
-              </DialogDescription>
-            </DialogHeader>
-
-            <DialogFooter>
-              <Button onClick={() => handleOpenChange(false)} className="w-full">
-                Done
-              </Button>
-            </DialogFooter>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <DialogHeader>
-              <DialogTitle>Invite vendor</DialogTitle>
-              <DialogDescription>
-                Send an assessment invitation. The vendor will receive NIS2-aligned
-                security questions via Assessly. Data is stored in your Assessly database.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-2">
-              <div className="grid gap-2">
-                <Label htmlFor="vendor-name">Organization name</Label>
-                <Input
-                  id="vendor-name"
-                  name="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Acme Cloud Ltd"
-                  autoComplete="organization"
-                  required
-                  disabled={pending}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="vendor-email">Security contact email</Label>
-                <Input
-                  id="vendor-email"
-                  name="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="security@vendor.example"
-                  autoComplete="email"
-                  required
-                  disabled={pending}
-                />
-              </div>
-              {error ? (
-                <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-                  {error}
+        <form onSubmit={handleSubmit} noValidate>
+          <DialogHeader>
+            <DialogTitle>Invite vendor</DialogTitle>
+            <DialogDescription>
+              Send an assessment invitation. The vendor will receive NIS2-aligned
+              security questions via Assessly. Data is stored in your Assessly database.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="grid gap-2">
+              <Label htmlFor="vendor-name">Organization name</Label>
+              <Input
+                id="vendor-name"
+                name="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Acme Cloud Ltd"
+                autoComplete="organization"
+                required
+                disabled={pending}
+                aria-invalid={!!nameError}
+                aria-describedby={nameError ? "vendor-name-error" : undefined}
+              />
+              {nameError ? (
+                <p id="vendor-name-error" data-slot="form-message" role="alert" className="text-sm text-destructive">
+                  {nameError}
                 </p>
               ) : null}
             </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => handleOpenChange(false)}
+            <div className="grid gap-2">
+              <Label htmlFor="vendor-email">Security contact email</Label>
+              <Input
+                id="vendor-email"
+                name="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="security@vendor.example"
+                autoComplete="email"
+                required
                 disabled={pending}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={pending}>
-                {pending ? "Saving…" : "Add Vendor"}
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
+                aria-invalid={!!emailError}
+                aria-describedby={emailError ? "vendor-email-error" : undefined}
+              />
+              {emailError ? (
+                <p id="vendor-email-error" data-slot="form-message" role="alert" className="text-sm text-destructive">
+                  {emailError}
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => handleOpenChange(false)}
+              disabled={pending}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={pending}>
+              {pending ? "Saving…" : "Add Vendor"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
