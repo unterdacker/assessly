@@ -32,7 +32,7 @@ function encodeBase64Url(input: Uint8Array): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function decodeBase64Url(input: string): Uint8Array {
+function decodeBase64Url(input: string): Uint8Array<ArrayBuffer> {
   const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
   const padding =
     normalized.length % 4 === 0 ? "" : "=".repeat(4 - (normalized.length % 4));

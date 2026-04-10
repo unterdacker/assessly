@@ -37,6 +37,11 @@ enum MailStrategy {
   LOG
 }
 
+enum CompanyPlan {
+  FREE
+  PREMIUM
+}
+
 model Company {
   id        String   @id @default(cuid())
   name      String
@@ -51,6 +56,7 @@ model Company {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   createdBy String
+  plan      CompanyPlan @default(FREE)
 
   vendors                    Vendor[]
   assessments                Assessment[]

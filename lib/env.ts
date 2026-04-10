@@ -208,6 +208,14 @@ const rawEnvSchema = z.object({
   /** HMAC key for pseudonymising user IDs in exports (GDPR Art. 5). */
   AUDIT_EXPORT_KEY: z.string().optional(),
   AUDIT_PSEUDONYMIZATION_KEY: z.string().optional(),
+
+  // ── Storage (S3-compatible) ────────────────────────────────────────────────
+  S3_ENDPOINT: z.string().optional(),
+  S3_REGION: z.string().optional(),
+  S3_BUCKET: z.string().optional(),
+  S3_ACCESS_KEY_ID: z.string().optional(),
+  S3_SECRET_ACCESS_KEY: z.string().optional(),
+  S3_FORCE_PATH_STYLE: z.enum(["true", "false"]).default("false"),
 });
 
 // ---------------------------------------------------------------------------
@@ -476,6 +484,36 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
       message:
         "MAIL_FORCE_ENV=true is a development-only escape hatch and is BLOCKED in production. " +
         "Remove it from your deployment environment.",
+    });
+  }
+
+  // ── S3_ENDPOINT: must be HTTPS in production ─────────────────────────────
+  if (data.S3_ENDPOINT && data.ALLOW_INSECURE_LOCALHOST !== "true") {
+    if (!data.S3_ENDPOINT.startsWith("https://")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["S3_ENDPOINT"],
+        message:
+          "S3_ENDPOINT must use HTTPS in production. HTTP is not permitted.",
+      });
+    }
+  }
+
+  // ── S3 credentials: reject placeholders ──────────────────────────────────
+  if (data.S3_ACCESS_KEY_ID && isPlaceholder(data.S3_ACCESS_KEY_ID)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["S3_ACCESS_KEY_ID"],
+      message:
+        "S3_ACCESS_KEY_ID contains a placeholder value. Use real AWS credentials.",
+    });
+  }
+  if (data.S3_SECRET_ACCESS_KEY && isPlaceholder(data.S3_SECRET_ACCESS_KEY)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["S3_SECRET_ACCESS_KEY"],
+      message:
+        "S3_SECRET_ACCESS_KEY contains a placeholder value. Use real AWS credentials.",
     });
   }
 });
