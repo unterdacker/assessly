@@ -844,7 +844,10 @@
     "errorSsrfBlocked": "Diese Aussteller-URL ist nicht zulässig.",
     "errorInvalidIssuer": "Die Aussteller-URL muss eine gültige HTTPS-URL sein.",
     "errorClientIdRequired": "Client-ID ist erforderlich.",
-    "errorClientSecretRequired": "Für neue Konfigurationen ist ein Client-Secret erforderlich."
+    "errorClientSecretRequired": "Für neue Konfigurationen ist ein Client-Secret erforderlich.",
+    "ssoFeatureTitle": "SSO ist eine Premium-Funktion",
+    "planRequired": "Single Sign-On ist im Premium-Plan verfügbar. Upgraden Sie, um OIDC für Ihr Unternehmen zu konfigurieren.",
+    "upgradeLabel": "Auf Premium upgraden"
   },
   "UserManagement": {
     "pageTitle": "Benutzerverwaltung",

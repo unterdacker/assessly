@@ -2,7 +2,7 @@
 
 > **Sovereign Vendor Risk Assessment Platform for NIS2 & GDPR-compliant organisations**
 
-Assessly replaces disconnected spreadsheets and inboxes with one auditable workspace covering vendor onboarding, NIS2-aligned questionnaire execution, AI-assisted document analysis, evidence review, and remediation tracking — with all data staying inside your own infrastructure.
+Assessly replaces disconnected spreadsheets and inboxes with one auditable workspace covering vendor onboarding, NIS2-aligned questionnaire execution, AI-assisted document analysis, evidence review, and remediation tracking — with all data staying inside your own infrastructure. Premium customers additionally benefit from OIDC single sign-on with JIT provisioning.
 
 ---
 
@@ -13,7 +13,7 @@ Assessly replaces disconnected spreadsheets and inboxes with one auditable works
 | [Architecture Overview](Architecture-Overview) | System design, technology stack, runtime model |
 | [Getting Started](Getting-Started) | Local setup, Docker, environment variables |
 | [Database Schema](Database-Schema) | Full entity model with field annotations |
-| [Authentication & Authorization](Authentication-and-Authorization) | Session model, roles, MFA, permissions |
+| [Authentication & Authorization](Authentication-and-Authorization) | Session model, roles, MFA, OIDC/SSO (Premium), permissions |
 | [NIS2 Compliance Module](NIS2-Compliance-Module) | Questionnaire catalogue, scoring, risk levels |
 | [AI Integration](AI-Integration) | Ollama / Mistral provider, document analysis, executive summaries |
 | [Audit Trail & Forensic Logging](Audit-Trail-and-Forensic-Logging) | Hash-chain, GDPR redaction, compliance categories |

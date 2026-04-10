@@ -56,6 +56,7 @@ export default async function RootLayout({
     <html lang={htmlLang} suppressHydrationWarning>
       <body
         className={`${GeistSans.variable} ${GeistMono.variable} min-h-screen bg-background font-sans antialiased`}
+        suppressHydrationWarning
       >
         <a
           href="#main-content"

@@ -11,6 +11,7 @@ Assessly helps security and compliance teams manage third-party vendor risk in l
 - **EU AI Act compliant by design** — every AI-assisted action is traceable, human-reviewable, and logged. Meets transparency and oversight requirements out of the box.
 - **Cryptographic audit trail** — tamper-evident chain-of-custody for all compliance events, exportable for auditors and regulators.
 - **Air-gap capable** — fully self-hostable with no mandatory external dependencies.
+- **Enterprise SSO (Premium)** — OIDC single sign-on with PKCE, JIT provisioning, and per-company IdP configuration. Available on the Premium plan.
 
 **Stack:** Next.js 15.1 · React 19 · TypeScript 5.7 · Prisma 6 · PostgreSQL 16 · Tailwind CSS 3 · Radix UI · next-intl 4
 
@@ -74,14 +75,29 @@ Open `http://localhost:3000`.
 ## Commands
 
 ```bash
-npm run dev            # development server
-npm run build          # production build
-npm run test           # unit tests (Vitest)
-npm run test:e2e       # E2E tests (Playwright)
-npm run lint           # linter
-npm run audit:verify-chain  # audit trail integrity
-npm run env:validate   # environment validation
+npm run dev                # development server
+npm run build              # production build
+npm run test               # unit tests (Vitest)
+npm run test:e2e           # E2E tests (Playwright)
+npm run test:coverage      # unit tests with coverage report
+npm run lint               # linter
+npm run audit:verify-chain # audit trail integrity
+npm run audit:tamper-test  # forensic tamper simulation
+npm run env:validate       # environment validation
+npm run db:migrate         # create and apply a named migration
+npm run db:push            # push schema without a migration file (dev only)
+npm run db:seed            # re-seed demo data
+npm run db:studio          # open Prisma Studio
 ```
+
+## Plans
+
+| Plan | Description |
+|------|-------------|
+| **Free** | Full access to NIS2 questionnaires, vendor portal, AI analysis, audit trail, and dashboard. |
+| **Premium** | Everything in Free, plus **OIDC/SSO** (single sign-on with JIT provisioning), and priority support. |
+
+> SSO requires the Premium plan. Contact us to upgrade.
 
 ## License
 

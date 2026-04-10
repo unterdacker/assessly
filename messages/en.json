@@ -806,7 +806,10 @@
     "errorSsrfBlocked": "That issuer URL is not permitted.",
     "errorInvalidIssuer": "Issuer URL must be a valid HTTPS URL.",
     "errorClientIdRequired": "Client ID is required.",
-    "errorClientSecretRequired": "A client secret is required for new configurations."
+    "errorClientSecretRequired": "A client secret is required for new configurations.",
+    "ssoFeatureTitle": "SSO is a Premium feature",
+    "planRequired": "Single Sign-On is available on the Premium plan. Upgrade to configure OIDC for your organisation.",
+    "upgradeLabel": "Upgrade to Premium"
   },
   "UserManagement": {
     "pageTitle": "User Management",

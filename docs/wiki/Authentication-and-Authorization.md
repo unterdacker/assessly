@@ -161,3 +161,108 @@ Login endpoints are protected by an in-process consecutive-failure rate limiter 
 - Cleanup interval runs every 5 minutes
 
 > **Note:** For multi-replica production deployments, replace the in-process Map with a Redis-backed store to share state across instances.
+
+---
+
+## OIDC / Single Sign-On
+
+> **Premium plan feature.** SSO requires a Premium subscription. Attempting to configure or use SSO on the Free plan will not be permitted.
+
+Assessly supports **OIDC 1.0** (OpenID Connect) single sign-on, allowing organisations to authenticate internal users via their own identity provider (IdP) — such as Okta, Azure AD, Keycloak, or any standards-compliant OIDC provider.
+
+### Architecture
+
+| Component | Location |
+|-----------|----------|
+| Login page | `app/[locale]/auth/sso/page.tsx` |
+| Login initiation (server action) | `app/actions/oidc-auth.ts` → `initiateOidcLogin()` |
+| OIDC client library | `lib/oidc/client.ts` (openid-client v6) |
+| State cookie | `lib/oidc/state-cookie.ts` |
+| SSRF guard | `lib/oidc/ssrf-guard.ts` |
+| Config retrieval | `lib/oidc/config.ts` |
+| Callback handler | `app/api/auth/oidc/callback/route.ts` |
+| Settings page (admin) | `app/[locale]/settings/sso/page.tsx` |
+| Settings action | `app/actions/oidc-settings.ts` → `saveOidcSettings()` |
+
+### Configuration (Admin UI)
+
+Admins configure SSO at **Settings → SSO**. The following fields are required:
+
+| Field | Description |
+|-------|-------------|
+| Issuer URL | The OIDC issuer discovery URL (e.g. `https://accounts.google.com`) |
+| Client ID | OAuth2 client identifier from your IdP |
+| Client Secret | OAuth2 client secret — stored AES-256-GCM encrypted in `OidcConfig.clientSecretEncrypted` |
+| Enable SSO | Toggle to activate the OIDC flow for this company |
+| JIT Provisioning | Auto-create new users on first SSO login |
+| Allowed Email Domains | Optional allowlist for JIT provisioning (e.g. `example.com`) |
+
+The issuer URL is validated against SSRF-safe discovery before saving. The connection to the IdP is tested automatically during save.
+
+### Login Flow
+
+```
+1. User visits /auth/sso and enters their work email
+2. initiateOidcLogin() server action:
+  a. Rate-limited (8 failures / 10 min)
+  b. Looks up user's company via email domain
+  c. Fetches and decrypts OidcConfig for the company
+  d. Discovers OIDC provider metadata (SSRF-safe fetch)
+  e. Generates PKCE verifier (64 random bytes, S256 code challenge)
+  f. Generates 32-byte state + 32-byte nonce (base64url)
+  g. Sets assessly-oidc-state cookie (HMAC-SHA256, TTL 10 min)
+  h. Returns authorization URL for browser redirect
+3. Browser redirects to the IdP authorization endpoint
+4. User authenticates with IdP
+5. IdP redirects back to /api/auth/oidc/callback with code + state
+6. Callback handler:
+  a. Validates state cookie (HMAC, expiry, type)
+  b. Exchanges authorization code for ID token (PKCE verification)
+  c. Validates ID token (signature, nonce, email_verified claim)
+  d. Looks up user by ssoProviderId, falls back to email
+  e. If JIT provisioning enabled and user not found → creates user (role=AUDITOR)
+  f. Creates AuthSession, sets session cookie
+  g. Clears OIDC state cookie
+  h. Writes audit event (SSO_LOGIN_SUCCESS)
+  i. Redirects to dashboard
+```
+
+### JIT (Just-in-Time) Provisioning
+
+When `jitProvisioning = true`, users who authenticate via SSO for the first time are automatically created:
+
+- Role assigned: `AUDITOR` (read-only internal access)
+- Email domain validated against `jitAllowedEmailDomains` (if the list is non-empty)
+- `ssoProviderId` (the OIDC `sub` claim) stored for future logins — immutable link
+- Audit event `SSO_USER_PROVISIONED` written
+
+### Security Controls
+
+| Control | Implementation |
+|---------|----------------|
+| PKCE | S256 code challenge; verifier never sent over the network after initiation |
+| State + Nonce | 32 random bytes each; HMAC-signed in cookie; validated on callback |
+| SSRF protection | `createSsrfSafeFetch()` blocks private IP ranges and localhost for IdP discovery |
+| Client secret at rest | AES-256-GCM encrypted using `SETTINGS_ENCRYPTION_KEY` |
+| Rate limiting | 8 failures / 10 minutes on `initiateOidcLogin()` |
+| `email_verified` | Callback rejects ID tokens where `email_verified` is false |
+| State cookie TTL | 10 minutes (`assessly-oidc-state`) |
+
+### Audit Events
+
+| Event | Trigger |
+|-------|---------|
+| `SSO_LOGIN_SUCCESS` | Successful SSO login |
+| `SSO_LOGIN_FAILED` | Any failure in the SSO flow (with `errorCode`) |
+| `SSO_USER_PROVISIONED` | JIT provisioning created a new user |
+
+All events are written to the tamper-evident `AuditLog` with `complianceCategory = AUTH`.
+
+### Environment Variables
+
+| Variable | Purpose |
+|----------|---------|
+| `OIDC_STATE_SECRET` | HMAC key for the OIDC state cookie (≥32 chars, always required) |
+| `SETTINGS_ENCRYPTION_KEY` | AES-256-GCM key for encrypting the OIDC client secret (64 hex chars) |
+
+The OIDC client secret is stored encrypted in the database — you do **not** need a separate env var for it after initial setup via the admin UI.

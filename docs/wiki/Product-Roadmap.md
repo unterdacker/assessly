@@ -4,18 +4,21 @@
 
 - NIS2-aligned vendor questionnaire (20 questions, 7 categories)
 - Vendor self-assessment portal with evidence uploads
-- AI-assisted document analysis (Mistral cloud + Ollama self-hosted)
+- AI-assisted document analysis (Mistral cloud EU + Ollama self-hosted)
 - Compliance scoring and risk levels (LOW / MEDIUM / HIGH)
 - Supply chain risk dashboard with charts
 - Tamper-evident audit trail (SHA-256 hash chain)
 - Forensic export bundle (HMAC-signed JSON)
 - GDPR erasure, pseudonymization, IP truncation
-- Role-based access (ADMIN, AUDITOR, VENDOR)
+- Role-based access (SUPER_ADMIN, ADMIN, RISK_REVIEWER, AUDITOR, VENDOR)
 - Multi-tenancy (full company-scoped data isolation)
 - MFA (TOTP), session management, rate limiting
 - Email notifications (SMTP + Resend)
 - English and German UI
 - Docker Compose deployment
+- CI/CD pipeline (GitHub Actions: lint, Vitest unit tests, CodeQL SAST, secret scanning, Playwright E2E, accessibility audit, CycloneDX SBOM)
+- OIDC/SSO single sign-on — **Premium plan only** (PKCE, JIT provisioning, encrypted client secrets, SSRF-safe IdP discovery, full audit trail)
+- FREE / PREMIUM subscription tiers (plan gate via `lib/plan-gate.ts`)
 
 ---
 
@@ -23,7 +26,6 @@
 
 ### Near-term
 
-- CI/CD pipeline (GitHub Actions: lint, tests, Docker build on every PR)
 - Expand test coverage to > 80% (auth, audit trail, GDPR flows)
 - OpenAPI spec for all API routes
 - Wire rate limiting to all public routes
@@ -31,10 +33,11 @@
 
 ### Mid-term
 
-- SAML 2.0 / OIDC single sign-on
+- SAML 2.0 support (OIDC already available on Premium)
+- Billing UI with Stripe integration (Premium plan self-service upgrade)
 - API keys and webhook subscriptions
 - Custom questionnaire builder (not just NIS2)
-- Assessment approval workflow (review ? approve ? sign-off)
+- Assessment approval workflow (review → approve → sign-off)
 - SLA tracking and automated vendor reminders
 - PDF report generation per vendor
 - More compliance templates (ISO 27001, SOC2, DORA, HIPAA)
@@ -42,7 +45,6 @@
 ### Later
 
 - Managed cloud SaaS offering with self-service signup
-- Billing and pricing tiers (Stripe)
 - Integrations: Jira, Slack, ServiceNow, Microsoft Teams
 - Continuous compliance monitoring (recurring assessments, risk trends)
 - SOC2 Type II and ISO 27001 certification for the SaaS product
