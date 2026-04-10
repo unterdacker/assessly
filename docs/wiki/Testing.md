@@ -128,18 +128,62 @@ Validates all environment variables against the Zod schema in `lib/env.ts`. Usef
 
 ---
 
-## CI Pipeline Recommendations
+## CI Pipeline (`.github/workflows/ci.yml`)
 
-A typical CI pipeline for Assessly should include:
+The project ships with a production-grade 9-job GitHub Actions pipeline triggered on every push to `main` and on all pull requests.
 
-```yaml
-1. npm ci
-2. npm run env:validate
-3. npm run lint
-4. npm run test:coverage
-5. npm run build
-6. docker-compose up -d (test database)
-7. npx prisma db push
-8. npm run test:e2e
-9. npm run audit:verify-chain
+### Pipeline Structure
+
 ```
+Phase 1 (parallel)          Phase 2 (gated)    Phase 3 (parallel)
+─────────────────────       ───────────────    ──────────────────
+lint                  ─┐
+unit-test             ─┤
+secret-scan           ─┼──▶  build  ──▶  e2e
+audit                 ─┘                 a11y
+─────────────────────
+codeql                ──────────────────────── (independent, not a gate)
+dependency-review     ──────────────────────── (PRs only, not a gate)
+```
+
+### Phase 1 — Parallel checks (no dependencies)
+
+| Job | What it does |
+|-----|-------------|
+| `lint` | ESLint + TypeScript `tsc --noEmit` |
+| `unit-test` | Vitest with PostgreSQL service; uploads coverage report (7-day retention) |
+| `secret-scan` | Gitleaks v8.30.1; SARIF uploaded to GitHub Code Scanning |
+| `codeql` | GitHub CodeQL SAST (javascript-typescript, security-extended + security-and-quality queries) |
+| `audit` | `npm audit --audit-level=high`; uploads JSON report (30-day retention) |
+| `dependency-review` | Software Composition Analysis on PR diffs; fails on high-severity runtime dependencies |
+
+### Phase 2 — Build (gated on lint + unit-test + secret-scan + audit)
+
+The `build` job:
+1. Runs `npx next build` (bypasses prebuild scripts that require a live DB)
+2. Verifies `.next/BUILD_ID` exists
+3. Uploads the `.next/` artifact (3-day retention) for Phase 3 reuse
+4. Generates a CycloneDX SBOM (`sbom.cdx.json`, 90-day retention) — non-blocking
+
+### Phase 3 — Parallel test jobs (both require the build artifact)
+
+| Job | What it does |
+|-----|-------------|
+| `e2e` | Downloads build artifact → seeds DB → starts `next start` → runs Playwright tests (Chromium) |
+| `a11y` | Downloads build artifact → starts `next start` → runs `axe-core` WCAG 2.1/2.2 AA scan against `/en` and `/en/sign-in` |
+
+### Concurrency
+
+Each ref gets at most one in-progress run (`cancel-in-progress: true`). All jobs run with least-privilege token (`contents: read`); only `secret-scan`, `codeql`, and `dependency-review` request elevated permissions.
+
+### Required GitHub Actions Secrets
+
+| Secret | Description |
+|--------|-------------|
+| `CI_AUTH_SESSION_SECRET` | ≥32 chars random hex |
+| `CI_SETTINGS_ENCRYPTION_KEY` | Exactly 64 hex chars (32 bytes) |
+| `CI_MFA_ENCRYPTION_KEY` | Exactly 64 hex chars |
+| `CI_AUDIT_BUNDLE_SECRET` | ≥32 chars |
+| `CI_CRON_SECRET` | ≥32 chars |
+| `CI_SERVER_ACTIONS_KEY` | Base64-encoded 32 bytes |
+| `GITLEAKS_LICENSE` | Optional (open-source tier needs no license) |

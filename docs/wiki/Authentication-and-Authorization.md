@@ -44,21 +44,32 @@ POST /api/auth/sign-out
 
 ## Roles and Permissions
 
+### Role Groups
+
+Three predefined role groups control access at both path and server-action level (`lib/auth/permissions.ts`):
+
+| Group | Members | Purpose |
+|-------|---------|---------|
+| `ADMIN_ONLY_ROLES` | SUPER_ADMIN, ADMIN | Settings, user management, non-audit admin routes |
+| `INTERNAL_WRITE_ROLES` | SUPER_ADMIN, ADMIN, RISK_REVIEWER | State-changing server actions (create, update, delete) |
+| `INTERNAL_READ_ROLES` | SUPER_ADMIN, ADMIN, RISK_REVIEWER, AUDITOR | All internal read operations |
+
 ### Role Matrix
 
-| Action | ADMIN | AUDITOR | VENDOR |
-|--------|-------|---------|--------|
-| View dashboard | ✅ | ✅ | ❌ |
-| Manage vendors (CRUD) | ✅ | ❌ | ❌ |
-| Run assessments | ✅ | ✅ | ❌ |
-| Override assessment answers | ✅ | ✅ | ❌ |
-| Upload evidence documents | ✅ | ✅ | ❌ |
-| Generate AI summaries | ✅ | ✅ | ❌ |
-| View audit logs | ✅ | ✅ | ❌ |
-| Manage users | ✅ | ❌ | ❌ |
-| Manage settings | ✅ | ✅ | ❌ |
-| Access vendor portal | ❌ | ❌ | ✅ |
-| Complete questionnaire | ❌ | ❌ | ✅ |
+| Action | SUPER_ADMIN | ADMIN | RISK_REVIEWER | AUDITOR | VENDOR |
+|--------|-------------|-------|---------------|---------|--------|
+| View dashboard | ✅ | ✅ | ✅ | ✅ | ❌ |
+| View vendors & assessments | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Write vendors & assessments | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Upload evidence documents | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Generate AI summaries | ✅ | ✅ | ✅ | ❌ | ❌ |
+| View audit logs | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Manage users | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Manage settings | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Access vendor portal | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Complete questionnaire | ❌ | ❌ | ❌ | ❌ | ✅ |
+
+> **SUPER_ADMIN** has the same path-level rights as ADMIN and is intended for platform-level cross-company administration. **RISK_REVIEWER** has internal read + write access but cannot manage users, settings, or the general admin panel. **AUDITOR** is read-only across all internal routes. `RISK_REVIEWER` is not shown in the internal user creation form — it must be assigned directly.
 
 ### Path-Level Guards (`lib/auth/permissions.ts`)
 
@@ -66,10 +77,12 @@ The middleware enforces path guards before any Server Component renders:
 
 | Path prefix | Allowed roles |
 |-------------|---------------|
-| `/dashboard` | ADMIN, AUDITOR |
-| `/vendors` | ADMIN, AUDITOR |
-| `/settings` | ADMIN, AUDITOR |
-| `/admin` | ADMIN (audit-logs: also AUDITOR) |
+| `/dashboard` | SUPER_ADMIN, ADMIN, RISK_REVIEWER, AUDITOR |
+| `/dashboard/users` | SUPER_ADMIN, ADMIN |
+| `/vendors` | SUPER_ADMIN, ADMIN, RISK_REVIEWER, AUDITOR |
+| `/settings` | SUPER_ADMIN, ADMIN |
+| `/admin` (general) | SUPER_ADMIN, ADMIN |
+| `/admin/audit-logs` | SUPER_ADMIN, ADMIN, RISK_REVIEWER, AUDITOR |
 | `/external/` | VENDOR |
 | `/portal` | VENDOR |
 | `/auth/sign-in` | Public |

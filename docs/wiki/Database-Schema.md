@@ -8,7 +8,8 @@ Assessly uses **PostgreSQL 16** via **Prisma ORM**. The schema file is at `prism
 
 ```
 Company
-  ├── User (1:N)          — internal ADMIN / AUDITOR users
+  ├── User (1:N)          — internal users (SUPER_ADMIN / ADMIN / RISK_REVIEWER / AUDITOR)
+  ├── OidcConfig (1:1)    — optional OIDC/SSO provider configuration
   ├── Vendor (1:N)        — third-party suppliers under review
   │     └── Assessment (1:1)
   │           ├── AssessmentAnswer (1:N)   — one row per NIS2 question
@@ -29,8 +30,10 @@ SystemSettings           — singleton row: mail, encryption config
 ### `UserRole`
 | Value | Description |
 |-------|-------------|
+| `SUPER_ADMIN` | Platform-level administrator; same path access as ADMIN; intended for cross-company administration |
 | `ADMIN` | Full access: vendor management, settings, user management, audit logs |
-| `AUDITOR` | Read + assessment workflow access; cannot manage users or settings |
+| `RISK_REVIEWER` | Internal read + write (vendor/assessment management, audit logs); cannot manage users or settings. Not shown in the user creation form |
+| `AUDITOR` | Internal read-only access (dashboard, vendors, audit logs); cannot perform write operations |
 | `VENDOR` | External portal only; scoped to their own assessment |
 
 ### `AssessmentStatus`
@@ -68,6 +71,7 @@ The root multi-tenant entity. Every user, vendor, and audit log belongs to exact
 | `name` | `String` | Display name |
 | `slug` | `String` (unique) | URL-safe identifier |
 | `aiProvider` | `String` | `"local"` or `"mistral"` |
+| `aiDisabled` | `Boolean` | When `true`, AI features are disabled for this company |
 | `mistralApiKey` | `String?` | AES-256-GCM encrypted |
 | `localAiEndpoint` | `String?` | Ollama base URL |
 | `localAiModel` | `String?` | Default: `"ministral-3:8b"` |
@@ -76,9 +80,26 @@ The root multi-tenant entity. Every user, vendor, and audit log belongs to exact
 
 ---
 
+### `OidcConfig`
+
+Optional per-company OpenID Connect / SSO configuration. When enabled, users matching the allowed email domains are provisioned automatically (JIT provisioning).
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `id` | `String` (cuid) | |
+| `companyId` | `String` (unique) | FK → Company (cascade delete) |
+| `issuerUrl` | `String` | OIDC issuer discovery URL |
+| `clientId` | `String` | OAuth2 client ID |
+| `clientSecretEncrypted` | `String` | AES-256-GCM encrypted client secret |
+| `isEnabled` | `Boolean` | Whether SSO login is active |
+| `jitProvisioning` | `Boolean` | Auto-create users on first SSO login |
+| `jitAllowedEmailDomains` | `String[]` | Domains eligible for JIT user creation |
+
+---
+
 ### `User`
 
-Internal platform users (ADMIN / AUDITOR) and linked vendor contacts.
+Internal platform users (SUPER_ADMIN / ADMIN / RISK_REVIEWER / AUDITOR) and linked vendor contacts.
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -88,6 +109,7 @@ Internal platform users (ADMIN / AUDITOR) and linked vendor contacts.
 | `email` | `String?` (unique) | Login identifier |
 | `displayName` | `String?` | |
 | `passwordHash` | `String?` | bcrypt, cost factor 12 |
+| `ssoProviderId` | `String?` | SSO provider subject identifier (unique per company+provider) |
 | `role` | `UserRole` | |
 | `isActive` | `Boolean` | Soft disable without deletion |
 | `mfaEnabled` | `Boolean` | |

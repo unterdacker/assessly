@@ -18,7 +18,8 @@ All secrets must be generated with `crypto.randomBytes()`. Never use placeholder
 
 | Variable | Length | Generate Command | Description |
 |----------|--------|-----------------|-------------|
-| `AUTH_SESSION_SECRET` | 128 hex chars | `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` | HMAC-SHA256 key for session cookie signing |
+| `AUTH_SESSION_SECRET` | 128 hex chars | `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` | HMAC-SHA256 key for session cookie signing. Legacy alias: `NEXTAUTH_SECRET` (lower priority) |
+| `OIDC_STATE_SECRET` | ≥32 chars | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | **Required in all environments.** HMAC key for OIDC state parameter signing (prevents CSRF on SSO callbacks) |
 | `SETTINGS_ENCRYPTION_KEY` | 64 hex chars | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | AES-256-GCM key for encrypting SMTP passwords and API keys at rest |
 | `MFA_ENCRYPTION_KEY` | 64 hex chars | Same as above | AES-256-GCM key for encrypting TOTP secrets at rest |
 | `AUDIT_BUNDLE_SECRET` | 64 hex chars | Same as above | HMAC-SHA256 key for signing forensic audit bundle exports |
@@ -33,6 +34,7 @@ All secrets must be generated with `crypto.randomBytes()`. Never use placeholder
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` | Public-facing application URL. **Must be `https://`** in production |
+| `APP_URL` | — | **Required.** Internal server-side application URL used in OIDC callbacks and server-to-server requests. Must be a valid URL. Must be `https://` in production |
 | `NODE_ENV` | `development` | Set to `production` for production deployments |
 | `ALLOW_INSECURE_LOCALHOST` | `false` | Set to `true` ONLY in Docker Compose / CI when running on `http://localhost` with `NODE_ENV=production`. Never in a real deployment |
 
@@ -60,8 +62,11 @@ All secrets must be generated with `crypto.randomBytes()`. Never use placeholder
 | `SMTP_USER` | — | SMTP authentication username |
 | `SMTP_PASSWORD` | — | SMTP password (plaintext in env var; stored encrypted in DB when configured via UI) |
 | `RESEND_API_KEY` | — | Resend API key |
+| `MAIL_COMPANY_NAME` | `Assessly` | Company display name injected into email templates |
 | `MAILPIT_SMTP_HOST` | `localhost` | Mailpit SMTP hostname. Must be a plain hostname (no `http://` prefix). Docker Compose overrides this to `assessly-mailpit` |
 | `MAILPIT_SMTP_PORT` | `1025` | Mailpit SMTP port (1–65535). Consumers should `parseInt()` this value |
+| `MAILHOG_SMTP_HOST` | `localhost` | Backward-compat alias for `MAILPIT_SMTP_HOST`. Prefer `MAILPIT_SMTP_HOST` in new setups |
+| `MAILHOG_SMTP_PORT` | `1025` | Backward-compat alias for `MAILPIT_SMTP_PORT`. Prefer `MAILPIT_SMTP_PORT` in new setups |
 
 > The Mailpit web UI is accessible at `http://localhost:8025` when running the Docker Compose stack. All captured messages are ephemeral and lost on container restart.
 
