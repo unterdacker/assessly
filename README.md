@@ -1,6 +1,6 @@
 ﻿![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg) ![Version](https://img.shields.io/badge/version-0.1.0-informational) [![CI](https://github.com/unterdacker/assessly/actions/workflows/ci.yml/badge.svg)](https://github.com/unterdacker/assessly/actions/workflows/ci.yml)
 
-# Assessly - Sovereign Vendor Risk Assessment Platform
+# Assessly-Sovereign Vendor Risk Assessment Platform
 
 Assessly helps security and compliance teams manage third-party vendor risk in line with **NIS2** requirements. It replaces disconnected spreadsheets and inboxes with one auditable workspace covering vendor onboarding, questionnaire execution, evidence review, and remediation tracking.
 
