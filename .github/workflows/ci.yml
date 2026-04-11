@@ -5,8 +5,6 @@ name: CI
 # forked PRs. The sandboxed pull_request event is sufficient here.
 on:
   push:
-    branches:
-      - main
   pull_request:
   workflow_dispatch:
 
