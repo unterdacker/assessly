@@ -1,4 +1,1 @@
-[submodule "modules/sso"]
-	path = modules/sso
-	url = git@github.com:unterdacker/assessly-enterprise.git
-	branch = main
+

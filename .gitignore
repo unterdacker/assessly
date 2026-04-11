@@ -40,3 +40,6 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# enterprise modules (private — clone assessly-enterprise into /modules manually)
+/modules
