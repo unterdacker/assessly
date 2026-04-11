@@ -289,6 +289,8 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
+      - name: Checkout enterprise modules
+        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/assessly-enterprise.git modules
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"
@@ -380,6 +382,8 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
+      - name: Checkout enterprise modules
+        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/assessly-enterprise.git modules
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"
