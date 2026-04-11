@@ -100,7 +100,7 @@
   "prisma": {
     "seed": "./node_modules/.bin/tsx prisma/seed.ts"
   },
-+  "overrides": {
-+    "basic-ftp": "^5.2.2"
-+  }
+  "overrides": {
+    "basic-ftp": "^5.2.2"
+  }
 }
