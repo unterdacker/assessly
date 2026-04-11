@@ -567,7 +567,10 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
   }
 
   // ── SMS_PROVIDER: block "log" in production ───────────────────────────────
-  if (data.SMS_PROVIDER === "log") {
+  // ALLOW_INSECURE_LOCALHOST=true skips this check so that CI environments
+  // (NODE_ENV=production + ALLOW_INSECURE_LOCALHOST=true) can use the default
+  // "log" transport without a real SMS provider configured.
+  if (data.SMS_PROVIDER === "log" && data.ALLOW_INSECURE_LOCALHOST !== "true") {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["SMS_PROVIDER"],
