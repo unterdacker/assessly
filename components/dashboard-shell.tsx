@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, LayoutDashboard, Users, Activity, LogOut } from "lucide-react";
+import { Settings, LayoutDashboard, Users, Activity, LogOut, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -19,6 +19,7 @@ const NAV_LABELS = {
     settings: "Einstellungen",
     users: "Benutzerverwaltung",
     auditLogs: "Audit-Trail",
+    companies: "Unternehmen",
     nis2Label: "NIS2-konforme Bewertungen",
     signOut: "Abmelden",
   },
@@ -28,6 +29,7 @@ const NAV_LABELS = {
     settings: "Settings",
     users: "User Management",
     auditLogs: "Audit Trail",
+    companies: "Companies",
     nis2Label: "NIS2-aligned assessments",
     signOut: "Sign out",
   },
@@ -70,6 +72,14 @@ function getNav(locale: "de" | "en", role: string | null) {
       href: "/dashboard/users",
       label: NAV_LABELS[locale].users,
       icon: Users,
+    });
+  }
+
+  if (role === "SUPER_ADMIN") {
+    base.splice(3, 0, {
+      href: "/admin/companies",
+      label: NAV_LABELS[locale].companies,
+      icon: Building2,
     });
   }
 
