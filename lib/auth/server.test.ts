@@ -94,12 +94,6 @@ function stubSession(role: UserRole) {
   mockUpdate.mockResolvedValue({});
 }
 
-function stubNoSession() {
-  mockCookiesGet.mockReturnValue(undefined);
-  mockVerifySessionToken.mockResolvedValue(null);
-  mockFindUnique.mockResolvedValue(null);
-}
-
 beforeEach(() => {
   vi.clearAllMocks();
 });

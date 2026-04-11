@@ -14,7 +14,7 @@ import { AUTH_SESSION_COOKIE_NAME, hashSessionToken, verifySessionToken } from "
 import { canAccessPath } from "@/lib/auth/permissions";
 import { setMfaPendingCookie } from "@/lib/auth/mfa-pending";
 import type { InternalSignInState } from "@/app/actions/internal-auth.types";
-import { AuditLogger, AuditCategory } from "@/lib/structured-logger";
+import { AuditLogger } from "@/lib/structured-logger";
 import { logAuditEvent } from "@/lib/audit-log";
 import { truncateIp } from "@/lib/audit-sanitize";
 import { headers } from "next/headers";

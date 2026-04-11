@@ -414,7 +414,7 @@ export function VendorsTableSection({
         tempPassword: result.tempPassword,
         codeExpiresAt: result.codeExpiresAt,
       });
-    } catch (error) {
+    } catch {
       window.alert(t("genCodeUnexpectedError"));
       setCodeActionVendorId(null);
     }

@@ -12,6 +12,7 @@ function maskPhone(e164: string): string {
  */
 export class LogSmsProvider implements SmsProvider {
   // SECURITY: _body is intentionally unused — do NOT log it (contains tempPassword)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async send(to: string, _body: string): Promise<SmsResult> {
     console.log(`[SIMULATED SMS -> ${maskPhone(to)}]`);
     console.log(`  [SMS BODY REDACTED -- password delivered to device only]`);

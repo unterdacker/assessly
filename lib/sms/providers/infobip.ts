@@ -60,10 +60,9 @@ export class InfobipSmsProvider implements SmsProvider {
         const safeMessage = response.message.replace(/password[=: ].*/gi, "[REDACTED]");
         return { ok: false, error: safeMessage };
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const messageId =
-        ((response as any)?.data?.messages?.[0]?.messageId as string | undefined) ??
-        ((response as any)?.messages?.[0]?.messageId as string | undefined);
+        (response?.data?.messages?.[0]?.messageId as string | undefined) ??
+        (response?.messages?.[0]?.messageId as string | undefined);
       return { ok: true, messageId };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Infobip error";
