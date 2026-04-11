@@ -265,6 +265,25 @@ const rawEnvSchema = z.object({
    * Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
    */
   SMS_PSEUDONYM_KEY: z.string().min(32).optional(),
+
+  // ── License verification (hybrid licensing system) ─────────────────────────
+  /**
+   * RSA-2048 or RSA-4096 PUBLIC key (PEM format) for verifying RS256 license JWTs.
+   * Never set this to a private key — the env.ts superRefine will warn if you do.
+   * Required only when a license.json file is present (commercial builds).
+   */
+  LICENSE_KEY: z.string().optional(),
+  /**
+   * Per-installation audience binding for license JWT verification.
+   * Must exactly match the `aud` claim in the license JWT issued by Assessly.
+   * If absent when a license file exists, all premium features fall back to the stub.
+   */
+  LICENSE_AUDIENCE: z.string().optional(),
+  /**
+   * Override path to the license JSON file. Default: <cwd>/modules/license.json
+   * Must be an absolute path in production deployments.
+   */
+  LICENSE_FILE_PATH: z.string().optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -623,6 +642,25 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
         code: z.ZodIssueCode.custom,
         path: [field],
         message: `${field} contains a placeholder value. Use a real credential.`,
+      });
+    }
+  }
+
+  // ── LICENSE_KEY: warn if operator accidentally set a private key ────────────
+  if (data.LICENSE_KEY) {
+    const trimmed = data.LICENSE_KEY.trimStart();
+    const isPrivateKey =
+      trimmed.startsWith('-----BEGIN RSA PRIVATE KEY-----') ||
+      trimmed.startsWith('-----BEGIN PRIVATE KEY-----');
+    if (isPrivateKey) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['LICENSE_KEY'],
+        fatal: false,
+        message:
+          'LICENSE_KEY appears to contain an RSA private key. ' +
+          'LicenseService requires the RSA PUBLIC key (-----BEGIN PUBLIC KEY-----). ' +
+          'Using a private key as the verification key will fail at runtime.',
       });
     }
   }
