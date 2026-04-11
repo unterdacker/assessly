@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { Prisma, PrismaClient, AssessmentStatus, RiskLevel, UserRole } from "@prisma/client";
+import { Prisma, PrismaClient, AssessmentStatus, RiskLevel, UserRole, CompanyPlan, ExecReportStatus } from "@prisma/client";
 import { nis2Questions } from "../lib/nis2-questions";
 
 const prisma = new PrismaClient();
@@ -72,6 +72,7 @@ const demoVendors: DemoVendor[] = [
 ];
 
 async function main() {
+  await tryDeleteMany(() => prisma.execReport.deleteMany());
   await tryDeleteMany(() => prisma.authSession.deleteMany());
   await tryDeleteMany(() => prisma.user.deleteMany());
   await tryDeleteMany(() => prisma.auditLog.deleteMany());
@@ -84,6 +85,7 @@ async function main() {
     data: {
       name: "Demo Enterprise (EU)",
       slug: COMPANY_SLUG,
+      plan: CompanyPlan.PREMIUM,
       aiDisabled: true,
       createdBy: SEED_ACTOR,
     },
@@ -164,13 +166,43 @@ async function main() {
       },
     });
   }
+
+  // Seed a genesis ExecReport for the advanced-reporting E2E tests.
+  // Links to the first COMPLETED assessment (Northwind Analytics, score 82%).
+  const completedAssessment = await prisma.assessment.findFirstOrThrow({
+    // Find Northwind Analytics' assessment by vendor name — stable across future demoVendors additions.
+    where: {
+      companyId: company.id,
+      status: AssessmentStatus.COMPLETED,
+      vendor: { name: "Northwind Analytics" },
+    },
+    select: { id: true },
+  });
+
+  await prisma.execReport.create({
+    data: {
+      companyId: company.id,
+      assessmentId: completedAssessment.id,
+      createdBy: SEED_ACTOR,
+      status: ExecReportStatus.FINALIZED,
+      executiveSummary:
+        "Northwind Analytics demonstrates strong NIS2 compliance posture with an 82% score. " +
+        "No critical gaps identified. Minor findings in incident management documentation.",
+      remediationRoadmap:
+        "1. Update incident response runbooks (Q3). " +
+        "2. Schedule next assessment in 6 months.",
+      // chain genesis — hash computed on first update
+      eventHash: null,
+      previousReportHash: null,
+    },
+  });
 }
 
 main()
   .then(() => {
-    console.info(`Seeded company "${COMPANY_SLUG}", ${nis2Questions.length} questions, ${demoVendors.length} vendors.`);
-    console.info(`Admin login: ${DEFAULT_ADMIN_EMAIL} / ${DEFAULT_ADMIN_PASSWORD}`);
-    console.info(`Auditor login: ${DEFAULT_AUDITOR_EMAIL} / ${DEFAULT_AUDITOR_PASSWORD}`);
+    console.info(`Seeded company "${COMPANY_SLUG}", ${nis2Questions.length} questions, ${demoVendors.length} vendors, 1 exec report.`);
+    console.info(`Admin login: ${DEFAULT_ADMIN_EMAIL} / [redacted]`);
+    console.info(`Auditor login: ${DEFAULT_AUDITOR_EMAIL} / [redacted]`);
   })
   .catch((e) => {
     console.error(e);

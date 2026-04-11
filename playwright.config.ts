@@ -1,7 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./tests/e2e",
+  testDir: ".",
+  // Discover tests in the public test suite AND in enterprise module test suites
+  // (modules/ is a private git submodule; tests only run when it is checked out).
+  testMatch: ["tests/e2e/**/*.spec.ts", "modules/**/*.spec.ts"],
   timeout: process.env.CI ? 60_000 : 30_000,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

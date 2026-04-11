@@ -426,6 +426,8 @@ export async function deleteVendorAction(vendorId: string): Promise<DeleteVendor
         throw new Error("Vendor not found.");
       }
 
+      await tx.vendorSmsLog.deleteMany({ where: { vendorId: vendor.id } });
+
       await tx.vendor.delete({ where: { id: vendor.id } });
 
       await logAuditEvent(
@@ -494,6 +496,10 @@ export async function deleteVendorsAction(vendorIds: string[]): Promise<DeleteVe
       if (vendors.length === 0) {
         throw new Error("Selected vendors not found.");
       }
+
+      await tx.vendorSmsLog.deleteMany({
+        where: { vendorId: { in: vendors.map((v) => v.id) } },
+      });
 
       await tx.vendor.deleteMany({
         where: { id: { in: vendors.map((v) => v.id) }, companyId },

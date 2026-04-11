@@ -309,6 +309,9 @@ jobs:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
           ASSESSLY_ADMIN_EMAIL: admin@demo.assessly.dev
           ASSESSLY_ADMIN_PASSWORD: Admin1234!
+          # Auditor defaults — override via repo secrets if credentials change
+          ASSESSLY_AUDITOR_EMAIL: auditor@assessly.local
+          ASSESSLY_AUDITOR_PASSWORD: auditor123
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - name: Start Next.js server

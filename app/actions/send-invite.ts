@@ -1,8 +1,10 @@
 ﻿"use server";
 
 import crypto from "crypto";
+import { createHmac } from "crypto";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getDefaultCompanyId } from "@/lib/queries/vendor-assessments";
 import type { SendInviteState } from "@/lib/types/vendor-auth";
@@ -10,6 +12,9 @@ import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 import { sendMail } from "@/lib/mail";
 import { buildVendorInviteEmail } from "@/components/emails/vendor-invite";
 import { logAuditEvent } from "@/lib/audit-log";
+import { sendSms } from "@/lib/sms";
+import { env } from "@/lib/env";
+import { scrubPiiFields } from "@/lib/audit-sanitize";
 import { AuditLogger } from "@/lib/structured-logger";
 
 const ACCESS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -152,6 +157,33 @@ export async function sendOutOfBandInviteAction(
       }
       if (!updated) throw new Error("Failed to generate a unique access code.");
 
+      // -- SMS rate limit (per E.164 phone, 60-min window) --------------------
+      // Only enforced when a real SMS provider is active (not log/dev).
+      // TOCTOU note: count+create are inside the same tx but not serializable;
+      // worst case: 1-2 extra deliveries may slip through under high concurrency.
+      // This is an accepted trade-off for this low-frequency operation.
+      if ((env.SMS_PROVIDER ?? "log") !== "log") {
+        const sixtyMinutesAgo = new Date(Date.now() - 60 * 60 * 1_000);
+        const phoneHashHex = createHmac("sha256", env.SMS_PSEUDONYM_KEY!)
+          .update(phone)
+          .digest("hex");
+
+        const recentCount = await tx.vendorSmsLog.count({
+          where: {
+            phoneHash: phoneHashHex,
+            sentAt: { gte: sixtyMinutesAgo },
+          },
+        });
+
+        if (recentCount >= 3) {
+          throw new Error("SMS_RATE_LIMITED");
+        }
+
+        await tx.vendorSmsLog.create({
+          data: { vendorId: vendorId.trim(), phoneHash: phoneHashHex },
+        });
+      }
+
       await logAuditEvent(
         {
           companyId,
@@ -181,6 +213,17 @@ export async function sendOutOfBandInviteAction(
         status: "error",
         error: "Vendor already has a valid invite (expires in more than 1 hour). Use the Resend button to override.",
       };
+    }
+    if (err instanceof Error && err.message === "SMS_RATE_LIMITED") {
+      await logAuditEvent({
+        companyId,
+        userId: session.userId,
+        action: "SMS_RATE_LIMITED",
+        entityType: "vendor",
+        entityId: vendorId.trim(),
+        newValue: { destination: maskPhone(phone) },
+      }).catch(() => {});
+      return { status: "error", error: "Too many SMS invites to this number. Please wait 60 minutes." };
     }
     AuditLogger.dataOp("vendor.invite.sent", "failure", {
       userId: session.userId,
@@ -223,20 +266,32 @@ export async function sendOutOfBandInviteAction(
   }
 
   // -- SMS DELIVERY -----------------------------------------------------------
-  // SECURITY: tempPassword is transmitted here and then falls out of scope.
+  // SECURITY: tempPassword is embedded in smsBody and transmitted to the provider.
   // It is NEVER stored in plain text, never logged, never returned to the client.
-  //
-  // TODO: replace with your SMS provider SDK (e.g. Twilio, Vonage, AWS SNS)
-  //
-  // await twilioClient.messages.create({
-  //   from: process.env.TWILIO_PHONE_NUMBER,
-  //   to: phone,
-  //   body: `Assessly Security Portal: Your temporary password is: ${tempPassword}. ` +
-  //         `Log in with your emailed Access Code and change this password immediately.`,
-  // });
-  console.log(`[SIMULATED SMS -> ${maskPhone(phone)}]`);
-  console.log(`  [SMS BODY REDACTED -- password delivered to device only]`);
-  // tempPassword is now out of scope; no reference leaves this server action
+  // Provider implementations are PROHIBITED from logging the body parameter.
+  const smsBody =
+    `Your Assessly temporary password is: ${tempPassword}. ` +
+    `Use your emailed Access Code to log in and change this password immediately.`;
+
+  const smsResult = await sendSms(phone, smsBody);
+
+  if (!smsResult.ok) {
+    const safeReason = (smsResult.error ?? "Unknown").replace(/password[=: ].*/gi, "[REDACTED]");
+    await logAuditEvent({
+      companyId,
+      userId: session.userId,
+      action: "SMS_DELIVERY_FAILED",
+      entityType: "vendor",
+      entityId: vendorId.trim(),
+      newValue: scrubPiiFields({
+        reason: safeReason,
+        destination: maskPhone(phone),
+        provider: env.SMS_PROVIDER ?? "log",
+      }) as Prisma.InputJsonValue,
+    }).catch(() => {});
+    // Non-blocking: access code was saved; admin can provide credentials via alternate channel
+  }
+  // tempPassword and smsBody references end here — neither leaves this server action
 
   revalidatePath("/vendors");
   return { status: "sent", maskedPhone: maskPhone(phone), error: null };

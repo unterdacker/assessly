@@ -31,6 +31,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@infobip-api/sdk": "0.3.2",
     "@aws-sdk/client-s3": "^3.744.0",
     "@hookform/resolvers": "^5.2.2",
     "@mistralai/mistralai": "^2.1.2",
@@ -48,6 +49,7 @@
     "@react-pdf/renderer": "^4.1.0",
     "@tailwindcss/typography": "^0.5.19",
     "@types/sanitize-html": "^2.16.1",
+    "@sinch/sdk-core": "1.2.0",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

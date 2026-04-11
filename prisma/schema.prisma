@@ -407,3 +407,18 @@ model SystemSettings {
   updatedAt    DateTime     @updatedAt
   updatedBy    String?
 }
+
+/// Tracks SMS sends per phone hash for rate limiting (GDPR-safe — raw phone never stored).
+/// Only populated when SMS_PROVIDER is a real provider (not "log").
+/// Entries older than 24 hours should be pruned by the cleanup cron
+/// (/api/cron/cleanup-codes) to satisfy GDPR Art. 5(1)(e) storage limitation.
+model VendorSmsLog {
+  id        String   @id @default(cuid())
+  vendorId  String
+  /// HMAC-SHA256(E.164 phone, SMS_PSEUDONYM_KEY) — raw phone number never stored
+  phoneHash String
+  sentAt    DateTime @default(now())
+
+  @@index([phoneHash, sentAt])
+  @@index([vendorId, sentAt])
+}

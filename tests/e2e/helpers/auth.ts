@@ -14,3 +14,16 @@ export async function signInAsAdmin(page: Page): Promise<void> {
   await page.getByRole("button", { name: /sign in/i }).click();
   await page.waitForURL(/\/en\/dashboard/, { timeout: 30_000 });
 }
+
+export async function signInAsAuditor(page: Page): Promise<void> {
+  await page.goto("/en/auth/sign-in");
+  await page.waitForSelector('label[for="email"]', { state: "attached", timeout: 15_000 });
+  await page.getByLabel(/email/i).fill(
+    process.env.ASSESSLY_AUDITOR_EMAIL ?? "auditor@assessly.local",
+  );
+  await page.getByLabel(/password/i).fill(
+    process.env.ASSESSLY_AUDITOR_PASSWORD ?? "auditor123",
+  );
+  await page.getByRole("button", { name: /sign in/i }).click();
+  await page.waitForURL(/\/en\/dashboard/, { timeout: 30_000 });
+}
