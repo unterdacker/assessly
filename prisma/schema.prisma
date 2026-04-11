@@ -42,6 +42,11 @@ enum CompanyPlan {
   PREMIUM
 }
 
+enum ExecReportStatus {
+  DRAFT
+  FINALIZED
+}
+
 model Company {
   id        String   @id @default(cuid())
   name      String
@@ -64,6 +69,7 @@ model Company {
   customVendorServiceTypes   CustomVendorServiceType[]
   users                      User[]
   oidcConfig                 OidcConfig?
+  execReports                ExecReport[]
 }
 
 model OidcConfig {
@@ -101,6 +107,7 @@ model User {
   createdBy    String
 
   sessions     AuthSession[]
+  execReports  ExecReport[]
 
   @@index([companyId])
   @@index([role])
@@ -185,9 +192,41 @@ model Assessment {
 
   answers            AssessmentAnswer[]
   documents          Document[]
+  execReports        ExecReport[]
 
   @@index([companyId])
   @@index([vendorId])
+}
+
+model ExecReport {
+  id                  String           @id @default(cuid())
+  companyId           String
+  company             Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  assessmentId        String
+  assessment          Assessment       @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  creatorUserId       String?
+  creatorUser         User?            @relation(fields: [creatorUserId], references: [id], onDelete: SetNull)
+  createdBy           String
+
+  status              ExecReportStatus @default(DRAFT)
+
+  executiveSummary    String?
+  remediationRoadmap  String?
+  aiDraftSummary      String?
+  aiDraftRoadmap      String?
+
+  eventHash           String?
+  previousReportHash  String?
+
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@index([companyId])
+  @@index([assessmentId])
+  @@index([creatorUserId])
+  @@index([status])
+  @@index([companyId, status])
 }
 
 /// Global NIS2 question catalogue (seeded; version via NIS2_QUESTIONNAIRE_VERSION in app).

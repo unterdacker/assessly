@@ -33,9 +33,8 @@ jobs:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
-        with:
-          submodules: recursive
-          token: ${{ secrets.SUBMODULE_PAT }}
+      - name: Checkout enterprise modules
+        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/assessly-enterprise.git modules
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"
@@ -75,9 +74,8 @@ jobs:
       AI_PROVIDER: local
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
-        with:
-          submodules: recursive
-          token: ${{ secrets.SUBMODULE_PAT }}
+      - name: Checkout enterprise modules
+        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/assessly-enterprise.git modules
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"
@@ -140,9 +138,8 @@ jobs:
       actions: read
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
-        with:
-          submodules: recursive
-          token: ${{ secrets.SUBMODULE_PAT }}
+      - name: Checkout enterprise modules
+        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/assessly-enterprise.git modules
       - name: Initialize CodeQL
         uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13  # v4.35.1
         with:
@@ -231,9 +228,8 @@ jobs:
       AI_PROVIDER: local
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
-        with:
-          submodules: recursive
-          token: ${{ secrets.SUBMODULE_PAT }}
+      - name: Checkout enterprise modules
+        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/assessly-enterprise.git modules
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"

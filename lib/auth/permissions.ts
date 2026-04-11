@@ -47,6 +47,10 @@ export function canAccessPath(role: UserRole, normalizedPathname: string): boole
     return INTERNAL_READ_ROLES.includes(role);
   }
 
+  if (normalizedPathname.startsWith("/reporting")) {
+    return INTERNAL_READ_ROLES.includes(role);
+  }
+
   return INTERNAL_READ_ROLES.includes(role);
 }
 
@@ -54,6 +58,7 @@ export function isProtectedInternalPath(normalizedPathname: string): boolean {
   return (
     normalizedPathname.startsWith("/dashboard") ||
     normalizedPathname.startsWith("/vendors") ||
+    normalizedPathname.startsWith("/reporting") ||
     normalizedPathname.startsWith("/settings") ||
     normalizedPathname.startsWith("/admin")
   );
