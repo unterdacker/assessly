@@ -10,23 +10,23 @@ Venshield replaces disconnected spreadsheets and inboxes with one auditable work
 
 | Page | Description |
 |------|-------------|
-| [Architecture Overview](Architecture-Overview) | System design, technology stack, runtime model |
-| [Getting Started](Getting-Started) | Local setup, Docker, environment variables |
-| [Database Schema](Database-Schema) | Full entity model with field annotations |
-| [Authentication & Authorization](Authentication-and-Authorization) | Session model, roles, MFA, OIDC/SSO (Premium), permissions |
-| [Enterprise Features](Enterprise-Features) | Premium OIDC/SSO and Advanced Reporting |
-| [NIS2 Compliance Module](NIS2-Compliance-Module) | Questionnaire catalogue, scoring, risk levels |
-| [AI Integration](AI-Integration) | Ollama / Mistral provider, document analysis, executive summaries, Advanced Reporting (Premium) |
-| [Audit Trail & Forensic Logging](Audit-Trail-and-Forensic-Logging) | Hash-chain, GDPR redaction, compliance categories |
-| [Security Architecture](Security-Architecture) | Cryptography, CSP, rate limiting, secrets |
-| [Mail System](Mail-System) | SMTP / Resend strategies, invitation flow |
-| [Vendor Portal](Vendor-Portal) | External portal for vendors, invite-token flow |
-| [Internationalisation](Internationalisation) | Locale routing (en / de), next-intl setup |
-| [Testing](Testing) | Vitest unit tests, Playwright E2E, audit-chain verification |
-| [Deployment](Deployment) | Docker Compose, production hardening, key generation |
-| [Environment Variables Reference](Environment-Variables-Reference) | Full variable list with requirements |
-| [Scripts Reference](Scripts-Reference) | All npm scripts explained |
-| [Product Roadmap](Product-Roadmap) | Strategic roadmap for platform growth and commercial expansion |
+| [Architecture Overview](Architecture-Overview.md) | System design, technology stack, runtime model |
+| [Getting Started](Getting-Started.md) | Local setup, Docker, environment variables |
+| [Database Schema](Database-Schema.md) | Full entity model with field annotations |
+| [Authentication & Authorization](Authentication-and-Authorization.md) | Session model, roles, MFA, OIDC/SSO (Premium), permissions |
+| [Enterprise Features](Enterprise-Features.md) | Premium OIDC/SSO and Advanced Reporting |
+| [NIS2 Compliance Module](NIS2-Compliance-Module.md) | Questionnaire catalogue, scoring, risk levels |
+| [AI Integration](AI-Integration.md) | Ollama / Mistral provider, document analysis, executive summaries, Advanced Reporting (Premium) |
+| [Audit Trail & Forensic Logging](Audit-Trail-and-Forensic-Logging.md) | Hash-chain, GDPR redaction, compliance categories |
+| [Security Architecture](Security-Architecture.md) | Cryptography, CSP, rate limiting, secrets |
+| [Mail System](Mail-System.md) | SMTP / Resend strategies, invitation flow |
+| [Vendor Portal](Vendor-Portal.md) | External portal for vendors, invite-token flow |
+| [Internationalisation](Internationalisation.md) | Locale routing (en / de), next-intl setup |
+| [Testing](Testing.md) | Vitest unit tests, Playwright E2E, audit-chain verification |
+| [Deployment](Deployment.md) | Docker Compose, production hardening, key generation |
+| [Environment Variables Reference](Environment-Variables-Reference.md) | Full variable list with requirements |
+| [Scripts Reference](Scripts-Reference.md) | All npm scripts explained |
+| [Product Roadmap](Product-Roadmap.md) | Strategic roadmap for platform growth and commercial expansion |
 
 ---
 
