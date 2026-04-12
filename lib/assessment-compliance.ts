@@ -43,7 +43,7 @@ export async function syncAssessmentComplianceToDatabase(
 ): Promise<{ score: number; riskLevel: RiskLevel }> {
   if (
     answers.length === 0 &&
-    createdBy === DEMO_DATA_ACTOR &&
+    (createdBy === DEMO_DATA_ACTOR || createdBy === "system-seed") &&
     storedScore !== undefined &&
     storedRiskLevel !== undefined
   ) {
