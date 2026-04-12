@@ -7,6 +7,9 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+  repository_dispatch:
+    types:
+      - enterprise-push
 
 concurrency:
   group: ci-${{ github.ref }}
