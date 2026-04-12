@@ -39,7 +39,6 @@ export function parseRfc4180(content: string): string[][] {
   const commitRow = (terminator: "cr" | "lf") => {
     rows.push(row);
     row = [];
-    state = "POST_RECORD";
     previousTerminatorWasCr = terminator === "cr";
   };
 
@@ -72,6 +71,7 @@ export function parseRfc4180(content: string): string[][] {
       if (isRecordTerminator(ch)) {
         commitField();
         commitRow(ch === "\r" ? "cr" : "lf");
+        state = "POST_RECORD";
         index += 1;
         continue;
       }
@@ -92,6 +92,7 @@ export function parseRfc4180(content: string): string[][] {
       if (isRecordTerminator(ch)) {
         commitField();
         commitRow(ch === "\r" ? "cr" : "lf");
+        state = "POST_RECORD";
         index += 1;
         continue;
       }
@@ -129,6 +130,7 @@ export function parseRfc4180(content: string): string[][] {
       if (isRecordTerminator(ch)) {
         commitField();
         commitRow(ch === "\r" ? "cr" : "lf");
+        state = "POST_RECORD";
         index += 1;
         continue;
       }

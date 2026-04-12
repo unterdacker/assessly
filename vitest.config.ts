@@ -21,6 +21,8 @@ export default defineConfig({
         "lib/env.ts",
         "lib/mail.ts",
         "lib/pdf-utils.ts",
+        "lib/sms/providers/sinch.ts",
+        "lib/sms/providers/infobip.ts",
         "lib/ai/**",
         "lib/queries/**",
         "lib/ensure-demo-data.ts",

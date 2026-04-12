@@ -9,10 +9,12 @@ import {
   RemediationSendSchema,
   SaveAssessmentAnswerSchema,
   SendInviteSchema,
+  UpdateAiSettingsSchema,
   UpdateExternalVendorProfileSchema,
+  UpdateVendorProfileSchema,
 } from "@/lib/validation/schemas";
 
-const VALID_CUID = "cuid2test0000000000000";
+const VALID_CUID = "ctest00000000000000000001";
 
 describe("ForensicAuditSummaryQuerySchema", () => {
   it("defaults format to json", () => {
@@ -213,5 +215,63 @@ describe("UpdateExternalVendorProfileSchema", () => {
 
   it("accepts token-only payload", () => {
     expect(UpdateExternalVendorProfileSchema.safeParse({ token: "abc" }).success).toBe(true);
+  });
+
+  it("accepts empty optional email fields", () => {
+    expect(
+      UpdateExternalVendorProfileSchema.safeParse({
+        token: "abc",
+        securityOfficerEmail: "",
+        dpoEmail: "",
+      }).success,
+    ).toBe(true);
+  });
+});
+
+describe("UpdateVendorProfileSchema", () => {
+  it("accepts valid payload", () => {
+    expect(
+      UpdateVendorProfileSchema.safeParse({
+        vendorId: VALID_CUID,
+        officialName: "Acme GmbH",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects invalid vendorId", () => {
+    expect(UpdateVendorProfileSchema.safeParse({ vendorId: "invalid" }).success).toBe(false);
+  });
+});
+
+describe("UpdateAiSettingsSchema", () => {
+  it("coerces aiDisabled from string values", () => {
+    const parsed = UpdateAiSettingsSchema.safeParse({
+      companyId: VALID_CUID,
+      aiProvider: "mistral",
+      aiDisabled: "on",
+    });
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && parsed.data.aiDisabled).toBe(true);
+  });
+
+  it("accepts valid local provider endpoint", () => {
+    expect(
+      UpdateAiSettingsSchema.safeParse({
+        companyId: VALID_CUID,
+        aiProvider: "local",
+        localAiEndpoint: "https://ai.example.com/v1",
+        localAiModel: "llama3.1",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects invalid local endpoint URL", () => {
+    expect(
+      UpdateAiSettingsSchema.safeParse({
+        companyId: VALID_CUID,
+        aiProvider: "local",
+        localAiEndpoint: "not-a-url",
+      }).success,
+    ).toBe(false);
   });
 });
