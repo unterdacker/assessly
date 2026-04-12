@@ -225,8 +225,8 @@ describe("createCustomQuestion", () => {
     const result = await createCustomQuestion({ text: "How?" });
 
     expect(result.success).toBe(true);
-    expect(result.success && result.data.id).toBe("q-new");
-    expect(result.success && result.data.question.id).toBe("q-new");
+    expect(result.success && result.data!.id).toBe("q-new");
+    expect(result.success && result.data!.question.id).toBe("q-new");
     expect(AuditLogger.configuration).toHaveBeenCalledTimes(1);
     expect(revalidatePath).toHaveBeenCalledWith("/settings");
   });
@@ -278,8 +278,8 @@ describe("updateCustomQuestion", () => {
     const result = await updateCustomQuestion("q1", { text: "new" });
 
     expect(result.success).toBe(true);
-    expect(result.success && result.data.id).toBe("q1");
-    expect(result.success && result.data.question).toEqual({ id: "q1", text: "new" });
+    expect(result.success && result.data!.id).toBe("q1");
+    expect(result.success && result.data!.question).toEqual({ id: "q1", text: "new" });
   });
 
   it("clears guidance when null is passed", async () => {
