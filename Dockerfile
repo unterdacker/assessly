@@ -104,6 +104,14 @@ ENV CRON_SECRET=$CRON_SECRET
 ARG NEXT_PUBLIC_APP_URL="https://build-time-dummy.local"
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 
+# 64-char hex — satisfies the ≥32-char OIDC state signing key check.
+ARG OIDC_STATE_SECRET="f1a2b3c4d5e6f1a2b3c4d5e6f1a2b3c4d5e6f1a2b3c4d5e6f1a2b3c4d5e6f1a2"
+ENV OIDC_STATE_SECRET=$OIDC_STATE_SECRET
+
+# Must be an https:// URL — satisfies the APP_URL required URL check.
+ARG APP_URL="https://build-time-dummy.local"
+ENV APP_URL=$APP_URL
+
 # Disable Next.js telemetry during build.
 ENV NEXT_TELEMETRY_DISABLED=1
 
