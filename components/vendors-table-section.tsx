@@ -7,6 +7,7 @@ import { useTranslations, useLocale } from "next-intl";
 import type { UserRole } from "@prisma/client";
 import { Search, ChevronUp, ChevronDown, Copy, SendHorizonal, ShieldAlert, ShieldCheck, RefreshCw } from "lucide-react";
 import { AddVendorModal } from "@/components/add-vendor-modal";
+import { VendorCsvImportModal } from "@/components/vendor-csv-import-modal";
 import { InviteVendorModal } from "@/components/admin/invite-vendor-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -476,6 +477,7 @@ export function VendorsTableSection({
               {isBulkDeleting ? `${t("deleteSelected")}...` : `${t("deleteSelected")} (${selectedVendorIds.size})`}
             </Button>
           )}
+          {canManageVendors ? <VendorCsvImportModal /> : null}
           {canManageVendors ? (
             <AddVendorModal
               trigger={
