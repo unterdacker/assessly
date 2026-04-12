@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance";
 import { logAuditEvent } from "@/lib/audit-log";
 import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
+import { countVendorAssessmentQuestions } from "@/lib/queries/custom-questions";
 
 export async function saveAssessmentAnswer({
   assessmentId,
@@ -64,7 +65,7 @@ export async function saveAssessmentAnswer({
       where: { assessmentId },
       select: { status: true },
     });
-    const totalQuestions = await prisma.question.count();
+    const totalQuestions = await countVendorAssessmentQuestions(assessment.companyId);
     const { score: newScore } = await syncAssessmentComplianceToDatabase(
       assessmentId,
       allAnswers,

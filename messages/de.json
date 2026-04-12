@@ -974,5 +974,30 @@
     "errorInvalidToken": "Falscher Code. Bitte überprüfen Sie Ihre Authentifikator-App und versuchen Sie es erneut.",
     "errorSessionExpired": "Ihre Anmeldesitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
     "errorNotConfigured": "MFA ist für dieses Konto nicht konfiguriert."
+  },
+  "CustomQuestions": {
+    "title": "Benutzerdefinierte Bewertungsfragen",
+    "description": "F\u00fcgen Sie unternehmensspezifische Fragen hinzu, die nach den 20 NIS2-Fragen in jeder Anbieterbewertung erscheinen. Maximal 50 benutzerdefinierte Fragen.",
+    "addQuestion": "Frage hinzuf\u00fcgen",
+    "questionText": "Frage",
+    "questionTextPlaceholder": "z.\u00a0B. Unterh\u00e4lt der Anbieter ein dediziertes Sicherheitsschulungsprogramm?",
+    "guidanceOptional": "Hinweis (optional)",
+    "guidancePlaceholder": "Erkl\u00e4ren Sie, welche Nachweise erwartet werden oder wie eine konforme Antwort aussieht.",
+    "categoryLabel": "Kategorie",
+    "categoryDefault": "Benutzerdefiniert",
+    "save": "Speichern",
+    "saving": "Wird gespeichert\u2026",
+    "cancel": "Abbrechen",
+    "edit": "Bearbeiten",
+    "delete": "L\u00f6schen",
+    "deleteConfirm": "Diese Frage dauerhaft l\u00f6schen? Bestehende Bewertungsantworten bleiben f\u00fcr den Audit-Verlauf erhalten.",
+    "limitReached": "Maximal 50 benutzerdefinierte Fragen erreicht.",
+    "noQuestions": "Noch keine benutzerdefinierten Fragen. F\u00fcgen Sie eine hinzu, um den NIS2-Fragebogen zu erweitern.",
+    "errorEmpty": "Fragetext ist erforderlich.",
+    "errorSave": "Frage konnte nicht gespeichert werden.",
+    "errorDelete": "Frage konnte nicht gel\u00f6scht werden.",
+    "errorReorder": "Neue Reihenfolge konnte nicht gespeichert werden.",
+    "moveUp": "Nach oben",
+    "moveDown": "Nach unten"
   }
 }

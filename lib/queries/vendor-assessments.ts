@@ -5,6 +5,7 @@ import type { AssessmentAnswer } from "@prisma/client";
 import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance";
 import { ensureDemoData } from "@/lib/ensure-demo-data";
 import { requireInternalReadUser } from "@/lib/auth/server";
+import { countVendorAssessmentQuestions } from "@/lib/queries/custom-questions";
 
 /**
  * Explicit vendor column selection — omits sensitive fields that must never
@@ -102,7 +103,7 @@ export async function listVendorAssessments(): Promise<VendorAssessment[]> {
 
   await cleanupExpiredVendorCodes({ companyId });
 
-  const totalQuestions = await prisma.question.count();
+  const totalQuestions = await countVendorAssessmentQuestions(companyId);
 
   const rows = await prisma.assessment.findMany({
     where: { companyId },
@@ -173,7 +174,7 @@ export async function getVendorAssessmentDetail(
 
   await cleanupExpiredVendorCodes({ vendorId });
 
-  const totalQuestions = await prisma.question.count();
+  const totalQuestions = await countVendorAssessmentQuestions(session.companyId ?? "");
 
   const row = await prisma.assessment.findFirst({
     where: { vendorId, companyId: session.companyId },
@@ -274,7 +275,7 @@ export async function listVendorAssessmentsPaginated(
   const skip = (safePage - 1) * pageSize;
 
   const [totalQuestions, total, rows] = await Promise.all([
-    prisma.question.count(),
+    countVendorAssessmentQuestions(companyId),
     prisma.assessment.count({ where: { companyId } }),
     prisma.assessment.findMany({
       where: { companyId },

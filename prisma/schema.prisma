@@ -70,6 +70,7 @@ model Company {
   users                      User[]
   oidcConfig                 OidcConfig?
   execReports                ExecReport[]
+  customQuestions            Question[]
 }
 
 model OidcConfig {
@@ -231,7 +232,10 @@ model ExecReport {
 
 /// Global NIS2 question catalogue (seeded; version via NIS2_QUESTIONNAIRE_VERSION in app).
 model Question {
-  id        String   @id
+  id        String   @id @default(cuid())
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  isCustom  Boolean  @default(false)
   category  String
   text      String
   guidance  String?
@@ -241,6 +245,7 @@ model Question {
   createdBy String
 
   @@index([category])
+  @@index([companyId])
 }
 
 model AuditLog {

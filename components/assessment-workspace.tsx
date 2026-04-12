@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import type { UserRole } from "@prisma/client";
 import { ArrowLeft } from "lucide-react";
-import type { AssessmentAnswer } from "@prisma/client";
+import type { AssessmentAnswer, Question } from "@prisma/client";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
 import { Button } from "@/components/ui/button";
 import { PdfUploadZone } from "@/components/pdf-upload-zone";
@@ -24,6 +24,7 @@ type AssessmentWorkspaceProps = {
   assessmentId: string;
   companyId: string;
   initialAnswers: AssessmentAnswer[];
+  customQuestions?: Question[];
   documentUrl: string | null;
   documentFilename: string | null;
   documentFileSize: number | null;
@@ -36,6 +37,7 @@ export function AssessmentWorkspace({
   assessmentId,
   companyId,
   initialAnswers,
+  customQuestions,
   documentUrl,
   documentFilename,
   documentFileSize,
@@ -118,6 +120,7 @@ export function AssessmentWorkspace({
             answers={initialAnswers}
             selectedQuestionId={selectedQuestionId}
             onSelectQuestion={setSelectedQuestionId}
+            customQuestions={customQuestions}
           />
         </div>
 

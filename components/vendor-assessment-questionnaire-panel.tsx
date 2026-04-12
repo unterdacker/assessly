@@ -8,7 +8,7 @@ import {
   categoryKeyMap,
   nis2Questions,
 } from "@/lib/nis2-questions";
-import type { AssessmentAnswer } from "@prisma/client";
+import type { AssessmentAnswer, Question } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -19,12 +19,14 @@ export type VendorAssessmentQuestionnairePanelProps = {
   answers: AssessmentAnswer[];
   selectedQuestionId: string | null;
   onSelectQuestion: (id: string) => void;
+  customQuestions?: Question[];
 };
 
 export function VendorAssessmentQuestionnairePanel({
   answers,
   selectedQuestionId,
   onSelectQuestion,
+  customQuestions,
 }: VendorAssessmentQuestionnairePanelProps) {
   const t = useTranslations("assessment.questionnaire");
   const tRoot = useTranslations();
@@ -43,15 +45,18 @@ export function VendorAssessmentQuestionnairePanel({
     nis2Questions.forEach((q, i) => {
       m[q.id] = i + 1;
     });
+    (customQuestions ?? []).forEach((q, i) => {
+      m[q.id] = nis2Questions.length + 1 + i;
+    });
     return m;
-  }, []);
+  }, [customQuestions]);
 
   return (
     <Card>
       <CardHeader className="border-b border-slate-100 dark:border-slate-800">
         <CardTitle className="text-base">{t("title")}</CardTitle>
         <p className="text-sm font-normal text-muted-foreground">
-          {nis2Questions.length} {t("questionsAcross")} {Object.keys(groupedByCategory).length} {t("categories")}
+          {nis2Questions.length + (customQuestions?.length ?? 0)} {t("questionsAcross")} {Object.keys(groupedByCategory).length} {t("categories")}
           · {t("catalogue")} {NIS2_QUESTIONNAIRE_VERSION}
         </p>
       </CardHeader>
@@ -118,6 +123,70 @@ export function VendorAssessmentQuestionnairePanel({
             </section>
           );
         })}
+
+        {customQuestions && customQuestions.length > 0 && (() => {
+          // Group custom questions by category
+          const customGrouped: Record<string, Question[]> = {};
+          for (const q of customQuestions) {
+            if (!customGrouped[q.category]) customGrouped[q.category] = [];
+            customGrouped[q.category]!.push(q);
+          }
+          return Object.entries(customGrouped).map(([categoryName, qs]) => (
+            <section key={`custom-${categoryName}`} aria-labelledby={`questionnaire-cat-custom-${slugify(categoryName)}`}>
+              <h2
+                id={`questionnaire-cat-custom-${slugify(categoryName)}`}
+                className="mb-3 text-xs font-semibold uppercase tracking-wider text-violet-700 dark:text-violet-300"
+              >
+                {categoryName}
+              </h2>
+              <ol className="space-y-3">
+                {qs.map((q) => {
+                  const answer = answers.find((a) => a.questionId === q.id);
+                  const isSelected = selectedQuestionId === q.id;
+                  return (
+                    <li
+                      key={q.id}
+                      onClick={() => onSelectQuestion(q.id)}
+                      className={cn(
+                        "cursor-pointer rounded-lg border p-3 transition-colors",
+                        isSelected
+                          ? "border-violet-300 bg-violet-50/60 dark:border-violet-700 dark:bg-violet-900/30"
+                          : "border-slate-200/80 bg-slate-50/50 hover:bg-slate-100/50 dark:border-slate-800 dark:bg-slate-900/30 dark:hover:bg-slate-800/50",
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 text-sm">
+                          <span className="font-medium text-muted-foreground pr-1">
+                            {numberById[q.id]}.
+                          </span>
+                          {q.text}
+                        </div>
+                        <div className="shrink-0 pt-0.5">
+                          <Badge
+                            variant={
+                              answer?.status === "COMPLIANT"
+                                ? "compliant"
+                                : answer?.status === "NON_COMPLIANT"
+                                ? "nonCompliant"
+                                : "secondary"
+                            }
+                            className="font-normal"
+                          >
+                            {answer?.status === "COMPLIANT"
+                              ? t("compliant")
+                              : answer?.status === "NON_COMPLIANT"
+                              ? t("nonCompliant")
+                              : t("pending")}
+                          </Badge>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </section>
+          ));
+        })()}
       </CardContent>
     </Card>
   );

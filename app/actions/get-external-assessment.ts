@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { toVendorAssessment, VendorDomainMapper } from "@/lib/prisma-mappers";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
 import type { Assessment, AssessmentAnswer, Question } from "@prisma/client";
+import { countVendorAssessmentQuestions, getVendorAssessmentQuestions } from "@/lib/queries/custom-questions";
 
 const EXPIRY_GRACE_PERIOD_MS = 2 * 60 * 1000;
 
@@ -166,10 +167,11 @@ export async function getExternalAssessment(
       };
     }
 
-    const totalQuestions = await prisma.question.count();
-    const questions = await prisma.question.findMany({
-      orderBy: { sortOrder: 'asc' }
-    });
+    const assessmentCompanyId = vendor.assessment.companyId;
+    const [totalQuestions, questions] = await Promise.all([
+      countVendorAssessmentQuestions(assessmentCompanyId),
+      getVendorAssessmentQuestions(assessmentCompanyId),
+    ]);
 
     const filledCount = vendor.assessment.answers.filter(
       (a: { status: string }) => a.status === "COMPLIANT" || a.status === "NON_COMPLIANT"

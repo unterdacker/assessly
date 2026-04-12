@@ -936,6 +936,31 @@
     "errorInvalidToken": "Incorrect code. Please check your authenticator app and try again.",
     "errorSessionExpired": "Your sign-in session has expired. Please sign in again.",
     "errorNotConfigured": "MFA is not configured for this account."
+  },
+  "CustomQuestions": {
+    "title": "Custom Assessment Questions",
+    "description": "Add company-specific questions appended after the 20 NIS2 questions in every vendor assessment. Maximum 50 custom questions.",
+    "addQuestion": "Add question",
+    "questionText": "Question",
+    "questionTextPlaceholder": "e.g., Does the vendor maintain a dedicated security training programme?",
+    "guidanceOptional": "Guidance (optional)",
+    "guidancePlaceholder": "Explain what evidence is expected or what a compliant answer looks like.",
+    "categoryLabel": "Category",
+    "categoryDefault": "Custom",
+    "save": "Save",
+    "saving": "Saving\u2026",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Permanently delete this question? Existing assessment answers referencing it are retained for audit history.",
+    "limitReached": "Maximum of 50 custom questions reached.",
+    "noQuestions": "No custom questions yet. Add one to extend the standard NIS2 questionnaire.",
+    "errorEmpty": "Question text is required.",
+    "errorSave": "Failed to save question.",
+    "errorDelete": "Failed to delete question.",
+    "errorReorder": "Failed to save new order.",
+    "moveUp": "Move up",
+    "moveDown": "Move down"
   }
 }
 

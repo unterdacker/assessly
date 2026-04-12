@@ -9,6 +9,9 @@ import { PasswordSettings } from "@/components/password-settings";
 import { MfaSettings } from "@/components/mfa-settings";
 import { prisma } from "@/lib/prisma";
 import { requirePageRole } from "@/lib/auth/server";
+import { ClipboardList } from "lucide-react";
+import { CustomQuestionsManager } from "@/components/custom-questions-manager";
+import { getCustomQuestions } from "@/lib/queries/custom-questions";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +33,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   const t = await getTranslations();
   const oidcT = await getTranslations("OidcSettings");
   const isAdmin = session.role === "ADMIN";
-  const [company, currentUser] = await Promise.all([
+  const [company, currentUser, customQuestions] = await Promise.all([
     isAdmin
       ? prisma.company.findUnique({ where: { id: session.companyId ?? "" } })
       : Promise.resolve(null),
@@ -38,6 +41,9 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
       where: { id: session.userId },
       select: { mfaEnabled: true },
     }),
+    isAdmin && session.companyId
+      ? getCustomQuestions(session.companyId)
+      : Promise.resolve([]),
   ]);
 
   if (isAdmin && !company) {
@@ -182,6 +188,48 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
             </div>
             <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
           </Link>
+        )}
+
+        {isAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ClipboardList className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                {t("CustomQuestions.title")}
+              </CardTitle>
+              <CardDescription>{t("CustomQuestions.description")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CustomQuestionsManager
+                initialQuestions={customQuestions}
+                translations={{
+                  title: t("CustomQuestions.title"),
+                  description: t("CustomQuestions.description"),
+                  addQuestion: t("CustomQuestions.addQuestion"),
+                  questionText: t("CustomQuestions.questionText"),
+                  questionTextPlaceholder: t("CustomQuestions.questionTextPlaceholder"),
+                  guidanceOptional: t("CustomQuestions.guidanceOptional"),
+                  guidancePlaceholder: t("CustomQuestions.guidancePlaceholder"),
+                  categoryLabel: t("CustomQuestions.categoryLabel"),
+                  categoryDefault: t("CustomQuestions.categoryDefault"),
+                  save: t("CustomQuestions.save"),
+                  saving: t("CustomQuestions.saving"),
+                  cancel: t("CustomQuestions.cancel"),
+                  edit: t("CustomQuestions.edit"),
+                  delete_: t("CustomQuestions.delete"),
+                  deleteConfirm: t("CustomQuestions.deleteConfirm"),
+                  limitReached: t("CustomQuestions.limitReached"),
+                  noQuestions: t("CustomQuestions.noQuestions"),
+                  errorEmpty: t("CustomQuestions.errorEmpty"),
+                  errorSave: t("CustomQuestions.errorSave"),
+                  errorDelete: t("CustomQuestions.errorDelete"),
+                  errorReorder: t("CustomQuestions.errorReorder"),
+                  moveUp: t("CustomQuestions.moveUp"),
+                  moveDown: t("CustomQuestions.moveDown"),
+                }}
+              />
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

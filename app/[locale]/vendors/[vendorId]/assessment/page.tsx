@@ -4,6 +4,7 @@ import { AssessmentWorkspace } from "@/components/assessment-workspace";
 import { Button } from "@/components/ui/button";
 import { getVendorAssessmentDetail } from "@/lib/queries/vendor-assessments";
 import { requirePageRole } from "@/lib/auth/server";
+import { getCustomQuestions } from "@/lib/queries/custom-questions";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,10 @@ type PageProps = {
 export default async function AssessmentPage({ params }: PageProps) {
   const { locale, vendorId } = await params;
   const session = await requirePageRole(["SUPER_ADMIN", "ADMIN", "RISK_REVIEWER", "AUDITOR"], locale);
-  const detail = await getVendorAssessmentDetail(vendorId);
+  const [detail, customQuestions] = await Promise.all([
+    getVendorAssessmentDetail(vendorId),
+    session.companyId ? getCustomQuestions(session.companyId) : Promise.resolve([]),
+  ]);
   const t = await getTranslations();
 
   if (!detail) {
@@ -47,6 +51,7 @@ export default async function AssessmentPage({ params }: PageProps) {
       lastAuditedAt={detail.lastAuditedAt}
       companyId={detail.companyId}
       role={session.role}
+      customQuestions={customQuestions}
     />
   );
 }
