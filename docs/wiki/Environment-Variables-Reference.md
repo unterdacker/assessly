@@ -72,6 +72,66 @@ All secrets must be generated with `crypto.randomBytes()`. Never use placeholder
 
 ---
 
+## Storage (S3-Compatible — Optional)
+
+The application stores uploaded PDF evidence files on the **local filesystem** under `.venshield-storage/`. The S3 adapter (`lib/storage.ts`) is available for organisations that wish to migrate to an S3-compatible object store, but it has no active callers in the current release — the local filesystem remains the active storage layer.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `S3_ENDPOINT` | — | S3-compatible endpoint URL. Must be `https://` in production (validated at startup). Example: `https://s3.eu-central-1.amazonaws.com` |
+| `S3_REGION` | — | AWS region or equivalent. Example: `eu-central-1` |
+| `S3_BUCKET` | — | Bucket name for document storage |
+| `S3_ACCESS_KEY_ID` | — | Access key ID. Placeholder values (`change-me`, etc.) are rejected at startup in production |
+| `S3_SECRET_ACCESS_KEY` | — | Corresponding secret access key |
+| `S3_FORCE_PATH_STYLE` | `false` | Set to `true` for MinIO and other path-style S3-compatible endpoints |
+
+---
+
+## SMS
+
+SMS delivery is used to send temporary passwords during vendor onboarding. Provider selection and GDPR pseudonymisation are controlled by environment variables.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SMS_PROVIDER` | `log` | `log` \| `46elks` \| `sinch` \| `infobip`. `log` simulates delivery (prints a masked phone number to stdout; message body is always redacted). **Blocked in production** unless `ALLOW_INSECURE_LOCALHOST=true` — see note below |
+| `SMS_PSEUDONYM_KEY` | — | HMAC-SHA256 key (≥32 chars) for pseudonymising phone numbers in `VendorSmsLog`. Raw phone numbers are never stored — only `HMAC(phone, key)`. **Required in production when `SMS_PROVIDER` is not `log`**. Generate: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+
+> **`SMS_PROVIDER=log` in production:** `SMS_PROVIDER=log` with `NODE_ENV=production` causes a fatal startup error **unless `ALLOW_INSECURE_LOCALHOST=true`** is also set. When that escape hatch is active, `log` is permitted and SMS codes are silently dropped (console simulation only, no real delivery). This override is intended exclusively for Docker Compose / CI environments — it must never appear in a real production deployment.
+
+> **`SMS_PSEUDONYM_KEY` rotation warning:** Rotating or losing this key severs the HMAC linkage between `VendorSmsLog` entries and original phone numbers. Existing pseudonyms become irrecoverable, creating a GDPR obligation to re-pseudonymise affected log entries with the new key or purge them entirely. Treat this key with the same care as `AUDIT_PSEUDONYMIZATION_KEY`.
+
+### 46elks (`SMS_PROVIDER=46elks`)
+
+Sweden-based, GDPR-compliant EU provider. No SDK dependency — uses the 46elks REST API directly.
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `ELKS_API_USERNAME` | Yes | 46elks API username |
+| `ELKS_API_PASSWORD` | Yes | 46elks API password |
+| `ELKS_FROM` | No | Sender name (alphanumeric, max 11 chars) or E.164 number. Defaults to `Venshield` |
+
+### Sinch (`SMS_PROVIDER=sinch`)
+
+Sweden-based, GDPR-compliant EU provider.
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SINCH_SERVICE_PLAN_ID` | Yes | Sinch service plan ID |
+| `SINCH_API_TOKEN` | Yes | Sinch API token |
+| `SINCH_FROM` | Yes | E.164 sender number provisioned in the Sinch dashboard |
+
+### Infobip (`SMS_PROVIDER=infobip`)
+
+Croatia/EU-based, GDPR-compliant provider.
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `INFOBIP_API_KEY` | Yes | Infobip API key |
+| `INFOBIP_BASE_URL` | Yes | Personal base URL, format `https://<region>.api.infobip.com`. Only Infobip-owned domains are accepted (validated at startup) |
+| `INFOBIP_FROM` | No | Sender name or alphanumeric ID. Defaults to `Venshield` |
+
+---
+
 ## Cron
 
 | Variable | Description |

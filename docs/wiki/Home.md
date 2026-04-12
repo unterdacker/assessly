@@ -20,6 +20,7 @@ Venshield replaces disconnected spreadsheets and inboxes with one auditable work
 | [Audit Trail & Forensic Logging](Audit-Trail-and-Forensic-Logging.md) | Hash-chain, GDPR redaction, compliance categories |
 | [Security Architecture](Security-Architecture.md) | Cryptography, CSP, rate limiting, secrets |
 | [Mail System](Mail-System.md) | SMTP / Resend strategies, invitation flow |
+| [SMS System](SMS-System.md) | SMS delivery providers (46elks / Sinch / Infobip), GDPR pseudonymisation, temp-password flow |
 | [Vendor Portal](Vendor-Portal.md) | External portal for vendors, invite-token flow |
 | [Internationalisation](Internationalisation.md) | Locale routing (en / de), next-intl setup |
 | [Testing](Testing.md) | Vitest unit tests, Playwright E2E, audit-chain verification |

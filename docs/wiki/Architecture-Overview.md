@@ -1,4 +1,4 @@
-﻿# Architecture Overview
+# Architecture Overview
 
 ## Technology Stack
 
@@ -80,9 +80,13 @@ venshield/
 |-- lib/                          # Server-side business logic
 |   |-- auth/                     # Session token, permissions, MFA pending
 |   |-- ai/                       # AI provider abstraction, executive summaries
+|   |-- sms/                      # SMS delivery (46elks / Sinch / Infobip / log), GDPR pseudonymisation
 |   |-- queries/                  # Prisma read queries (dashboard, assessments)
 |   |-- types/                    # Shared TypeScript types
-|   `-- validation/               # Zod schemas for actions
+|   |-- validation/               # Zod schemas for actions
+|   |-- storage.ts                # S3-compatible object-storage adapter (optional; local filesystem is active by default)
+|   |-- plan-gate.ts              # DB-layer plan primitive: reads Company.plan, exposes getCompanyPlan() / isPremiumPlan()
+|   `-- enterprise-bridge.ts      # Enforcement façade over plan-gate: requirePremiumPlan() / isPremiumFeatureEnabled()
 |-- prisma/
 |   |-- schema.prisma             # Database schema
 |   `-- seed.ts                   # Demo data seeder
@@ -136,6 +140,17 @@ The `modules/` directory contains optional Premium extensions that are activated
 | `modules/advanced-reporting/` | Compliance reporting - report list, report detail, PDF export |
 
 Without a valid license, these modules degrade silently and do not affect the Free-tier platform.
+
+### Plan Gating
+
+Premium-feature enforcement is a two-layer stack:
+
+| Layer | File | Role |
+|-------|------|------|
+| DB primitive | `lib/plan-gate.ts` | Reads `Company.plan` from the database. Exposes `getCompanyPlan(companyId)` and `isPremiumPlan(companyId)`. Returns `"FREE"` safely when called with a `null` or `undefined` company ID |
+| Enforcement façade | `lib/enterprise-bridge.ts` | Calls `isPremiumPlan()` and exposes two helpers: `requirePremiumPlan()` throws `PremiumGateError` (use in mutations, before any data access) and `isPremiumFeatureEnabled()` returns a `boolean` (use in UI components to conditionally render upgrade prompts) |
+
+The `CompanyPlan` enum has two values: `FREE` (default for all new tenants) and `PREMIUM`.
 
 ---
 
