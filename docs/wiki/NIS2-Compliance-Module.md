@@ -2,7 +2,7 @@
 
 ## Overview
 
-Assessly is designed around **NIS2 Directive (Directive (EU) 2022/2555) Article 21** supply chain security obligations. The platform provides a structured framework for organisations to assess the cybersecurity posture of their third-party vendors.
+Venshield is designed around **NIS2 Directive (Directive (EU) 2022/2555) Article 21** supply chain security obligations. The platform provides a structured framework for organisations to assess the cybersecurity posture of their third-party vendors.
 
 ---
 

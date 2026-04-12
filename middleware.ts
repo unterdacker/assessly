@@ -38,7 +38,7 @@ function emitMiddlewareLog(entry: {
     level: entry.status === "failure" ? "warn" : "info",
     event_type: entry.event_type,
     action_name: entry.action_name,
-    service_name: "assessly-compliance",
+    service_name: "venshield-compliance",
     environment: process.env.NODE_ENV ?? "development",
     status: entry.status,
     user_id: entry.user_id ?? null,
@@ -132,7 +132,7 @@ function stripLocaleFromPathname(pathname: string): string {
 }
 
 /**
- * Middleware to enforce the "Vault" rule for Assessly.
+ * Middleware to enforce the "Vault" rule for Venshield.
  * Ensures that external vendor requests stay isolated within the /external/ route tree.
  * Security headers are applied to every response via applySecurityHeaders().
  */
@@ -147,7 +147,7 @@ async function _middleware(request: NextRequest, nonce: string): Promise<NextRes
     // Auth pages (sign-in, MFA verify) and the vendor first-login setup page
     // submit server actions while the user has no session yet — let them through
     // without an auth check. The actions themselves validate any required tokens
-    // (e.g. assessly-vendor-setup cookie for force-password-change).
+    // (e.g. venshield-vendor-setup cookie for force-password-change).
     if (
       normalizedPathname.startsWith("/auth/") ||
       normalizedPathname === "/external/portal" ||
@@ -205,7 +205,7 @@ async function _middleware(request: NextRequest, nonce: string): Promise<NextRes
 
   // Force-password-change always requires a setup token cookie.
   if (normalizedPathname.startsWith("/external/force-password-change")) {
-    const setupToken = request.cookies.get("assessly-vendor-setup")?.value;
+    const setupToken = request.cookies.get("venshield-vendor-setup")?.value;
     if (!setupToken) {
       const url = request.nextUrl.clone();
       url.pathname = withLocalePath("/external/portal", activeLocale);
@@ -247,7 +247,7 @@ async function _middleware(request: NextRequest, nonce: string): Promise<NextRes
   const authToken = request.cookies.get(AUTH_SESSION_COOKIE_NAME)?.value || null;
 
   const authSession = await verifySessionToken(authToken);
-  const vendorToken = request.cookies.get("assessly-vendor-token")?.value || null;
+  const vendorToken = request.cookies.get("venshield-vendor-token")?.value || null;
 
   if (!authSession && authToken) {
     response.cookies.delete(AUTH_SESSION_COOKIE_NAME);
@@ -262,7 +262,7 @@ async function _middleware(request: NextRequest, nonce: string): Promise<NextRes
       // Bootstrap: write the token from the invite URL into a secure HttpOnly cookie.
       // SameSite=Lax so the cookie is sent when the vendor follows an email link
       // (top-level navigation) but not on cross-site sub-resource requests.
-      response.cookies.set("assessly-vendor-token", token, {
+      response.cookies.set("venshield-vendor-token", token, {
         path: "/",
         maxAge: 60 * 60 * 24, // Conservative 24-hour cap; refreshed on re-login
         sameSite: "lax",
@@ -340,7 +340,7 @@ async function _middleware(request: NextRequest, nonce: string): Promise<NextRes
     }
 
     if (vendorToken && authSession.role !== "VENDOR") {
-      response.cookies.delete("assessly-vendor-token");
+      response.cookies.delete("venshield-vendor-token");
     }
     return response;
   }

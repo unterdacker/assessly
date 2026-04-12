@@ -9,7 +9,7 @@ import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 import { logAuditEvent } from "@/lib/audit-log";
 import { AuditLogger } from "@/lib/structured-logger";
 
-const ROOT_STORAGE_DIR = path.join(process.cwd(), ".assessly-storage");
+const ROOT_STORAGE_DIR = path.join(process.cwd(), ".venshield-storage");
 
 export async function removeAssessmentDocument(assessmentId: string) {
   const session = await requireAdminUser().catch((error) => {

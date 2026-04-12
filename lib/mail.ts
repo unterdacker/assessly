@@ -1,12 +1,12 @@
 /**
- * Assessly Universal Mail Utility
+ * Venshield Universal Mail Utility
  *
  * Strategy resolution order:
  *   1. MAIL_FORCE_ENV=true check — if set, skips DB and reads env vars directly.
  *   2. SystemSettings table (DB) — configured via Admin › Settings › Mail.
  *   3. Environment variables (fallback):
  *        MAIL_STRATEGY=smtp|resend|log|mailpit|mailhog
- *        MAIL_FROM="Assessly <noreply@yourdomain.com>"
+ *        MAIL_FROM="Venshield <noreply@yourdomain.com>"
  *        SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD
  *        RESEND_API_KEY
  *        MAILPIT_SMTP_HOST (default: "localhost"), MAILPIT_SMTP_PORT (default: "1025")
@@ -55,14 +55,14 @@ async function resolveMailConfig(): Promise<ResolvedConfig> {
       // This secondary runtime guard is mandatory — it prevents MAIL_FORCE_ENV=true
       // from silently bypassing DB config in production if accidentally left in .env.
       console.error(
-        "[Assessly Mail] SECURITY: MAIL_FORCE_ENV=true is a development-only " +
+        "[Venshield Mail] SECURITY: MAIL_FORCE_ENV=true is a development-only " +
           "escape hatch and is BLOCKED in production. Falling back to DB config.",
       );
       // Fall through to DB resolution — do NOT return early.
     } else {
       return {
         strategy: (process.env.MAIL_STRATEGY ?? "log").toLowerCase().trim(),
-        from: process.env.MAIL_FROM ?? "Assessly <noreply@assessly.local>",
+        from: process.env.MAIL_FROM ?? "Venshield <noreply@venshield.local>",
         smtp: {
           host: process.env.SMTP_HOST ?? "",
           port: parseInt(process.env.SMTP_PORT ?? "587", 10),
@@ -85,7 +85,7 @@ async function resolveMailConfig(): Promise<ResolvedConfig> {
           ? settings.mailFromName
             ? `${settings.mailFromName} <${settings.mailFrom}>`
             : settings.mailFrom
-          : "Assessly <noreply@assessly.local>";
+          : "Venshield <noreply@venshield.local>";
 
       const smtpPass = settings.smtpPassword
         ? decrypt(settings.smtpPassword)
@@ -114,7 +114,7 @@ async function resolveMailConfig(): Promise<ResolvedConfig> {
   return {
     strategy: (process.env.MAIL_STRATEGY ?? "log").toLowerCase().trim(),
     from:
-      process.env.MAIL_FROM ?? "Assessly <noreply@assessly.local>",
+      process.env.MAIL_FROM ?? "Venshield <noreply@venshield.local>",
     smtp: {
       host: process.env.SMTP_HOST ?? "",
       port: parseInt(process.env.SMTP_PORT ?? "587", 10),
@@ -145,7 +145,7 @@ export async function sendMail(payload: MailPayload): Promise<MailResult> {
     case "mailhog":
       if (process.env.NODE_ENV === "production") {
         console.error(
-          "[Assessly Mail] mailpit/mailhog strategy is BLOCKED in production. " +
+          "[Venshield Mail] mailpit/mailhog strategy is BLOCKED in production. " +
             "Set MAIL_STRATEGY=smtp|resend|log. Falling back to log.",
         );
         return logSimulatedEmail({ ...payload, from: resolvedFrom });
@@ -155,7 +155,7 @@ export async function sendMail(payload: MailPayload): Promise<MailResult> {
       return logSimulatedEmail({ ...payload, from: resolvedFrom });
     default:
       console.warn(
-        `[Assessly Mail] Unknown mail strategy "${config.strategy}". ` +
+        `[Venshield Mail] Unknown mail strategy "${config.strategy}". ` +
           `Valid values: smtp | resend | log | mailpit | mailhog. Falling back to "log".`,
       );
       return logSimulatedEmail({ ...payload, from: resolvedFrom });
@@ -172,7 +172,7 @@ async function sendViaSMTP(
 
   if (!host || !user || !pass) {
     console.warn(
-      "[Assessly Mail] SMTP strategy selected but host / user / password are not configured. " +
+      "[Venshield Mail] SMTP strategy selected but host / user / password are not configured. " +
         "Falling back to simulated log.",
     );
     return logSimulatedEmail(payload);
@@ -196,7 +196,7 @@ async function sendViaSMTP(
     return { ok: true };
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
-    console.error("[Assessly Mail] SMTP delivery failed:", error);
+    console.error("[Venshield Mail] SMTP delivery failed:", error);
     return { ok: false, error };
   }
 }
@@ -209,7 +209,7 @@ async function sendViaResend(
 ): Promise<MailResult> {
   if (!apiKey) {
     console.warn(
-      "[Assessly Mail] Resend strategy selected but API key is not configured. " +
+      "[Venshield Mail] Resend strategy selected but API key is not configured. " +
         "Falling back to simulated log.",
     );
     return logSimulatedEmail(payload);
@@ -225,14 +225,14 @@ async function sendViaResend(
     });
 
     if (error) {
-      console.error("[Assessly Mail] Resend delivery failed:", error.message);
+      console.error("[Venshield Mail] Resend delivery failed:", error.message);
       return { ok: false, error: error.message };
     }
 
     return { ok: true };
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
-    console.error("[Assessly Mail] Resend delivery failed:", error);
+    console.error("[Venshield Mail] Resend delivery failed:", error);
     return { ok: false, error };
   }
 }
@@ -278,12 +278,12 @@ async function sendViaMailhog(
     });
 
     console.log(
-      `[Assessly Mail] Mailpit delivery → ${payload.to} (${host}:${port})`,
+      `[Venshield Mail] Mailpit delivery → ${payload.to} (${host}:${port})`,
     );
     return { ok: true };
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
-    console.error("[Assessly Mail] Mailpit delivery failed:", error);
+    console.error("[Venshield Mail] Mailpit delivery failed:", error);
     return { ok: false, error };
   }
 }
@@ -294,7 +294,7 @@ function logSimulatedEmail(payload: Required<MailPayload>): MailResult {
   console.log(
     `\n╔═══════════════════════════════════════════════════════════`,
   );
-  console.log(`║  [Assessly Mail · SIMULATED — set MAIL_STRATEGY to send for real]`);
+  console.log(`║  [Venshield Mail · SIMULATED — set MAIL_STRATEGY to send for real]`);
   console.log(`║  To:      ${payload.to}`);
   console.log(`║  From:    ${payload.from}`);
   console.log(`║  Subject: ${payload.subject}`);

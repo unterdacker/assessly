@@ -62,7 +62,7 @@ SMTP on port 1025. All captured messages are visible in the Mailpit web UI at
 Required environment variables:
 | Variable | Default (host-only dev) | Docker Compose default |
 |---|---|---|
-| `MAILHOG_SMTP_HOST` | `localhost` | `assessly-mailpit` (auto-set) |
+| `MAILHOG_SMTP_HOST` | `localhost` | `venshield-mailpit` (auto-set) |
 | `MAILHOG_SMTP_PORT` | `1025` | `1025` (auto-set) |
 
 ---
@@ -118,7 +118,7 @@ If the SystemSettings row has `mailStrategy = LOG` (the default), these environm
 
 ```env
 MAIL_STRATEGY=smtp          # smtp | resend | log | mailhog
-MAIL_FROM="Assessly <noreply@yourdomain.com>"
+MAIL_FROM="Venshield <noreply@yourdomain.com>"
 SMTP_HOST=mail.yourdomain.com
 SMTP_PORT=587
 SMTP_USER=noreply@yourdomain.com
@@ -131,7 +131,7 @@ RESEND_API_KEY=re_your_resend_key
 
 ```env
 MAIL_STRATEGY=mailhog
-MAILHOG_SMTP_HOST=localhost    # or assessly-mailpit inside Docker Compose
+MAILHOG_SMTP_HOST=localhost    # or venshield-mailpit inside Docker Compose
 MAILHOG_SMTP_PORT=1025
 ```
 

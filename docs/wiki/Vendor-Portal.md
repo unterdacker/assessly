@@ -81,7 +81,7 @@ Vendors can upload one PDF evidence file per question via the `upload-answer-evi
 
 1. File type validated (PDF only)
 2. File size validated (max configurable)
-3. Stored in `.assessly-storage/` with a sanitised filename
+3. Stored in `.venshield-storage/` with a sanitised filename
 4. `Document` record created (append-only)
 5. `AssessmentAnswer.evidenceFileUrl` updated to point to the document
 

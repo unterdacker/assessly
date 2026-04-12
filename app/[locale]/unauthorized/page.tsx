@@ -21,7 +21,7 @@ export default async function UnauthorizedPage({ params }: UnauthorizedPageProps
         </div>
         <h1 className="text-2xl font-semibold tracking-tight">Unauthorized</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Your current role does not have access to this route. Assessly blocks the request before any protected data is returned.
+          Your current role does not have access to this route. Venshield blocks the request before any protected data is returned.
         </p>
         <div className="mt-6">
           <Button asChild>

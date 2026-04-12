@@ -243,7 +243,7 @@ function buildPrompt(args: GenerateDashboardExecutiveSummaryArgs): string {
     .join("\n");
 
   return [
-    `You are the Assessly executive risk analyst. Respond entirely in ${localeLabel}.`,
+    `You are the Venshield executive risk analyst. Respond entirely in ${localeLabel}.`,
     "Analyze the full vendor list and produce a concise executive summary for a supply-chain admin dashboard.",
     "Return JSON only with this exact schema:",
     '{"systemicRisk":"string","averageRemediationTimeDays":number,"recommendedCategoryKey":"governanceRisk|accessIdentity|dataProtectionPrivacy|encryption|operationsMonitoring|incidentManagement|supplyChainSecurity"}',
@@ -307,7 +307,7 @@ async function runProviderPrompt(args: {
       messages: [
         {
           role: "system",
-          content: "You produce structured executive risk summaries for Assessly dashboards.",
+          content: "You produce structured executive risk summaries for Venshield dashboards.",
         },
         {
           role: "user",
@@ -343,7 +343,7 @@ async function runProviderPrompt(args: {
       messages: [
         {
           role: "system",
-          content: "You produce structured executive risk summaries for Assessly dashboards.",
+          content: "You produce structured executive risk summaries for Venshield dashboards.",
         },
         {
           role: "user",

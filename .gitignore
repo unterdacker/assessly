@@ -36,10 +36,10 @@ yarn-error.log*
 /prisma/dev.db-journal
 
 # local PDF evidence storage (audit documents must not be committed to source control)
-/.assessly-storage/
+/.venshield-storage/
 
 # typescript
 *.tsbuildinfo
 
-# enterprise modules (private — clone assessly-enterprise into /modules manually)
+# enterprise modules (private — clone venshield-enterprise into /modules manually)
 /modules

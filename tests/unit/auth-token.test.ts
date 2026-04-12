@@ -10,7 +10,7 @@ import {
 
 function makeClaims(overrides: Partial<SessionClaims> = {}): SessionClaims {
   return {
-    type: "assessly-session",
+    type: "venshield-session",
     sid: "test-sid",
     uid: "test-uid",
     role: "ADMIN" as SessionClaims["role"],
@@ -91,7 +91,7 @@ describe("verifySessionToken", () => {
     expect(result).toBeNull();
   });
 
-  it("rejects a token with a non-assessly-session type", async () => {
+  it("rejects a token with a non-venshield-session type", async () => {
     vi.stubEnv("AUTH_SESSION_SECRET", TEST_SECRET);
     const token = await signSessionClaims(makeClaims());
     const [, originalSig] = token.split(".");

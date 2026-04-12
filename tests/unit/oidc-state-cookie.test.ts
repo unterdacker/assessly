@@ -33,7 +33,7 @@ import {
 } from "@/lib/oidc/state-cookie";
 
 const APP_URL = "https://app.example.com";
-const OIDC_STATE_COOKIE = "assessly-oidc-state";
+const OIDC_STATE_COOKIE = "venshield-oidc-state";
 
 function encodeBase64Url(input: Uint8Array): string {
   const binary = Array.from(input, (byte) => String.fromCharCode(byte)).join("");
@@ -123,7 +123,7 @@ describe("OIDC state cookie", () => {
     const claims = await getOidcStateClaims();
 
     expect(claims).not.toBeNull();
-    expect(claims?.type).toBe("assessly-oidc-state");
+    expect(claims?.type).toBe("venshield-oidc-state");
     expect(claims?.state).toBe("state-1");
     expect(claims?.nonce).toBe("nonce-1");
     expect(claims?.pkceVerifier).toBe("pkce-1");
@@ -204,7 +204,7 @@ describe("OIDC state cookie", () => {
     const payloadB64 = encodeBase64Url(
       new TextEncoder().encode(
         JSON.stringify({
-          type: "assessly-mfa-pending",
+          type: "venshield-mfa-pending",
           state: "state-1",
           nonce: "nonce-1",
           pkceVerifier: "pkce-1",

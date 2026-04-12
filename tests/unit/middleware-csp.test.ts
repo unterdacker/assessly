@@ -47,7 +47,7 @@ vi.mock("@/lib/auth/permissions", () => ({
   withLocalePath: vi.fn((p: string) => p),
 }));
 vi.mock("@/lib/auth/token", () => ({
-  AUTH_SESSION_COOKIE_NAME: "assessly-session",
+  AUTH_SESSION_COOKIE_NAME: "venshield-session",
   shouldSecureCookie: vi.fn(() => false),
   verifySessionToken: vi.fn(() => null),
 }));

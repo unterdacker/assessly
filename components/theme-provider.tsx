@@ -22,7 +22,7 @@ export function ThemeProvider({ children, nonce }: { children: React.ReactNode; 
       attribute="class"
       defaultTheme="system"
       enableSystem
-      storageKey="assessly-theme"
+      storageKey="venshield-theme"
       disableTransitionOnChange
       nonce={nonce}
     >

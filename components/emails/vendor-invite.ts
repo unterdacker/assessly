@@ -1,5 +1,5 @@
 /**
- * Assessly vendor invite email template.
+ * Venshield vendor invite email template.
  *
  * Produces a subject line and a table-based HTML body suitable for all
  * major email clients including Outlook (which does not support flexbox/grid).
@@ -64,7 +64,7 @@ const copy: Record<string, EmailCopy> = {
     footer:
       "This invitation was sent on behalf of {companyName}. " +
       "If you did not expect this, you can safely ignore this email.",
-    poweredBy: "Powered by Assessly — Sovereign Vendor Risk Assessment",
+    poweredBy: "Powered by Venshield — Sovereign Vendor Risk Assessment",
   },
   de: {
     subject:
@@ -87,7 +87,7 @@ const copy: Record<string, EmailCopy> = {
     footer:
       "Diese Einladung wurde im Auftrag von {companyName} versendet. " +
       "Falls Sie diese Einladung nicht erwartet haben, können Sie diese E-Mail ignorieren.",
-    poweredBy: "Bereitgestellt von Assessly — Sovereign Vendor Risk Assessment",
+    poweredBy: "Bereitgestellt von Venshield — Sovereign Vendor Risk Assessment",
   },
 };
 
@@ -153,7 +153,7 @@ export function buildVendorInviteEmail(
               <tr>
                 <td>
                   <p style="margin:0;font-size:20px;font-weight:bold;color:#ffffff;
-                             letter-spacing:0.05em;">Assessly</p>
+                             letter-spacing:0.05em;">Venshield</p>
                   <p style="margin:4px 0 0;font-size:12px;color:#c7d2fe;
                              letter-spacing:0.08em;text-transform:uppercase;">
                     Vendor Risk Assessment

@@ -48,7 +48,7 @@ function createMinimalPdf(sizeBytes = 1024): string {
   // Pad to desired size
   const padding = Math.max(0, sizeBytes - content.length);
   const fullContent = content + " ".repeat(padding);
-  const tmpFile = path.join(os.tmpdir(), `assessly-test-${Date.now()}.pdf`);
+  const tmpFile = path.join(os.tmpdir(), `venshield-test-${Date.now()}.pdf`);
   fs.writeFileSync(tmpFile, fullContent);
   return tmpFile;
 }
@@ -57,7 +57,7 @@ function createMinimalPdf(sizeBytes = 1024): string {
 function createFakeImageAsPdf(): string {
   // PNG magic bytes — should fail the %PDF- signature check
   const content = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-  const tmpFile = path.join(os.tmpdir(), `assessly-fake-${Date.now()}.pdf`);
+  const tmpFile = path.join(os.tmpdir(), `venshield-fake-${Date.now()}.pdf`);
   fs.writeFileSync(tmpFile, content);
   return tmpFile;
 }
@@ -145,7 +145,7 @@ test.describe("Assessment Completion — PDF upload validation", () => {
     // Create a 6 MB fake PDF (starts with %PDF- but is oversized).
     // Use mkdtempSync so the directory (and file inside it) is created
     // atomically with restricted permissions — avoids CWE-377/CWE-378.
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "assessly-oversize-"));
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "venshield-oversize-"));
     const oversizedPath = path.join(tmpDir, "oversize.pdf");
     const header = "%PDF-1.4\n";
     const padding = Buffer.alloc(6 * 1024 * 1024, "A");

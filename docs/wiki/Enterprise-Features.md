@@ -1,19 +1,19 @@
 ﻿# Enterprise Features
 
-Assessly offers a **Premium plan** for organisations that require enterprise identity management and advanced compliance reporting capabilities. Both features are available after upgrading and placing the signed license file provided by the Assessly team.
+Venshield offers a **Premium plan** for organisations that require enterprise identity management and advanced compliance reporting capabilities. Both features are available after upgrading and placing the signed license file provided by the Venshield team.
 
 ---
 
 ## OIDC Single Sign-On
 
-Enterprise SSO allows users to authenticate using an existing corporate identity provider (IdP) via the OpenID Connect standard. Users no longer need a separate Assessly password — they log in through your organisation's existing identity infrastructure.
+Enterprise SSO allows users to authenticate using an existing corporate identity provider (IdP) via the OpenID Connect standard. Users no longer need a separate Venshield password — they log in through your organisation's existing identity infrastructure.
 
 **Who configures it:** An **ADMIN** at **Settings → SSO**.
 
 ### Capabilities
 
 - **OpenID Connect (OIDC) support with PKCE support** — compatible with Microsoft Entra ID (Azure AD), Okta, Keycloak, Auth0, and any standards-compliant OIDC provider
-- **Just-in-time (JIT) user provisioning** — new users are automatically created in Assessly the first time they log in via SSO, with no manual invite step required
+- **Just-in-time (JIT) user provisioning** — new users are automatically created in Venshield the first time they log in via SSO, with no manual invite step required
 - **Email domain allowlisting** — optionally restrict JIT provisioning to specific corporate email domains (e.g. `example.com`) to prevent unwanted accounts
 - **AUDITOR role by default** — users provisioned via JIT receive the read-only **AUDITOR** role; an ADMIN can elevate them to RISK_REVIEWER or ADMIN at any time via **Settings → Users**
 - **Full audit trail** — every SSO login attempt, success, and new user provisioning event is written to the cryptographic audit log
@@ -21,10 +21,10 @@ Enterprise SSO allows users to authenticate using an existing corporate identity
 ### Login Flow
 
 1. A user visits the SSO sign-in page and enters their work email address.
-2. Assessly looks up the OIDC provider configured for the user's company and redirects the browser to the identity provider's authorisation endpoint.
+2. Venshield looks up the OIDC provider configured for the user's company and redirects the browser to the identity provider's authorisation endpoint.
 3. The user authenticates with the identity provider (password, MFA, etc. — entirely managed by the IdP).
-4. The IdP redirects back to Assessly with an authorisation code.
-5. Assessly validates the response, exchanges the code for an identity token, verifies the user's identity, and creates a session.
+4. The IdP redirects back to Venshield with an authorisation code.
+5. Venshield validates the response, exchanges the code for an identity token, verifies the user's identity, and creates a session.
 6. The user is redirected to the dashboard.
 
 ### Audit Events
@@ -57,4 +57,4 @@ Advanced Reporting generates structured compliance reports that combine vendor a
 
 ## Obtaining a Premium License
 
-To activate Premium features, contact the Assessly team to obtain a signed license file for your organisation. Once issued, follow the enterprise setup documentation shipped with your license to place the license file and configure the required environment variables.
+To activate Premium features, contact the Venshield team to obtain a signed license file for your organisation. Once issued, follow the enterprise setup documentation shipped with your license to place the license file and configure the required environment variables.

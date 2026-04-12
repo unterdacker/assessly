@@ -202,7 +202,7 @@ export async function createSessionForUser(input: {
   const sessionId = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + SESSION_TTL_SECONDS * 1000);
   const token = await signSessionClaims({
-    type: "assessly-session",
+    type: "venshield-session",
     sid: sessionId,
     uid: input.userId,
     role: input.role,

@@ -1,5 +1,5 @@
 # =============================================================================
-# Assessly — Multi-stage Dockerfile
+# Venshield — Multi-stage Dockerfile
 # Base: node:20-alpine (small footprint, musl libc)
 # =============================================================================
 

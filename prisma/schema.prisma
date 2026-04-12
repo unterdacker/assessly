@@ -1,4 +1,4 @@
-// Assessly — EU-oriented multi-tenant core.
+// Venshield — EU-oriented multi-tenant core.
 // PostgreSQL is the default provider for local and production environments.
 
 generator client {
@@ -372,7 +372,7 @@ model Document {
   assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
   /// Original filename as provided by the uploader.
   filename     String
-  /// Path relative to the .assessly-storage/ root on the server.
+  /// Path relative to the .venshield-storage/ root on the server.
   storagePath  String
   mimeType     String     @default("application/pdf")
   fileSize     Int
@@ -392,7 +392,7 @@ model SystemSettings {
   mailStrategy MailStrategy @default(LOG)
   /// Sender address, e.g. "noreply@company.com".
   mailFrom     String?
-  /// Sender display name, e.g. "Assessly".
+  /// Sender display name, e.g. "Venshield".
   mailFromName String?
   /// SMTP relay host.
   smtpHost     String?

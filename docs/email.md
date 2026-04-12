@@ -1,6 +1,6 @@
 # Email System — Developer Guide
 
-This document describes how Assessly sends transactional emails, how to test
+This document describes how Venshield sends transactional emails, how to test
 with Mailpit locally, and how to configure a production mail provider.
 
 ---
@@ -55,7 +55,7 @@ MAILPIT_SMTP_PORT="1025"        # already the default
 Restart the dev server (`npm run dev`). Sent emails now appear in the Mailpit inbox.
 
 > **Docker Compose users:** `docker-compose.yml` already injects
-> `MAILPIT_SMTP_HOST=assessly-mailpit` into the `web` container so the
+> `MAILPIT_SMTP_HOST=venshield-mailpit` into the `web` container so the
 > app reaches Mailpit by service name. You only need `MAIL_STRATEGY=mailpit`
 > in your `.env`.
 
@@ -105,8 +105,8 @@ a fatal startup error. Note: this protection only activates when
 | Variable | Default | Description |
 |---|---|---|
 | `MAIL_STRATEGY` | `log` | Active strategy: `log`, `smtp`, `resend`, `mailpit`, `mailhog` |
-| `MAIL_FROM` | `Assessly <noreply@assessly.local>` | Sender address shown to recipients |
-| `MAIL_COMPANY_NAME` | `Assessly` | Company name in email templates |
+| `MAIL_FROM` | `Venshield <noreply@venshield.local>` | Sender address shown to recipients |
+| `MAIL_COMPANY_NAME` | `Venshield` | Company name in email templates |
 | `SMTP_HOST` | — | SMTP relay hostname |
 | `SMTP_PORT` | `587` | SMTP port (587 = STARTTLS, 465 = implicit TLS) |
 | `SMTP_USER` | — | SMTP auth username |

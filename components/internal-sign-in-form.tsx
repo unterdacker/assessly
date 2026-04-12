@@ -64,7 +64,7 @@ export function InternalSignInForm({
   return (
     <Card className="mx-auto w-full max-w-md border-border bg-card shadow-sm">
       <CardHeader className="space-y-3">
-        <Image src="/logo.png" alt="Assessly logo" width={40} height={40} className="rounded-full" priority />
+        <Image src="/logo.png" alt="Venshield logo" width={40} height={40} className="rounded-full" priority />
         <div>
           <CardTitle className="text-foreground">{t("title")}</CardTitle>
           <CardDescription>{t("description")}</CardDescription>

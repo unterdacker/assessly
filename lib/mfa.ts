@@ -24,7 +24,7 @@ function getMfaEncryptionKey(): Buffer {
     // Dev-only deterministic fallback — never use in production.
     return crypto
       .createHash("sha256")
-      .update("dev-only-assessly-mfa-key-not-for-production")
+      .update("dev-only-venshield-mfa-key-not-for-production")
       .digest();
   }
 
@@ -80,7 +80,7 @@ export function generateTotpSecret(): string {
 
 /** Builds the otpauth:// URI used to populate authenticator apps. */
 export function generateTotpUri(email: string, secret: string): string {
-  return generateURI({ issuer: "Assessly", label: email, secret });
+  return generateURI({ issuer: "Venshield", label: email, secret });
 }
 
 /**

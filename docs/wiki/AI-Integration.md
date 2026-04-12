@@ -2,7 +2,7 @@
 
 ## Overview
 
-Assessly integrates AI to reduce manual work in the vendor assessment process. AI features are:
+Venshield integrates AI to reduce manual work in the vendor assessment process. AI features are:
 
 - **Optional** — the platform is fully functional without any AI provider
 - **Auditable** — every AI action is logged to the audit trail with model ID, provider, and input hash
@@ -100,7 +100,7 @@ An auditor can trigger re-analysis of a previously uploaded document (`reanalyze
 
 ## EU AI Act Compliance
 
-Assessly implements the following EU AI Act obligations:
+Venshield implements the following EU AI Act obligations:
 
 | Article | Requirement | Implementation |
 |---------|-------------|----------------|
@@ -145,7 +145,7 @@ Advanced Reporting is accessible at **Reporting** in the main navigation and gen
 
 ### AI Draft Service
 
-When creating a new report, Assessly calls the configured AI provider (Ollama or Mistral AI — the same provider configured under **Settings → AI**) to produce an AI-written executive summary. The draft covers:
+When creating a new report, Venshield calls the configured AI provider (Ollama or Mistral AI — the same provider configured under **Settings → AI**) to produce an AI-written executive summary. The draft covers:
 
 - Per-category NIS2 compliance scores and open gap counts
 - Overall risk posture and vendor risk distribution

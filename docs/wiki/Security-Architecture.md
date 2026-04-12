@@ -64,7 +64,7 @@ User-supplied HTML input (e.g. rich-text fields) is sanitized with `sanitize-htm
 
 ## Content Security Policy Hashes
 
-Theme switching scripts require inline execution. Rather than using the unsafe `'unsafe-inline'` directive, Assessly:
+Theme switching scripts require inline execution. Rather than using the unsafe `'unsafe-inline'` directive, Venshield:
 
 1. Computes the SHA-256 hash of the theme script at build time (`scripts/compute-themes-hash.mjs`)
 2. Stores the hash in `lib/csp-hashes.ts`
@@ -122,7 +122,7 @@ Run `npm audit` to check for known CVEs in the dependency tree.
 
 ## Air-Gap Capability
 
-Assessly has **no mandatory external network dependencies**. Every feature works without internet access when configured with:
+Venshield has **no mandatory external network dependencies**. Every feature works without internet access when configured with:
 
 - `AI_PROVIDER=local` + local Ollama instance
 - `MAIL_STRATEGY=smtp` + local SMTP relay

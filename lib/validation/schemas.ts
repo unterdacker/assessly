@@ -1,5 +1,5 @@
 /**
- * Assessly — Shared Zod validation schemas
+ * Venshield — Shared Zod validation schemas
  *
  * These schemas should be imported by API route handlers and server actions to
  * replace ad-hoc manual validation.  Each schema mirrors the exact input shape

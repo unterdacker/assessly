@@ -60,6 +60,8 @@
             "matchCommandLine": true
         },
         "Get-Process": true,
-        ".github/workflows/ci.yml": true
+        ".github/workflows/ci.yml": true,
+        "New-Object": true,
+        ".github/workflows/trigger-public-ci.yml": true
     }
 }

@@ -334,7 +334,7 @@ async function extractHeadersForForensics(): Promise<{
  * Using the two-argument form (namespace, derived key) avoids collisions with
  * advisory locks used by other subsystems in the same database.
  *
- * 7769 was chosen arbitrarily for Assessly; document it here so operators can
+ * 7769 was chosen arbitrarily for Venshield; document it here so operators can
  * identify it in pg_locks:
  *   SELECT pid, granted, classid, objid
  *   FROM pg_locks WHERE locktype = 'advisory' AND classid = 7769;

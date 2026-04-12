@@ -98,7 +98,7 @@ export type StructuredLogEntry = {
 // Configuration
 // ---------------------------------------------------------------------------
 
-const SERVICE_NAME = "assessly-compliance";
+const SERVICE_NAME = "venshield-compliance";
 const ENVIRONMENT = process.env.NODE_ENV ?? "development";
 
 // ---------------------------------------------------------------------------

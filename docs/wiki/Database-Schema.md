@@ -1,6 +1,6 @@
 # Database Schema
 
-Assessly uses **PostgreSQL 16** via **Prisma ORM**. The schema file is at `prisma/schema.prisma`.
+Venshield uses **PostgreSQL 16** via **Prisma ORM**. The schema file is at `prisma/schema.prisma`.
 
 ---
 
@@ -206,7 +206,7 @@ Append-only PDF evidence record. Documents are never deleted; the audit-grade fi
 |-------|------|-------|
 | `assessmentId` | `String` | FK → Assessment |
 | `filename` | `String` | Original upload name (sanitised) |
-| `storagePath` | `String` | Path relative to `.assessly-storage/` |
+| `storagePath` | `String` | Path relative to `.venshield-storage/` |
 | `mimeType` | `String` | Default `application/pdf` |
 | `fileSize` | `Int` | Bytes |
 | `uploadedBy` | `String` | User ID at upload time |

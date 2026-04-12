@@ -18,12 +18,12 @@ import "@/lib/env";
  */
 export const metadata: Metadata = {
   title: {
-    default: "Assessly — Sovereign Vendor Risk Assessment",
-    template: "%s | Assessly",
+    default: "Venshield — Sovereign Vendor Risk Assessment",
+    template: "%s | Venshield",
   },
   description:
     "NIS2-aligned third-party risk assessments for IT security officers. Designed for EU enterprise security: self-hosted assets, data minimization in telemetry, and EU-based AI routing when enabled.",
-  applicationName: "Assessly",
+  applicationName: "Venshield",
   referrer: "strict-origin-when-cross-origin",
   robots: { index: true, follow: true },
   icons: {

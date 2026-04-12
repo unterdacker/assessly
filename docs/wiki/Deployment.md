@@ -2,7 +2,7 @@
 
 ## Overview
 
-Assessly ships as a Docker container and is designed for self-hosted deployments in EU data centres, air-gapped networks, or any environment where data sovereignty is required.
+Venshield ships as a Docker container and is designed for self-hosted deployments in EU data centres, air-gapped networks, or any environment where data sovereignty is required.
 
 ---
 
@@ -12,7 +12,7 @@ Assessly ships as a Docker container and is designed for self-hosted deployments
 
 | Image | Tag | Purpose |
 |-------|-----|---------|
-| `assessly-web` | Custom (Dockerfile) | Next.js application |
+| `venshield-web` | Custom (Dockerfile) | Next.js application |
 | `postgres` | `16-alpine` | Primary database |
 
 ### Dockerfile
@@ -66,9 +66,9 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ```env
 # Required
-DATABASE_URL="postgresql://user:password@your-db-host:5432/assessly?schema=public"
+DATABASE_URL="postgresql://user:password@your-db-host:5432/venshield?schema=public"
 NODE_ENV=production
-NEXT_PUBLIC_APP_URL=https://assessly.yourdomain.com
+NEXT_PUBLIC_APP_URL=https://venshield.yourdomain.com
 
 # Security secrets (generated above)
 AUTH_SESSION_SECRET=<128-char hex>
@@ -85,7 +85,7 @@ LOCAL_AI_ENDPOINT=http://your-ollama-host:11434
 
 # Mail
 MAIL_STRATEGY=smtp
-MAIL_FROM="Assessly <noreply@yourdomain.com>"
+MAIL_FROM="Venshield <noreply@yourdomain.com>"
 SMTP_HOST=smtp.yourdomain.com
 SMTP_PORT=587
 SMTP_USER=noreply@yourdomain.com
@@ -102,15 +102,15 @@ The production `docker-compose.yml` reads secrets from the `.env` file via `${VA
 
 ### 4 — TLS / Reverse Proxy
 
-Place Assessly behind a TLS-terminating reverse proxy. Example nginx snippet:
+Place Venshield behind a TLS-terminating reverse proxy. Example nginx snippet:
 
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name assessly.yourdomain.com;
+    server_name venshield.yourdomain.com;
 
-    ssl_certificate /etc/ssl/certs/assessly.crt;
-    ssl_certificate_key /etc/ssl/private/assessly.key;
+    ssl_certificate /etc/ssl/certs/venshield.crt;
+    ssl_certificate_key /etc/ssl/private/venshield.key;
 
     location / {
         proxy_pass http://localhost:3000;
@@ -128,7 +128,7 @@ Set up automated backups for the PostgreSQL volume:
 
 ```bash
 # Example: daily pg_dump
-docker exec assessly-postgres pg_dump -U postgres assessly | gzip > assessly-$(date +%Y%m%d).sql.gz
+docker exec venshield-postgres pg_dump -U postgres venshield | gzip > venshield-$(date +%Y%m%d).sql.gz
 ```
 
 ---
@@ -164,8 +164,8 @@ Returns `200 OK` with `{ status: "ok" }` when the application and database are r
 - [ ] `ALLOW_INSECURE_LOCALHOST` is NOT set (or is `false`)
 - [ ] TLS enforced at reverse proxy
 - [ ] PostgreSQL not exposed to the public internet (bind to `127.0.0.1` or Docker internal network only)
-- [ ] `.assessly-storage/` directory has restricted filesystem permissions (`chmod 700`)
-- [ ] Demo accounts (`admin@assessly.local`) deactivated or removed
+- [ ] `.venshield-storage/` directory has restricted filesystem permissions (`chmod 700`)
+- [ ] Demo accounts (`admin@venshield.local`) deactivated or removed
 - [ ] SMTP credentials in DB (encrypted) — not in environment variables
 - [ ] Container running as non-root user
 - [ ] Docker socket not mounted into the container
@@ -175,10 +175,10 @@ Returns `200 OK` with `{ status: "ok" }` when the application and database are r
 
 ## Scaling Considerations
 
-Assessly is a single-process Node.js application. For horizontal scaling:
+Venshield is a single-process Node.js application. For horizontal scaling:
 
 - Use a **shared PostgreSQL** instance (not container-local)
-- Use a **shared file store** (NFS, S3, or similar) for `.assessly-storage/` — the local filesystem approach does not work across replicas
+- Use a **shared file store** (NFS, S3, or similar) for `.venshield-storage/` — the local filesystem approach does not work across replicas
 - The in-process rate limiter **must** be replaced with a Redis-backed store when running multiple replicas
 - Session state is fully database-backed — no sticky sessions required once the rate limiter is externalised
 

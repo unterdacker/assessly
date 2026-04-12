@@ -1,8 +1,8 @@
-﻿![License](https://img.shields.io/badge/License-AGPL_v3-blue.svg) ![Version](https://img.shields.io/badge/version-0.1.0-informational) [![CI](https://github.com/unterdacker/assessly/actions/workflows/ci.yml/badge.svg)](https://github.com/unterdacker/assessly/actions/workflows/ci.yml)
+﻿![License](https://img.shields.io/badge/License-AGPL_v3-blue.svg) ![Version](https://img.shields.io/badge/version-0.1.0-informational) [![CI](https://github.com/unterdacker/venshield/actions/workflows/ci.yml/badge.svg)](https://github.com/unterdacker/venshield/actions/workflows/ci.yml)
 
-# Assessly — Sovereign Vendor Risk Assessment Platform
+# Venshield — Sovereign Vendor Risk Assessment Platform
 
-Assessly helps security and compliance teams manage third-party vendor risk in line with **NIS2** and **DORA** requirements. It replaces disconnected spreadsheets and inboxes with one auditable workspace covering vendor onboarding, questionnaire execution, AI-assisted document analysis, evidence review, and remediation tracking.
+Venshield helps security and compliance teams manage third-party vendor risk in line with **NIS2** and **DORA** requirements. It replaces disconnected spreadsheets and inboxes with one auditable workspace covering vendor onboarding, questionnaire execution, AI-assisted document analysis, evidence review, and remediation tracking.
 
 ### Key advantages
 
@@ -54,15 +54,15 @@ The **Settings → SSO** admin panel where an ADMIN configures the OIDC issuer U
 **Prerequisites:** Node.js 20+, npm 10+, Docker Desktop
 
 ```bash
-git clone https://github.com/unterdacker/assessly.git
-cd assessly
+git clone https://github.com/unterdacker/venshield.git
+cd venshield
 npm install
 ```
 
 Create `.env`:
 
 ```bash
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/assessly?schema=public"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/venshield?schema=public"
 ```
 
 ```bash
@@ -73,7 +73,7 @@ npx prisma db seed
 npm run dev
 ```
 
-> ⚠️ **Development only.** `npx prisma db seed` creates demo accounts with default passwords (`admin123`, `auditor123`). Never run this against a production database. Set `ASSESSLY_ADMIN_PASSWORD` and `ASSESSLY_AUDITOR_PASSWORD` environment variables to override the defaults before seeding.
+> ⚠️ **Development only.** `npx prisma db seed` creates demo accounts with default passwords (`admin123`, `auditor123`). Never run this against a production database. Set `VENSHIELD_ADMIN_PASSWORD` and `VENSHIELD_AUDITOR_PASSWORD` environment variables to override the defaults before seeding.
 
 Open `http://localhost:3000`.
 
@@ -81,8 +81,8 @@ Open `http://localhost:3000`.
 
 | Role    | Email                      | Password   |
 |---------|----------------------------|------------|
-| Admin   | `admin@assessly.local`     | `admin123` |
-| Auditor | `auditor@assessly.local`   | `auditor123` |
+| Admin   | `admin@venshield.local`     | `admin123` |
+| Auditor | `auditor@venshield.local`   | `auditor123` |
 
 ## Commands
 
@@ -125,4 +125,4 @@ Full documentation is available in the [wiki](docs/wiki/Home.md):
 
 [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE)
 
-If you run a modified version of Assessly as a network service, you must make the complete corresponding source code available under AGPL-3.0. The Premium enterprise modules are licensed separately under a proprietary license and are not covered by AGPL-3.0.
+If you run a modified version of Venshield as a network service, you must make the complete corresponding source code available under AGPL-3.0. The Premium enterprise modules are licensed separately under a proprietary license and are not covered by AGPL-3.0.

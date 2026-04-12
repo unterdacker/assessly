@@ -3,12 +3,12 @@ import { cookies } from "next/headers";
 import { env } from "@/lib/env";
 import { logErrorReport } from "@/lib/logger";
 
-const OIDC_STATE_COOKIE = "assessly-oidc-state";
+const OIDC_STATE_COOKIE = "venshield-oidc-state";
 const OIDC_STATE_TTL_MS = 600_000;
 const OIDC_STATE_TTL_SECONDS = 600;
 
 export interface OidcStateClaims {
-  type: "assessly-oidc-state";
+  type: "venshield-oidc-state";
   state: string;
   nonce: string;
   pkceVerifier: string;
@@ -86,7 +86,7 @@ async function verifyClaims(token: string): Promise<OidcStateClaims | null> {
     const claims = JSON.parse(payloadJson) as OidcStateClaims;
 
     if (claims.exp < Date.now()) return null;
-    if (claims.type !== "assessly-oidc-state") return null;
+    if (claims.type !== "venshield-oidc-state") return null;
 
     return claims;
   } catch (e) {
@@ -124,7 +124,7 @@ export function validateNextParam(
 
 export async function setOidcStateCookie(params: SetOidcStateCookieParams): Promise<void> {
   const claims: OidcStateClaims = {
-    type: "assessly-oidc-state",
+    type: "venshield-oidc-state",
     ...params,
     exp: Date.now() + OIDC_STATE_TTL_MS,
   };

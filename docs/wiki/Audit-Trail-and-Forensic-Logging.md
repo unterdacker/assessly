@@ -2,7 +2,7 @@
 
 ## Overview
 
-Assessly implements a **tamper-evident, cryptographically chained audit trail** that satisfies requirements from multiple compliance frameworks simultaneously:
+Venshield implements a **tamper-evident, cryptographically chained audit trail** that satisfies requirements from multiple compliance frameworks simultaneously:
 
 | Framework | Requirement |
 |-----------|-------------|

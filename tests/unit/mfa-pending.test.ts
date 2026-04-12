@@ -79,7 +79,7 @@ describe("mfa-pending cookie", () => {
     const claims = await getMfaPendingClaims();
 
     expect(claims).not.toBeNull();
-    expect(claims?.type).toBe("assessly-mfa-pending");
+    expect(claims?.type).toBe("venshield-mfa-pending");
     expect(claims?.uid).toBe("user-1");
     expect(claims?.locale).toBe("en");
     expect(claims?.next).toBe("/dashboard");
@@ -161,14 +161,14 @@ describe("mfa-pending cookie", () => {
   });
 
   it("returns null when token has wrong type", async () => {
-    const secret = "dev-only-assessly-session-secret-change-me";
+    const secret = "dev-only-venshield-session-secret-change-me";
     vi.stubEnv("AUTH_SESSION_SECRET", secret);
     vi.stubEnv("NEXTAUTH_SECRET", "");
 
     const payloadB64 = encodeBase64Url(
       new TextEncoder().encode(
         JSON.stringify({
-          type: "assessly-oidc-state",
+          type: "venshield-oidc-state",
           uid: "user-1",
           locale: "en",
           next: "/dashboard",

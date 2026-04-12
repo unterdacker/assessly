@@ -41,7 +41,7 @@
 |           |  audit-log writes, encryption/decryption                 |
 +---------------------------------------------------------------------+
 |  Data     |  PostgreSQL 16 (Docker)                                  |
-|           |  .assessly-storage/ for uploaded PDF evidence files      |
+|           |  .venshield-storage/ for uploaded PDF evidence files      |
 +---------------------------------------------------------------------+
 ```
 
@@ -50,7 +50,7 @@
 ## Directory Structure
 
 ```
-assessly/
+venshield/
 |-- app/                          # Next.js App Router
 |   |-- [locale]/                 # Localised routes (en / de)
 |   |   |-- auth/                 # Sign-in page
@@ -147,4 +147,4 @@ Each tenant is represented by a **Company** record. All entities (Vendor, Assess
 
 ## File Storage
 
-Uploaded PDF evidence files are stored on the local filesystem under `.assessly-storage/` relative to the working directory. The `Document` model records `storagePath` (relative path), `filename`, `mimeType`, and `fileSize`. Download is served through the `/api/documents/[id]` route handler, which re-validates session access before streaming the file.
+Uploaded PDF evidence files are stored on the local filesystem under `.venshield-storage/` relative to the working directory. The `Document` model records `storagePath` (relative path), `filename`, `mimeType`, and `fileSize`. Download is served through the `/api/documents/[id]` route handler, which re-validates session access before streaming the file.

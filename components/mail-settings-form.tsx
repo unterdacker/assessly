@@ -148,7 +148,7 @@ export function MailSettingsForm({ initial }: { initial: MailSettingsInitialData
               Mail Delivery Configuration
             </CardTitle>
             <CardDescription>
-              Configure how Assessly delivers emails. Secrets are encrypted at rest using AES-256-GCM
+              Configure how Venshield delivers emails. Secrets are encrypted at rest using AES-256-GCM
               and never exposed in plaintext after saving.
             </CardDescription>
           </CardHeader>
@@ -180,7 +180,7 @@ export function MailSettingsForm({ initial }: { initial: MailSettingsInitialData
                   <Input
                     id="mailFromName"
                     name="mailFromName"
-                    placeholder="Assessly"
+                    placeholder="Venshield"
                     defaultValue={initial.mailFromName ?? ""}
                     disabled={isBusy}
                   />

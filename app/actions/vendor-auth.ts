@@ -145,14 +145,14 @@ export async function authenticateVendorAccessCode(
   // If this is the vendor's first login, redirect to force-change-password flow
   const isFirstLogin = vendor.isFirstLogin;
   if (isFirstLogin) {
-    cookieStore.set("assessly-vendor-setup", crypto.randomUUID(), {
+    cookieStore.set("venshield-vendor-setup", crypto.randomUUID(), {
       httpOnly: true,
       sameSite: "strict",
       secure: shouldSecureCookie(),
       path: "/",
       maxAge: 60 * 30, // 30 minutes
     });
-    cookieStore.set("assessly-vendor-id", vendor.id, {
+    cookieStore.set("venshield-vendor-id", vendor.id, {
       httpOnly: true,
       sameSite: "strict",
       secure: shouldSecureCookie(),
@@ -185,8 +185,8 @@ export async function authenticateVendorAccessCode(
   const codeMaxAgeSeconds  = Math.max(0, Math.floor((codeExpiresAt.getTime() - Date.now()) / 1000));
   const isSecure = shouldSecureCookie();
 
-  // assessly-vendor-id — identifies which vendor record backs this session.
-  cookieStore.set("assessly-vendor-id", vendor.id, {
+  // venshield-vendor-id — identifies which vendor record backs this session.
+  cookieStore.set("venshield-vendor-id", vendor.id, {
     httpOnly: true,
     sameSite: "lax",
     secure: isSecure,
@@ -194,10 +194,10 @@ export async function authenticateVendorAccessCode(
     maxAge: tokenMaxAgeSeconds,
   });
 
-  // assessly-vendor-token — the opaque invite token used to authenticate portal actions.
+  // venshield-vendor-token — the opaque invite token used to authenticate portal actions.
   // SameSite=Lax: sent on top-level navigations (click a link) but NOT on
   // cross-site sub-resource requests or cross-site POST, preventing CSRF.
-  cookieStore.set("assessly-vendor-token", inviteToken, {
+  cookieStore.set("venshield-vendor-token", inviteToken, {
     httpOnly: true,
     sameSite: "lax",
     secure: isSecure,
@@ -205,8 +205,8 @@ export async function authenticateVendorAccessCode(
     maxAge: tokenMaxAgeSeconds,
   });
 
-  // assessly-vendor-code-exp — expiry timestamp surfaced to the UI countdown clock.
-  cookieStore.set("assessly-vendor-code-exp", codeExpiresAt.toISOString(), {
+  // venshield-vendor-code-exp — expiry timestamp surfaced to the UI countdown clock.
+  cookieStore.set("venshield-vendor-code-exp", codeExpiresAt.toISOString(), {
     httpOnly: true,
     sameSite: "lax",
     secure: isSecure,

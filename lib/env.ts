@@ -1,5 +1,5 @@
 /**
- * Assessly — Runtime environment validation
+ * Venshield — Runtime environment validation
  *
  * This module validates every environment variable declared in .env.example
  * using Zod at server startup.  It is the single source of truth for the
@@ -125,8 +125,8 @@ const rawEnvSchema = z.object({
   MAIL_STRATEGY: z
     .enum(["log", "smtp", "resend", "mailpit", "mailhog"])
     .default("log"),
-  MAIL_FROM: z.string().default("Assessly <noreply@assessly.local>"),
-  MAIL_COMPANY_NAME: z.string().default("Assessly"),
+  MAIL_FROM: z.string().default("Venshield <noreply@venshield.local>"),
+  MAIL_COMPANY_NAME: z.string().default("Venshield"),
   SMTP_HOST: z.string().optional(),
   /** Validated as a numeric port string. Consumers should parseInt(). */
   SMTP_PORT: z
@@ -143,7 +143,7 @@ const rawEnvSchema = z.object({
   /**
    * Mailpit SMTP trap hostname (dev only).
    * Must be a plain hostname — not a URL (no http:// prefix).
-   * Default: "localhost". Docker Compose overrides this to "assessly-mailpit".
+   * Default: "localhost". Docker Compose overrides this to "venshield-mailpit".
    */
   MAILPIT_SMTP_HOST: z
     .string()
@@ -275,7 +275,7 @@ const rawEnvSchema = z.object({
   LICENSE_KEY: z.string().optional(),
   /**
    * Per-installation audience binding for license JWT verification.
-   * Must exactly match the `aud` claim in the license JWT issued by Assessly.
+   * Must exactly match the `aud` claim in the license JWT issued by Venshield.
    * If absent when a license file exists, all premium features fall back to the stub.
    */
   LICENSE_AUDIENCE: z.string().optional(),
@@ -444,7 +444,7 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
     });
   } else if (
     isPlaceholder(authSecret) ||
-    authSecret === "dev-only-assessly-session-secret-change-me"
+    authSecret === "dev-only-venshield-session-secret-change-me"
   ) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -458,7 +458,7 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
     // ── OIDC_STATE_SECRET ────────────────────────────────────────────────────
     if (
       isPlaceholder(data.OIDC_STATE_SECRET) ||
-      data.OIDC_STATE_SECRET === "dev-only-assessly-oidc-state-secret-change-me"
+      data.OIDC_STATE_SECRET === "dev-only-venshield-oidc-state-secret-change-me"
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -499,7 +499,7 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
         path: ["NEXT_PUBLIC_APP_URL"],
         message:
           "NEXT_PUBLIC_APP_URL must not point to localhost in production. " +
-          "Set it to your public-facing domain (e.g. https://assessly.example.com).",
+          "Set it to your public-facing domain (e.g. https://venshield.example.com).",
       });
     } else if (!data.NEXT_PUBLIC_APP_URL.startsWith("https://")) {
       ctx.addIssue({
@@ -507,7 +507,7 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
         path: ["NEXT_PUBLIC_APP_URL"],
         message:
           "NEXT_PUBLIC_APP_URL must use HTTPS in production " +
-          "(e.g. https://assessly.example.com). HTTP is not permitted.",
+          "(e.g. https://venshield.example.com). HTTP is not permitted.",
       });
     }
   }
@@ -520,7 +520,7 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
         path: ["APP_URL"],
         message:
           "APP_URL must not point to localhost in production. " +
-          "Set it to your public-facing domain (e.g. https://assessly.example.com).",
+          "Set it to your public-facing domain (e.g. https://venshield.example.com).",
       });
     } else if (!data.APP_URL.startsWith("https://")) {
       ctx.addIssue({
@@ -528,7 +528,7 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
         path: ["APP_URL"],
         message:
           "APP_URL must use HTTPS in production " +
-          "(e.g. https://assessly.example.com). HTTP is not permitted.",
+          "(e.g. https://venshield.example.com). HTTP is not permitted.",
       });
     }
   }
@@ -687,7 +687,7 @@ function formatErrors(error: z.ZodError): string {
 
 const FATAL_HEADER = `
 ╔══════════════════════════════════════════════════════════════╗
-║   Assessly — FATAL: Invalid or missing environment variables ║
+║   Venshield — FATAL: Invalid or missing environment variables ║
 ╚══════════════════════════════════════════════════════════════╝
 
 The following configuration errors must be resolved before the
@@ -714,7 +714,7 @@ are resolved. Set the variables in your deployment environment
  */
 function devFallbackKey(variableName: string): string {
   return createHash("sha256")
-    .update(`assessly-dev-insecure:${variableName}:do-not-use-in-production`)
+    .update(`venshield-dev-insecure:${variableName}:do-not-use-in-production`)
     .digest("hex");
 }
 
@@ -854,7 +854,7 @@ export const auditEnv = {
 
 /** Application-level runtime settings. */
 export const appEnv = {
-  /** Canonical public-facing URL, e.g. https://assessly.example.com. */
+  /** Canonical public-facing URL, e.g. https://venshield.example.com. */
   url: env.NEXT_PUBLIC_APP_URL,
   /** Bearer token for /api/cron/* route protection. */
   cronSecret: env.CRON_SECRET,

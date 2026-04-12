@@ -2,7 +2,7 @@
 
 ## Session Architecture
 
-Assessly uses a **stateful cookie-based session** system — no NextAuth, no JWT. Every session is a row in the `AuthSession` table.
+Venshield uses a **stateful cookie-based session** system — no NextAuth, no JWT. Every session is a row in the `AuthSession` table.
 
 ### Login Flow
 
@@ -163,7 +163,7 @@ Login endpoints are protected by an in-process consecutive-failure rate limiter:
 
 > **Premium plan feature.** SSO requires a Premium subscription. See the [Enterprise Features](Enterprise-Features) page for a full capability overview.
 
-Assessly supports **OpenID Connect (OIDC)** single sign-on, allowing organisations to authenticate internal users through their existing identity provider (IdP) — such as Microsoft Entra ID, Okta, Keycloak, Auth0, or any standards-compliant OIDC provider.
+Venshield supports **OpenID Connect (OIDC)** single sign-on, allowing organisations to authenticate internal users through their existing identity provider (IdP) — such as Microsoft Entra ID, Okta, Keycloak, Auth0, or any standards-compliant OIDC provider.
 
 ### Configuration
 
@@ -183,9 +183,9 @@ The issuer URL is validated for safety before saving. The connection to the IdP 
 ### Login Flow
 
 1. User visits `/auth/sso` and enters their work email address
-2. Assessly looks up the configured IdP for the user's company and redirects the browser to the provider's authorisation endpoint
+2. Venshield looks up the configured IdP for the user's company and redirects the browser to the provider's authorisation endpoint
 3. User authenticates with the IdP
-4. IdP redirects back to Assessly; Assessly validates the response, verifies the identity token, and creates a session
+4. IdP redirects back to Venshield; Venshield validates the response, verifies the identity token, and creates a session
 5. User is redirected to the dashboard
 
 ### JIT Provisioning

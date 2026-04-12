@@ -22,7 +22,7 @@ async function main() {
 
   const funcText = source.slice(fnStart, endIndex);
   // Keep in sync with props in components/theme-provider.tsx
-  const params = '"class","assessly-theme","system",null,["light","dark"],null,true,true';
+  const params = '"class","venshield-theme","system",null,["light","dark"],null,true,true';
   const scriptText = `(${funcText})(${params})`;
 
   const base64 = createHash("sha256").update(scriptText, "utf8").digest("base64");

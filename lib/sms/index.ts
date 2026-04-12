@@ -29,7 +29,7 @@ export async function sendSms(to: string, body: string): Promise<SmsResult> {
         return new ElksSmsProvider(
           env.ELKS_API_USERNAME,
           env.ELKS_API_PASSWORD,
-          env.ELKS_FROM ?? "Assessly",
+          env.ELKS_FROM ?? "Venshield",
         ).send(to, body);
       }
 
@@ -53,7 +53,7 @@ export async function sendSms(to: string, body: string): Promise<SmsResult> {
         return new InfobipSmsProvider(
           env.INFOBIP_API_KEY,
           env.INFOBIP_BASE_URL,
-          env.INFOBIP_FROM ?? "Assessly",
+          env.INFOBIP_FROM ?? "Venshield",
         ).send(to, body);
       }
 

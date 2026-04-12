@@ -10,7 +10,7 @@ import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance"
 import { logAuditEvent } from "@/lib/audit-log";
 import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 
-const STORAGE_DIR = path.join(process.cwd(), ".assessly-storage");
+const STORAGE_DIR = path.join(process.cwd(), ".venshield-storage");
 
 /** Persist a supplemental evidence PDF for a specific AssessmentAnswer. */
 async function saveAnswerEvidencePdf(

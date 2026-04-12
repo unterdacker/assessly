@@ -42,7 +42,7 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 vi.mock("@/lib/auth/token", () => ({
-  AUTH_SESSION_COOKIE_NAME: "assessly-session",
+  AUTH_SESSION_COOKIE_NAME: "venshield-session",
   verifySessionToken: mockVerifySessionToken,
   hashSessionToken: mockHashSessionToken,
   shouldSecureCookie: vi.fn().mockReturnValue(false),
@@ -82,7 +82,7 @@ function stubSession(role: UserRole) {
   mockCookiesGet.mockReturnValue({ value: "mock-token" });
   mockHashSessionToken.mockResolvedValue("mock-hash");
   mockVerifySessionToken.mockResolvedValue({
-    type: "assessly-session",
+    type: "venshield-session",
     sid: "test-session-id",
     uid: "test-user-id",
     role,

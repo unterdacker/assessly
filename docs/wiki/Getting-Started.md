@@ -15,8 +15,8 @@
 ### 1 — Clone and install
 
 ```bash
-git clone https://github.com/Assessly-AI/assessly.git
-cd assessly
+git clone https://github.com/Venshield-AI/venshield.git
+cd venshield
 npm install
 ```
 
@@ -25,7 +25,7 @@ npm install
 Create a `.env` file in the project root with at minimum:
 
 ```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/assessly?schema=public"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/venshield?schema=public"
 ```
 
 For AI-assisted document analysis using a local Ollama instance (recommended):
@@ -63,8 +63,8 @@ The seed creates two demo companies and the following accounts:
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | `admin@assessly.local` | `admin123` |
-| Auditor | `auditor@assessly.local` | `auditor123` |
+| Admin | `admin@venshield.local` | `admin123` |
+| Auditor | `auditor@venshield.local` | `auditor123` |
 
 > **Warning:** These credentials are for local development only. Never use them in any internet-accessible environment.
 
@@ -102,7 +102,7 @@ Key differences from the local setup:
 - Set `NEXT_PUBLIC_APP_URL` to your `https://` domain
 - Generate all secrets with the commands documented in [Environment Variables Reference](Environment-Variables-Reference)
 - Use a managed PostgreSQL instance or a properly volume-backed container
-- Place Assessly behind a TLS-terminating reverse proxy (nginx, Caddy, Traefik)
+- Place Venshield behind a TLS-terminating reverse proxy (nginx, Caddy, Traefik)
 
 ---
 

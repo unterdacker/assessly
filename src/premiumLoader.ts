@@ -103,7 +103,7 @@ async function verifyLicense(featureName: string): Promise<VerifyResult> {
   try {
     const result = await jwtVerify<LicensePayload>(token, publicKey, {
       algorithms: ['RS256'],
-      issuer: 'assessly-licensing',
+      issuer: 'venshield-licensing',
       audience,
     });
     payload = result.payload as LicensePayload;

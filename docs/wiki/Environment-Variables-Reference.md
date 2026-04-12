@@ -8,7 +8,7 @@ All environment variables are validated at startup by `lib/env.ts` using Zod. In
 
 | Variable | Example | Description |
 |----------|---------|-------------|
-| `DATABASE_URL` | `postgresql://user:pass@host:5432/assessly?schema=public` | PostgreSQL connection string. Must begin with `postgresql://` or `postgres://` |
+| `DATABASE_URL` | `postgresql://user:pass@host:5432/venshield?schema=public` | PostgreSQL connection string. Must begin with `postgresql://` or `postgres://` |
 
 ---
 
@@ -56,14 +56,14 @@ All secrets must be generated with `crypto.randomBytes()`. Never use placeholder
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `MAIL_STRATEGY` | `log` | `smtp` \| `resend` \| `log` \| `mailpit`. `mailpit` routes to a local Mailpit SMTP trap and is **blocked at runtime if `NODE_ENV=production`**. `mailhog` is accepted as a backward-compat alias for `mailpit`. Overridden by SystemSettings DB row when set |
-| `MAIL_FROM` | `Assessly <noreply@assessly.local>` | Sender address and display name |
+| `MAIL_FROM` | `Venshield <noreply@venshield.local>` | Sender address and display name |
 | `SMTP_HOST` | — | SMTP server hostname |
 | `SMTP_PORT` | `587` | SMTP port |
 | `SMTP_USER` | — | SMTP authentication username |
 | `SMTP_PASSWORD` | — | SMTP password (plaintext in env var; stored encrypted in DB when configured via UI) |
 | `RESEND_API_KEY` | — | Resend API key |
-| `MAIL_COMPANY_NAME` | `Assessly` | Company display name injected into email templates |
-| `MAILPIT_SMTP_HOST` | `localhost` | Mailpit SMTP hostname. Must be a plain hostname (no `http://` prefix). Docker Compose overrides this to `assessly-mailpit` |
+| `MAIL_COMPANY_NAME` | `Venshield` | Company display name injected into email templates |
+| `MAILPIT_SMTP_HOST` | `localhost` | Mailpit SMTP hostname. Must be a plain hostname (no `http://` prefix). Docker Compose overrides this to `venshield-mailpit` |
 | `MAILPIT_SMTP_PORT` | `1025` | Mailpit SMTP port (1–65535). Consumers should `parseInt()` this value |
 | `MAILHOG_SMTP_HOST` | `localhost` | Backward-compat alias for `MAILPIT_SMTP_HOST`. Prefer `MAILPIT_SMTP_HOST` in new setups |
 | `MAILHOG_SMTP_PORT` | `1025` | Backward-compat alias for `MAILPIT_SMTP_PORT`. Prefer `MAILPIT_SMTP_PORT` in new setups |
@@ -107,8 +107,8 @@ The following environment variables are required only when Premium modules (SSO 
 
 | Variable | Description |
 |----------|-------------|
-| `LICENSE_FILE_PATH` | Path to the license file provided by Assessly for Premium features. Default: `modules/license.json` relative to the application root. |
-| `LICENSE_KEY` | License activation key for Premium modules. Provided by Assessly with your license package. Store as a multiline value or mount as a file — it must not be prefixed with `NEXT_PUBLIC_`. |
+| `LICENSE_FILE_PATH` | Path to the license file provided by Venshield for Premium features. Default: `modules/license.json` relative to the application root. |
+| `LICENSE_KEY` | License activation key for Premium modules. Provided by Venshield with your license package. Store as a multiline value or mount as a file — it must not be prefixed with `NEXT_PUBLIC_`. |
 | `LICENSE_AUDIENCE` | License audience identifier that must match the value issued with your license. Case-sensitive. Provided in your license delivery. |
 
-> All Premium-specific secrets (`OIDC_STATE_SECRET`, `SETTINGS_ENCRYPTION_KEY`) are operator-generated and covered in the **Security Secrets** section above — they are not provided by Assessly.
+> All Premium-specific secrets (`OIDC_STATE_SECRET`, `SETTINGS_ENCRYPTION_KEY`) are operator-generated and covered in the **Security Secrets** section above — they are not provided by Venshield.

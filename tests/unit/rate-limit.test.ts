@@ -8,7 +8,7 @@ import {
 } from "@/lib/rate-limit";
 
 beforeEach(() => {
-  (globalThis as { __assesslyRateLimit?: Map<string, unknown> }).__assesslyRateLimit?.clear();
+  (globalThis as { __venshieldRateLimit?: Map<string, unknown> }).__venshieldRateLimit?.clear();
 });
 
 describe("RATE_LIMIT_DEFAULTS", () => {
@@ -112,7 +112,7 @@ describe("FIFO eviction and expiry", () => {
   });
 
   it("evicts oldest entry when store is at capacity", () => {
-    const store = (globalThis as { __assesslyRateLimit?: Map<string, unknown> }).__assesslyRateLimit!;
+    const store = (globalThis as { __venshieldRateLimit?: Map<string, unknown> }).__venshieldRateLimit!;
     for (let i = store.size; i < 100_000; i += 1) {
       store.set(`fill-${i}`, { consecutiveFailures: 0, blockedUntil: 0 });
     }
@@ -126,7 +126,7 @@ describe("FIFO eviction and expiry", () => {
   });
 
   it("does not evict when updating an existing key at capacity", () => {
-    const store = (globalThis as { __assesslyRateLimit?: Map<string, unknown> }).__assesslyRateLimit!;
+    const store = (globalThis as { __venshieldRateLimit?: Map<string, unknown> }).__venshieldRateLimit!;
     store.clear();
 
     const existingKey = "existing-at-capacity";

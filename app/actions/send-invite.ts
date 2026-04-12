@@ -240,7 +240,7 @@ export async function sendOutOfBandInviteAction(
 
   const { subject, html } = buildVendorInviteEmail({
     locale,
-    companyName: process.env.MAIL_COMPANY_NAME ?? "Assessly",
+    companyName: process.env.MAIL_COMPANY_NAME ?? "Venshield",
     vendorName,
     accessCode,
     portalUrl,
@@ -270,7 +270,7 @@ export async function sendOutOfBandInviteAction(
   // It is NEVER stored in plain text, never logged, never returned to the client.
   // Provider implementations are PROHIBITED from logging the body parameter.
   const smsBody =
-    `Your Assessly temporary password is: ${tempPassword}. ` +
+    `Your Venshield temporary password is: ${tempPassword}. ` +
     `Use your emailed Access Code to log in and change this password immediately.`;
 
   const smsResult = await sendSms(phone, smsBody);
@@ -291,7 +291,7 @@ export async function sendOutOfBandInviteAction(
     }).catch(() => {});
     // Non-blocking: access code was saved; admin can provide credentials via alternate channel
   }
-  // tempPassword and smsBody references end here — neither leaves this server action
+  // tempPassword and smsBody references end here â€” neither leaves this server action
 
   revalidatePath("/vendors");
   return { status: "sent", maskedPhone: maskPhone(phone), error: null };

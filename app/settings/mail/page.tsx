@@ -11,7 +11,7 @@ import type { MailSettingsInitialData } from "@/components/mail-settings-form";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Mail Settings — Assessly",
+  title: "Mail Settings — Venshield",
   description: "Configure email delivery strategy, SMTP credentials, and Resend API key.",
 };
 

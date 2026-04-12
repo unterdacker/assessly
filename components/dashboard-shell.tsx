@@ -132,9 +132,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           aria-label="Workspace navigation"
         >
           <div className="flex h-14 items-center gap-2 border-b border-slate-200 px-4 dark:border-slate-800">
-            <Image src="/logo.png" alt="Assessly logo" width={32} height={32} className="rounded-md" priority />
+            <Image src="/logo.png" alt="Venshield logo" width={32} height={32} className="rounded-md" priority />
             <div className="leading-tight">
-              <p className="text-sm font-semibold tracking-tight">Assessly</p>
+              <p className="text-sm font-semibold tracking-tight">Venshield</p>
               <p className="text-[10px] text-muted-foreground">
                 {session?.role === "ADMIN" ? "Admin workspace" : session?.role === "AUDITOR" ? "Auditor workspace" : "Vendor risk"}
               </p>
@@ -184,8 +184,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur-sm dark:border-slate-800 dark:bg-card/95 md:px-6">
             <div className="flex min-w-0 items-center gap-3 md:hidden">
-              <Image src="/logo.png" alt="Assessly logo" width={32} height={32} className="rounded-md" priority />
-              <span className="truncate text-sm font-semibold">Assessly</span>
+              <Image src="/logo.png" alt="Venshield logo" width={32} height={32} className="rounded-md" priority />
+              <span className="truncate text-sm font-semibold">Venshield</span>
             </div>
             <div className="hidden md:block" />
             <div className="flex items-center gap-2">

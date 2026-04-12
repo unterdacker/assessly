@@ -1,6 +1,6 @@
 #!/bin/sh
 # =============================================================================
-# Assessly — container entrypoint
+# Venshield — container entrypoint
 #
 # 1. Pushes the Prisma schema to the database (creates tables on first start,
 #    applies any schema drift on subsequent starts).

@@ -15,10 +15,10 @@ async function tryDeleteMany(fn: () => Promise<unknown>): Promise<void> {
 
 const SEED_ACTOR = "system-seed";
 const COMPANY_SLUG = "default";
-const DEFAULT_ADMIN_EMAIL = process.env.ASSESSLY_ADMIN_EMAIL || "admin@assessly.local";
-const DEFAULT_ADMIN_PASSWORD = process.env.ASSESSLY_ADMIN_PASSWORD || "admin123";
-const DEFAULT_AUDITOR_EMAIL = process.env.ASSESSLY_AUDITOR_EMAIL || "auditor@assessly.local";
-const DEFAULT_AUDITOR_PASSWORD = process.env.ASSESSLY_AUDITOR_PASSWORD || "auditor123";
+const DEFAULT_ADMIN_EMAIL = process.env.VENSHIELD_ADMIN_EMAIL || "admin@venshield.local";
+const DEFAULT_ADMIN_PASSWORD = process.env.VENSHIELD_ADMIN_PASSWORD || "admin123";
+const DEFAULT_AUDITOR_EMAIL = process.env.VENSHIELD_AUDITOR_EMAIL || "auditor@venshield.local";
+const DEFAULT_AUDITOR_PASSWORD = process.env.VENSHIELD_AUDITOR_PASSWORD || "auditor123";
 
 type DemoVendor = {
   name: string;
@@ -101,7 +101,7 @@ async function main() {
       {
         companyId: company.id,
         email: DEFAULT_ADMIN_EMAIL,
-        displayName: "Assessly Admin",
+        displayName: "Venshield Admin",
         passwordHash: adminPasswordHash,
         role: UserRole.ADMIN,
         createdBy: SEED_ACTOR,
@@ -109,7 +109,7 @@ async function main() {
       {
         companyId: company.id,
         email: DEFAULT_AUDITOR_EMAIL,
-        displayName: "Assessly Auditor",
+        displayName: "Venshield Auditor",
         passwordHash: auditorPasswordHash,
         role: UserRole.AUDITOR,
         createdBy: SEED_ACTOR,

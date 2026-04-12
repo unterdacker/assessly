@@ -14,7 +14,7 @@ const ALLOWED_EVIDENCE_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
 ]);
-const EVIDENCE_STORAGE_DIR = path.join(process.cwd(), ".assessly-storage", "question-evidence");
+const EVIDENCE_STORAGE_DIR = path.join(process.cwd(), ".venshield-storage", "question-evidence");
 
 function safeDisplayFilename(rawName: string): string {
   const basename = path.basename(rawName || "evidence");

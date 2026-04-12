@@ -3,7 +3,7 @@
  * scripts/verify-audit-chain.ts
  *
  * ════════════════════════════════════════════════════════════════════════════
- * Assessly Forensic Audit Log — Hash-Chain Verifier
+ * Venshield Forensic Audit Log — Hash-Chain Verifier
  * ════════════════════════════════════════════════════════════════════════════
  *
  * PURPOSE
@@ -109,7 +109,7 @@ const CANONICAL_SEPARATOR = "|";
  * This is an intentional local copy of the algorithm — the script must remain
  * standalone and must not depend on Next.js module resolution or any server
  * runtime.  The algorithm is identical to `computeEventHash` in
- * lib/audit-sanitize.ts and is specified by the Assessly Audit Log Specification
+ * lib/audit-sanitize.ts and is specified by the Venshield Audit Log Specification
  * (see file header).
  *
  * If a field value contains the separator character the function returns a
@@ -197,7 +197,7 @@ async function main(): Promise<void> {
   const runAt = new Date().toISOString();
 
   emit(DIVIDER);
-  emit("  Assessly Forensic Audit Log — Hash-Chain Verification Report");
+  emit("  Venshield Forensic Audit Log — Hash-Chain Verification Report");
   emit(`  Company ID    : ${companyId}`);
   emit(`  Total rows    : ${rows.length}`);
   emit(`  Report run at : ${runAt}`);

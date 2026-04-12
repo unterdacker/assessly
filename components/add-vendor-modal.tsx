@@ -99,7 +99,7 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
             <DialogTitle>Invite vendor</DialogTitle>
             <DialogDescription>
               Send an assessment invitation. The vendor will receive NIS2-aligned
-              security questions via Assessly. Data is stored in your Assessly database.
+              security questions via Venshield. Data is stored in your Venshield database.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-2">

@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
       - name: Checkout enterprise modules
-        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/assessly-enterprise.git modules
+        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/venshield-enterprise.git modules
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"
@@ -77,7 +77,7 @@ jobs:
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
       - name: Checkout enterprise modules
-        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/assessly-enterprise.git modules
+        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/venshield-enterprise.git modules
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"
@@ -141,7 +141,7 @@ jobs:
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
       - name: Checkout enterprise modules
-        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/assessly-enterprise.git modules
+        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/venshield-enterprise.git modules
       - name: Initialize CodeQL
         uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13  # v4.35.1
         with:
@@ -231,7 +231,7 @@ jobs:
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
       - name: Checkout enterprise modules
-        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/assessly-enterprise.git modules
+        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/venshield-enterprise.git modules
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"
@@ -293,7 +293,7 @@ jobs:
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
       - name: Checkout enterprise modules
-        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/assessly-enterprise.git modules
+        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/venshield-enterprise.git modules
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"
@@ -312,11 +312,11 @@ jobs:
         run: npx prisma db seed
         env:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
-          ASSESSLY_ADMIN_EMAIL: admin@demo.assessly.dev
-          ASSESSLY_ADMIN_PASSWORD: Admin1234!
+          VENSHIELD_ADMIN_EMAIL: admin@demo.venshield.dev
+          VENSHIELD_ADMIN_PASSWORD: Admin1234!
           # Auditor defaults — override via repo secrets if credentials change
-          ASSESSLY_AUDITOR_EMAIL: auditor@assessly.local
-          ASSESSLY_AUDITOR_PASSWORD: auditor123
+          VENSHIELD_AUDITOR_EMAIL: auditor@venshield.local
+          VENSHIELD_AUDITOR_PASSWORD: auditor123
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - name: Start Next.js server
@@ -330,14 +330,14 @@ jobs:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
           # CI-only ephemeral keys — structurally valid but intentionally non-production.
           # All-zero/all-one hex keys match the pattern already used in build/unit-test jobs.
-          AUTH_SESSION_SECRET: "ci-assessly-auth-session-secret-32-chars-ok"
+          AUTH_SESSION_SECRET: "ci-venshield-auth-session-secret-32-chars-ok"
           SETTINGS_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
           MFA_ENCRYPTION_KEY: "1111111111111111111111111111111111111111111111111111111111111111"
-          AUDIT_BUNDLE_SECRET: "ci-assessly-audit-bundle-secret-minimum-32-chars"
+          AUDIT_BUNDLE_SECRET: "ci-venshield-audit-bundle-secret-minimum-32-chars"
           AUDIT_EXPORT_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
           AUDIT_PSEUDONYMIZATION_KEY: "1111111111111111111111111111111111111111111111111111111111111111"
-          CRON_SECRET: "ci-assessly-cron-secret-minimum-32-chars-here-ok"
-          OIDC_STATE_SECRET: "ci-assessly-oidc-state-secret-minimum-32-chars"
+          CRON_SECRET: "ci-venshield-cron-secret-minimum-32-chars-here-ok"
+          OIDC_STATE_SECRET: "ci-venshield-oidc-state-secret-minimum-32-chars"
           APP_URL: http://localhost:3000
           NEXT_PUBLIC_APP_URL: http://localhost:3000
           ALLOW_INSECURE_LOCALHOST: "true"
@@ -386,7 +386,7 @@ jobs:
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
       - name: Checkout enterprise modules
-        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/assessly-enterprise.git modules
+        run: git clone https://x-access-token:${{ secrets.SUBMODULE_PAT }}@github.com/unterdacker/venshield-enterprise.git modules
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f  # v6.3.0
         with:
           node-version: "22"
@@ -413,14 +413,14 @@ jobs:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
           # CI-only ephemeral keys — structurally valid but intentionally non-production.
           # All-zero/all-one hex keys match the pattern already used in build/unit-test jobs.
-          AUTH_SESSION_SECRET: "ci-assessly-auth-session-secret-32-chars-ok"
+          AUTH_SESSION_SECRET: "ci-venshield-auth-session-secret-32-chars-ok"
           SETTINGS_ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
           MFA_ENCRYPTION_KEY: "1111111111111111111111111111111111111111111111111111111111111111"
-          AUDIT_BUNDLE_SECRET: "ci-assessly-audit-bundle-secret-minimum-32-chars"
+          AUDIT_BUNDLE_SECRET: "ci-venshield-audit-bundle-secret-minimum-32-chars"
           AUDIT_EXPORT_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
           AUDIT_PSEUDONYMIZATION_KEY: "1111111111111111111111111111111111111111111111111111111111111111"
-          CRON_SECRET: "ci-assessly-cron-secret-minimum-32-chars-here-ok"
-          OIDC_STATE_SECRET: "ci-assessly-oidc-state-secret-minimum-32-chars"
+          CRON_SECRET: "ci-venshield-cron-secret-minimum-32-chars-here-ok"
+          OIDC_STATE_SECRET: "ci-venshield-oidc-state-secret-minimum-32-chars"
           APP_URL: http://localhost:3000
           NEXT_PUBLIC_APP_URL: http://localhost:3000
           ALLOW_INSECURE_LOCALHOST: "true"

@@ -11,7 +11,7 @@
 
 ## Implementation
 
-Assessly uses [next-intl](https://next-intl-docs.vercel.app/) v4 for route-based internationalisation.
+Venshield uses [next-intl](https://next-intl-docs.vercel.app/) v4 for route-based internationalisation.
 
 ### Routing Configuration (`i18n/routing.ts`)
 
