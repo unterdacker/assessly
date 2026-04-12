@@ -62,6 +62,7 @@
         "Get-Process": true,
         ".github/workflows/ci.yml": true,
         "New-Object": true,
-        ".github/workflows/trigger-public-ci.yml": true
+        ".github/workflows/trigger-public-ci.yml": true,
+        "Group-Object": true
     }
 }
