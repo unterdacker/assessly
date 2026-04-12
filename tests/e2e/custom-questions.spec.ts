@@ -128,7 +128,7 @@ test.describe("Custom Questions - Assessment panel integration", () => {
 
     if (count > 0) {
       await vendorLinks.first().click();
-      await expect(page.getByText(/NIS2|questionnaire|compliance/i)).toBeVisible({
+      await expect(page.getByText(/NIS2|questionnaire|compliance/i).first()).toBeVisible({
         timeout: 15_000,
       });
     } else {
