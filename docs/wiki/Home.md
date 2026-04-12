@@ -1,5 +1,7 @@
 ﻿# Venshield — Documentation Home
 
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square)](https://www.apache.org/licenses/LICENSE-2.0) [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org) [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com) [![NIS2](https://img.shields.io/badge/NIS2-compliant-green?style=flat-square)](https://nis2directive.eu) [![GDPR](https://img.shields.io/badge/GDPR-compliant-green?style=flat-square)](https://gdpr.eu)
+
 > **Sovereign Vendor Risk Assessment Platform for NIS2 & GDPR-compliant organisations**
 
 Venshield replaces disconnected spreadsheets and inboxes with one auditable workspace covering vendor onboarding, NIS2-aligned questionnaire execution, AI-assisted document analysis, evidence review, and remediation tracking — with all data staying inside your own infrastructure. Premium customers additionally benefit from OIDC single sign-on with just-in-time provisioning and AI-powered Advanced Reporting with PDF export.
