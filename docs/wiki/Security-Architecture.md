@@ -1,4 +1,4 @@
-# Security Architecture
+﻿# Security Architecture
 
 ## Security Headers
 
@@ -21,13 +21,13 @@ The CSP hash for the theme script is pre-computed at build time by `scripts/comp
 
 ### AES-256-GCM Encryption (`lib/crypto.ts`)
 
-Used for encrypting sensitive values at rest (SMTP passwords, API keys, Mistral API key):
+Used for encrypting sensitive values at rest (SMTP passwords, API keys, Mistral API key, OIDC client secrets for SSO):
 
 - **Algorithm:** AES-256-GCM
 - **Key:** 32 bytes / 256 bits from `SETTINGS_ENCRYPTION_KEY` (64 hex chars)
-- **IV:** 12 bytes (96-bit) — NIST recommended for GCM mode — generated fresh per encryption
+- **IV:** 12 bytes (96-bit)  NIST recommended for GCM mode  generated fresh per encryption
 - **Format stored in DB:** `<iv_hex>:<tag_hex>:<ciphertext_hex>`
-- **Authentication:** GCM authentication tag verified on decryption — any tampering throws
+- **Authentication:** GCM authentication tag verified on decryption  any tampering throws
 
 ### MFA Secret Encryption (`lib/mfa.ts`)
 
@@ -36,7 +36,7 @@ Same AES-256-GCM scheme, separate key (`MFA_ENCRYPTION_KEY`). TOTP secrets are e
 ### Session Token Integrity (`lib/auth/token.ts`)
 
 - Session tokens are signed with **HMAC-SHA256** using `AUTH_SESSION_SECRET`
-- Only the `tokenHash` is stored in the database — the raw token never persists
+- Only the `tokenHash` is stored in the database  the raw token never persists
 - `verifySessionToken()` computes the HMAC and compares in constant time to prevent timing attacks
 
 ### Audit Hash Chain (`lib/audit-sanitize.ts`)
@@ -108,15 +108,15 @@ Run `npm audit` to check for known CVEs in the dependency tree.
 
 | Secret | Command | Notes |
 |--------|---------|-------|
-| `AUTH_SESSION_SECRET` | `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` | 64 bytes → 128 hex chars |
-| `SETTINGS_ENCRYPTION_KEY` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes → 64 hex chars |
-| `MFA_ENCRYPTION_KEY` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes → 64 hex chars |
-| `AUDIT_BUNDLE_SECRET` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes → 64 hex chars |
-| `AUDIT_EXPORT_KEY` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes → 64 hex chars |
-| `AUDIT_PSEUDONYMIZATION_KEY` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes → 64 hex chars |
-| `CRON_SECRET` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes → 64 hex chars |
+| `AUTH_SESSION_SECRET` | `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` | 64 bytes  128 hex chars |
+| `SETTINGS_ENCRYPTION_KEY` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes  64 hex chars |
+| `MFA_ENCRYPTION_KEY` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes  64 hex chars |
+| `AUDIT_BUNDLE_SECRET` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes  64 hex chars |
+| `AUDIT_EXPORT_KEY` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes  64 hex chars |
+| `AUDIT_PSEUDONYMIZATION_KEY` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes  64 hex chars |
+| `CRON_SECRET` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes  64 hex chars |
 
-> **Important:** Never reuse keys across environments. Rotate all secrets when deploying to production. Store secrets in a secrets manager (Vault, AWS Secrets Manager, etc.) — never in the repository.
+> **Important:** Never reuse keys across environments. Rotate all secrets when deploying to production. Store secrets in a secrets manager (Vault, AWS Secrets Manager, etc.)  never in the repository.
 
 ---
 
@@ -129,3 +129,5 @@ Assessly has **no mandatory external network dependencies**. Every feature works
 - Self-hosted PostgreSQL
 
 This makes the platform suitable for classified environments, air-gapped networks, and high-security data centres.
+
+

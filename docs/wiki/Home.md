@@ -1,8 +1,8 @@
-# Assessly — Documentation Home
+﻿# Assessly — Documentation Home
 
 > **Sovereign Vendor Risk Assessment Platform for NIS2 & GDPR-compliant organisations**
 
-Assessly replaces disconnected spreadsheets and inboxes with one auditable workspace covering vendor onboarding, NIS2-aligned questionnaire execution, AI-assisted document analysis, evidence review, and remediation tracking — with all data staying inside your own infrastructure. Premium customers additionally benefit from OIDC single sign-on with JIT provisioning.
+Assessly replaces disconnected spreadsheets and inboxes with one auditable workspace covering vendor onboarding, NIS2-aligned questionnaire execution, AI-assisted document analysis, evidence review, and remediation tracking — with all data staying inside your own infrastructure. Premium customers additionally benefit from OIDC single sign-on with just-in-time provisioning and AI-powered Advanced Reporting with PDF export.
 
 ---
 
@@ -14,8 +14,9 @@ Assessly replaces disconnected spreadsheets and inboxes with one auditable works
 | [Getting Started](Getting-Started) | Local setup, Docker, environment variables |
 | [Database Schema](Database-Schema) | Full entity model with field annotations |
 | [Authentication & Authorization](Authentication-and-Authorization) | Session model, roles, MFA, OIDC/SSO (Premium), permissions |
+| [Enterprise Features](Enterprise-Features) | Premium OIDC/SSO and Advanced Reporting |
 | [NIS2 Compliance Module](NIS2-Compliance-Module) | Questionnaire catalogue, scoring, risk levels |
-| [AI Integration](AI-Integration) | Ollama / Mistral provider, document analysis, executive summaries |
+| [AI Integration](AI-Integration) | Ollama / Mistral provider, document analysis, executive summaries, Advanced Reporting (Premium) |
 | [Audit Trail & Forensic Logging](Audit-Trail-and-Forensic-Logging) | Hash-chain, GDPR redaction, compliance categories |
 | [Security Architecture](Security-Architecture) | Cryptography, CSP, rate limiting, secrets |
 | [Mail System](Mail-System) | SMTP / Resend strategies, invitation flow |

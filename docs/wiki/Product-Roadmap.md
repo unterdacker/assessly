@@ -1,4 +1,4 @@
-# Product Roadmap
+﻿# Product Roadmap
 
 ## What's built
 
@@ -17,8 +17,9 @@
 - English and German UI
 - Docker Compose deployment
 - CI/CD pipeline (GitHub Actions: lint, Vitest unit tests, CodeQL SAST, secret scanning, Playwright E2E, accessibility audit, CycloneDX SBOM)
-- OIDC/SSO single sign-on — **Premium plan only** (PKCE, JIT provisioning, encrypted client secrets, SSRF-safe IdP discovery, full audit trail)
-- FREE / PREMIUM subscription tiers (plan gate via `lib/plan-gate.ts`)
+- OIDC/SSO single sign-on — **Premium plan only** (PKCE support, just-in-time provisioning, encrypted client secrets, SSRF-safe IdP discovery, full audit trail)
+- Advanced Reporting — AI-generated compliance reports, interactive report editor, one-click PDF export, AI executive summaries — **Premium plan only**
+- FREE / PREMIUM subscription tiers
 
 ---
 
@@ -39,7 +40,6 @@
 - Custom questionnaire builder (not just NIS2)
 - Assessment approval workflow (review → approve → sign-off)
 - SLA tracking and automated vendor reminders
-- PDF report generation per vendor
 - More compliance templates (ISO 27001, SOC2, DORA, HIPAA)
 
 ### Later

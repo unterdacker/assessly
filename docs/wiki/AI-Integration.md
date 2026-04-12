@@ -134,3 +134,33 @@ If the AI provider is unavailable or returns an unparseable response, the platfo
 4. Never blocks the assessment workflow
 
 The simulation module (`lib/simulate-nis2-document-analysis.ts`) provides deterministic mock responses for testing without a live AI endpoint.
+
+---
+
+## Advanced Reporting (Premium)
+
+> **Premium plan feature.** Advanced Reporting requires a Premium subscription. See the [Enterprise Features](Enterprise-Features) page for a full capability overview.
+
+Advanced Reporting is accessible at **Reporting** in the main navigation and generates structured compliance reports from accumulated vendor assessment data.
+
+### AI Draft Service
+
+When creating a new report, Assessly calls the configured AI provider (Ollama or Mistral AI — the same provider configured under **Settings → AI**) to produce an AI-written executive summary. The draft covers:
+
+- Per-category NIS2 compliance scores and open gap counts
+- Overall risk posture and vendor risk distribution
+- Top remediation priorities ranked by compliance impact
+
+No raw vendor contact details or PII are sent to the AI provider. Input consists solely of aggregated metrics.
+
+### Report Editor
+
+The generated AI draft is presented in an interactive report editor where an auditor can review, correct, and refine the content before publishing. Changes are saved explicitly — the AI draft and the published version are separate states.
+
+### PDF Export
+
+A formatted PDF report can be generated with one click from the report detail view. The download is served directly from the platform with appropriate content headers.
+
+### Audit Trail Integration
+
+All AI invocations made by Advanced Reporting are written to the audit trail with model identification, provider name, and a hash of the input context — consistent with EU AI Act Art. 12/14 obligations enforced across the entire platform.

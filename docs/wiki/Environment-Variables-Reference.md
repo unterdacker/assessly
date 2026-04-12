@@ -98,3 +98,17 @@ The placeholder detector rejects values matching:
 - `placeholder`
 - `your_*`, `example_*`
 - Values starting with `CHANGE_ME`
+
+---
+
+## Premium Features
+
+The following environment variables are required only when Premium modules (SSO and/or Advanced Reporting) are enabled.
+
+| Variable | Description |
+|----------|-------------|
+| `LICENSE_FILE_PATH` | Path to the license file provided by Assessly for Premium features. Default: `modules/license.json` relative to the application root. |
+| `LICENSE_KEY` | License activation key for Premium modules. Provided by Assessly with your license package. Store as a multiline value or mount as a file — it must not be prefixed with `NEXT_PUBLIC_`. |
+| `LICENSE_AUDIENCE` | License audience identifier that must match the value issued with your license. Case-sensitive. Provided in your license delivery. |
+
+> All Premium-specific secrets (`OIDC_STATE_SECRET`, `SETTINGS_ENCRYPTION_KEY`) are operator-generated and covered in the **Security Secrets** section above — they are not provided by Assessly.

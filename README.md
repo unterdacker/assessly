@@ -1,8 +1,8 @@
-﻿![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg) ![Version](https://img.shields.io/badge/version-0.1.0-informational) [![CI](https://github.com/unterdacker/assessly/actions/workflows/ci.yml/badge.svg)](https://github.com/unterdacker/assessly/actions/workflows/ci.yml)
+﻿![License](https://img.shields.io/badge/License-AGPL_v3-blue.svg) ![Version](https://img.shields.io/badge/version-0.1.0-informational) [![CI](https://github.com/unterdacker/assessly/actions/workflows/ci.yml/badge.svg)](https://github.com/unterdacker/assessly/actions/workflows/ci.yml)
 
-# Assessly - Sovereign Vendor Risk Assessment Platform
+# Assessly — Sovereign Vendor Risk Assessment Platform
 
-Assessly helps security and compliance teams manage third-party vendor risk in line with **NIS2** requirements. It replaces disconnected spreadsheets and inboxes with one auditable workspace covering vendor onboarding, questionnaire execution, evidence review, and remediation tracking.
+Assessly helps security and compliance teams manage third-party vendor risk in line with **NIS2** and **DORA** requirements. It replaces disconnected spreadsheets and inboxes with one auditable workspace covering vendor onboarding, questionnaire execution, AI-assisted document analysis, evidence review, and remediation tracking.
 
 ### Key advantages
 
@@ -11,31 +11,43 @@ Assessly helps security and compliance teams manage third-party vendor risk in l
 - **EU AI Act compliant by design** — every AI-assisted action is traceable, human-reviewable, and logged. Meets transparency and oversight requirements out of the box.
 - **Cryptographic audit trail** — tamper-evident chain-of-custody for all compliance events, exportable for auditors and regulators.
 - **Air-gap capable** — fully self-hostable with no mandatory external dependencies.
-- **Enterprise SSO (Premium)** — OIDC single sign-on with PKCE, JIT provisioning, and per-company IdP configuration. Available on the Premium plan.
+- **Enterprise SSO (Premium)** — OIDC single sign-on with PKCE support, just-in-time user provisioning, and per-company identity provider configuration. Available on the Premium plan.
+- **Advanced Reporting (Premium)** — AI-generated compliance reports with one-click PDF export, executive summaries, and a built-in report editor. Available on the Premium plan.
 
 **Stack:** Next.js 15.1 · React 19 · TypeScript 5.7 · Prisma 6 · PostgreSQL 16 · Tailwind CSS 3 · Radix UI · next-intl 4
 
+---
+
 ## Screenshots
 
-### Dashboard — Supply chain risk overview
-Mission-control view of your vendor portfolio: aggregated compliance score, assessment status counters, NIS2 category radar, vendors-by-risk bar chart, and an AI-generated executive summary.
+New screenshots are being prepared. Below is an overview of the five key screens that will be documented visually.
 
-![Dashboard overview](docs/screenshots/dashboard.png)
+### 1 — Dashboard: Supply Chain Risk at a Glance
+Mission-control overview of your vendor portfolio: aggregated NIS2 compliance score, pending and completed assessment counters, category compliance radar chart, vendors-by-risk distribution bar chart, and an AI-generated executive risk summary. The ideal first screen for security and compliance teams starting their morning review.
 
-### Vendors — Manage your third-party ecosystem
-Search, invite, and monitor all vendors in one table. Each row shows access code status, compliance score, risk level, and quick actions to resend invites or open the assessment workspace.
+<!-- screenshot placeholder: docs/screenshots/dashboard.png -->
 
-![Vendors table](docs/screenshots/vendors.png)
+### 2 — Vendor Assessment Workspace: NIS2 Review in One Place
+The internal auditor view of a live vendor assessment: 20 NIS2 control questions with AI-pre-filled answers, an embedded evidence document viewer, side-panel compliance scoring, and a remediation action panel. Replaces the spreadsheet-and-inbox workflow entirely.
 
-### Vendor Assessment Portal — Questionnaire workspace
-The vendor-facing portal where suppliers answer NIS2 controls, upload evidence documents, and fill in their company profile — all in a clean step-by-step interface.
+<!-- screenshot placeholder: docs/screenshots/assessment-workspace.png -->
 
-![Vendor assessment workspace](docs/screenshots/external-assessment.png)
+### 3 — Audit Trail: Cryptographic Chain of Custody
+Every compliance event — logins, assessments, file uploads, AI actions, role changes — is hash-chained, timestamped, IP-truncated, and exportable for regulators. Demonstrates built-in NIS2 Article 21, DORA Art. 9, and EU AI Act Art. 12/14 readiness at a glance.
 
-### Audit Trail — Cryptographic chain of custody
-Every compliance event is hash-chained (NIS2 / DORA Art. 9), AI actions are traced per EU AI Act Art. 12/14, and field-level diffs follow ISO 27001 A.12.4. Each record is exportable for regulators.
+<!-- screenshot placeholder: docs/screenshots/audit-trail.png -->
 
-![Audit trail details](docs/screenshots/audit-trail.png)
+### 4 — Advanced Reporting: AI Compliance Reports with PDF Export *(Premium)*
+The reporting dashboard listing all generated compliance reports. Opening a report shows the AI-written executive summary, per-category risk breakdown, and a one-click PDF export button for sharing with boards, auditors, and regulators. Available exclusively on the Premium plan.
+
+<!-- screenshot placeholder: docs/screenshots/advanced-reporting.png -->
+
+### 5 — Enterprise SSO: Identity Provider Configuration *(Premium)*
+The **Settings → SSO** admin panel where an ADMIN configures the OIDC issuer URL, client credentials, and just-in-time provisioning rules including email domain allow-listing. Enterprise-grade identity management with a full cryptographic audit trail. Available exclusively on the Premium plan.
+
+<!-- screenshot placeholder: docs/screenshots/sso-settings.png -->
+
+---
 
 ## Quick Start
 
@@ -95,10 +107,22 @@ npm run db:studio          # open Prisma Studio
 | Plan | Description |
 |------|-------------|
 | **Free** | Full access to NIS2 questionnaires, vendor portal, AI analysis, audit trail, and dashboard. |
-| **Premium** | Everything in Free, plus **OIDC/SSO** (single sign-on with JIT provisioning), and priority support. |
+| **Premium** | Everything in Free, plus **OIDC/SSO** (single sign-on with just-in-time provisioning), **Advanced Reporting** (AI compliance reports, PDF export, executive summaries), and priority support. |
 
-> SSO requires the Premium plan. Contact us to upgrade.
+> Interested in Premium? Contact us to obtain a license.
+
+## Documentation
+
+Full documentation is available in the [wiki](docs/wiki/Home.md):
+
+- [Getting Started](docs/wiki/Getting-Started.md)
+- [Architecture Overview](docs/wiki/Architecture-Overview.md)
+- [Enterprise Features (SSO & Advanced Reporting)](docs/wiki/Enterprise-Features.md)
+- [Deployment](docs/wiki/Deployment.md)
+- [Security Architecture](docs/wiki/Security-Architecture.md)
 
 ## License
 
-Apache License 2.0.
+[GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE)
+
+If you run a modified version of Assessly as a network service, you must make the complete corresponding source code available under AGPL-3.0. The Premium enterprise modules are licensed separately under a proprietary license and are not covered by AGPL-3.0.
