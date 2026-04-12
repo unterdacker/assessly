@@ -131,7 +131,7 @@ afterEach(() => {
 
 describe("createSessionForUser", () => {
   it("creates a signed persisted session and returns token with expiry", async () => {
-    vi.spyOn(crypto, "randomUUID").mockReturnValue("session-123");
+    vi.spyOn(crypto, "randomUUID").mockReturnValue("00000000-0000-0000-0000-000000000123");
     vi.spyOn(Date, "now").mockReturnValue(1_700_000_000_000);
     mockSignSessionClaims.mockResolvedValue("signed-token");
     mockHashSessionToken.mockResolvedValue("token-hash");
