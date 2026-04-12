@@ -17,8 +17,7 @@
     "noImplicitOverride": true,
     "plugins": [{ "name": "next" }],
     "paths": {
-      "@/*": ["./*"],
-      "@premium": ["./src/premiumLoader.ts"]
+      "@/*": ["./*"]
     }
   },
   "ts-node": {
