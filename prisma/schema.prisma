@@ -42,6 +42,13 @@ enum CompanyPlan {
   PREMIUM
 }
 
+enum RemediationTaskStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  WONT_FIX
+}
+
 enum ExecReportStatus {
   DRAFT
   FINALIZED
@@ -71,6 +78,7 @@ model Company {
   oidcConfig                 OidcConfig?
   execReports                ExecReport[]
   customQuestions            Question[]
+  remediationTasks           RemediationTask[]
 }
 
 model OidcConfig {
@@ -109,6 +117,7 @@ model User {
 
   sessions     AuthSession[]
   execReports  ExecReport[]
+  assignedRemediationTasks RemediationTask[] @relation("AssignedRemediationTasks")
 
   @@index([companyId])
   @@index([role])
@@ -194,6 +203,7 @@ model Assessment {
   answers            AssessmentAnswer[]
   documents          Document[]
   execReports        ExecReport[]
+  remediationTasks   RemediationTask[]
 
   @@index([companyId])
   @@index([vendorId])
@@ -426,4 +436,29 @@ model VendorSmsLog {
 
   @@index([phoneHash, sentAt])
   @@index([vendorId, sentAt])
+}
+
+model RemediationTask {
+  id             String                @id @default(cuid())
+  companyId      String
+  assessmentId   String
+  questionId     String
+  title          String
+  description    String?
+  status         RemediationTaskStatus @default(OPEN)
+  dueDate        DateTime?
+  assigneeUserId String?
+  resolvedAt     DateTime?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  createdBy      String
+
+  company        Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  assessment     Assessment            @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  assignee       User?                 @relation("AssignedRemediationTasks", fields: [assigneeUserId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([assessmentId])
+  @@index([assigneeUserId])
+  @@index([companyId, status])
 }

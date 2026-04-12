@@ -3,6 +3,8 @@
   "Welcome": "Willkommen zurück!",
   "Logout": "Abmelden",
   "Dashboard": "Dashboard",
+  "OpenRemediations": "Offene Maßnahmen",
+  "OpenRemediationsHint": "Aufgaben mit Handlungsbedarf bei allen Anbietern",
   "Audit": {
     "title": "Audit-Trail",
     "description": "Datenschutzkonformer forensischer Ereignisverlauf. NIS2 · DORA · EU AI Act · ISO 27001 · SOC2 · DSGVO konform.",
@@ -657,6 +659,43 @@
         "saveChanges": "Änderungen speichern"
       }
     }
+  },
+  "remediation": {
+    "addTask": "Maßnahme hinzufügen",
+    "tasks": "Maßnahmen",
+    "tasksForVendor": "Maßnahmen für {vendorName}",
+    "noTasks": "Noch keine Maßnahmen vorhanden.",
+    "noAssessmentFound": "Keine Bewertung für diesen Anbieter gefunden.",
+    "deleteSuccess": "Aufgabe gelöscht.",
+    "errorGeneric": "Ein Fehler ist aufgetreten. Bitte erneut versuchen.",
+    "form": {
+      "titleCreate": "Maßnahme erstellen",
+      "titleEdit": "Maßnahme bearbeiten",
+      "labelTitle": "Titel",
+      "labelDescription": "Beschreibung",
+      "labelAssignee": "Zugewiesen an",
+      "labelDueDate": "Fälligkeitsdatum",
+      "labelStatus": "Status",
+      "submit": "Aufgabe speichern",
+      "cancel": "Abbrechen",
+      "errorRequired": "Titel ist erforderlich.",
+      "successCreate": "Maßnahme erstellt.",
+      "successEdit": "Maßnahme aktualisiert.",
+      "noAssignee": "Keine Zuweisung"
+    },
+    "status": {
+      "OPEN": "Offen",
+      "IN_PROGRESS": "In Bearbeitung",
+      "RESOLVED": "Erledigt",
+      "WONT_FIX": "Wird nicht behoben"
+    },
+    "dueLabel": "Fällig",
+    "noDueDate": "Kein Fälligkeitsdatum",
+    "editLabel": "Bearbeiten",
+    "deleteLabel": "Löschen",
+    "sortByDueDate": "Nach Fälligkeitsdatum sortieren",
+    "sortByStatus": "Nach Status sortieren",
+    "pageDescription": "Alle Maßnahmen für diesen Anbieter."
   },
   "remediationModal": {
     "openButton": "One-Click Remediation",

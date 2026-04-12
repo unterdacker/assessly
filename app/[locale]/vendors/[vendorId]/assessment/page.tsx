@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { getVendorAssessmentDetail } from "@/lib/queries/vendor-assessments";
 import { requirePageRole } from "@/lib/auth/server";
 import { getCustomQuestions } from "@/lib/queries/custom-questions";
+import {
+  listInternalUsersForCompany,
+  listRemediationTasksByAssessmentId,
+} from "@/lib/queries/remediation-tasks";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +44,11 @@ export default async function AssessmentPage({ params }: PageProps) {
     );
   }
 
+  const [initialRemediationTasks, internalUsers] = await Promise.all([
+    listRemediationTasksByAssessmentId(detail.assessmentId, detail.companyId),
+    listInternalUsersForCompany(detail.companyId),
+  ]);
+
   return (
     <AssessmentWorkspace
       vendorAssessment={detail.vendorAssessment}
@@ -52,6 +61,8 @@ export default async function AssessmentPage({ params }: PageProps) {
       companyId={detail.companyId}
       role={session.role}
       customQuestions={customQuestions}
+      initialRemediationTasks={initialRemediationTasks}
+      internalUsers={internalUsers}
     />
   );
 }

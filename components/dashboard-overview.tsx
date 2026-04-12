@@ -24,6 +24,7 @@ export type DashboardOverviewProps = {
   riskPosture: DashboardRiskPostureOverview;
   role: UserRole;
   locale: string;
+  openRemediationCount: number;
   translations: {
     Dashboard: string;
     DashboardDesc: string;
@@ -35,6 +36,8 @@ export type DashboardOverviewProps = {
     QuestionnaireUnderway: string;
     Completed: string;
     AssessmentsClosed: string;
+    OpenRemediations: string;
+    OpenRemediationsHint: string;
     ManageVendors: string;
     ElevatedAttentionRecommended: string;
     MonitorAndRemediateGaps: string;
@@ -105,6 +108,7 @@ export function DashboardOverview({
   riskPosture,
   role,
   locale,
+  openRemediationCount,
   translations,
 }: DashboardOverviewProps) {
   const score = supplyChainRiskScore(vendorAssessments);
@@ -130,6 +134,12 @@ export function DashboardOverview({
       value: completed,
       icon: UserCheck,
       hint: translations.AssessmentsClosed,
+    },
+    {
+      label: translations.OpenRemediations,
+      value: openRemediationCount,
+      icon: ShieldAlert,
+      hint: translations.OpenRemediationsHint,
     },
   ] as const;
 
@@ -200,7 +210,7 @@ export function DashboardOverview({
           </CardContent>
         </Card>
 
-        <div className="grid gap-4 sm:grid-cols-3 lg:col-span-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-2">
           {tiles.map(({ label, value, icon: Icon, hint }) => (
             <Card key={label}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

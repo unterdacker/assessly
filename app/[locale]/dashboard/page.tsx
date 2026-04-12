@@ -4,6 +4,7 @@ import { DashboardOverview } from "@/components/dashboard-overview";
 import { getDashboardRiskPostureOverview } from "@/lib/queries/dashboard-risk-posture";
 import { listVendorAssessments } from "@/lib/queries/vendor-assessments";
 import { requirePageRole } from "@/lib/auth/server";
+import { countOpenRemediationTasks } from "@/lib/queries/remediation-tasks";
 
 export const dynamic = "force-dynamic";
 
@@ -27,9 +28,10 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   const session = await requirePageRole(["SUPER_ADMIN", "ADMIN", "RISK_REVIEWER", "AUDITOR"], routeLocale);
   const t = await getTranslations();
   const locale = (await getLocale()) as "en" | "de";
-  const [vendorAssessments, riskPosture] = await Promise.all([
+  const [vendorAssessments, riskPosture, openRemediationCount] = await Promise.all([
     listVendorAssessments(),
     getDashboardRiskPostureOverview(locale),
+    countOpenRemediationTasks(session.companyId ?? ""),
   ]);
 
   const translations = {
@@ -43,6 +45,8 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     QuestionnaireUnderway: t("QuestionnaireUnderway"),
     Completed: t("Completed"),
     AssessmentsClosed: t("AssessmentsClosed"),
+    OpenRemediations: t("OpenRemediations"),
+    OpenRemediationsHint: t("OpenRemediationsHint"),
     ManageVendors: t("ManageVendors"),
     ElevatedAttentionRecommended: t("ElevatedAttentionRecommended"),
     MonitorAndRemediateGaps: t("MonitorAndRemediateGaps"),
@@ -115,6 +119,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
       riskPosture={riskPosture}
       role={session.role}
       locale={locale}
+      openRemediationCount={openRemediationCount}
       translations={translations}
     />
   );

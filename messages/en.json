@@ -3,6 +3,8 @@
   "Welcome": "Welcome back",
   "Logout": "Sign out",
   "Dashboard": "Dashboard",
+  "OpenRemediations": "Open remediations",
+  "OpenRemediationsHint": "Tasks requiring action across all vendors",
   "Audit": {
     "title": "Audit Trail",
     "description": "Privacy-first forensic event history. NIS2 · DORA · EU AI Act · ISO 27001 · SOC2 · GDPR compliant.",
@@ -619,6 +621,43 @@
         "saveChanges": "Save Changes"
       }
     }
+  },
+  "remediation": {
+    "addTask": "Add remediation task",
+    "tasks": "Remediation tasks",
+    "tasksForVendor": "Remediation tasks for {vendorName}",
+    "noTasks": "No remediation tasks yet.",
+    "noAssessmentFound": "No assessment found for this vendor.",
+    "deleteSuccess": "Task deleted.",
+    "errorGeneric": "An error occurred. Please try again.",
+    "form": {
+      "titleCreate": "Create Remediation Task",
+      "titleEdit": "Edit Remediation Task",
+      "labelTitle": "Title",
+      "labelDescription": "Description",
+      "labelAssignee": "Assignee",
+      "labelDueDate": "Due date",
+      "labelStatus": "Status",
+      "submit": "Save task",
+      "cancel": "Cancel",
+      "errorRequired": "Title is required.",
+      "successCreate": "Remediation task created.",
+      "successEdit": "Remediation task updated.",
+      "noAssignee": "No assignee"
+    },
+    "status": {
+      "OPEN": "Open",
+      "IN_PROGRESS": "In progress",
+      "RESOLVED": "Resolved",
+      "WONT_FIX": "Won't fix"
+    },
+    "dueLabel": "Due",
+    "noDueDate": "No due date",
+    "editLabel": "Edit",
+    "deleteLabel": "Delete",
+    "sortByDueDate": "Sort by due date",
+    "sortByStatus": "Sort by status",
+    "pageDescription": "All remediation tasks for this vendor."
   },
   "remediationModal": {
     "openButton": "One-Click Remediation",

@@ -8,9 +8,14 @@ import {
   categoryKeyMap,
   nis2Questions,
 } from "@/lib/nis2-questions";
-import type { AssessmentAnswer, Question } from "@prisma/client";
+import type { AssessmentAnswer, Question, RemediationTask } from "@prisma/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  RemediationTaskInlineList,
+  type RemediationTaskInlineListTranslations,
+} from "@/components/remediation-task-inline-list";
 import { cn } from "@/lib/utils";
 
 const groupedByCategory = groupQuestionsByCategory(nis2Questions);
@@ -20,6 +25,15 @@ export type VendorAssessmentQuestionnairePanelProps = {
   selectedQuestionId: string | null;
   onSelectQuestion: (id: string) => void;
   customQuestions?: Question[];
+  remediationTasks?: RemediationTask[];
+  canEdit?: boolean;
+  canDelete?: boolean;
+  onAddRemediationTask?: (questionId: string) => void;
+  onEditRemediationTask?: (task: RemediationTask) => void;
+  onDeleteRemediationTask?: (taskId: string) => void;
+  remediationTranslations?: RemediationTaskInlineListTranslations & {
+    addTask: string;
+  };
 };
 
 export function VendorAssessmentQuestionnairePanel({
@@ -27,6 +41,13 @@ export function VendorAssessmentQuestionnairePanel({
   selectedQuestionId,
   onSelectQuestion,
   customQuestions,
+  remediationTasks,
+  canEdit,
+  canDelete,
+  onAddRemediationTask,
+  onEditRemediationTask,
+  onDeleteRemediationTask,
+  remediationTranslations,
 }: VendorAssessmentQuestionnairePanelProps) {
   const t = useTranslations("assessment.questionnaire");
   const tRoot = useTranslations();
@@ -50,6 +71,16 @@ export function VendorAssessmentQuestionnairePanel({
     });
     return m;
   }, [customQuestions]);
+
+  const remediationByQuestionId = React.useMemo(() => {
+    const map = new Map<string, RemediationTask[]>();
+    for (const task of remediationTasks ?? []) {
+      const list = map.get(task.questionId) ?? [];
+      list.push(task);
+      map.set(task.questionId, list);
+    }
+    return map;
+  }, [remediationTasks]);
 
   return (
     <Card>
@@ -78,6 +109,8 @@ export function VendorAssessmentQuestionnairePanel({
                   const answer = answers.find((a) => a.questionId === q.id);
                   const isSelected = selectedQuestionId === q.id;
                   const qText = questionText(q);
+                  const isNonCompliant = answer?.status === "NON_COMPLIANT";
+                  const questionTasks = remediationByQuestionId.get(q.id) ?? [];
 
                   return (
                     <li
@@ -116,6 +149,32 @@ export function VendorAssessmentQuestionnairePanel({
                           </Badge>
                         </div>
                       </div>
+                      {isNonCompliant && remediationTranslations ? (
+                        <div className="mt-2">
+                          {canEdit && onAddRemediationTask ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onAddRemediationTask(q.id);
+                              }}
+                            >
+                              {remediationTranslations.addTask}
+                            </Button>
+                          ) : null}
+                          {questionTasks.length > 0 ? (
+                            <RemediationTaskInlineList
+                              tasks={questionTasks}
+                              canEdit={Boolean(canEdit)}
+                              canDelete={Boolean(canDelete)}
+                              onEdit={onEditRemediationTask ?? (() => undefined)}
+                              onDelete={onDeleteRemediationTask ?? (() => undefined)}
+                              translations={remediationTranslations}
+                            />
+                          ) : null}
+                        </div>
+                      ) : null}
                     </li>
                   );
                 })}
@@ -143,6 +202,8 @@ export function VendorAssessmentQuestionnairePanel({
                 {qs.map((q) => {
                   const answer = answers.find((a) => a.questionId === q.id);
                   const isSelected = selectedQuestionId === q.id;
+                  const isNonCompliant = answer?.status === "NON_COMPLIANT";
+                  const questionTasks = remediationByQuestionId.get(q.id) ?? [];
                   return (
                     <li
                       key={q.id}
@@ -180,6 +241,32 @@ export function VendorAssessmentQuestionnairePanel({
                           </Badge>
                         </div>
                       </div>
+                      {isNonCompliant && remediationTranslations ? (
+                        <div className="mt-2">
+                          {canEdit && onAddRemediationTask ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onAddRemediationTask(q.id);
+                              }}
+                            >
+                              {remediationTranslations.addTask}
+                            </Button>
+                          ) : null}
+                          {questionTasks.length > 0 ? (
+                            <RemediationTaskInlineList
+                              tasks={questionTasks}
+                              canEdit={Boolean(canEdit)}
+                              canDelete={Boolean(canDelete)}
+                              onEdit={onEditRemediationTask ?? (() => undefined)}
+                              onDelete={onDeleteRemediationTask ?? (() => undefined)}
+                              translations={remediationTranslations}
+                            />
+                          ) : null}
+                        </div>
+                      ) : null}
                     </li>
                   );
                 })}
