@@ -148,7 +148,7 @@ describe("createSessionForUser", () => {
     expect(result.expiresAt.getTime()).toBe(1_700_043_200_000);
     expect(mockSignSessionClaims).toHaveBeenCalledWith({
       type: "venshield-session",
-      sid: "session-123",
+            sid: "00000000-0000-0000-0000-000000000123",
       uid: "user-1",
       role: "ADMIN",
       cid: "ctest00000000000000000001",
@@ -157,7 +157,7 @@ describe("createSessionForUser", () => {
     });
     expect(mockCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        id: "session-123",
+          id: "00000000-0000-0000-0000-000000000123",
         userId: "user-1",
         role: "ADMIN",
         companyId: "ctest00000000000000000001",
