@@ -1,9 +1,5 @@
 ﻿# Venshield — Documentation Home
 
-![Visitors](https://visitor-badge.laobi.icu/badge?page_id=venshield.assessly)
-
-[![Stack](https://skillicons.dev/icons?i=nextjs,postgres,docker,ts,prisma,redis)](https://skillicons.dev)
-
 > **Sovereign Vendor Risk Assessment Platform for NIS2 & GDPR-compliant organisations**
 
 Venshield replaces disconnected spreadsheets and inboxes with one auditable workspace covering vendor onboarding, NIS2-aligned questionnaire execution, AI-assisted document analysis, evidence review, and remediation tracking — with all data staying inside your own infrastructure. Premium customers additionally benefit from OIDC single sign-on with just-in-time provisioning and AI-powered Advanced Reporting with PDF export.
