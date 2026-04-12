@@ -264,6 +264,9 @@ const PII_FIELD_NAMES = new Set([
   "set-cookie",
 ]);
 
+/** Keys that must never be written as properties — blocks prototype pollution. */
+const PROTOTYPE_POISONING_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
 const PII_FIELD_PATTERNS = [
   /password/i,
   /token/i,
@@ -357,6 +360,7 @@ export function scrubPiiFields(value: unknown): unknown {
   const result: Record<string, unknown> = {};
 
   for (const [key, val] of Object.entries(obj)) {
+    if (PROTOTYPE_POISONING_KEYS.has(key)) continue;
     if (hasSpecialCategoryKeyword(key)) {
       result[key] = "[BLOCKED_SPECIAL_CATEGORY_ART9]";
     } else if (isPiiKey(key)) {

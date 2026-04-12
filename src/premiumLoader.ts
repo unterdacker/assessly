@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { readFile, stat } from 'node:fs/promises';
+import { open, type FileHandle } from 'node:fs/promises';
 import path from 'node:path';
 import { importSPKI, jwtVerify, errors as joseErrors } from 'jose';
 
@@ -35,25 +35,27 @@ async function verifyLicense(featureName: string): Promise<VerifyResult> {
   const licenseFilePath = process.env.LICENSE_FILE_PATH
     ?? path.join(process.cwd(), 'modules', 'license.json');
 
-  let fileContent: string;
-  let fileStats: Awaited<ReturnType<typeof stat>>;
+  let fileContent = '';
+  let fh: FileHandle | undefined;
   try {
-    fileStats = await stat(licenseFilePath);
+    fh = await open(licenseFilePath, 'r');
   } catch {
     logLicenseFailure('FILE_NOT_FOUND', false, false, featureName);
     return { valid: false, reason: 'FILE_NOT_FOUND' };
   }
 
-  if (fileStats.size > LICENSE_FILE_MAX_BYTES) {
-    logLicenseFailure('FILE_TOO_LARGE', true, false, featureName);
-    return { valid: false, reason: 'FILE_TOO_LARGE' };
-  }
-
   try {
-    fileContent = await readFile(licenseFilePath, 'utf-8');
+    const fileStats = await fh.stat();
+    if (fileStats.size > LICENSE_FILE_MAX_BYTES) {
+      logLicenseFailure('FILE_TOO_LARGE', true, false, featureName);
+      return { valid: false, reason: 'FILE_TOO_LARGE' };
+    }
+    fileContent = await fh.readFile({ encoding: 'utf-8' });
   } catch {
     logLicenseFailure('FILE_NOT_FOUND', false, false, featureName);
     return { valid: false, reason: 'FILE_NOT_FOUND' };
+  } finally {
+    await fh.close();
   }
 
   const licenseKey = process.env.LICENSE_KEY;
