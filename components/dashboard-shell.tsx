@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, LayoutDashboard, Users, Activity, LogOut, Building2 } from "lucide-react";
+import { Settings, LayoutDashboard, Users, Activity, LogOut, Building2, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -16,6 +16,7 @@ const NAV_LABELS = {
   de: {
     overview: "Übersicht",
     vendors: "Anbieter",
+    reporting: "Berichte",
     settings: "Einstellungen",
     users: "Benutzerverwaltung",
     auditLogs: "Audit-Trail",
@@ -26,6 +27,7 @@ const NAV_LABELS = {
   en: {
     overview: "Overview",
     vendors: "Vendors",
+    reporting: "Reports",
     settings: "Settings",
     users: "User Management",
     auditLogs: "Audit Trail",
@@ -56,6 +58,7 @@ function getNav(locale: "de" | "en", role: string | null) {
   const base = [
     { href: "/dashboard", label: NAV_LABELS[locale].overview, icon: LayoutDashboard },
     { href: "/vendors", label: NAV_LABELS[locale].vendors, icon: Users },
+    { href: "/reporting", label: NAV_LABELS[locale].reporting, icon: BarChart3 },
     { href: "/admin/audit-logs", label: NAV_LABELS[locale].auditLogs, icon: Activity },
   ];
 

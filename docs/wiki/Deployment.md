@@ -6,6 +6,133 @@ Venshield ships as a Docker container and is designed for self-hosted deployment
 
 ---
 
+## Local Testing with the GHCR Image
+
+Venshield is distributed as a pre-built Docker image at `ghcr.io/unterdacker/venshield:main` (private registry).
+This section covers everything needed to pull and run the image locally.
+
+### 1 — Create a GitHub PAT with the correct scopes
+
+The image is private. A Personal Access Token (classic) with **`read:packages`** scope is required to pull it.
+The `SUBMODULE_PAT` used in CI only has `repo` scope and **cannot** pull from GHCR — a separate token is needed.
+
+| Scope | Purpose |
+|---|---|
+| `repo` | CI submodule checkout (`SUBMODULE_PAT`) |
+| `read:packages` | Pull image from GHCR (local / customer use) |
+
+Generate at: **GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)**
+
+### 2 — Login and pull
+
+```bash
+echo "ghp_YOUR_TOKEN" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+docker pull ghcr.io/unterdacker/venshield:main
+```
+
+> **Apple Silicon (M1/M2/M3):** The image is built for `linux/amd64`. Docker Desktop runs it via Rosetta.
+> You will see a platform mismatch warning — this is expected and harmless.
+
+### 3 — Create the env file
+
+Create a file named `venshield.env` (no quotes around values — Docker's `--env-file` does not strip them):
+
+```env
+DATABASE_URL=postgresql://user:password@db:5432/venshield?schema=public
+APP_URL=http://localhost:3000
+OIDC_STATE_SECRET=<output of: openssl rand -hex 32>
+ALLOW_INSECURE_LOCALHOST=true
+SMS_PROVIDER=log
+NODE_ENV=production
+```
+
+Generate `OIDC_STATE_SECRET`:
+```bash
+openssl rand -hex 32
+```
+
+> `ALLOW_INSECURE_LOCALHOST=true` is required for any local run with `NODE_ENV=production`.
+> It bypasses the `APP_URL` localhost check and the `SMS_PROVIDER=log` production block — both are intentional
+> safety guards that only apply to real deployments.
+
+### 4a — Option A: docker-compose with bundled Postgres (recommended)
+
+Create `docker-compose.yml` next to `venshield.env`:
+
+```yaml
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: venshield
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    image: ghcr.io/unterdacker/venshield:main
+    platform: linux/amd64
+    ports:
+      - "3000:3000"
+    env_file:
+      - venshield.env
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
+```
+
+Start:
+```bash
+docker compose up
+```
+
+### 4b — Option B: docker run against an existing local Postgres
+
+If Postgres is already running on the Mac (e.g. Postgres.app, DBngin, or another Docker container),
+use `host.docker.internal` as the hostname — `localhost` inside a container refers to the container itself,
+not the Mac host.
+
+```bash
+# Check which port the local Postgres is listening on
+lsof -i :5432
+
+# Update DATABASE_URL in venshield.env:
+# DATABASE_URL=postgresql://user:password@host.docker.internal:5432/venshield?schema=public
+
+docker run --env-file venshield.env -p 3000:3000 ghcr.io/unterdacker/venshield:main
+```
+
+### 5 — Access the application
+
+Open **http://localhost:3000** in your browser.
+
+**Default seed credentials:**
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@venshield.local` | `admin123` |
+| Auditor | `auditor@venshield.local` | `auditor123` |
+
+> ⚠️ Change these credentials immediately for any non-throwaway environment.
+
+---
+
+### Troubleshooting
+
+| Error | Cause | Fix |
+|---|---|---|
+| `403` on `docker pull` | PAT missing `read:packages` scope | Create a new PAT with `read:packages` |
+| `DATABASE_URL must begin with postgresql://` | Quotes in env file — `DATABASE_URL="postgresql://..."` | Remove the surrounding quotes |
+| `APP_URL must not point to localhost in production` | `NODE_ENV=production` + localhost URL | Add `ALLOW_INSECURE_LOCALHOST=true` |
+| `SMS_PROVIDER='log' is not permitted in production` | `NODE_ENV=production` + log provider | Add `ALLOW_INSECURE_LOCALHOST=true` |
+| `P1001: Can't reach database server at localhost:…` | `localhost` resolves to the container, not the Mac | Use `host.docker.internal` instead of `localhost` |
+| `Invalid credentials` on login | Using wrong email domain | Use `admin@venshield.local` (not `assessly.local`) |
+
+---
+
 ## Docker Architecture
 
 ### Container Images

@@ -135,9 +135,11 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
                       {t("DataProcessingFrance")}
                     </Badge>
                   )}
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
-                    {t("Provider")}: {providerDisplayName}
-                  </span>
+                  {!isNoAi && (
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                      {t("Provider")}: {providerDisplayName}
+                    </span>
+                  )}
                 </div>
               </div>
 

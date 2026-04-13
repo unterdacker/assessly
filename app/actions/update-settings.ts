@@ -149,6 +149,7 @@ export async function updateAiSettings(
     });
 
     revalidatePath('/settings');
+    revalidatePath('/', 'layout');
     revalidateTag(RISK_POSTURE_CACHE_TAG);
     return { success: true };
   } catch (error) {

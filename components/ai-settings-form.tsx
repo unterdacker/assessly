@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Sparkles, Globe, Server, Ban } from "lucide-react";
 import { updateAiSettings } from "@/app/actions/update-settings";
 import { useActionState } from "react";
+import { useRouter } from "next/navigation";
 
 interface Company {
   id: string;
@@ -42,9 +43,16 @@ interface Translations {
 }
 
 export function AiSettingsForm({ company, companyId, translations }: { company: Company; companyId: string; translations: Translations }) {
+  const router = useRouter();
   const [aiProvider, setAiProvider] = useState(company.aiDisabled ? "no-ai" : company.aiProvider);
 
   const [state, formAction] = useActionState(updateAiSettings, null);
+
+  useEffect(() => {
+    if (state?.success) {
+      router.refresh();
+    }
+  }, [state, router]);
 
   return (
     <Card>
