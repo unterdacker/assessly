@@ -10,7 +10,6 @@ import {
 describe("getRoleLandingPath", () => {
   it("returns expected home path per role", () => {
     expect(getRoleLandingPath("VENDOR")).toBe("/external/portal");
-    expect(getRoleLandingPath("SUPER_ADMIN")).toBe("/dashboard");
     expect(getRoleLandingPath("ADMIN")).toBe("/dashboard");
     expect(getRoleLandingPath("RISK_REVIEWER")).toBe("/dashboard");
     expect(getRoleLandingPath("AUDITOR")).toBe("/dashboard");
@@ -20,32 +19,26 @@ describe("getRoleLandingPath", () => {
 describe("canAccessPath", () => {
   it("allows public routes for all roles", () => {
     expect(canAccessPath("VENDOR", "/")).toBe(true);
-    expect(canAccessPath("SUPER_ADMIN", "/")).toBe(true);
     expect(canAccessPath("RISK_REVIEWER", "/")).toBe(true);
     expect(canAccessPath("ADMIN", "/")).toBe(true);
     expect(canAccessPath("VENDOR", "/unauthorized")).toBe(true);
-    expect(canAccessPath("SUPER_ADMIN", "/unauthorized")).toBe(true);
     expect(canAccessPath("RISK_REVIEWER", "/unauthorized")).toBe(true);
     expect(canAccessPath("VENDOR", "/auth/sign-in")).toBe(true);
-    expect(canAccessPath("SUPER_ADMIN", "/auth/sign-in")).toBe(true);
     expect(canAccessPath("RISK_REVIEWER", "/auth/sign-in")).toBe(true);
     expect(canAccessPath("ADMIN", "/auth/sign-in")).toBe(true);
   });
 
   it("applies external portal access rules", () => {
     expect(canAccessPath("VENDOR", "/portal")).toBe(true);
-    expect(canAccessPath("SUPER_ADMIN", "/portal")).toBe(false);
     expect(canAccessPath("ADMIN", "/portal")).toBe(false);
     expect(canAccessPath("RISK_REVIEWER", "/portal")).toBe(false);
     expect(canAccessPath("AUDITOR", "/portal")).toBe(false);
     expect(canAccessPath("VENDOR", "/external/anything")).toBe(true);
-    expect(canAccessPath("SUPER_ADMIN", "/external/anything")).toBe(false);
     expect(canAccessPath("ADMIN", "/external/anything")).toBe(false);
     expect(canAccessPath("RISK_REVIEWER", "/external/anything")).toBe(false);
   });
 
   it("applies settings access rules", () => {
-    expect(canAccessPath("SUPER_ADMIN", "/settings")).toBe(true);
     expect(canAccessPath("ADMIN", "/settings")).toBe(true);
     expect(canAccessPath("AUDITOR", "/settings")).toBe(false);
     expect(canAccessPath("RISK_REVIEWER", "/settings")).toBe(false);
@@ -53,7 +46,6 @@ describe("canAccessPath", () => {
   });
 
   it("applies admin/users access rules", () => {
-    expect(canAccessPath("SUPER_ADMIN", "/admin/users")).toBe(true);
     expect(canAccessPath("ADMIN", "/admin/users")).toBe(true);
     expect(canAccessPath("RISK_REVIEWER", "/admin/users")).toBe(false);
     expect(canAccessPath("AUDITOR", "/admin/users")).toBe(false);
@@ -61,7 +53,6 @@ describe("canAccessPath", () => {
   });
 
   it("applies admin/audit-logs access rules", () => {
-    expect(canAccessPath("SUPER_ADMIN", "/admin/audit-logs")).toBe(true);
     expect(canAccessPath("ADMIN", "/admin/audit-logs")).toBe(true);
     expect(canAccessPath("RISK_REVIEWER", "/admin/audit-logs")).toBe(true);
     expect(canAccessPath("AUDITOR", "/admin/audit-logs")).toBe(true);
@@ -69,12 +60,10 @@ describe("canAccessPath", () => {
   });
 
   it("applies internal dashboard/vendor access rules", () => {
-    expect(canAccessPath("SUPER_ADMIN", "/dashboard")).toBe(true);
     expect(canAccessPath("ADMIN", "/dashboard")).toBe(true);
     expect(canAccessPath("RISK_REVIEWER", "/dashboard")).toBe(true);
     expect(canAccessPath("AUDITOR", "/dashboard")).toBe(true);
     expect(canAccessPath("VENDOR", "/dashboard")).toBe(false);
-    expect(canAccessPath("SUPER_ADMIN", "/vendors/test")).toBe(true);
     expect(canAccessPath("ADMIN", "/vendors/test")).toBe(true);
     expect(canAccessPath("RISK_REVIEWER", "/vendors/test")).toBe(true);
     expect(canAccessPath("VENDOR", "/vendors/test")).toBe(false);

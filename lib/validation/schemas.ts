@@ -73,7 +73,7 @@ export const RemediationSendSchema = z.object({
  */
 export const CreateInternalUserSchema = z.object({
   email: emailAddress,
-  role: z.enum(["SUPER_ADMIN", "ADMIN", "RISK_REVIEWER", "AUDITOR"]),
+  role: z.enum(["ADMIN", "RISK_REVIEWER", "AUDITOR"]),
 });
 
 /**

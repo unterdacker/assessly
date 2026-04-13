@@ -1,8 +1,8 @@
 import type { UserRole } from "@prisma/client";
 
-export const INTERNAL_READ_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN", "RISK_REVIEWER", "AUDITOR"];
-export const INTERNAL_WRITE_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN", "RISK_REVIEWER"];
-export const ADMIN_ONLY_ROLES: UserRole[] = ["SUPER_ADMIN", "ADMIN"];
+export const INTERNAL_READ_ROLES: UserRole[] = ["ADMIN", "RISK_REVIEWER", "AUDITOR"];
+export const INTERNAL_WRITE_ROLES: UserRole[] = ["ADMIN", "RISK_REVIEWER"];
+export const ADMIN_ONLY_ROLES: UserRole[] = ["ADMIN"];
 
 export function getRoleLandingPath(role: UserRole): string {
   return role === "VENDOR" ? "/external/portal" : "/dashboard";

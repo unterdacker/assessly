@@ -169,10 +169,6 @@ export async function requireInternalWriteUser(): Promise<AuthSession> {
   return requireUserRole(INTERNAL_WRITE_ROLES);
 }
 
-export async function requireSuperAdminUser(): Promise<AuthSession> {
-  return requireUserRole(["SUPER_ADMIN"]);
-}
-
 export function isAccessControlError(error: unknown): boolean {
   return error instanceof Error && (error.message === "UNAUTHENTICATED" || error.message === "FORBIDDEN");
 }

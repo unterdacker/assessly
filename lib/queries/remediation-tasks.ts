@@ -25,7 +25,7 @@ export async function countOpenRemediationTasks(companyId: string): Promise<numb
 export async function listInternalUsersForCompany(
   companyId: string,
 ): Promise<{ id: string; displayName: string | null; email: string | null }[]> {
-  const internalWriteRoles: UserRole[] = ["SUPER_ADMIN", "ADMIN", "RISK_REVIEWER"];
+  const internalWriteRoles: UserRole[] = ["ADMIN", "RISK_REVIEWER"];
 
   return prisma.user.findMany({
     where: {

@@ -54,7 +54,6 @@ import {
   requireAdminUser,
   requireInternalReadUser,
   requireInternalWriteUser,
-  requireSuperAdminUser,
 } from "@/lib/auth/server";
 
 function makeDbSession(role: UserRole) {
@@ -99,11 +98,6 @@ beforeEach(() => {
 });
 
 describe("requireAdminUser", () => {
-  it("resolves for SUPER_ADMIN", async () => {
-    stubSession("SUPER_ADMIN");
-    await expect(requireAdminUser()).resolves.toMatchObject({ role: "SUPER_ADMIN" });
-  });
-
   it("resolves for ADMIN", async () => {
     stubSession("ADMIN");
     await expect(requireAdminUser()).resolves.toMatchObject({ role: "ADMIN" });
@@ -126,11 +120,6 @@ describe("requireAdminUser", () => {
 });
 
 describe("requireInternalReadUser", () => {
-  it("resolves for SUPER_ADMIN", async () => {
-    stubSession("SUPER_ADMIN");
-    await expect(requireInternalReadUser()).resolves.toMatchObject({ role: "SUPER_ADMIN" });
-  });
-
   it("resolves for ADMIN", async () => {
     stubSession("ADMIN");
     await expect(requireInternalReadUser()).resolves.toMatchObject({ role: "ADMIN" });
@@ -153,11 +142,6 @@ describe("requireInternalReadUser", () => {
 });
 
 describe("requireInternalWriteUser", () => {
-  it("resolves for SUPER_ADMIN", async () => {
-    stubSession("SUPER_ADMIN");
-    await expect(requireInternalWriteUser()).resolves.toMatchObject({ role: "SUPER_ADMIN" });
-  });
-
   it("resolves for ADMIN", async () => {
     stubSession("ADMIN");
     await expect(requireInternalWriteUser()).resolves.toMatchObject({ role: "ADMIN" });
@@ -176,33 +160,6 @@ describe("requireInternalWriteUser", () => {
   it("throws FORBIDDEN for VENDOR", async () => {
     stubSession("VENDOR");
     await expect(requireInternalWriteUser()).rejects.toThrow("FORBIDDEN");
-  });
-});
-
-describe("requireSuperAdminUser", () => {
-  it("resolves for SUPER_ADMIN", async () => {
-    stubSession("SUPER_ADMIN");
-    await expect(requireSuperAdminUser()).resolves.toMatchObject({ role: "SUPER_ADMIN" });
-  });
-
-  it("throws FORBIDDEN for ADMIN", async () => {
-    stubSession("ADMIN");
-    await expect(requireSuperAdminUser()).rejects.toThrow("FORBIDDEN");
-  });
-
-  it("throws FORBIDDEN for RISK_REVIEWER", async () => {
-    stubSession("RISK_REVIEWER");
-    await expect(requireSuperAdminUser()).rejects.toThrow("FORBIDDEN");
-  });
-
-  it("throws FORBIDDEN for AUDITOR", async () => {
-    stubSession("AUDITOR");
-    await expect(requireSuperAdminUser()).rejects.toThrow("FORBIDDEN");
-  });
-
-  it("throws FORBIDDEN for VENDOR", async () => {
-    stubSession("VENDOR");
-    await expect(requireSuperAdminUser()).rejects.toThrow("FORBIDDEN");
   });
 });
 

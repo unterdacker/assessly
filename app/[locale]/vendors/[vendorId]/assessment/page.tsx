@@ -23,7 +23,7 @@ type PageProps = {
  */
 export default async function AssessmentPage({ params }: PageProps) {
   const { locale, vendorId } = await params;
-  const session = await requirePageRole(["SUPER_ADMIN", "ADMIN", "RISK_REVIEWER", "AUDITOR"], locale);
+  const session = await requirePageRole(["ADMIN", "RISK_REVIEWER", "AUDITOR"], locale);
   const [detail, customQuestions] = await Promise.all([
     getVendorAssessmentDetail(vendorId),
     session.companyId ? getCustomQuestions(session.companyId) : Promise.resolve([]),

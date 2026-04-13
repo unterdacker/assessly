@@ -26,7 +26,7 @@ type SettingsPageProps = {
 
 export default async function SettingsPage({ params }: SettingsPageProps) {
   const { locale } = await params;
-  const session = await requirePageRole(["SUPER_ADMIN", "ADMIN"], locale);
+  const session = await requirePageRole(["ADMIN"], locale);
   const t = await getTranslations();
   const isAdmin = session.role === "ADMIN";
   const [company, currentUser] = await Promise.all([

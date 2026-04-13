@@ -112,7 +112,7 @@ describe("getOidcConfigForEmail", () => {
     expect(mockFindFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          role: { in: ["SUPER_ADMIN", "ADMIN", "RISK_REVIEWER", "AUDITOR"] },
+          role: { in: ["ADMIN", "RISK_REVIEWER", "AUDITOR"] },
         }),
       }),
     );

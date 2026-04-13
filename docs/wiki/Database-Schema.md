@@ -8,7 +8,7 @@ Venshield uses **PostgreSQL 16** via **Prisma ORM**. The schema file is at `pris
 
 ```
 Company
-  ├── User (1:N)          — internal users (SUPER_ADMIN / ADMIN / RISK_REVIEWER / AUDITOR)
+  ├── User (1:N)          — internal users (ADMIN / RISK_REVIEWER / AUDITOR)
   ├── OidcConfig (1:1)    — optional OIDC/SSO provider configuration
   ├── Vendor (1:N)        — third-party suppliers under review
   │     └── Assessment (1:1)
@@ -30,7 +30,6 @@ SystemSettings           — singleton row: mail, encryption config
 ### `UserRole`
 | Value | Description |
 |-------|-------------|
-| `SUPER_ADMIN` | Platform-level administrator; same path access as ADMIN; intended for cross-company administration |
 | `ADMIN` | Full access: vendor management, settings, user management, audit logs |
 | `RISK_REVIEWER` | Internal read + write (vendor/assessment management, audit logs); cannot manage users or settings. Not shown in the user creation form |
 | `AUDITOR` | Internal read-only access (dashboard, vendors, audit logs); cannot perform write operations |
@@ -99,7 +98,7 @@ Optional per-company OpenID Connect / SSO configuration. When enabled, users mat
 
 ### `User`
 
-Internal platform users (SUPER_ADMIN / ADMIN / RISK_REVIEWER / AUDITOR) and linked vendor contacts.
+Internal platform users (ADMIN / RISK_REVIEWER / AUDITOR) and linked vendor contacts.
 
 | Field | Type | Notes |
 |-------|------|-------|

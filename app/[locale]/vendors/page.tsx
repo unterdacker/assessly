@@ -22,7 +22,7 @@ type VendorsPageProps = {
 export default async function VendorsPage({ params, searchParams }: VendorsPageProps) {
   const { locale } = await params;
   const { page: pageParam } = await searchParams;
-  const session = await requirePageRole(["SUPER_ADMIN", "ADMIN", "RISK_REVIEWER", "AUDITOR"], locale);
+  const session = await requirePageRole(["ADMIN", "RISK_REVIEWER", "AUDITOR"], locale);
 
   const page = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
   const { items: vendorAssessments, total, pageCount } = await listVendorAssessmentsPaginated(

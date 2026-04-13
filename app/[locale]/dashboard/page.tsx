@@ -25,7 +25,7 @@ type DashboardPageProps = {
 export default async function DashboardPage({ params }: DashboardPageProps) {
   const { locale: routeLocale } = await params;
   setRequestLocale(routeLocale);
-  const session = await requirePageRole(["SUPER_ADMIN", "ADMIN", "RISK_REVIEWER", "AUDITOR"], routeLocale);
+  const session = await requirePageRole(["ADMIN", "RISK_REVIEWER", "AUDITOR"], routeLocale);
   const t = await getTranslations();
   const locale = (await getLocale()) as "en" | "de";
   const [vendorAssessments, riskPosture, openRemediationCount] = await Promise.all([

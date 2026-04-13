@@ -50,26 +50,26 @@ Three predefined role groups control access at both path and server-action level
 
 | Group | Members | Purpose |
 |-------|---------|---------|
-| `ADMIN_ONLY_ROLES` | SUPER_ADMIN, ADMIN | Settings, user management, non-audit admin routes |
-| `INTERNAL_WRITE_ROLES` | SUPER_ADMIN, ADMIN, RISK_REVIEWER | State-changing server actions (create, update, delete) |
-| `INTERNAL_READ_ROLES` | SUPER_ADMIN, ADMIN, RISK_REVIEWER, AUDITOR | All internal read operations |
+| `ADMIN_ONLY_ROLES` | ADMIN | Settings, user management, non-audit admin routes |
+| `INTERNAL_WRITE_ROLES` | ADMIN, RISK_REVIEWER | State-changing server actions (create, update, delete) |
+| `INTERNAL_READ_ROLES` | ADMIN, RISK_REVIEWER, AUDITOR | All internal read operations |
 
 ### Role Matrix
 
-| Action | SUPER_ADMIN | ADMIN | RISK_REVIEWER | AUDITOR | VENDOR |
-|--------|-------------|-------|---------------|---------|--------|
-| View dashboard | ✅ | ✅ | ✅ | ✅ | ❌ |
-| View vendors & assessments | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Write vendors & assessments | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Upload evidence documents | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Generate AI summaries | ✅ | ✅ | ✅ | ❌ | ❌ |
-| View audit logs | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Manage users | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Manage settings | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Access vendor portal | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Complete questionnaire | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Action | ADMIN | RISK_REVIEWER | AUDITOR | VENDOR |
+|--------|-------|---------------|---------|--------|
+| View dashboard | ✅ | ✅ | ✅ | ❌ |
+| View vendors & assessments | ✅ | ✅ | ✅ | ❌ |
+| Write vendors & assessments | ✅ | ✅ | ❌ | ❌ |
+| Upload evidence documents | ✅ | ✅ | ❌ | ❌ |
+| Generate AI summaries | ✅ | ✅ | ❌ | ❌ |
+| View audit logs | ✅ | ✅ | ✅ | ❌ |
+| Manage users | ✅ | ❌ | ❌ | ❌ |
+| Manage settings | ✅ | ❌ | ❌ | ❌ |
+| Access vendor portal | ❌ | ❌ | ❌ | ✅ |
+| Complete questionnaire | ❌ | ❌ | ❌ | ✅ |
 
-> **SUPER_ADMIN** has the same path-level rights as ADMIN and is intended for platform-level cross-company administration. **RISK_REVIEWER** has internal read + write access but cannot manage users, settings, or the general admin panel. **AUDITOR** is read-only across all internal routes.
+> **RISK_REVIEWER** has internal read + write access but cannot manage users, settings, or the general admin panel. **AUDITOR** is read-only across all internal routes.
 
 ### Path-Level Guards (`lib/auth/permissions.ts`)
 
@@ -77,12 +77,12 @@ The middleware enforces path guards before any Server Component renders:
 
 | Path prefix | Allowed roles |
 |-------------|---------------|
-| `/dashboard` | SUPER_ADMIN, ADMIN, RISK_REVIEWER, AUDITOR |
-| `/dashboard/users` | SUPER_ADMIN, ADMIN |
-| `/vendors` | SUPER_ADMIN, ADMIN, RISK_REVIEWER, AUDITOR |
-| `/settings` | SUPER_ADMIN, ADMIN |
-| `/admin` (general) | SUPER_ADMIN, ADMIN |
-| `/admin/audit-logs` | SUPER_ADMIN, ADMIN, RISK_REVIEWER, AUDITOR |
+| `/dashboard` | ADMIN, RISK_REVIEWER, AUDITOR |
+| `/dashboard/users` | ADMIN |
+| `/vendors` | ADMIN, RISK_REVIEWER, AUDITOR |
+| `/settings` | ADMIN |
+| `/admin` (general) | ADMIN |
+| `/admin/audit-logs` | ADMIN, RISK_REVIEWER, AUDITOR |
 | `/external/` | VENDOR |
 | `/portal` | VENDOR |
 | `/auth/sign-in` | Public |

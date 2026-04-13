@@ -10,7 +10,7 @@
 - Tamper-evident audit trail (SHA-256 hash chain)
 - Forensic export bundle (HMAC-signed JSON)
 - GDPR erasure, pseudonymization, IP truncation
-- Role-based access (SUPER_ADMIN, ADMIN, RISK_REVIEWER, AUDITOR, VENDOR)
+- Role-based access (ADMIN, RISK_REVIEWER, AUDITOR, VENDOR)
 - Multi-tenancy (full company-scoped data isolation)
 - MFA (TOTP), session management, rate limiting
 - Email notifications (SMTP + Resend)
