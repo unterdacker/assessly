@@ -22,6 +22,15 @@ jobs:
           git config --global url."https://${{ secrets.SUBMODULE_PAT }}@github.com/".insteadOf "https://github.com/"
           git submodule update --init --recursive
 
+      - name: Submodule verifizieren
+        run: |
+          if [ ! -f "modules/sso/index.ts" ]; then
+            echo "FEHLER: modules/sso/index.ts nicht gefunden — Submodule-Checkout fehlgeschlagen!"
+            echo "Prüfe ob SUBMODULE_PAT korrekt gesetzt ist und Zugang zu unterdacker/venshield-enterprise hat."
+            exit 1
+          fi
+          echo "Submodule OK: $(ls modules/)"
+
       - name: In GHCR einloggen
         uses: docker/login-action@v3
         with:
