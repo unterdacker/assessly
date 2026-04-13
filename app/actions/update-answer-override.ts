@@ -1,7 +1,5 @@
 "use server";
 
-import fs from "fs/promises";
-import path from "path";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { RISK_POSTURE_CACHE_TAG } from "@/lib/queries/dashboard-risk-posture";
@@ -9,8 +7,8 @@ import { logErrorReport } from "@/lib/logger";
 import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance";
 import { logAuditEvent } from "@/lib/audit-log";
 import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
-
-const STORAGE_DIR = path.join(process.cwd(), ".venshield-storage");
+import { encrypt, decrypt } from "@/lib/crypto";
+import { putLocalFile } from "@/lib/storage";
 
 /** Persist a supplemental evidence PDF for a specific AssessmentAnswer. */
 async function saveAnswerEvidencePdf(
@@ -18,15 +16,9 @@ async function saveAnswerEvidencePdf(
   originalFilename: string,
   buffer: Buffer,
 ): Promise<string> {
-  await fs.mkdir(STORAGE_DIR, { recursive: true });
   const safeName = originalFilename.replace(/[^a-zA-Z0-9._-]/g, "_");
   const storedName = `answer__${answerId}__${safeName}`;
-  const resolvedStorage = path.resolve(STORAGE_DIR);
-  const targetPath = path.resolve(resolvedStorage, storedName);
-  if (!targetPath.startsWith(resolvedStorage + path.sep)) {
-    throw new Error("Invalid file path: path traversal detected");
-  }
-  await fs.writeFile(targetPath, buffer);
+  await putLocalFile(storedName, buffer);
   return `/api/documents/answer/${encodeURIComponent(answerId)}?filename=${encodeURIComponent(safeName)}`;
 }
 
@@ -45,6 +37,14 @@ export type OverrideAnswerInput = {
 export type OverrideAnswerResult =
   | { success: true; newScore: number }
   | { success: false; error: string };
+
+const CIPHER_FORMAT_RE = /^[0-9a-f]+:[0-9a-f]+:[0-9a-f]+$/i;
+
+function safeDecryptForAudit(value: string | null | undefined): string | null | undefined {
+  if (value == null) return value;
+  if (!CIPHER_FORMAT_RE.test(value)) return value;
+  return decrypt(value);
+}
 
 /**
  * Dedicated server action for ISB manual overrides.
@@ -81,8 +81,9 @@ export async function overrideAssessmentAnswer(
 
     // Build the audited findings line that appends to any existing AI reasoning
     const auditPrefix = `[ISB Override — ${new Date().toISOString()}]\nReason: ${manualNotes.trim()}`;
-    const auditedFindings = existing?.findings
-      ? `${auditPrefix}\n\n--- Previous AI reasoning ---\n${existing.findings}`
+    const rawExistingFindings = safeDecryptForAudit(existing?.findings ?? null);
+    const auditedFindings = rawExistingFindings
+      ? `${auditPrefix}\n\n--- Previous AI reasoning ---\n${rawExistingFindings}`
       : auditPrefix;
 
     let answerId: string;
@@ -93,8 +94,8 @@ export async function overrideAssessmentAnswer(
         where: { id: existing.id },
         data: {
           status,
-          findings: auditedFindings,
-          manualNotes: manualNotes.trim(),
+          findings: encrypt(auditedFindings),
+          manualNotes: encrypt(manualNotes.trim()),
         },
         select: { id: true },
       });
@@ -105,8 +106,8 @@ export async function overrideAssessmentAnswer(
           assessmentId,
           questionId,
           status,
-          findings: auditedFindings,
-          manualNotes: manualNotes.trim(),
+          findings: encrypt(auditedFindings),
+          manualNotes: encrypt(manualNotes.trim()),
           createdBy: session.userId,
         },
         select: { id: true },

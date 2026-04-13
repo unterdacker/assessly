@@ -1,5 +1,6 @@
 "use server";
 
+import { decrypt } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
 import { toVendorAssessment, VendorDomainMapper } from "@/lib/prisma-mappers";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
@@ -7,6 +8,15 @@ import type { Assessment, AssessmentAnswer, Question } from "@prisma/client";
 import { countVendorAssessmentQuestions, getVendorAssessmentQuestions } from "@/lib/queries/custom-questions";
 
 const EXPIRY_GRACE_PERIOD_MS = 2 * 60 * 1000;
+const CIPHER_FORMAT_RE = /^[0-9a-f]+:[0-9a-f]+:[0-9a-f]+$/i;
+
+function safeDecrypt(value: string | null | undefined): string | null | undefined {
+  if (value == null) return value;
+  // Legacy plaintext row: not in iv:tag:ciphertext format - return as-is
+  if (!CIPHER_FORMAT_RE.test(value)) return value;
+  // Encrypted row: let GCM auth-tag failure propagate (signals tampering/corruption)
+  return decrypt(value);
+}
 
 /** Placeholder used in error-path returns where isValid is false. */
 const EMPTY_VENDOR_ASSESSMENT: VendorAssessment = {
@@ -187,13 +197,23 @@ export async function getExternalAssessment(
     // Security: Remove sensitive internal fields that shouldn't be seen by the vendor
     // (Actual stripping happens by only returning what's needed in this object)
 
+    const decryptedAnswers = vendor.assessment.answers.map((a) => ({
+      ...a,
+      aiReasoning:       safeDecrypt(a.aiReasoning),
+      findings:          safeDecrypt(a.findings),
+      evidenceSnippet:   safeDecrypt(a.evidenceSnippet),
+      justificationText: safeDecrypt(a.justificationText),
+      manualNotes:       safeDecrypt(a.manualNotes),
+      aiSuggestedStatus: safeDecrypt(a.aiSuggestedStatus),
+    }));
+
     return {
       isValid: true,
       vendorAssessment,
       assessmentId: vendor.assessment.id,
       isSubmitted: vendor.assessment.status === "COMPLETED",
       questions,
-      answers: vendor.assessment.answers,
+      answers: decryptedAnswers,
       documentUrl: vendor.assessment.documentUrl || null,
       documentFilename: vendor.assessment.documentFilename || null,
       sessionExpiresAt: deadline.toISOString(),

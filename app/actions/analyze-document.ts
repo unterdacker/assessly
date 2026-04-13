@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { runNis2AnalysisWithTrace } from "@/lib/ai/provider";
 import { logErrorReport } from "@/lib/logger";
 import { logAuditEvent } from "@/lib/audit-log";
+import { encrypt } from "@/lib/crypto";
 import {
   countStrictlyCompliantAnswers,
   syncAssessmentComplianceToDatabase,
@@ -151,12 +152,12 @@ export async function analyzeDocument(
       status: aiCalculatedStatus,
       isAiSuggested: true,
       verified: false,
-      aiSuggestedStatus: aiCalculatedStatus,
-      aiReasoning: res.reasoning,
-      justificationText: res.reasoning,
+      aiSuggestedStatus: encrypt(aiCalculatedStatus),
+      aiReasoning: encrypt(res.reasoning),
+      justificationText: encrypt(res.reasoning),
       aiConfidence: 0.95,
-      findings: res.reasoning,
-      evidenceSnippet: res.evidenceSnippet,
+      findings: encrypt(res.reasoning),
+      evidenceSnippet: res.evidenceSnippet ? encrypt(res.evidenceSnippet) : null,
       createdBy: "ai-analysis-system",
     };
 
@@ -190,8 +191,8 @@ export async function analyzeDocument(
       try {
         const fallbackData = {
           status: "PENDING",
-          findings: res.reasoning,
-          evidenceSnippet: res.evidenceSnippet,
+          findings: encrypt(res.reasoning),
+          evidenceSnippet: res.evidenceSnippet ? encrypt(res.evidenceSnippet) : null,
         };
         if (existing) {
           await prisma.assessmentAnswer.update({

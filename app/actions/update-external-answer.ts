@@ -1,6 +1,5 @@
 "use server";
 
-import fs from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
 import sanitizeHtml from "sanitize-html";
@@ -9,6 +8,8 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { RISK_POSTURE_CACHE_TAG } from "@/lib/queries/dashboard-risk-posture";
 import { logAuditEvent } from "@/lib/audit-log";
+import { encrypt } from "@/lib/crypto";
+import { putLocalFile } from "@/lib/storage";
 
 const MAX_EVIDENCE_SIZE_BYTES = 10 * 1024 * 1024;
 /** Grace period keeps sessions alive through brief clock skew at the boundary. */
@@ -18,7 +19,6 @@ const ALLOWED_EVIDENCE_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
 ]);
-const EVIDENCE_STORAGE_DIR = path.join(process.cwd(), ".venshield-storage", "question-evidence");
 
 function sanitizeJustificationText(raw: string): string {
   return sanitizeHtml(raw, {
@@ -64,18 +64,9 @@ async function persistEvidenceFile(file: File): Promise<{ storageKey: string; di
   const displayName = safeDisplayFilename(file.name);
   const extension = extensionForMimeType(file.type);
   const storageKey = `${randomUUID()}.${extension}`;
-  const storagePath = path.join(EVIDENCE_STORAGE_DIR, storageKey);
-  const resolvedStorageDir = path.resolve(EVIDENCE_STORAGE_DIR);
-  const resolvedStoragePath = path.resolve(storagePath);
-
-  if (!resolvedStoragePath.startsWith(resolvedStorageDir)) {
-    throw new Error("Invalid storage path.");
-  }
-
-  await fs.mkdir(EVIDENCE_STORAGE_DIR, { recursive: true });
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
-  await fs.writeFile(storagePath, buffer, { flag: "wx" });
+  await putLocalFile(`question-evidence/${storageKey}`, buffer);
 
   return { storageKey, displayName };
 }
@@ -229,8 +220,8 @@ export async function updateExternalAnswer(formData: FormData) {
         where: { id: existing.id },
         data: { 
           status, 
-          findings: justificationText,
-          justificationText,
+          findings: encrypt(justificationText),
+          justificationText: encrypt(justificationText),
           ...(evidenceFileUrl
             ? {
                 evidenceFileUrl,
@@ -310,8 +301,8 @@ export async function updateExternalAnswer(formData: FormData) {
           assessmentId,
           questionId,
           status,
-          findings: justificationText,
-          justificationText,
+          findings: encrypt(justificationText),
+          justificationText: encrypt(justificationText),
           evidenceFileUrl,
           evidenceFileName,
           documentId: evidenceDocumentId,

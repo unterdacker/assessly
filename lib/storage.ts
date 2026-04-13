@@ -1,4 +1,6 @@
 import "server-only";
+import fs from "fs/promises";
+import path from "path";
 import {
   S3Client,
   PutObjectCommand,
@@ -6,7 +8,9 @@ import {
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { Readable } from "stream";
+import { encryptFile, decryptFile } from "@/lib/crypto";
 import { env } from "@/lib/env";
+import { logErrorReport } from "@/lib/logger";
 
 function getS3Client(): S3Client {
   return new S3Client({
@@ -68,5 +72,89 @@ export async function deleteObject(key: string): Promise<void> {
     const code = (err as { Code?: string; name?: string }).Code ?? (err as { name?: string }).name;
     if (code === "NoSuchKey") return;
     throw err;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Local filesystem storage helpers  (application-level AES-256-GCM)
+// Used when S3 is not configured.  Files are stored under .venshield-storage/
+// and encrypted at rest using STORAGE_ENCRYPTION_KEY.
+// ---------------------------------------------------------------------------
+
+const LOCAL_STORAGE_DIR = path.join(process.cwd(), ".venshield-storage");
+
+/**
+ * Writes an encrypted file to the local filesystem under .venshield-storage/.
+ * `relativePath` must be a relative path (e.g. "question-evidence/uuid.pdf").
+ * Path-traversal and symlink-escape attacks are blocked.
+ */
+export async function putLocalFile(relativePath: string, data: Buffer): Promise<void> {
+  // Reject absolute paths before resolving
+  if (path.isAbsolute(relativePath)) {
+    throw new Error("Invalid storage path: absolute paths are not permitted.");
+  }
+
+  // Ensure the base dir exists before calling realpath
+  await fs.mkdir(LOCAL_STORAGE_DIR, { recursive: true });
+  const realBase = await fs.realpath(LOCAL_STORAGE_DIR);
+
+  const target = path.resolve(realBase, relativePath);
+  if (!target.startsWith(realBase + path.sep)) {
+    throw new Error("Invalid storage path: path traversal detected.");
+  }
+
+  // Ensure parent directory exists
+  await fs.mkdir(path.dirname(target), { recursive: true });
+
+  // Defense-in-depth: check parent dir does not escape via symlink
+  const realTargetDir = await fs.realpath(path.dirname(target));
+  if (!realTargetDir.startsWith(realBase + path.sep) && realTargetDir !== realBase) {
+    throw new Error("Invalid storage path: symlink escape detected.");
+  }
+
+  const encrypted = encryptFile(data);
+  await fs.writeFile(target, encrypted);
+}
+
+/**
+ * Reads and decrypts a file from the local filesystem under .venshield-storage/.
+ * `relativePath` must be a relative path.
+ * Returns the decrypted plaintext buffer.
+ * Throws if the file does not exist or the GCM auth tag is invalid (tamper detection).
+ * For legacy unencrypted files (written before encryption was introduced), the raw buffer
+ * is returned as-is if decryption fails — migration tolerance.
+ */
+export async function getLocalFile(relativePath: string): Promise<Buffer> {
+  // Reject absolute paths before resolving
+  if (path.isAbsolute(relativePath)) {
+    throw new Error("Invalid storage path: absolute paths are not permitted.");
+  }
+
+  await fs.mkdir(LOCAL_STORAGE_DIR, { recursive: true });
+  const realBase = await fs.realpath(LOCAL_STORAGE_DIR);
+
+  const target = path.resolve(realBase, relativePath);
+  if (!target.startsWith(realBase + path.sep)) {
+    throw new Error("Invalid storage path: path traversal detected.");
+  }
+
+  // Dereference symlinks in the target to prevent symlink-escape
+  const realTarget = await fs.realpath(target);
+  if (!realTarget.startsWith(realBase + path.sep)) {
+    throw new Error("Invalid storage path: symlink escape detected.");
+  }
+
+  const raw = await fs.readFile(realTarget) as Buffer;
+
+  // Migration tolerance: if the file is too short to be encrypted or
+  // decryption fails, return the raw buffer (legacy unencrypted file).
+  if (raw.length < 28) {
+    return raw;
+  }
+  try {
+    return decryptFile(raw);
+  } catch (err) {
+    logErrorReport("storage.getLocalFile: decryption failed — possible tamper or key mismatch", err);
+    return raw; // migration fallback: may be a legacy plaintext file
   }
 }

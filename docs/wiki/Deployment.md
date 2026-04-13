@@ -172,9 +172,9 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
 # All other secrets (32 bytes each) — run once per variable
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-# Run for: SETTINGS_ENCRYPTION_KEY, MFA_ENCRYPTION_KEY, AUDIT_BUNDLE_SECRET,
-#          AUDIT_EXPORT_KEY, AUDIT_PSEUDONYMIZATION_KEY, CRON_SECRET,
-#          OIDC_STATE_SECRET, SMS_PSEUDONYM_KEY
+# Run for: SETTINGS_ENCRYPTION_KEY, MFA_ENCRYPTION_KEY, STORAGE_ENCRYPTION_KEY,
+#          AUDIT_BUNDLE_SECRET, AUDIT_EXPORT_KEY, AUDIT_PSEUDONYMIZATION_KEY,
+#          CRON_SECRET, OIDC_STATE_SECRET, SMS_PSEUDONYM_KEY
 ```
 
 ### 2 — Create Production `.env`
@@ -195,6 +195,7 @@ OIDC_STATE_SECRET=<64-char hex>
 # ── Encryption keys (exactly 64 hex chars = 32 bytes each) ───────────────────
 SETTINGS_ENCRYPTION_KEY=<64-char hex>
 MFA_ENCRYPTION_KEY=<64-char hex>
+STORAGE_ENCRYPTION_KEY=<64-char hex>
 
 # ── Audit log signing ─────────────────────────────────────────────────────────
 AUDIT_BUNDLE_SECRET=<64-char hex>

@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
 import { prisma } from "@/lib/prisma";
 import { getAuthSessionFromRequest } from "@/lib/auth/server";
 import { logErrorReport } from "@/lib/logger";
-
-const ROOT_STORAGE_DIR = path.join(process.cwd(), ".venshield-storage");
-const STORAGE_DIR = path.join(process.cwd(), ".venshield-storage", "question-evidence");
+import { getLocalFile } from "@/lib/storage";
 
 export async function GET(
   req: NextRequest,
@@ -74,29 +70,12 @@ export async function GET(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const legacyFilePath = answer.evidenceFileUrl ? path.join(STORAGE_DIR, answer.evidenceFileUrl) : null;
-  const documentFilePath = answer.document?.storagePath
-    ? path.join(ROOT_STORAGE_DIR, answer.document.storagePath)
-    : null;
-  const filePath = documentFilePath || legacyFilePath;
   const downloadName = answer.document?.filename || answer.evidenceFileName || "evidence-file";
-
-  if (!filePath) {
-    return NextResponse.json({ error: "No evidence file on record." }, { status: 404 });
-  }
-
-  // Path-traversal guard
-  const resolved = path.resolve(filePath);
-  if (
-    !resolved.startsWith(path.resolve(STORAGE_DIR)) &&
-    !resolved.startsWith(path.resolve(ROOT_STORAGE_DIR))
-  ) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
 
   let buffer: Buffer;
   try {
-    buffer = await fs.readFile(resolved);
+    const relPath = answer.document?.storagePath ?? `question-evidence/${answer.evidenceFileUrl}`;
+    buffer = await getLocalFile(relPath);
   } catch (err) {
     logErrorReport("api.documents.read-file", err);
     return NextResponse.json({ error: "Document file not found on server." }, { status: 404 });

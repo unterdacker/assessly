@@ -1,12 +1,12 @@
 "use server";
 
-import fs from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit-log";
 import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
+import { putLocalFile } from "@/lib/storage";
 
 const MAX_EVIDENCE_SIZE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_EVIDENCE_MIME_TYPES = new Set([
@@ -14,7 +14,6 @@ const ALLOWED_EVIDENCE_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
 ]);
-const EVIDENCE_STORAGE_DIR = path.join(process.cwd(), ".venshield-storage", "question-evidence");
 
 function safeDisplayFilename(rawName: string): string {
   const basename = path.basename(rawName || "evidence");
@@ -56,18 +55,9 @@ async function persistEvidenceDocument(
   const displayName = safeDisplayFilename(file.name);
   const extension = extensionForMimeType(file.type);
   const storageKey = `${randomUUID()}.${extension}`;
-  const storagePath = path.join(EVIDENCE_STORAGE_DIR, storageKey);
-  const resolvedStorageDir = path.resolve(EVIDENCE_STORAGE_DIR);
-  const resolvedStoragePath = path.resolve(storagePath);
-
-  if (!resolvedStoragePath.startsWith(resolvedStorageDir)) {
-    throw new Error("Invalid storage path.");
-  }
-
-  await fs.mkdir(EVIDENCE_STORAGE_DIR, { recursive: true });
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
-  await fs.writeFile(storagePath, buffer, { flag: "wx" });
+  await putLocalFile(`question-evidence/${storageKey}`, buffer);
 
   const doc = await prisma.document.create({
     data: {

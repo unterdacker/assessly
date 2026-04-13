@@ -10,6 +10,7 @@ import {
   type NIS2CategoryBreakdown,
 } from "@/modules/advanced-reporting/services/report-data-service";
 import { generateReportPdf, type PdfInput } from "@/modules/advanced-reporting/services/pdf-generator";
+import { getExecReportForPdf } from "@/lib/queries/reporting";
 
 export async function GET(
   _req: Request,
@@ -81,21 +82,7 @@ export async function GET(
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const report = await prisma.execReport.findFirst({
-    where: {
-      id: reportId,
-      companyId: persistedSession.user.companyId,
-      status: "FINALIZED",
-    },
-    include: {
-      assessment: {
-        include: {
-          vendor: true,
-          company: true,
-        },
-      },
-    },
-  });
+  const report = await getExecReportForPdf(reportId, persistedSession.user.companyId);
 
   if (!report) {
     return Response.json({ error: "not_found" }, { status: 404 });

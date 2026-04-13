@@ -82,6 +82,12 @@ const rawEnvSchema = z.object({
    * MUST be exactly 64 hex characters (32 bytes) in production.
    */
   MFA_ENCRYPTION_KEY: z.string().optional(),
+  /**
+   * AES-256-GCM key for evidence file encryption at rest in .venshield-storage/.
+   * MUST be exactly 64 hex characters (32 bytes) in production.
+   * Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   */
+  STORAGE_ENCRYPTION_KEY: z.string().optional(),
 
   // ── Application URL ────────────────────────────────────────────────────────
   NEXT_PUBLIC_APP_URL: z
@@ -336,6 +342,35 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
         message:
           "MFA_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes / 256 bits). " +
           'Generate: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"',
+      });
+    }
+  }
+
+  // ── STORAGE_ENCRYPTION_KEY ────────────────────────────────────────────────
+  if (
+    require(
+      "STORAGE_ENCRYPTION_KEY",
+      data.STORAGE_ENCRYPTION_KEY,
+      "STORAGE_ENCRYPTION_KEY is required in production. " +
+        'Generate: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"',
+    ) &&
+    data.STORAGE_ENCRYPTION_KEY
+  ) {
+    if (!HEX_64_RE.test(data.STORAGE_ENCRYPTION_KEY)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["STORAGE_ENCRYPTION_KEY"],
+        message:
+          "STORAGE_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes / 256 bits). " +
+          'Generate: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"',
+      });
+    } else if (isPlaceholder(data.STORAGE_ENCRYPTION_KEY)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["STORAGE_ENCRYPTION_KEY"],
+        message:
+          "STORAGE_ENCRYPTION_KEY contains a placeholder value. " +
+          "Generate a real cryptographic key before deploying.",
       });
     }
   }
@@ -725,6 +760,10 @@ function validateEnv(): Env {
     data.MFA_ENCRYPTION_KEY = devFallbackKey("MFA_ENCRYPTION_KEY");
     fallbacksUsed.push("MFA_ENCRYPTION_KEY");
   }
+  if (!data.STORAGE_ENCRYPTION_KEY) {
+    data.STORAGE_ENCRYPTION_KEY = devFallbackKey("STORAGE_ENCRYPTION_KEY");
+    fallbacksUsed.push("STORAGE_ENCRYPTION_KEY");
+  }
   if (!data.AUDIT_BUNDLE_SECRET) {
     data.AUDIT_BUNDLE_SECRET = devFallbackKey("AUDIT_BUNDLE_SECRET");
     fallbacksUsed.push("AUDIT_BUNDLE_SECRET");
@@ -805,6 +844,8 @@ export const encryptionEnv = {
   settingsKey: env.SETTINGS_ENCRYPTION_KEY,
   /** 64-char hex key (32 bytes) for TOTP / MFA secret encryption. */
   mfaKey: env.MFA_ENCRYPTION_KEY,
+  /** 64-char hex key (32 bytes) for local file storage encryption. */
+  storageKey: env.STORAGE_ENCRYPTION_KEY,
 };
 
 /** Audit log integrity and forensic bundle export secrets. */

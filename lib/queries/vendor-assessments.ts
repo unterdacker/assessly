@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { decrypt } from "@/lib/crypto";
 import { toVendorAssessment, VendorDomainMapper } from "@/lib/prisma-mappers";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
 import type { AssessmentAnswer } from "@prisma/client";
@@ -6,6 +7,16 @@ import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance"
 import { ensureDemoData } from "@/lib/ensure-demo-data";
 import { requireInternalReadUser } from "@/lib/auth/server";
 import { countVendorAssessmentQuestions } from "@/lib/queries/custom-questions";
+
+const CIPHER_FORMAT_RE = /^[0-9a-f]+:[0-9a-f]+:[0-9a-f]+$/i;
+
+function safeDecrypt(value: string | null | undefined): string | null | undefined {
+  if (value == null) return value;
+  // Legacy plaintext row: not in iv:tag:ciphertext format - return as-is
+  if (!CIPHER_FORMAT_RE.test(value)) return value;
+  // Encrypted row: let GCM auth-tag failure propagate (signals tampering/corruption)
+  return decrypt(value);
+}
 
 /**
  * Explicit vendor column selection — omits sensitive fields that must never
@@ -213,6 +224,15 @@ export async function getVendorAssessmentDetail(
   );
 
   const { vendor, answers, documents, ...assessmentFields } = row;
+  const decryptedAnswers = answers.map((a) => ({
+    ...a,
+    aiReasoning:       safeDecrypt(a.aiReasoning),
+    findings:          safeDecrypt(a.findings),
+    evidenceSnippet:   safeDecrypt(a.evidenceSnippet),
+    justificationText: safeDecrypt(a.justificationText),
+    manualNotes:       safeDecrypt(a.manualNotes),
+    aiSuggestedStatus: safeDecrypt(a.aiSuggestedStatus),
+  }));
   const latestDocument = documents[0] ?? null;
 
   const filledCount = answers.filter(
@@ -230,7 +250,7 @@ export async function getVendorAssessmentDetail(
     vendorAssessment,
     assessmentId: row.id,
     companyId: row.companyId,
-    answers,
+    answers: decryptedAnswers,
     documentUrl: row.documentUrl ?? null,
     documentFilename: row.documentFilename ?? null,
     documentFileSize: latestDocument?.fileSize ?? null,

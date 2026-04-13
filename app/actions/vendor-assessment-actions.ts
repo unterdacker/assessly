@@ -6,6 +6,15 @@ import { syncAssessmentComplianceToDatabase } from "@/lib/assessment-compliance"
 import { logAuditEvent } from "@/lib/audit-log";
 import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 import { countVendorAssessmentQuestions } from "@/lib/queries/custom-questions";
+import { encrypt, decrypt } from "@/lib/crypto";
+
+const CIPHER_FORMAT_RE = /^[0-9a-f]+:[0-9a-f]+:[0-9a-f]+$/i;
+
+function safeDecryptForAudit(value: string | null | undefined): string | null | undefined {
+  if (value == null) return value;
+  if (!CIPHER_FORMAT_RE.test(value)) return value;
+  return decrypt(value);
+}
 
 export async function saveAssessmentAnswer({
   assessmentId,
@@ -43,10 +52,15 @@ export async function saveAssessmentAnswer({
       if (!overrideReason?.trim()) {
         return { success: false, error: "A reason is required to change an existing answer." };
       }
-      const auditedFindings = `[Override reason: ${overrideReason.trim()}]\n\n${findings ?? existing.findings ?? ""}`.trim();
+      const rawExistingFindings = safeDecryptForAudit(existing.findings ?? null);
+      const auditedFindings = `[Override reason: ${overrideReason.trim()}]\n\n${findings ?? rawExistingFindings ?? ""}`.trim();
       answer = await prisma.assessmentAnswer.update({
         where: { id: existing.id },
-        data: { status, findings: auditedFindings, evidenceSnippet },
+        data: {
+          status,
+          findings: encrypt(auditedFindings),
+          evidenceSnippet: evidenceSnippet ? encrypt(evidenceSnippet) : null,
+        },
       });
     } else {
       answer = await prisma.assessmentAnswer.create({
@@ -54,8 +68,8 @@ export async function saveAssessmentAnswer({
           assessmentId,
           questionId,
           status,
-          findings,
-          evidenceSnippet,
+          findings: findings ? encrypt(findings) : undefined,
+          evidenceSnippet: evidenceSnippet ? encrypt(evidenceSnippet) : null,
           createdBy: session.userId,
         },
       });
