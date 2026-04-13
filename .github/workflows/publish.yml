@@ -21,9 +21,10 @@ jobs:
         env:
           PAT: ${{ secrets.SUBMODULE_PAT }}
         run: |
-          git submodule init
-          git submodule set-url modules "https://${PAT}@github.com/unterdacker/venshield-enterprise.git"
-          git submodule update --progress || exit 1
+          echo "PAT laenge: ${#PAT}"
+          rm -rf modules
+          git clone "https://${PAT}@github.com/unterdacker/venshield-enterprise.git" modules
+          echo "Module gefunden: $(ls modules/)"
 
       - name: Submodule verifizieren
         run: |
