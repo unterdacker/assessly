@@ -118,6 +118,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # NODE_ENV must be production so the prebuild env validator runs in strict mode
 # and confirms the stub values above satisfy all format requirements.
 ENV NODE_ENV=production
+ENV ALLOW_INSECURE_LOCALHOST=true
 
 # 1. Generate the Prisma client from the schema.
 RUN ./node_modules/.bin/prisma generate
