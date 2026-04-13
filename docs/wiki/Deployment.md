@@ -170,53 +170,93 @@ The entrypoint script runs on container startup:
 # AUTH_SESSION_SECRET (64 bytes)
 node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
-# SETTINGS_ENCRYPTION_KEY (32 bytes)
+# All other secrets (32 bytes each) — run once per variable
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-
-# MFA_ENCRYPTION_KEY (32 bytes)
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-
-# AUDIT_BUNDLE_SECRET (32 bytes)
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-
-# AUDIT_EXPORT_KEY (32 bytes)
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-
-# AUDIT_PSEUDONYMIZATION_KEY (32 bytes)
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-
-# CRON_SECRET (32 bytes)
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+# Run for: SETTINGS_ENCRYPTION_KEY, MFA_ENCRYPTION_KEY, AUDIT_BUNDLE_SECRET,
+#          AUDIT_EXPORT_KEY, AUDIT_PSEUDONYMIZATION_KEY, CRON_SECRET,
+#          OIDC_STATE_SECRET, SMS_PSEUDONYM_KEY
 ```
 
 ### 2 — Create Production `.env`
 
 ```env
-# Required
-DATABASE_URL="postgresql://user:password@your-db-host:5432/venshield?schema=public"
+# ── Core ─────────────────────────────────────────────────────────────────────
+DATABASE_URL=postgresql://user:password@your-db-host:5432/venshield?schema=public
 NODE_ENV=production
+APP_URL=https://venshield.yourdomain.com
 NEXT_PUBLIC_APP_URL=https://venshield.yourdomain.com
 
-# Security secrets (generated above)
+# ── Session & OIDC ────────────────────────────────────────────────────────────
+# AUTH_SESSION_SECRET: min 128 hex chars (64 bytes)
 AUTH_SESSION_SECRET=<128-char hex>
+# OIDC_STATE_SECRET: min 64 hex chars (32 bytes) — always required
+OIDC_STATE_SECRET=<64-char hex>
+
+# ── Encryption keys (exactly 64 hex chars = 32 bytes each) ───────────────────
 SETTINGS_ENCRYPTION_KEY=<64-char hex>
 MFA_ENCRYPTION_KEY=<64-char hex>
+
+# ── Audit log signing ─────────────────────────────────────────────────────────
 AUDIT_BUNDLE_SECRET=<64-char hex>
 AUDIT_EXPORT_KEY=<64-char hex>
 AUDIT_PSEUDONYMIZATION_KEY=<64-char hex>
+
+# ── Cron ─────────────────────────────────────────────────────────────────────
 CRON_SECRET=<64-char hex>
 
-# AI (optional — defaults to local/Ollama)
+# ── AI provider ──────────────────────────────────────────────────────────────
+# AI_PROVIDER: mistral | local (default: local — uses Ollama)
 AI_PROVIDER=local
 LOCAL_AI_ENDPOINT=http://your-ollama-host:11434
+LOCAL_AI_MODEL=ministral-3:8b
+# Mistral SaaS (set AI_PROVIDER=mistral to use)
+# MISTRAL_API_KEY=your_mistral_api_key
 
-# Mail
+# ── Mail ─────────────────────────────────────────────────────────────────────
+# MAIL_STRATEGY: smtp | resend | log
+# mailpit and mailhog are BLOCKED in production
 MAIL_STRATEGY=smtp
-MAIL_FROM="Venshield <noreply@yourdomain.com>"
+MAIL_FROM=Venshield <noreply@yourdomain.com>
+MAIL_COMPANY_NAME=Venshield
 SMTP_HOST=smtp.yourdomain.com
 SMTP_PORT=587
 SMTP_USER=noreply@yourdomain.com
 SMTP_PASSWORD=your_smtp_password
+# Resend SaaS alternative (set MAIL_STRATEGY=resend to use)
+# RESEND_API_KEY=your_resend_api_key
+
+# ── SMS ───────────────────────────────────────────────────────────────────────
+# SMS_PROVIDER=log is BLOCKED in production — configure a real EU provider
+# Choose one of: 46elks | sinch | infobip
+
+# Option A: 46elks (Sweden, GDPR-compliant)
+SMS_PROVIDER=46elks
+ELKS_API_USERNAME=your_46elks_username
+ELKS_API_PASSWORD=your_46elks_password
+ELKS_FROM=Venshield
+
+# Option B: Sinch (Sweden, GDPR-compliant) — uncomment, remove Option A
+# SMS_PROVIDER=sinch
+# SINCH_SERVICE_PLAN_ID=your_service_plan_id
+# SINCH_API_TOKEN=your_api_token
+# SINCH_FROM=+4900000000
+
+# Option C: Infobip (Croatia/EU, GDPR-compliant) — uncomment, remove Option A
+# SMS_PROVIDER=infobip
+# INFOBIP_API_KEY=your_api_key
+# INFOBIP_BASE_URL=https://<region>.api.infobip.com
+# INFOBIP_FROM=Venshield
+
+# Required when SMS_PROVIDER != log — HMAC key for phone pseudonymisation (GDPR Art. 4(5))
+SMS_PSEUDONYM_KEY=<64-char hex>
+
+# ── S3-compatible storage (optional — falls back to local filesystem) ─────────
+# S3_ENDPOINT=https://s3.eu-central-1.amazonaws.com
+# S3_REGION=eu-central-1
+# S3_BUCKET=venshield-storage
+# S3_ACCESS_KEY_ID=your_access_key_id
+# S3_SECRET_ACCESS_KEY=your_secret_access_key
+# S3_FORCE_PATH_STYLE=false
 ```
 
 ### 3 — Deploy with Docker Compose

@@ -104,6 +104,71 @@ npm run db:seed            # re-seed demo data
 npm run db:studio          # open Prisma Studio
 ```
 
+## Integrations
+
+Venshield integrates with the following external services. All are optional except PostgreSQL — the platform runs fully air-gapped with local fallbacks for every other category.
+
+### Mail
+
+| Provider | Type | Link |
+|---|---|---|
+| **SMTP** | Any RFC 5321-compliant relay (e.g. Postfix, AWS SES, Mailgun) | — |
+| **Resend** | SaaS email API, developer-friendly | [resend.com](https://resend.com) |
+| **Mailpit** | Local dev SMTP trap (dev only, blocked in production) | [mailpit.axllent.org](https://mailpit.axllent.org) |
+
+Configure with: `MAIL_STRATEGY=smtp|resend|log`
+
+### SMS
+
+SMS is used for MFA token delivery. All supported providers are GDPR-compliant EU companies.
+
+| Provider | Headquarters | Link |
+|---|---|---|
+| **46elks** | Sweden | [46elks.com](https://46elks.com) |
+| **Sinch** | Sweden | [sinch.com](https://www.sinch.com) |
+| **Infobip** | Croatia / EU | [infobip.com](https://www.infobip.com) |
+
+Configure with: `SMS_PROVIDER=46elks|sinch|infobip`
+
+### AI / LLM
+
+All AI analysis runs on infrastructure you control. No assessment data is sent to US cloud services.
+
+| Provider | Type | Link |
+|---|---|---|
+| **Ollama** | Self-hosted, on-premise LLM inference | [ollama.com](https://ollama.com) |
+| **Mistral AI** | EU-hosted SaaS LLM | [mistral.ai](https://mistral.ai) |
+
+Configure with: `AI_PROVIDER=local|mistral`
+
+### Object Storage
+
+| Provider | Type | Link |
+|---|---|---|
+| **Local filesystem** | Default — no config required | — |
+| **AWS S3** | Managed cloud object storage | [aws.amazon.com/s3](https://aws.amazon.com/s3) |
+| **MinIO** | Self-hosted S3-compatible storage | [min.io](https://min.io) |
+| **Any S3-compatible** | Hetzner Object Storage, Backblaze B2, Cloudflare R2, etc. | — |
+
+Configure with: `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`
+
+### Identity Provider (SSO) *(Premium)*
+
+Venshield supports any [OpenID Connect](https://openid.net/connect/)-compliant identity provider via PKCE.
+
+| Provider | Link |
+|---|---|
+| **Microsoft Entra ID** (Azure AD) | [microsoft.com/entra](https://www.microsoft.com/en-us/security/business/microsoft-entra) |
+| **Okta** | [okta.com](https://www.okta.com) |
+| **Keycloak** | [keycloak.org](https://www.keycloak.org) |
+| **Google Workspace** | [workspace.google.com](https://workspace.google.com) |
+| **Auth0** | [auth0.com](https://auth0.com) |
+| **Any OIDC-compliant IdP** | — |
+
+Configure per-company via **Settings → SSO** (Premium plan).
+
+---
+
 ## Plans
 
 | Plan | Description |

@@ -24,6 +24,7 @@ Venshield replaces disconnected spreadsheets and inboxes with one auditable work
 | [Vendor Portal](Vendor-Portal.md) | External portal for vendors, invite-token flow |
 | [Internationalisation](Internationalisation.md) | Locale routing (en / de), next-intl setup |
 | [Testing](Testing.md) | Vitest unit tests, Playwright E2E, audit-chain verification |
+| [Integrations](Integrations.md) | Mail, SMS, AI, storage, SSO — all supported providers with configuration examples |
 | [Deployment](Deployment.md) | Docker Compose, production hardening, key generation |
 | [Environment Variables Reference](Environment-Variables-Reference.md) | Full variable list with requirements |
 | [Scripts Reference](Scripts-Reference.md) | All npm scripts explained |
