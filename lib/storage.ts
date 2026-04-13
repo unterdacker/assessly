@@ -10,7 +10,6 @@ import {
 import { Readable } from "stream";
 import { encryptFile, decryptFile } from "@/lib/crypto";
 import { env } from "@/lib/env";
-import { logErrorReport } from "@/lib/logger";
 
 function getS3Client(): S3Client {
   return new S3Client({
@@ -120,9 +119,8 @@ export async function putLocalFile(relativePath: string, data: Buffer): Promise<
  * Reads and decrypts a file from the local filesystem under .venshield-storage/.
  * `relativePath` must be a relative path.
  * Returns the decrypted plaintext buffer.
- * Throws if the file does not exist or the GCM auth tag is invalid (tamper detection).
- * For legacy unencrypted files (written before encryption was introduced), the raw buffer
- * is returned as-is if decryption fails — migration tolerance.
+ * If the file is shorter than 28 bytes, returns the raw buffer as-is (pre-encryption legacy file).
+ * If the file is 28 bytes or longer, decryptFile() is called and GCM auth-tag failures propagate.
  */
 export async function getLocalFile(relativePath: string): Promise<Buffer> {
   // Reject absolute paths before resolving
@@ -146,15 +144,11 @@ export async function getLocalFile(relativePath: string): Promise<Buffer> {
 
   const raw = await fs.readFile(realTarget) as Buffer;
 
-  // Migration tolerance: if the file is too short to be encrypted or
-  // decryption fails, return the raw buffer (legacy unencrypted file).
+  // Migration tolerance: files too short to contain IV+ciphertext+tag are
+  // treated as pre-encryption legacy plaintext and returned as-is.
+  // Otherwise decryptFile() is called and any auth-tag failure propagates.
   if (raw.length < 28) {
     return raw;
   }
-  try {
-    return decryptFile(raw);
-  } catch (err) {
-    logErrorReport("storage.getLocalFile: decryption failed — possible tamper or key mismatch", err);
-    return raw; // migration fallback: may be a legacy plaintext file
-  }
+  return decryptFile(raw);
 }
