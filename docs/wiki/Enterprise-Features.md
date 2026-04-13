@@ -1,6 +1,6 @@
 ﻿# Enterprise Features
 
-Venshield offers a **Premium plan** for organisations that require enterprise identity management and advanced compliance reporting capabilities. Both features are available after upgrading and placing the signed license file provided by the Venshield team.
+Venshield offers a **Premium plan** for organisations that require enterprise identity management and advanced compliance reporting capabilities. Both features are included in the Premium Docker image distributed via GitHub Container Registry (GHCR) — no license file required.
 
 ---
 
@@ -55,6 +55,14 @@ Advanced Reporting generates structured compliance reports that combine vendor a
 
 ---
 
-## Obtaining a Premium License
+## Getting Access — Premium Docker Image
 
-To activate Premium features, contact the Venshield team to obtain a signed license file for your organisation. Once issued, follow the enterprise setup documentation shipped with your license to place the license file and configure the required environment variables.
+Premium features are delivered as a pre-built Docker image hosted on GitHub Container Registry (GHCR). Paying customers are granted pull access to the image for their organisation — no license file to manage.
+
+To get started, [contact the Venshield team](mailto:venshield@proton.me). Once your subscription is confirmed you will receive GHCR credentials and deployment instructions.
+
+```bash
+docker pull ghcr.io/unterdacker/venshield-premium:latest
+```
+
+See the [Deployment guide](Deployment.md) for the full production setup.

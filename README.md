@@ -1,4 +1,4 @@
-﻿![License](https://img.shields.io/badge/License-AGPL_v3-blue.svg) ![Version](https://img.shields.io/badge/version-0.1.0-informational) [![CI](https://github.com/unterdacker/venshield/actions/workflows/ci.yml/badge.svg)](https://github.com/unterdacker/venshield/actions/workflows/ci.yml) [![Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square)](https://www.apache.org/licenses/LICENSE-2.0) [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org) [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com) ![Visitors](https://visitor-badge.laobi.icu/badge?page_id=venshield.assessly)
+﻿![Version](https://img.shields.io/badge/version-0.1.0-informational) [![CI](https://github.com/unterdacker/venshield/actions/workflows/ci.yml/badge.svg)](https://github.com/unterdacker/venshield/actions/workflows/ci.yml) [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org) [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com) ![Visitors](https://visitor-badge.laobi.icu/badge?page_id=venshield.assessly)
 
 [![Stack](https://skillicons.dev/icons?i=nextjs,postgres,docker,ts,prisma,redis)](https://skillicons.dev)
 
@@ -111,7 +111,7 @@ npm run db:studio          # open Prisma Studio
 | **Free** | Full access to NIS2 questionnaires, vendor portal, AI analysis, audit trail, and dashboard. |
 | **Premium** | Everything in Free, plus **OIDC/SSO** (single sign-on with just-in-time provisioning), **Advanced Reporting** (AI compliance reports, PDF export, executive summaries), and priority support. |
 
-> Interested in Premium? Contact us under [Contact Support](mailto:venshield@proton.me)  to obtain a license.
+> Interested in Premium? [Contact us](mailto:venshield@proton.me) — paying customers receive access to the pre-built Docker image hosted on GitHub Container Registry (GHCR).
 
 ## Documentation
 
@@ -123,8 +123,8 @@ Full documentation is available in the [wiki](docs/wiki/Home.md):
 - [Deployment](docs/wiki/Deployment.md)
 - [Security Architecture](docs/wiki/Security-Architecture.md)
 
-## License
+## Premium Distribution
 
-[GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE)
+The Premium plan is delivered as a pre-built Docker image hosted on **GitHub Container Registry (GHCR)**. Paying customers are granted pull access to the image for their organisation. There is no license file to manage — access is controlled at the registry level.
 
-If you run a modified version of Venshield as a network service, you must make the complete corresponding source code available under AGPL-3.0. The Premium enterprise modules are licensed separately under a proprietary license and are not covered by AGPL-3.0.
+[Contact us](mailto:venshield@proton.me) to subscribe. See [Enterprise Features](docs/wiki/Enterprise-Features.md) for full details.
