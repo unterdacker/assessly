@@ -25,7 +25,7 @@ const E2E_MFA_USER_PASSWORD = process.env.E2E_MFA_USER_PASSWORD ?? "MfaUser1234!
 const E2E_MFA_ENFORCED_EMAIL = process.env.E2E_MFA_ENFORCED_EMAIL ?? "mfa-enforced@venshield.local";
 const E2E_MFA_ENFORCED_PASSWORD = process.env.E2E_MFA_ENFORCED_PASSWORD ?? "Enforced1234!";
 // Test-fixture TOTP secret - publicly known otplib example value, NEVER use in production.
-const E2E_MFA_TOTP_SECRET = "JBSWY3DPEHPK3PXP";
+const E2E_MFA_TOTP_SECRET = process.env.E2E_MFA_TOTP_SECRET ?? "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
 // First recovery code - known plaintext used by E2E scenarios 2+3.
 const E2E_MFA_RECOVERY_CODE_1 = process.env.E2E_MFA_RECOVERY_CODE ?? "AABBCCDD-11223344-55667788-99AABBCC";
 

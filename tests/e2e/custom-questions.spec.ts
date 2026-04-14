@@ -56,7 +56,7 @@ test.describe("Custom Questions - Settings UI", () => {
     await page.getByRole("button", { name: /add question/i }).click();
     await page.getByRole("button", { name: /^save$/i }).click();
 
-    await expect(page.getByText(/required/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole("alert")).toBeVisible({ timeout: 5_000 });
   });
 
   test("can create a new custom question", async ({ page }) => {

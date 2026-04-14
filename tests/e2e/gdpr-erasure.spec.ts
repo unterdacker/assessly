@@ -115,8 +115,8 @@ test.describe("GDPR Erasure — user lifecycle and PII redaction", () => {
       // Role defaults to AUDITOR in the modal — leave unchanged.
       await dialog.getByRole("button", { name: /create user/i }).click();
 
-      // Success toast confirms creation; the temp password is shown there.
-      await expect(page.getByText(/user created successfully/i)).toBeVisible({
+      // Success toast confirms creation (invite email sent).
+      await expect(page.getByText(/invite email sent/i)).toBeVisible({
         timeout: 10_000,
       });
 

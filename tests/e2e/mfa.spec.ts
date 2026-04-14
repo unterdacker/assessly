@@ -26,7 +26,7 @@ import { signInAsAdmin } from "./helpers/auth";
 // --- Env-injected fixtures --------------------------------------------------
 const MFA_USER_EMAIL = process.env.E2E_MFA_USER_EMAIL ?? "mfa-user@venshield.local";
 const MFA_USER_PASSWORD = process.env.E2E_MFA_USER_PASSWORD ?? "MfaUser1234!";
-const TOTP_SECRET = process.env.E2E_MFA_TOTP_SECRET ?? "JBSWY3DPEHPK3PXP";
+const TOTP_SECRET = process.env.E2E_MFA_TOTP_SECRET ?? "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
 const RECOVERY_CODE = process.env.E2E_MFA_RECOVERY_CODE ?? "AABBCCDD-11223344-55667788-99AABBCC";
 const ENFORCED_EMAIL = process.env.E2E_MFA_ENFORCED_EMAIL ?? "mfa-enforced@venshield.local";
 const ENFORCED_PASSWORD = process.env.E2E_MFA_ENFORCED_PASSWORD ?? "Enforced1234!";
@@ -115,9 +115,11 @@ test("MFA: enforced user is redirected to mfa-setup-required page on sign-in", a
   await page.waitForURL(/\/en\/auth\/mfa-setup-required/, { timeout: 30_000 });
 
   expect(page.url()).toMatch(/mfa-setup-required/);
-  // Setup page must present a QR code or instructions
+  // Setup page must present instructions (idle phase) or QR code (scanning phase)
   await expect(
-    page.getByRole("img", { name: /qr/i }).or(page.getByText(/scan|authenticator/i).first()),
+    page.getByText(/complete setup before continuing/i).or(
+      page.getByRole("img", { name: /qr/i }),
+    ),
   ).toBeVisible({ timeout: 10_000 });
 });
 
