@@ -28,7 +28,7 @@ New screenshots are being prepared. Below is an overview of the five key screens
 Mission-control overview of your vendor portfolio: aggregated NIS2 compliance score, pending and completed assessment counters, category compliance radar chart, vendors-by-risk distribution bar chart, and an AI-generated executive risk summary. The ideal first screen for security and compliance teams starting their morning review.
 
 ![Dashboard Screenshot 1](docs/screenshots/dashboard2.png)
-![Dashboard Screenshot 2](docs/screenshots/dashboard2.png)
+![Dashboard Screenshot 2](docs/screenshots/dashboard1.png)
 
 ### 2 — Vendor Assessment Workspace: NIS2 Review in One Place
 The internal auditor view of a live vendor assessment: 20 NIS2 control questions with AI-pre-filled answers, an embedded evidence document viewer, side-panel compliance scoring, and a remediation action panel. Replaces the spreadsheet-and-inbox workflow entirely.
