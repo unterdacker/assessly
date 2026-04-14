@@ -10,8 +10,8 @@ import { countVendorAssessmentQuestions } from "@/lib/queries/custom-questions";
 
 const CIPHER_FORMAT_RE = /^[0-9a-f]+:[0-9a-f]+:[0-9a-f]+$/i;
 
-function safeDecrypt(value: string | null | undefined): string | null | undefined {
-  if (value == null) return value;
+function safeDecrypt(value: string | null | undefined): string | null {
+  if (value == null) return null;
   // Legacy plaintext row: not in iv:tag:ciphertext format - return as-is
   if (!CIPHER_FORMAT_RE.test(value)) return value;
   // Encrypted row: let GCM auth-tag failure propagate (signals tampering/corruption)
