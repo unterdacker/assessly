@@ -9,6 +9,6 @@ export const initialPortalActionState: PortalActionState = {
 export type SendInviteState =
   | { status: "idle";  error: null }
   | { status: "error"; error: string }
-  | { status: "sent";  maskedPhone: string; error: null };
+  | { status: "sent";  error: null };
 
 export const initialSendInviteState: SendInviteState = { status: "idle", error: null };

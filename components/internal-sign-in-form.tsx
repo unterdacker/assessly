@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 const errorKeyMap: Record<string, string> = {
   REQUIRED: "errorRequired",
   INVALID_CREDENTIALS: "errorInvalidCredentials",
+  ACCOUNT_NOT_ACTIVATED: "errorInvalidCredentials",
   TOO_MANY_REQUESTS: "errorTooManyRequests",
 };
 

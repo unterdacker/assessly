@@ -125,16 +125,34 @@ Vendors authenticate via a separate flow — they do **not** have platform accou
 ### Invite-Token Flow (Recommended)
 
 1. Admin clicks **Send Invite** for a vendor
-2. Server generates a cryptographically random invite token and sends an email containing a one-time invite link
-3. Vendor clicks the link → lands on `/external/force-password-change`
-4. Vendor sets a password; `isFirstLogin` is cleared
-5. Subsequent logins via `/external/portal` use email + password
+2. Server generates a cryptographically random invite token and sends an email containing a one-time setup link (`/[locale]/vendor/accept-invite?token=<plain-hex-token>`)
+3. Vendor opens the setup page and creates their own password
+4. Invite token is redeemed exactly once and expires after 48 hours
+5. Subsequent logins via `/external/portal` use Access Code + password
 
-### Access-Code Flow (Legacy)
+### Vendor Password Setup Page
 
-1. Admin generates a short access code for the vendor
-2. Vendor enters the code on the portal login page
-3. After successful entry, a VENDOR-role `AuthSession` is created
+When a vendor is invited, they receive an email with a one-time setup link:
+`/[locale]/vendor/accept-invite?token=<plain-hex-token>`
+
+The page:
+- Is publicly accessible (no session required)
+- Accepts the token from the URL via a Server Component, then strips it from the browser URL using `history.replaceState` on mount
+- Validates: token must exist in DB as a SHA-256 hash match, must not be expired (48h), must not already be redeemed
+- Uses a Serializable transaction with `SELECT ... FOR UPDATE` to prevent concurrent redemption (TOCTOU prevention)
+- On success: sets `Vendor.passwordHash` (bcrypt cost >=10), clears `setupToken` and `setupTokenExpires`
+- Audit event: `VENDOR_INVITE_ACCEPTED`
+
+### Internal User Invite Page
+
+When an Admin creates an internal user (Admin/Auditor role), the user receives an invite email:
+`/[locale]/auth/accept-invite?token=<plain-hex-token>`
+
+The page follows the same token-validation pattern as the Vendor Password Setup Page.
+- User is created with `isActive: false`, `passwordHash: null` until invite is accepted
+- On acceptance: `isActive: true`, `passwordHash` set, token cleared
+- Existing unactivated users (no `passwordHash`) get a new token on re-invite rather than an error
+- Audit event: `USER_INVITE_ACCEPTED`
 
 ---
 
@@ -142,7 +160,6 @@ Vendors authenticate via a separate flow — they do **not** have platform accou
 
 - Passwords hashed with **bcrypt** at cost factor 12 (`bcryptjs`)
 - Minimum length and complexity enforced by Zod validation schemas
-- Vendors are forced to change their password on first login (`isFirstLogin = true`)
 - Admins can trigger a forced password reset for any vendor
 
 ---

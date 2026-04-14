@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -36,6 +37,7 @@ export async function submitExternalAssessment(input: {
   const vendorId = input.vendorId?.trim();
   const assessmentId = input.assessmentId?.trim();
   const token = input.token?.trim();
+  const tokenHash = token ? createHash("sha256").update(token).digest("hex") : "";
 
   if (!vendorId || !assessmentId || !token) {
     throw new Error("Missing identification for assessment submission.");
@@ -45,7 +47,7 @@ export async function submitExternalAssessment(input: {
     const vendor = await prisma.vendor.findFirst({
       where: {
         id: vendorId,
-        inviteToken: token,
+        inviteToken: tokenHash,
         isCodeActive: true,
       },
       include: {

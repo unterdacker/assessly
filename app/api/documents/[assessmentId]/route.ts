@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "crypto";
 import fs from "fs/promises";
 import path from "path";
 import { prisma } from "@/lib/prisma";
@@ -14,6 +15,7 @@ export async function GET(
   const { assessmentId } = await params;
   const session = await getAuthSessionFromRequest(req);
   const vendorToken = req.cookies.get("venshield-vendor-token")?.value || null;
+  const vendorTokenHash = vendorToken ? createHash("sha256").update(vendorToken).digest("hex") : null;
 
   // Verify this assessment actually has a stored document
   const assessment = await prisma.assessment.findUnique({
@@ -41,8 +43,8 @@ export async function GET(
     session.companyId === assessment.companyId,
   );
   const vendorAccess = Boolean(
-    vendorToken &&
-    assessment.vendor?.inviteToken === vendorToken &&
+    vendorTokenHash &&
+    assessment.vendor?.inviteToken === vendorTokenHash &&
     assessment.vendor.inviteTokenExpires &&
     assessment.vendor.inviteTokenExpires > new Date(),
   );

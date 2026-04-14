@@ -1,7 +1,2 @@
-export type SmsResult =
-  | { ok: true; messageId?: string }
-  | { ok: false; error: string };
-
-export interface SmsProvider {
-  send(to: string, body: string): Promise<SmsResult>;
-}
+// SMS types removed. See migration 20260415000000_invite_link_flow.
+export {};

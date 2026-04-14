@@ -730,20 +730,16 @@
   },
   "inviteVendorModal": {
     "success": {
-      "title": "Einladung zugestellt",
-      "description": "Zugangsdaten wurden für <strong>{vendorName}</strong> auf zwei Kanaele verteilt.",
-      "emailStatus": "<strong>E-Mail gesendet</strong> - Portal-Link und Zugangscode wurden zugestellt.",
-      "smsStatus": "<strong>SMS gesendet</strong> - temporäres Passwort wurde an <mono>{phone}</mono> zugestellt.",
-      "securityHint": "Der Anbieter muss das Passwort beim ersten Login sofort ändern. Das temporäre Passwort wird nie im Klartext gespeichert und kann nicht wiederhergestellt werden."
+      "title": "Einladung versendet",
+      "description": "Eine sichere Einrichtungs-E-Mail wurde an <strong>{vendorName}</strong> gesendet.",
+      "emailStatus": "<strong>E-Mail versendet</strong> – der Anbieter erhält einen Einmallink zur Passwortvergabe. Der Link läuft in 48 Stunden ab.",
+      "securityHint": "Der Anbieter legt sein eigenes Passwort vor dem ersten Login fest. Der Einladungslink ist einmalig verwendbar und zeitlich begrenzt."
     },
     "form": {
       "title": "Sichere Einladung senden",
-      "description": "Der Zugangscode geht per <strong>E-Mail</strong>; das temporäre Passwort per <strong>SMS</strong>. Die beiden Zugangsdaten werden nie gemeinsam versendet.",
+      "description": "Ein Einmallink zur Passwortvergabe wird per <strong>E-Mail</strong> versendet. Der Link läuft in 48 Stunden ab.",
       "emailLabel": "E-Mail-Adresse",
       "emailPlaceholder": "security@vendor.com",
-      "mobileLabel": "Mobilnummer",
-      "mobilePlaceholder": "+49 151 12345678",
-      "mobileHint": "Internationales Format erforderlich, z. B. +49 151 12345678",
       "codeValidityLabel": "Code-Gueltigkeit",
       "duration1h": "1 Stunde",
       "duration24h": "24 Stunden",
@@ -978,14 +974,14 @@
     "roleChangedError": "Rolle konnte nicht aktualisiert werden.",
     "addUser": "Benutzer hinzufügen",
     "addUserTitle": "Internen Benutzer hinzufügen",
-    "addUserDesc": "Neues Admin- oder Prüfer-Konto erstellen. Ein temporäres Passwort wird generiert.",
+    "addUserDesc": "Erstellen Sie ein neues Admin- oder Auditor-Konto. Eine Einladungs-E-Mail wird versendet, damit der Nutzer ein eigenes Passwort festlegen kann.",
     "addUserEmail": "E-Mail-Adresse",
     "addUserRole": "Rolle auswählen",
     "addUserConfirm": "Benutzer erstellen",
     "addUserCreating": "Wird erstellt…",
     "cancel": "Abbrechen",
-    "addUserSuccess": "Benutzer erfolgreich erstellt.",
-    "addUserTempPassword": "Temporäres Passwort: {password}",
+    "addUserSuccess": "Einladungs-E-Mail versendet. Der Nutzer kann sein eigenes Passwort über den Link festlegen.",
+    "addUserErrorMailFailed": "Konto erstellt, aber die Einladungs-E-Mail konnte nicht gesendet werden. Bitte kontaktieren Sie den Nutzer direkt oder versuchen Sie es erneut.",
     "addUserErrorEmailExists": "Diese E-Mail-Adresse wird bereits verwendet.",
     "addUserError": "Benutzer konnte nicht erstellt werden. Bitte erneut versuchen.",
     "revokeAccess": "Zugang entziehen",
@@ -1080,5 +1076,31 @@
     "errorReorder": "Neue Reihenfolge konnte nicht gespeichert werden.",
     "moveUp": "Nach oben",
     "moveDown": "Nach unten"
+  },
+  "vendorAcceptInvite": {
+    "pageTitle": "Passwort festlegen",
+    "pageSubtitle": "Erstellen Sie ein sicheres Passwort für den Zugang zu Ihrem Bewertungsportal",
+    "tokenInvalid": "Dieser Einladungslink ist ungültig oder abgelaufen. Bitte kontaktieren Sie das Bewertungsteam für eine neue Einladung.",
+    "newPasswordLabel": "Neues Passwort",
+    "confirmPasswordLabel": "Passwort bestätigen",
+    "passwordHint": "Mind. 12 Zeichen · Großbuchstabe · Kleinbuchstabe · Zahl · Sonderzeichen",
+    "submitButton": "Passwort festlegen",
+    "submitting": "Passwort wird gesetzt...",
+    "successTitle": "Passwort erfolgreich festgelegt",
+    "successMessage": "Sie können sich jetzt mit Ihrem Zugangscode und dem soeben festgelegten Passwort am Bewertungsportal anmelden.",
+    "loginLink": "Zum Portal-Login"
+  },
+  "userAcceptInvite": {
+    "pageTitle": "Konto einrichten",
+    "pageSubtitle": "Erstellen Sie ein Passwort, um Ihr Venshield-Konto zu aktivieren",
+    "tokenInvalid": "Dieser Einladungslink ist ungültig oder abgelaufen. Bitten Sie einen Administrator, eine neue Einladung zu senden.",
+    "newPasswordLabel": "Neues Passwort",
+    "confirmPasswordLabel": "Passwort bestätigen",
+    "passwordHint": "Mind. 12 Zeichen · Großbuchstabe · Kleinbuchstabe · Zahl · Sonderzeichen",
+    "submitButton": "Konto aktivieren",
+    "submitting": "Wird aktiviert...",
+    "successTitle": "Konto aktiviert",
+    "successMessage": "Ihr Konto ist bereit. Sie können sich jetzt anmelden.",
+    "loginLink": "Zur Anmeldung"
   }
 }

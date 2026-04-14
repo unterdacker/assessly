@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash } from "crypto";
 import { decrypt } from "@/lib/crypto";
 import { prisma } from "@/lib/prisma";
 import { toVendorAssessment, VendorDomainMapper } from "@/lib/prisma-mappers";
@@ -85,11 +86,12 @@ export async function getExternalAssessment(
   token: string
 ): Promise<ExternalAssessmentDetail | null> {
   if (!token) return null;
+  const tokenHash = createHash("sha256").update(token).digest("hex");
 
   try {
     const vendor = await prisma.vendor.findFirst({
       where: {
-        inviteToken: token,
+        inviteToken: tokenHash,
       },
       include: {
         assessment: {

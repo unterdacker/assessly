@@ -1,7 +1,7 @@
 "use server";
 
-import crypto from "crypto";
 import bcrypt from "bcryptjs";
+import { createHash } from "crypto";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { hasLocale } from "next-intl";
@@ -25,6 +25,10 @@ function sanitizeAccessCode(raw: unknown): string {
 function formatAccessCode(code8: string): string {
   if (code8.length !== 8) return "";
   return `${code8.slice(0, 4)}-${code8.slice(4)}`;
+}
+
+function hashInviteToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
 }
 
 async function failWithDelay(): Promise<PortalActionState> {
@@ -88,6 +92,8 @@ export async function authenticateVendorAccessCode(
       companyId: true,
       inviteToken: true,
       inviteTokenExpires: true,
+      setupToken: true,
+      setupTokenExpires: true,
       codeExpiresAt: true,
       passwordHash: true,
       isFirstLogin: true,
@@ -124,11 +130,25 @@ export async function authenticateVendorAccessCode(
     return failWithDelay();
   }
 
-  // Verify password — must have a hash (requires code regeneration after MFA upgrade)
+  // R2: Explicit null-password guard before bcrypt.compare
+  // This handles: (a) vendor whose setup token has not been redeemed yet,
+  // (b) edge cases where passwordHash was cleared, (c) future transitions.
   const passwordHash = vendor.passwordHash;
   if (!passwordHash) {
+    // Check if vendor has a pending setup token (invite sent but not accepted)
+    const hasPendingSetup = vendor.setupToken !== null &&
+      vendor.setupTokenExpires instanceof Date &&
+      vendor.setupTokenExpires > new Date();
+
     registerFailure(ipKey);
     registerFailure(codeKey, { maxFailures: 5, blockMs: 10 * 60 * 1000 });
+
+    if (hasPendingSetup) {
+      // Return a specific (but still generic-looking) error — do not leak token details
+      return {
+        error: "Please set your password using the invite link sent to your email before logging in.",
+      };
+    }
     return failWithDelay();
   }
 
@@ -142,42 +162,23 @@ export async function authenticateVendorAccessCode(
   resetFailures(ipKey);
   resetFailures(codeKey);
 
-  // If this is the vendor's first login, redirect to force-change-password flow
-  const isFirstLogin = vendor.isFirstLogin;
-  if (isFirstLogin) {
-    cookieStore.set("venshield-vendor-setup", crypto.randomUUID(), {
-      httpOnly: true,
-      sameSite: "strict",
-      secure: shouldSecureCookie(),
-      path: "/",
-      maxAge: 60 * 30, // 30 minutes
-    });
-    cookieStore.set("venshield-vendor-id", vendor.id, {
-      httpOnly: true,
-      sameSite: "strict",
-      secure: shouldSecureCookie(),
-      path: "/",
-      maxAge: 60 * 30,
-    });
-    redirect(withLocalePath("/external/force-password-change", locale));
-  }
-
   const now = new Date();
   let inviteToken = vendor.inviteToken;
   let expires = vendor.inviteTokenExpires;
+  let inviteTokenPlain = "";
 
-  if (!inviteToken || !expires || expires <= now) {
-    inviteToken = crypto.randomUUID().replace(/-/g, "");
-    expires = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 14);
+  // Always rotate the portal session token on each login to prevent session fixation.
+  inviteTokenPlain = crypto.randomUUID().replace(/-/g, "");
+  inviteToken = hashInviteToken(inviteTokenPlain);
+  expires = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 14);
 
-    await prisma.vendor.update({
-      where: { id: vendor.id },
-      data: {
-        inviteToken,
-        inviteTokenExpires: expires,
-      },
-    });
-  }
+  await prisma.vendor.update({
+    where: { id: vendor.id },
+    data: {
+      inviteToken,
+      inviteTokenExpires: expires,
+    },
+  });
 
   // Derive cookie lifetimes from the actual server-side expiry timestamps so the
   // browser discards them at the same moment the server considers them invalid.
@@ -197,7 +198,7 @@ export async function authenticateVendorAccessCode(
   // venshield-vendor-token — the opaque invite token used to authenticate portal actions.
   // SameSite=Lax: sent on top-level navigations (click a link) but NOT on
   // cross-site sub-resource requests or cross-site POST, preventing CSRF.
-  cookieStore.set("venshield-vendor-token", inviteToken, {
+  cookieStore.set("venshield-vendor-token", inviteTokenPlain, {
     httpOnly: true,
     sameSite: "lax",
     secure: isSecure,
@@ -243,5 +244,5 @@ export async function authenticateVendorAccessCode(
   });
   await setAuthSessionCookie(token, expiresAt);
 
-  redirect(withLocalePath(`/external/assessment/${inviteToken}`, locale));
+  redirect(withLocalePath(`/external/assessment/${inviteTokenPlain}`, locale));
 }

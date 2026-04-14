@@ -6,12 +6,15 @@
 
 Venshield helps security and compliance teams manage third-party vendor risk in line with **NIS2** and **DORA** requirements. It replaces disconnected spreadsheets and inboxes with one auditable workspace covering vendor onboarding, questionnaire execution, AI-assisted document analysis, evidence review, and remediation tracking.
 
+Vendor onboarding flow: Admin enters vendor email -> vendor receives email with one-time password-setup link (valid 48 hours) -> vendor sets their own password -> vendor logs in with Access Code + password.
+
 ### Key advantages
 
 - **NIS2 & DORA ready** — structured vendor questionnaires, control traceability, and remediation workflows aligned to NIS2 Article 21 supply chain obligations.
 - **Data stays in Europe** — AI analysis runs on your own infrastructure via [Ollama](https://ollama.com/) or EU-hosted providers. No assessment data is sent to US cloud services.
 - **EU AI Act compliant by design** — every AI-assisted action is traceable, human-reviewable, and logged. Meets transparency and oversight requirements out of the box.
 - **Cryptographic audit trail** — tamper-evident chain-of-custody for all compliance events, exportable for auditors and regulators.
+- **Invite-link based onboarding** — vendors and internal users receive a single email invite with a one-time password-setup link that expires after 48 hours.
 - **Air-gap capable** — fully self-hostable with no mandatory external dependencies.
 - **Enterprise SSO (Premium)** — OIDC single sign-on with PKCE support, just-in-time user provisioning, and per-company identity provider configuration. Available on the Premium plan.
 - **Advanced Reporting (Premium)** — AI-generated compliance reports with one-click PDF export, executive summaries, and a built-in report editor. Available on the Premium plan.
@@ -126,18 +129,6 @@ Venshield integrates with the following external services. All are optional exce
 | **Resend** | SaaS email API, developer-friendly | [resend.com](https://resend.com) |
 
 Configure with: `MAIL_STRATEGY=smtp|resend|log`
-
-### SMS
-
-SMS is used for MFA token delivery. All supported providers are GDPR-compliant EU companies.
-
-| Provider | Headquarters | Link |
-|---|---|---|
-| **46elks** | Sweden | [46elks.com](https://46elks.com) |
-| **Sinch** | Sweden | [sinch.com](https://www.sinch.com) |
-| **Infobip** | Croatia / EU | [infobip.com](https://www.infobip.com) |
-
-Configure with: `SMS_PROVIDER=46elks|sinch|infobip`
 
 ### AI / LLM
 

@@ -69,7 +69,7 @@ export async function authenticateInternalUser(
     }),
   );
 
-  if (!user?.passwordHash) {
+  if (!user) {
     registerFailure(rlKey, { maxFailures: 10, blockMs: 15 * 60 * 1000 });
     AuditLogger.auth("user.login_failed", "failure", {
       message: "Login failed: unknown email",
@@ -77,6 +77,13 @@ export async function authenticateInternalUser(
       details: { reason: "unknown_email" },
     });
     return { error: "INVALID_CREDENTIALS" };
+  }
+
+  // R2: Explicit null-password guard before bcrypt.compare
+  // Handles users created via invite-link who haven't set their password yet
+  if (!user.passwordHash) {
+    registerFailure(rlKey, { maxFailures: 10, blockMs: 15 * 60 * 1000 });
+    return { error: "ACCOUNT_NOT_ACTIVATED" };
   }
 
   const passwordOk = await bcrypt.compare(password, user.passwordHash);

@@ -33,7 +33,6 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.744.0",
     "@hookform/resolvers": "^5.2.2",
-    "@infobip-api/sdk": "0.3.2",
     "@mistralai/mistralai": "^2.1.2",
     "@prisma/client": "^6.19.3",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -47,7 +46,6 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-pdf/renderer": "^4.1.0",
-    "@sinch/sdk-core": "1.2.0",
     "@tailwindcss/typography": "^0.5.19",
     "@types/sanitize-html": "^2.16.1",
     "bcryptjs": "^3.0.3",

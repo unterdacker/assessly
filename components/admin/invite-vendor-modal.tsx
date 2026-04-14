@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
-import { Mail, Phone, SendHorizonal, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Mail, SendHorizonal, CheckCircle2, ShieldCheck } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -80,7 +80,7 @@ export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", for
                       vendorName,
                       strong: (chunks) => <strong>{chunks}</strong>,
                     })
-                  : <>Credentials split across two channels for <strong>{vendorName}</strong>.</>}
+                  : <>A secure setup email has been sent to <strong>{vendorName}</strong>.</>}
               </DialogDescription>
             </DialogHeader>
 
@@ -97,20 +97,18 @@ export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", for
               </div>
 
               <div className="flex items-start gap-3 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800/40 dark:bg-emerald-900/20">
-                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
                 <p className="text-sm text-emerald-800 dark:text-emerald-300">
-                  {t.has("inviteVendorModal.success.smsStatus")
-                    ? t.rich("inviteVendorModal.success.smsStatus", {
+                  {t.has("inviteVendorModal.success.setupStatus")
+                    ? t.rich("inviteVendorModal.success.setupStatus", {
                         strong: (chunks) => <span className="font-semibold">{chunks}</span>,
-                        phone: state.maskedPhone ?? "",
-                        mono: (chunks) => <span className="font-mono">{chunks}</span>,
                       })
-                    : <><span className="font-semibold">SMS sent</span> - temporary password delivered to <span className="font-mono">{state.maskedPhone}</span>.</>}
+                    : <><span className="font-semibold">Setup link sent</span> - vendor must set a password from the invite email before first login.</>}
                 </p>
               </div>
 
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                {tr("success.securityHint", "The vendor must change their password immediately on first login. The temporary password is never stored in plain text and cannot be retrieved.")}
+                {tr("success.securityHint", "The invite link is one-time and expires after 48 hours. Passwords are set by the vendor and never emailed in plain text.")}
               </p>
             </div>
 
@@ -131,7 +129,7 @@ export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", for
                   ? t.rich("inviteVendorModal.form.description", {
                       strong: (chunks) => <strong>{chunks}</strong>,
                     })
-                  : <>The access code goes by <strong>email</strong>; the temporary password goes by <strong>SMS</strong>. The two credentials never travel together.</>}
+                  : <>Send an <strong>email invite link</strong> so the vendor can set their password securely before using the access code.</>}
               </DialogDescription>
             </DialogHeader>
 
@@ -161,28 +159,6 @@ export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", for
                     required
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="inv-phone"
-                  className="text-xs font-semibold uppercase tracking-wider text-slate-500"
-                >
-                  {tr("form.mobileLabel", "Mobile Number")}
-                </label>
-                <div className="relative">
-                  <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    id="inv-phone"
-                    name="phone"
-                    type="tel"
-                    autoComplete="tel"
-                    placeholder={tr("form.mobilePlaceholder", "+49 151 12345678")}
-                    className="pl-9"
-                    required
-                  />
-                </div>
-                <p className="text-xs text-slate-400">{tr("form.mobileHint", "International format required, e.g. +49 151 12345678")}</p>
               </div>
 
               <div className="space-y-2">

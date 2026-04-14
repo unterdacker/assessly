@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { getAuthSessionFromRequest } from "@/lib/auth/server";
 import { logErrorReport } from "@/lib/logger";
@@ -10,12 +11,13 @@ export async function GET(
 ) {
   const { answerId } = await params;
   const vendorToken = req.cookies.get("venshield-vendor-token")?.value || null;
+  const vendorTokenHash = vendorToken ? createHash("sha256").update(vendorToken).digest("hex") : null;
   const session = await getAuthSessionFromRequest(req);
 
-  if (vendorToken) {
+  if (vendorTokenHash) {
     const tokenOwner = await prisma.vendor.findFirst({
       where: {
-        inviteToken: vendorToken,
+        inviteToken: vendorTokenHash,
         inviteTokenExpires: { gt: new Date() },
       },
       include: {

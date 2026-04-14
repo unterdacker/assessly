@@ -692,20 +692,16 @@
   },
   "inviteVendorModal": {
     "success": {
-      "title": "Invite delivered",
-      "description": "Credentials split across two channels for <strong>{vendorName}</strong>.",
-      "emailStatus": "<strong>Email sent</strong> - portal link and access code delivered.",
-      "smsStatus": "<strong>SMS sent</strong> - temporary password delivered to <mono>{phone}</mono>.",
-      "securityHint": "The vendor must change their password immediately on first login. The temporary password is never stored in plain text and cannot be retrieved."
+      "title": "Invite Sent",
+      "description": "A secure setup email has been sent to <strong>{vendorName}</strong>.",
+      "emailStatus": "<strong>Email sent</strong> — the vendor will receive a one-time link to set their password. The link expires in 48 hours.",
+      "securityHint": "The vendor sets their own password before their first login. The invite link is single-use and time-limited."
     },
     "form": {
       "title": "Send Secure Invite",
-      "description": "The access code goes by <strong>email</strong>; the temporary password goes by <strong>SMS</strong>. The two credentials never travel together.",
+      "description": "A one-time password-setup link will be sent by <strong>email</strong>. The link expires in 48 hours.",
       "emailLabel": "Email Address",
       "emailPlaceholder": "security@vendor.com",
-      "mobileLabel": "Mobile Number",
-      "mobilePlaceholder": "+49 151 12345678",
-      "mobileHint": "International format required, e.g. +49 151 12345678",
       "codeValidityLabel": "Code Validity",
       "duration1h": "1 hour",
       "duration24h": "24 hours",
@@ -940,14 +936,14 @@
     "roleChangedError": "Failed to update role.",
     "addUser": "Add User",
     "addUserTitle": "Add Internal User",
-    "addUserDesc": "Create a new Admin or Auditor account. A temporary password will be generated.",
+    "addUserDesc": "Create a new Admin or Auditor account. An invite email will be sent so the user can set their own password.",
     "addUserEmail": "Email Address",
     "addUserRole": "Select Role",
     "addUserConfirm": "Create User",
     "addUserCreating": "Creating…",
     "cancel": "Cancel",
-    "addUserSuccess": "User created successfully.",
-    "addUserTempPassword": "Temporary password: {password}",
+    "addUserSuccess": "Invite email sent. The user can set their own password using the link.",
+    "addUserErrorMailFailed": "Account created but the invite email could not be sent. Please contact the user directly or try again.",
     "addUserErrorEmailExists": "This email address is already in use.",
     "addUserError": "Failed to create user. Please try again.",
     "revokeAccess": "Revoke Access",
@@ -1042,6 +1038,32 @@
     "errorReorder": "Failed to save new order.",
     "moveUp": "Move up",
     "moveDown": "Move down"
+  },
+  "vendorAcceptInvite": {
+    "pageTitle": "Set Your Password",
+    "pageSubtitle": "Create a secure password to access your assessment portal",
+    "tokenInvalid": "This invite link is invalid or has expired. Please contact the assessment team for a new invite.",
+    "newPasswordLabel": "New Password",
+    "confirmPasswordLabel": "Confirm Password",
+    "passwordHint": "Min 12 characters · uppercase · lowercase · number · special character",
+    "submitButton": "Set Password",
+    "submitting": "Setting password...",
+    "successTitle": "Password set successfully",
+    "successMessage": "You can now log in to the assessment portal using your Access Code and the password you just set.",
+    "loginLink": "Go to Portal Login"
+  },
+  "userAcceptInvite": {
+    "pageTitle": "Set Up Your Account",
+    "pageSubtitle": "Create a password to activate your Venshield account",
+    "tokenInvalid": "This invite link is invalid or has expired. Ask an administrator to send a new invite.",
+    "newPasswordLabel": "New Password",
+    "confirmPasswordLabel": "Confirm Password",
+    "passwordHint": "Min 12 characters · uppercase · lowercase · number · special character",
+    "submitButton": "Activate Account",
+    "submitting": "Activating...",
+    "successTitle": "Account activated",
+    "successMessage": "Your account is ready. You can now sign in.",
+    "loginLink": "Go to Sign In"
   }
 }
 

@@ -173,54 +173,6 @@ const rawEnvSchema = z.object({
   S3_SECRET_ACCESS_KEY: z.string().optional(),
   S3_FORCE_PATH_STYLE: z.enum(["true", "false"]).default("false"),
 
-  // ── SMS provider ──────────────────────────────────────────────────────────
-  /**
-   * Active SMS delivery strategy.
-   *   log     → console simulation (default, no config required; BLOCKED in production)
-   *   46elks  → 46elks REST API (Sweden, GDPR-compliant EU provider)
-   *   sinch   → Sinch SMS API (Sweden, GDPR-compliant EU provider)
-   *   infobip → Infobip SMS API (Croatia/EU, GDPR-compliant EU provider)
-   */
-  SMS_PROVIDER: z
-    .enum(["log", "46elks", "sinch", "infobip"])
-    .default("log"),
-
-  // ── 46elks credentials (required when SMS_PROVIDER=46elks) ───────────────
-  ELKS_API_USERNAME: z.string().optional(),
-  ELKS_API_PASSWORD: z.string().optional(),
-  /** Sender ID / alphanumeric name (max 11 chars) or E.164 number. */
-  ELKS_FROM: z.string().optional(),
-
-  // ── Sinch credentials (required when SMS_PROVIDER=sinch) ─────────────────
-  SINCH_SERVICE_PLAN_ID: z.string().optional(),
-  SINCH_API_TOKEN: z.string().optional(),
-  /** E.164 sender number provisioned in the Sinch dashboard. */
-  SINCH_FROM: z.string().optional(),
-
-  // ── Infobip credentials (required when SMS_PROVIDER=infobip) ─────────────
-  INFOBIP_API_KEY: z.string().optional(),
-  /**
-   * Infobip personal base URL (format: https://<region>.api.infobip.com).
-   * SSRF protection: only Infobip-owned domains are accepted.
-   */
-  INFOBIP_BASE_URL: z
-    .string()
-    .regex(
-      /^https:\/\/[a-z0-9-]+\.api\.infobip\.com(\/.*)?$/i,
-      "INFOBIP_BASE_URL must be https://<region>.api.infobip.com",
-    )
-    .optional(),
-  /** Sender name or alphanumeric ID for Infobip. */
-  INFOBIP_FROM: z.string().optional(),
-
-  // ── SMS pseudonymization (GDPR Art. 4(5) — required in production) ────────
-  /**
-   * HMAC-SHA256 key for pseudonymizing phone numbers in VendorSmsLog.
-   * Raw phone numbers are never stored — only HMAC(phone, this key).
-   * Required in production when SMS_PROVIDER is not "log".
-   * Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-   */
-  SMS_PSEUDONYM_KEY: z.string().min(32).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -538,67 +490,6 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
       message:
         "S3_SECRET_ACCESS_KEY contains a placeholder value. Use real AWS credentials.",
     });
-  }
-
-  // ── SMS_PROVIDER: block "log" in production ───────────────────────────────
-  // ALLOW_INSECURE_LOCALHOST=true skips this check so that CI environments
-  // (NODE_ENV=production + ALLOW_INSECURE_LOCALHOST=true) can use the default
-  // "log" transport without a real SMS provider configured.
-  if (data.SMS_PROVIDER === "log" && data.ALLOW_INSECURE_LOCALHOST !== "true") {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["SMS_PROVIDER"],
-      message:
-        "SMS_PROVIDER='log' is not permitted in production. " +
-        "Configure a real EU provider: SMS_PROVIDER=46elks, sinch, or infobip.",
-    });
-  }
-
-  // ── SMS_PROVIDER: validate required credentials per provider ──────────────
-  if (data.SMS_PROVIDER === "46elks") {
-    require("ELKS_API_USERNAME", data.ELKS_API_USERNAME,
-      "ELKS_API_USERNAME is required when SMS_PROVIDER=46elks.");
-    require("ELKS_API_PASSWORD", data.ELKS_API_PASSWORD,
-      "ELKS_API_PASSWORD is required when SMS_PROVIDER=46elks.");
-  }
-  if (data.SMS_PROVIDER === "sinch") {
-    require("SINCH_SERVICE_PLAN_ID", data.SINCH_SERVICE_PLAN_ID,
-      "SINCH_SERVICE_PLAN_ID is required when SMS_PROVIDER=sinch.");
-    require("SINCH_API_TOKEN", data.SINCH_API_TOKEN,
-      "SINCH_API_TOKEN is required when SMS_PROVIDER=sinch.");
-    require("SINCH_FROM", data.SINCH_FROM,
-      "SINCH_FROM (E.164 sender number) is required when SMS_PROVIDER=sinch.");
-  }
-  if (data.SMS_PROVIDER === "infobip") {
-    require("INFOBIP_API_KEY", data.INFOBIP_API_KEY,
-      "INFOBIP_API_KEY is required when SMS_PROVIDER=infobip.");
-    require("INFOBIP_BASE_URL", data.INFOBIP_BASE_URL,
-      "INFOBIP_BASE_URL is required when SMS_PROVIDER=infobip.");
-  }
-
-  // ── SMS_PSEUDONYM_KEY: required in production for real providers ──────────
-  if (data.SMS_PROVIDER !== "log") {
-    require(
-      "SMS_PSEUDONYM_KEY",
-      data.SMS_PSEUDONYM_KEY,
-      "SMS_PSEUDONYM_KEY (min 32 chars) is required in production for GDPR phone pseudonymization in VendorSmsLog. " +
-        'Generate: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"',
-    );
-  }
-
-  // ── SMS credentials: reject placeholder values ────────────────────────────
-  for (const [field, value] of [
-    ["ELKS_API_PASSWORD", data.ELKS_API_PASSWORD],
-    ["SINCH_API_TOKEN", data.SINCH_API_TOKEN],
-    ["INFOBIP_API_KEY", data.INFOBIP_API_KEY],
-  ] as const) {
-    if (value && isPlaceholder(value)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: [field],
-        message: `${field} contains a placeholder value. Use a real credential.`,
-      });
-    }
   }
 
 });

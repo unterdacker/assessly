@@ -9,11 +9,14 @@ export function getRoleLandingPath(role: UserRole): string {
 }
 
 export function canAccessPath(role: UserRole, normalizedPathname: string): boolean {
+  // Public unauthenticated routes (exact match or anchored regex)
   if (
     normalizedPathname === "/" ||
     normalizedPathname === "/unauthorized" ||
     normalizedPathname.startsWith("/auth/sign-in") ||
-    normalizedPathname.startsWith("/auth/sso")
+    normalizedPathname.startsWith("/auth/sso") ||
+    /^\/vendor\/accept-invite$/.test(normalizedPathname) ||
+    /^\/auth\/accept-invite$/.test(normalizedPathname)
   ) {
     return true;
   }

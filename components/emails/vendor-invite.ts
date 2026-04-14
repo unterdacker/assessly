@@ -17,6 +17,8 @@ export type VendorInviteEmailProps = {
   vendorName: string;
   /** Pre-generated access code, e.g. "ABCD-1234". */
   accessCode: string;
+  /** Full URL to the one-time password-setup page. */
+  setupUrl: string;
   /** Full URL to the external vendor portal. */
   portalUrl: string;
 };
@@ -51,16 +53,15 @@ const copy: Record<string, EmailCopy> = {
       "{companyName} has invited you to complete a NIS2-aligned supply chain security assessment. " +
       "Please follow the steps below to access your secure assessment portal.",
     steps: [
-      "Click the button below or copy the portal link into your browser.",
-      "Enter your unique Access Code when prompted.",
+      "Click the button below to set your own password first (required before login).",
+      "Return to the portal and log in with your Access Code and the password you just set.",
       "Complete the questionnaire and upload any supporting evidence.",
     ],
     securityNote:
-      "Your temporary login password was sent separately via SMS for security reasons. " +
-      "You will be required to change it immediately upon first login. " +
-      "The two credentials are intentionally delivered through different channels.",
+      "Click the button above to set your secure password before logging in. " +
+      "The link is valid for 48 hours and can only be used once.",
     codeLabel: "Your Access Code",
-    buttonLabel: "Open Assessment Portal",
+    buttonLabel: "Set Your Password & Open Portal",
     footer:
       "This invitation was sent on behalf of {companyName}. " +
       "If you did not expect this, you can safely ignore this email.",
@@ -74,16 +75,15 @@ const copy: Record<string, EmailCopy> = {
       "{companyName} lädt Sie ein, eine NIS2-konforme Sicherheitsbewertung der Lieferkette abzuschließen. " +
       "Bitte folgen Sie den nachstehenden Schritten, um auf Ihr sicheres Bewertungsportal zuzugreifen.",
     steps: [
-      "Klicken Sie auf die Schaltfläche unten oder kopieren Sie den Portal-Link in Ihren Browser.",
-      "Geben Sie Ihren einmaligen Zugangscode ein, wenn Sie dazu aufgefordert werden.",
+      "Klicken Sie auf die Schaltfläche unten, um zuerst Ihr eigenes Passwort festzulegen (erforderlich vor der Anmeldung).",
+      "Kehren Sie zum Portal zurück und melden Sie sich mit Ihrem Zugangscode und dem soeben gesetzten Passwort an.",
       "Füllen Sie den Fragebogen aus und laden Sie gegebenenfalls unterstützende Nachweise hoch.",
     ],
     securityNote:
-      "Ihr temporäres Anmeldepasswort wurde aus Sicherheitsgründen separat per SMS übermittelt. " +
-      "Sie werden beim ersten Login aufgefordert, das Passwort sofort zu ändern. " +
-      "Die zwei Zugangsdaten werden bewusst über unterschiedliche Kanäle zugestellt.",
+      "Klicken Sie auf die obige Schaltfläche, um vor dem Login Ihr sicheres Passwort festzulegen. " +
+      "Der Link ist 48 Stunden gültig und kann nur einmal verwendet werden.",
     codeLabel: "Ihr Zugangscode",
-    buttonLabel: "Bewertungsportal öffnen",
+    buttonLabel: "Passwort festlegen & Portal öffnen",
     footer:
       "Diese Einladung wurde im Auftrag von {companyName} versendet. " +
       "Falls Sie diese Einladung nicht erwartet haben, können Sie diese E-Mail ignorieren.",
@@ -103,7 +103,7 @@ function interpolate(
 export function buildVendorInviteEmail(
   props: VendorInviteEmailProps,
 ): VendorInviteEmailResult {
-  const { locale, companyName, vendorName, accessCode, portalUrl } = props;
+  const { locale, companyName, vendorName, accessCode, setupUrl, portalUrl } = props;
 
   // Fall back to English if locale is not translated
   const c = copy[locale] ?? copy.en;
@@ -237,7 +237,7 @@ export function buildVendorInviteEmail(
                 <td align="center">
                   <!--[if mso]>
                   <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml"
-                    href="${escapeAttr(portalUrl)}"
+                    href="${escapeAttr(setupUrl)}"
                     style="height:44px;v-text-anchor:middle;width:260px;"
                     arcsize="15%" fillcolor="#4f46e5" stroke="f">
                     <w:anchorlock/>
@@ -248,7 +248,7 @@ export function buildVendorInviteEmail(
                   </v:roundrect>
                   <![endif]-->
                   <!--[if !mso]><!-->
-                  <a href="${escapeAttr(portalUrl)}"
+                  <a href="${escapeAttr(setupUrl)}"
                     style="display:inline-block;background-color:#4f46e5;
                            color:#ffffff;font-size:14px;font-weight:bold;
                            text-decoration:none;padding:12px 32px;
@@ -261,8 +261,10 @@ export function buildVendorInviteEmail(
             </table>
 
             <!-- Portal URL (plain text fallback) -->
-            <p style="margin:0 0 24px;font-size:12px;color:#94a3b8;
-                       word-break:break-all;text-align:center;">
+            <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;text-align:center;">
+              ${escapeHtml(locale === "de" ? "Nach dem Festlegen Ihres Passworts melden Sie sich hier an:" : "After setting your password, log in at:")}
+            </p>
+            <p style="margin:0 0 24px;font-size:12px;color:#94a3b8;word-break:break-all;text-align:center;">
               ${escapeHtml(portalUrl)}
             </p>
 

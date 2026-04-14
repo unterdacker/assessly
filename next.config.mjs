@@ -112,6 +112,14 @@ const nextConfig = {
         source: "/favicon.ico",
         headers: immutableCacheHeaders,
       },
+      {
+        source: "/:locale/vendor/accept-invite",
+        headers: [{ key: "Cache-Control", value: "no-store, no-cache" }],
+      },
+      {
+        source: "/:locale/auth/accept-invite",
+        headers: [{ key: "Cache-Control", value: "no-store, no-cache" }],
+      },
     ];
   },
 

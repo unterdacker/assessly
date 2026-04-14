@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash } from "crypto";
 import fs from "fs/promises";
 import path from "path";
 import { revalidatePath } from "next/cache";
@@ -33,10 +34,11 @@ function normalizeOptional(value?: string | null): string | null {
 
 async function getExternalVendorByToken(token: string) {
   if (!token || !token.trim()) return null;
+  const tokenHash = createHash("sha256").update(token).digest("hex");
 
   const vendor = await prisma.vendor.findFirst({
     where: {
-      inviteToken: token,
+      inviteToken: tokenHash,
       isCodeActive: true,
     },
     include: {

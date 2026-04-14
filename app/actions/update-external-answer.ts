@@ -1,7 +1,7 @@
 "use server";
 
 import path from "path";
-import { randomUUID } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import sanitizeHtml from "sanitize-html";
 import { cookies, headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
@@ -134,9 +134,10 @@ export async function updateExternalAnswer(formData: FormData) {
   if (!vendorToken) {
     return { ok: false, error: "Session expired. Please reload the portal." };
   }
+  const vendorTokenHash = createHash("sha256").update(vendorToken).digest("hex");
 
   const tokenVendor = await prisma.vendor.findFirst({
-    where: { inviteToken: vendorToken, isCodeActive: true },
+    where: { inviteToken: vendorTokenHash, isCodeActive: true },
     select: {
       id: true,
       inviteTokenExpires: true,

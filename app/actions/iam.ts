@@ -1,13 +1,13 @@
 "use server";
 
-import { randomBytes } from "crypto";
+import { createHash, randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
-import bcrypt from "bcryptjs";
 import type { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logAuditEvent } from "@/lib/audit-log";
 import { requireAdminUser } from "@/lib/auth/server";
 import { AuditLogger } from "@/lib/structured-logger";
+import { INVITE_TOKEN_EXPIRES_MS } from "@/lib/auth/constants";
 
 /**
  * Updates a target user's role.
@@ -80,7 +80,7 @@ export async function updateUserRole(
 export async function createInternalUser(
   email: string,
   role: Extract<UserRole, "ADMIN" | "AUDITOR">,
-): Promise<{ success: true; temporaryPassword: string }> {
+): Promise<{ success: true }> {
   const session = await requireAdminUser();
 
   const companyId = session.companyId;
@@ -90,27 +90,71 @@ export async function createInternalUser(
 
   const normalizedEmail = email.trim().toLowerCase();
 
+  // Check for existing user — if they have an unaccepted invite, regenerate it
   const existing = await prisma.user.findUnique({
     where: { email: normalizedEmail },
-    select: { id: true },
+    select: { id: true, inviteToken: true, passwordHash: true },
   });
-  if (existing) {
+
+  if (existing && existing.passwordHash !== null) {
+    // Active user with a password — reject duplicate
     throw new Error("EMAIL_ALREADY_EXISTS");
   }
 
-  const temporaryPassword = randomBytes(12).toString("base64url");
-  const passwordHash = await bcrypt.hash(temporaryPassword, 12);
+  // Generate invite token: 32 random bytes, store only SHA-256 hash
+  const inviteTokenBytes = randomBytes(32);
+  const inviteTokenPlain = inviteTokenBytes.toString("hex");
+  const inviteTokenHash = createHash("sha256").update(inviteTokenPlain).digest("hex");
+  const inviteTokenExpires = new Date(Date.now() + INVITE_TOKEN_EXPIRES_MS);
 
-  const newUser = await prisma.user.create({
-    data: {
-      companyId,
-      email: normalizedEmail,
-      passwordHash,
-      role,
-      createdBy: session.userId,
-    },
-    select: { id: true },
+  let newUserId: string;
+
+  if (existing) {
+    // Existing unactivated user — regenerate invite token
+    await prisma.user.update({
+      where: { id: existing.id },
+      data: {
+        role,
+        inviteToken: inviteTokenHash,
+        inviteTokenExpires,
+        isActive: false,
+      },
+    });
+    newUserId = existing.id;
+  } else {
+    const newUser = await prisma.user.create({
+      data: {
+        companyId,
+        email: normalizedEmail,
+        passwordHash: null,
+        role,
+        isActive: false,
+        inviteToken: inviteTokenHash,
+        inviteTokenExpires,
+        createdBy: session.userId,
+      },
+      select: { id: true },
+    });
+    newUserId = newUser.id;
+  }
+
+  // Build invite URL using server env var
+  const appUrl = (process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  // Default locale to "en" — the user can switch after login
+  const inviteUrl = `${appUrl}/en/auth/accept-invite?token=${inviteTokenPlain}`;
+
+  // Import here to avoid circular dependency
+  const { buildUserInviteEmail } = await import("@/components/emails/user-invite");
+  const { sendMail } = await import("@/lib/mail");
+
+  const { subject, html } = buildUserInviteEmail({
+    locale: "en",
+    companyName: process.env.MAIL_COMPANY_NAME ?? "Venshield",
+    inviteUrl,
+    recipientEmail: normalizedEmail,
   });
+
+  const mailResult = await sendMail({ to: normalizedEmail, subject, html });
 
   await logAuditEvent(
     {
@@ -118,23 +162,40 @@ export async function createInternalUser(
       userId: session.userId,
       action: "USER_CREATED",
       entityType: "User",
-      entityId: newUser.id,
-      newValue: { email: normalizedEmail, role },
+      entityId: newUserId,
+      newValue: {
+        email: normalizedEmail,
+        role,
+        inviteChannel: "email-link",
+        mailDelivered: mailResult.ok,
+      },
     },
     { captureHeaders: true },
   );
 
+  if (!mailResult.ok) {
+    await logAuditEvent({
+      companyId,
+      userId: session.userId,
+      action: "MAIL_DELIVERY_FAILED",
+      entityType: "User",
+      entityId: newUserId,
+      newValue: { reason: mailResult.error },
+    }).catch(() => {});
+    throw new Error("MAIL_DELIVERY_FAILED");
+  }
+
   AuditLogger.accessControl("user.created", "success", {
     userId: session.userId,
     entityType: "User",
-    entityId: newUser.id,
+    entityId: newUserId,
     message: `Internal user created with role ${role}`,
     details: { role },
   });
 
   revalidatePath("/dashboard/users");
 
-  return { success: true, temporaryPassword };
+  return { success: true };
 }
 
 /**

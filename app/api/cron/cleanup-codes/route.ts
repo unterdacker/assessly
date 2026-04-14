@@ -59,6 +59,30 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
+    // Clear expired setup tokens (invite links that were never redeemed)
+    await prisma.vendor.updateMany({
+      where: {
+        setupTokenExpires: { lt: new Date() },
+        setupToken: { not: null },
+      },
+      data: {
+        setupToken: null,
+        setupTokenExpires: null,
+      },
+    });
+
+    // Clear expired user invite tokens
+    await prisma.user.updateMany({
+      where: {
+        inviteTokenExpires: { lt: new Date() },
+        inviteToken: { not: null },
+      },
+      data: {
+        inviteToken: null,
+        inviteTokenExpires: null,
+      },
+    });
+
     const cleanedCount = pendingResult.count + securedResult.count + stalePendingResult.count;
 
     return NextResponse.json({

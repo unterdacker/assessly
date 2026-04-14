@@ -150,6 +150,7 @@ async function _middleware(request: NextRequest, nonce: string): Promise<NextRes
     // (e.g. venshield-vendor-setup cookie for force-password-change).
     if (
       normalizedPathname.startsWith("/auth/") ||
+      /^\/vendor\/accept-invite$/.test(normalizedPathname) ||
       normalizedPathname === "/external/portal" ||
       normalizedPathname.startsWith("/external/force-password-change")
     ) {

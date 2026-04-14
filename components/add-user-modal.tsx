@@ -52,11 +52,11 @@ export function AddUserModal() {
 
     startTransition(async () => {
       try {
-        const result = await createInternalUser(trimmedEmail, role);
+        await createInternalUser(trimmedEmail, role);
         toast.success(t("addUserSuccess"), {
-          description: t("addUserTempPassword", {
-            password: result.temporaryPassword,
-          }),
+          description: t.has("addUserInviteSent")
+            ? t("addUserInviteSent")
+            : "An invite link was sent to the user email address.",
           duration: 12000,
         });
         setOpen(false);
@@ -65,6 +65,8 @@ export function AddUserModal() {
       } catch (err) {
         if (err instanceof Error && err.message === "EMAIL_ALREADY_EXISTS") {
           toast.error(t("addUserErrorEmailExists"));
+        } else if (err instanceof Error && err.message === "MAIL_DELIVERY_FAILED") {
+          toast.error(t("addUserErrorMailFailed"));
         } else {
           toast.error(t("addUserError"));
         }

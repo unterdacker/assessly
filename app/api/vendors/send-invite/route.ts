@@ -7,7 +7,6 @@ import { logErrorReport } from "@/lib/logger";
 const ALLOWED_JSON_KEYS = new Set([
   "vendorId",
   "email",
-  "phone",
   "duration",
   "locale",
   "forceRefresh",
