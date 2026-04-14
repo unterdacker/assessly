@@ -177,7 +177,7 @@ Configure per-company via **Settings → SSO** (Premium plan).
 | **Free** | Full access to NIS2 questionnaires, vendor portal, AI analysis, audit trail, and dashboard. |
 | **Premium** | Everything in Free, plus **OIDC/SSO** (single sign-on with just-in-time provisioning), **Advanced Reporting** (AI compliance reports, PDF export, executive summaries), and priority support. |
 
-> Interested in Premium? [Contact us](mailto:venshield@proton.me) — paying customers receive access to the pre-built Docker image hosted on GitHub Container Registry (GHCR).
+> Interested in Premium?(currently its free for testers) [Contact us](mailto:venshield@proton.me) — premium customers receive access to the pre-built Docker image hosted on GitHub Container Registry (GHCR).
 
 ## Documentation
 
