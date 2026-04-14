@@ -11,7 +11,7 @@
 INSERT INTO "AuditLog" ("id", "companyId", "userId", "action", "entityType", "entityId", "newValue", "timestamp", "actorId", "createdBy", "updatedAt", "complianceCategory")
 SELECT
   gen_random_uuid()::text,
-  'system',
+  c."id",
   'migration',
   'PERSONAL_DATA_DELETED',
   'VendorSmsLog',
@@ -22,7 +22,7 @@ SELECT
   'migration',
   NOW(),
   'DATA_OPERATIONS'
-WHERE EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'AuditLog');
+FROM "Company" c;
 
 -- Drop VendorSmsLog (GDPR Art. 17 erasure - no rollback path recreates this table with data)
 DROP TABLE IF EXISTS "VendorSmsLog";
