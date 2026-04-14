@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { Prisma, PrismaClient, AssessmentStatus, RiskLevel, UserRole, CompanyPlan, ExecReportStatus } from "@prisma/client";
 import { nis2Questions } from "../lib/nis2-questions";
+import crypto from "crypto";
 
 const prisma = new PrismaClient();
 
@@ -19,6 +20,39 @@ const DEFAULT_ADMIN_EMAIL = process.env.VENSHIELD_ADMIN_EMAIL || "admin@venshiel
 const DEFAULT_ADMIN_PASSWORD = process.env.VENSHIELD_ADMIN_PASSWORD || "admin123";
 const DEFAULT_AUDITOR_EMAIL = process.env.VENSHIELD_AUDITOR_EMAIL || "auditor@venshield.local";
 const DEFAULT_AUDITOR_PASSWORD = process.env.VENSHIELD_AUDITOR_PASSWORD || "auditor123";
+const E2E_MFA_USER_EMAIL = process.env.E2E_MFA_USER_EMAIL ?? "mfa-user@venshield.local";
+const E2E_MFA_USER_PASSWORD = process.env.E2E_MFA_USER_PASSWORD ?? "MfaUser1234!";
+const E2E_MFA_ENFORCED_EMAIL = process.env.E2E_MFA_ENFORCED_EMAIL ?? "mfa-enforced@venshield.local";
+const E2E_MFA_ENFORCED_PASSWORD = process.env.E2E_MFA_ENFORCED_PASSWORD ?? "Enforced1234!";
+// Test-fixture TOTP secret - publicly known otplib example value, NEVER use in production.
+const E2E_MFA_TOTP_SECRET = "JBSWY3DPEHPK3PXP";
+// First recovery code - known plaintext used by E2E scenarios 2+3.
+const E2E_MFA_RECOVERY_CODE_1 = process.env.E2E_MFA_RECOVERY_CODE ?? "AABBCCDD-11223344-55667788-99AABBCC";
+
+/**
+ * AES-256-GCM encryption for MFA secrets in seed data.
+ * Mirrors lib/mfa.ts encryptMfaSecret without the server-only import.
+ * Format: <iv_hex>:<tag_hex>:<ciphertext_hex>
+ * Requires MFA_ENCRYPTION_KEY env var (64 hex chars = 32 bytes).
+ */
+function encryptMfaSecretForSeed(plaintext: string): string {
+  const keyHex = process.env.MFA_ENCRYPTION_KEY;
+  if (!keyHex) {
+    throw new Error(
+      "MFA_ENCRYPTION_KEY must be set when seeding MFA-enabled users. " +
+        "Set it to the same value used by the application server.",
+    );
+  }
+  const key = Buffer.from(keyHex, "hex");
+  if (key.length !== 32) {
+    throw new Error("MFA_ENCRYPTION_KEY must be a 64-char hex string (32 bytes).");
+  }
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return `${iv.toString("hex")}:${tag.toString("hex")}:${encrypted.toString("hex")}`;
+}
 
 type DemoVendor = {
   name: string;
@@ -96,6 +130,26 @@ async function main() {
     bcrypt.hash(DEFAULT_AUDITOR_PASSWORD, 12),
   ]);
 
+  const [mfaUserPasswordHash, enforcedUserPasswordHash] = await Promise.all([
+    bcrypt.hash(E2E_MFA_USER_PASSWORD, 12),
+    bcrypt.hash(E2E_MFA_ENFORCED_PASSWORD, 12),
+  ]);
+
+  // Hash 10 recovery codes: first is the known E2E test code, remaining 9 are random.
+  // Cost 10 matches the production RECOVERY_CODE_HASH_COST used in lib/mfa.ts.
+  const recoveryCodePlaintexts = [
+    E2E_MFA_RECOVERY_CODE_1,
+    ...Array.from({ length: 9 }, () => {
+      const hex = crypto.randomBytes(16).toString("hex").toUpperCase();
+      return `${hex.slice(0, 8)}-${hex.slice(8, 16)}-${hex.slice(16, 24)}-${hex.slice(24, 32)}`;
+    }),
+  ];
+  const mfaRecoveryCodes = await Promise.all(
+    recoveryCodePlaintexts.map((c) => bcrypt.hash(c, 10)),
+  );
+
+  const encryptedMfaSecret = encryptMfaSecretForSeed(E2E_MFA_TOTP_SECRET);
+
   await prisma.user.createMany({
     data: [
       {
@@ -112,6 +166,27 @@ async function main() {
         displayName: "Venshield Auditor",
         passwordHash: auditorPasswordHash,
         role: UserRole.AUDITOR,
+        createdBy: SEED_ACTOR,
+      },
+      {
+        companyId: company.id,
+        email: E2E_MFA_USER_EMAIL,
+        displayName: "MFA Test User (Admin)",
+        passwordHash: mfaUserPasswordHash,
+        role: UserRole.ADMIN,
+        mfaEnabled: true,
+        mfaSecret: encryptedMfaSecret,
+        mfaRecoveryCodes: mfaRecoveryCodes,
+        createdBy: SEED_ACTOR,
+      },
+      {
+        companyId: company.id,
+        email: E2E_MFA_ENFORCED_EMAIL,
+        displayName: "MFA Enforced User (Auditor)",
+        passwordHash: enforcedUserPasswordHash,
+        role: UserRole.AUDITOR,
+        mfaEnabled: false,
+        mfaEnforced: true,
         createdBy: SEED_ACTOR,
       },
     ],

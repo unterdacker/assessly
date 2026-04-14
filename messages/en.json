@@ -951,7 +951,15 @@
     "revokeConfirmDesc": "This will deactivate the account and end all active sessions. The user will no longer be able to sign in. This action cannot be undone.",
     "revokeConfirmAction": "Yes, revoke access",
     "revokeSuccess": "User access revoked.",
-    "revokeError": "Failed to revoke access. Please try again."
+    "revokeError": "Failed to revoke access. Please try again.",
+    "colMfa": "MFA",
+    "mfaBadgeEnforced": "Required",
+    "mfaBadgeEnabled": "Enabled",
+    "mfaBadgeNone": "Not configured",
+    "enforceMfa": "Require MFA",
+    "removeMfaEnforcement": "Remove MFA requirement",
+    "enforceMfaSuccess": "MFA requirement updated.",
+    "enforceMfaError": "Failed to update MFA requirement."
   },
   "PasswordSettings": {
     "sectionTitle": "Change Password",
@@ -989,6 +997,7 @@
     "scanHint": "Use Google Authenticator, Authy, or any TOTP-compatible app to scan the QR code below.",
     "qrAlt": "TOTP setup QR code",
     "manualKeyLabel": "Manual setup key",
+    "copyButtonLabel": "Copy secret key",
     "manualKeyHint": "If you cannot scan the QR code, enter this key manually in your authenticator app.",
     "verifyLabel": "Verification code",
     "verifyButton": "Verify & activate",
@@ -1000,7 +1009,20 @@
     "errorInvalidToken": "Incorrect verification code. Please check your authenticator app and try again.",
     "errorNoSecret": "No MFA secret found. Please start the setup again.",
     "errorNotEnabled": "MFA is not currently enabled on this account.",
-    "errorGeneric": "An unexpected error occurred. Please try again."
+    "errorGeneric": "An unexpected error occurred. Please try again.",
+    "recoveryCodes": {
+      "sectionTitle": "Recovery Codes",
+      "sectionDesc": "Use these codes to access your account if you lose your authenticator. Each code can only be used once.",
+      "warningOnce": "These codes are shown only once. Store them somewhere safe.",
+      "codesExistHint": "You have recovery codes stored. Regenerate them if you think they may be compromised.",
+      "downloadButton": "Download codes (.txt)",
+      "regenerateTitle": "Regenerate recovery codes",
+      "regenerateDesc": "Invalidates existing codes and generates 10 new ones. Requires your current authenticator code.",
+      "regenerateButton": "Regenerate codes",
+      "regenerating": "Regenerating…",
+      "regenerateSuccess": "New recovery codes generated. Store them securely.",
+      "errorRegenerate": "Failed to regenerate codes. Check your authenticator code and try again."
+    }
   },
   "MfaVerify": {
     "title": "Two-Factor Authentication",
@@ -1012,7 +1034,69 @@
     "backLink": "Back to sign-in",
     "errorInvalidToken": "Incorrect code. Please check your authenticator app and try again.",
     "errorSessionExpired": "Your sign-in session has expired. Please sign in again.",
-    "errorNotConfigured": "MFA is not configured for this account."
+    "errorNotConfigured": "MFA is not configured for this account.",
+    "useRecoveryCode": "Use a recovery code instead",
+    "useTotp": "Use authenticator code instead",
+    "recoveryCodeLabel": "Recovery code",
+    "recoveryCodePlaceholder": "XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX",
+    "errorRecoveryCodeInvalid": "Invalid or already-used recovery code."
+  },
+  "MfaSetupRequired": {
+    "title": "Set Up Two-Factor Authentication",
+    "description": "Your account or organisation requires MFA. Complete setup before continuing.",
+    "enforcementNotice": "This step is mandatory before you can access your workspace.",
+    "scanTitle": "Scan with your authenticator app",
+    "scanHint": "Use Google Authenticator, Authy, or any TOTP-compatible app.",
+    "qrAlt": "TOTP setup QR code",
+    "manualKeyLabel": "Manual setup key",
+    "copyButtonLabel": "Copy secret key",
+    "verifyLabel": "Verification code",
+    "submitButton": "Activate & continue",
+    "submitting": "Activating…",
+    "errorInvalidToken": "Incorrect code. Check your authenticator app and try again.",
+    "errorExpiredSession": "Setup session expired. Please sign in again.",
+    "errorAlreadyEnrolled": "MFA is already enabled on this account.",
+    "successTitle": "MFA activated",
+    "recoveryCodesTitle": "Save your recovery codes",
+    "recoveryCodesDesc": "Store these 10 codes safely. Each one can be used once if you lose your authenticator app.",
+    "downloadButton": "Download codes (.txt)",
+    "continueButton": "I've saved my codes — continue"
+  },
+  "OrgSecurityPolicy": {
+    "sectionTitle": "Organisation Security Policy",
+    "sectionDesc": "Apply security requirements across all users in your organisation.",
+    "mfaRequired": {
+      "label": "Require MFA for all users",
+      "hint": "All users must enrol in TOTP MFA at next sign-in.",
+      "enabled": "MFA required",
+      "disabled": "Not required",
+      "enableSuccess": "Org-wide MFA requirement enabled.",
+      "disableSuccess": "Org-wide MFA requirement removed.",
+      "errorSave": "Failed to save MFA policy. Please try again.",
+      "adminLockoutWarning": "You must enable MFA on your own account before requiring it org-wide.",
+      "errorAdminNotEnrolled": "Enable MFA on your own account first."
+    }
+  },
+  "VendorMfaVerify": {
+    "title": "Two-Factor Authentication",
+    "heading": "Verify your identity",
+    "description": "Enter the 6-digit code from your authenticator app to access the assessment portal.",
+    "tokenLabel": "Authenticator code",
+    "submitButton": "Verify",
+    "verifying": "Verifying…",
+    "backHint": "Wrong account?",
+    "backLink": "Back to portal",
+    "errorInvalidToken": "Incorrect code. Check your authenticator app and try again.",
+    "errorSessionExpired": "Your sign-in session has expired. Please enter your credentials again.",
+    "useRecoveryCode": "Use a recovery code instead",
+    "useTotp": "Use authenticator code instead",
+    "recoveryCodeLabel": "Recovery code",
+    "recoveryCodePlaceholder": "XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX",
+    "errorRecoveryCodeInvalid": "Invalid or already-used recovery code."
+  },
+  "VendorMfaSettings": {
+    "title": "Security Settings",
+    "description": "Manage two-factor authentication for your account."
   },
   "CustomQuestions": {
     "title": "Custom Assessment Questions",

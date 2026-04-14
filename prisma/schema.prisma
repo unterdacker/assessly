@@ -68,6 +68,7 @@ model Company {
   updatedAt DateTime @updatedAt
   createdBy String
   plan      CompanyPlan @default(FREE)
+  mfaRequired Boolean   @default(false)
 
   vendors                    Vendor[]
   assessments                Assessment[]
@@ -110,6 +111,8 @@ model User {
   isActive     Boolean       @default(true)
   mfaEnabled   Boolean       @default(false)
   mfaSecret    String?       // AES-256-GCM encrypted TOTP secret
+  mfaRecoveryCodes String[]  @default([])
+  mfaEnforced Boolean        @default(false)
   /// SHA-256 hash of the 32-byte random one-time invite token for initial password setup.
   inviteToken        String?       @unique
   /// Expiry for the user invite token (48 hours from invite creation).
@@ -282,7 +285,6 @@ model AuditLog {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   createdBy  String
-
   // === Privacy-First Forensic Logging: Multi-Framework Compliance ===
 
   /// SOC2/ISO 27001/BSI: Framework category for compliance filtering.

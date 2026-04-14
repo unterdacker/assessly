@@ -13,6 +13,7 @@ import {
 import { AUTH_SESSION_COOKIE_NAME, hashSessionToken, verifySessionToken } from "@/lib/auth/token";
 import { canAccessPath } from "@/lib/auth/permissions";
 import { setMfaPendingCookie } from "@/lib/auth/mfa-pending";
+import { setMfaSetupPendingCookie } from "@/lib/auth/mfa-setup-pending";
 import type { InternalSignInState } from "@/app/actions/internal-auth.types";
 import { AuditLogger } from "@/lib/structured-logger";
 import { logAuditEvent } from "@/lib/audit-log";
@@ -64,7 +65,9 @@ export async function authenticateInternalUser(
         role: true,
         companyId: true,
         vendorId: true,
+        ssoProviderId: true,
         mfaEnabled: true,
+        mfaEnforced: true,
       },
     }),
   );
@@ -117,6 +120,20 @@ export async function authenticateInternalUser(
   if (user.mfaEnabled) {
     await setMfaPendingCookie(user.id, safeLocale, nextPath);
     redirect(`/${safeLocale}/auth/mfa-verify`);
+  }
+
+  const companyMfaRequired = user.companyId
+    ? (await prisma.company.findUnique({
+        where: { id: user.companyId },
+        select: { mfaRequired: true },
+      }))?.mfaRequired ?? false
+    : false;
+
+  const isSsoUser = Boolean(user.ssoProviderId);
+
+  if (!isSsoUser && (user.mfaEnforced || companyMfaRequired)) {
+    await setMfaSetupPendingCookie(user.id, safeLocale);
+    redirect(`/${safeLocale}/auth/mfa-setup-required`);
   }
 
   const { token, expiresAt } = await createSessionForUser({

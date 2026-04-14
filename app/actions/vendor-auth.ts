@@ -14,6 +14,8 @@ import { withLocalePath } from "@/lib/auth/permissions";
 import { isRateLimited, registerFailure, resetFailures, readClientIp } from "@/lib/rate-limit";
 import { AuditLogger } from "@/lib/structured-logger";
 import { truncateIp } from "@/lib/audit-sanitize";
+import { setVendorMfaPendingCookie } from "@/lib/auth/vendor-mfa-pending";
+import { setMfaSetupPendingCookie } from "@/lib/auth/mfa-setup-pending";
 
 const FAIL_DELAY_MS = 3_000;
 
@@ -161,6 +163,34 @@ export async function authenticateVendorAccessCode(
 
   resetFailures(ipKey);
   resetFailures(codeKey);
+
+  const linkedUser = await prisma.user.findFirst({
+    where: { vendorId: vendor.id },
+    select: { id: true, mfaEnabled: true, mfaEnforced: true },
+  });
+
+  const companyMfaRequired = vendor.companyId
+    ? (await prisma.company.findUnique({
+        where: { id: vendor.companyId },
+        select: { mfaRequired: true },
+      }))?.mfaRequired ?? false
+    : false;
+
+  if (linkedUser?.mfaEnabled) {
+    await setVendorMfaPendingCookie(linkedUser.id, vendor.id, vendor.companyId, locale);
+    redirect(`/${locale}/external/mfa-verify`);
+  }
+
+  const needsSetup = (linkedUser?.mfaEnforced ?? false) || companyMfaRequired;
+  if (needsSetup) {
+    const userId = linkedUser?.id ?? null;
+    if (userId) {
+      await setMfaSetupPendingCookie(userId, locale);
+      redirect(`/${locale}/external/settings/mfa`);
+    }
+    // If this is a true first login and the linked user is not created yet,
+    // allow this sign-in and enforce setup on the next login once the user exists.
+  }
 
   const now = new Date();
   let inviteToken = vendor.inviteToken;

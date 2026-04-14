@@ -1,5 +1,6 @@
 import "server-only";
 
+import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { generateSecret as totpGenerateSecret, generateURI, verifySync } from "otplib";
 
@@ -94,4 +95,35 @@ export function verifyTotpToken(token: string, encryptedSecret: string): boolean
   } catch {
     return false;
   }
+}
+
+function formatRecoveryCodeFromHex(rawHex: string): string {
+  const normalized = rawHex.replace(/[^a-fA-F0-9]/g, "").toUpperCase();
+  return `${normalized.slice(0, 8)}-${normalized.slice(8, 16)}-${normalized.slice(16, 24)}-${normalized.slice(24, 32)}`;
+}
+
+export async function generateRecoveryCodes(): Promise<{ plaintext: string[]; hashed: string[] }> {
+  const plaintext = Array.from({ length: 10 }, () => {
+    const raw = crypto.randomBytes(16).toString("hex").toUpperCase();
+    return formatRecoveryCodeFromHex(raw);
+  });
+  const hashed = await Promise.all(plaintext.map((code) => bcrypt.hash(code, 10)));
+  return { plaintext, hashed };
+}
+
+export async function verifyAndConsumeRecoveryCode(
+  rawCode: string,
+  hashedCodes: string[],
+): Promise<number> {
+  const normalized = formatRecoveryCodeFromHex(rawCode);
+  let matchedIndex = -1;
+
+  for (let i = 0; i < hashedCodes.length; i += 1) {
+    const isMatch = await bcrypt.compare(normalized, hashedCodes[i]);
+    if (isMatch && matchedIndex === -1) {
+      matchedIndex = i;
+    }
+  }
+
+  return matchedIndex;
 }

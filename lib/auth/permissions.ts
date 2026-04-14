@@ -15,10 +15,16 @@ export function canAccessPath(role: UserRole, normalizedPathname: string): boole
     normalizedPathname === "/unauthorized" ||
     normalizedPathname.startsWith("/auth/sign-in") ||
     normalizedPathname.startsWith("/auth/sso") ||
+    normalizedPathname.startsWith("/auth/mfa-setup-required") ||
+    normalizedPathname.startsWith("/external/mfa-verify") ||
     /^\/vendor\/accept-invite$/.test(normalizedPathname) ||
     /^\/auth\/accept-invite$/.test(normalizedPathname)
   ) {
     return true;
+  }
+
+  if (normalizedPathname.startsWith("/external/settings/mfa")) {
+    return role === "VENDOR";
   }
 
   if (

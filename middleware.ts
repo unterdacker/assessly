@@ -361,6 +361,24 @@ async function _middleware(request: NextRequest, nonce: string): Promise<NextRes
     return NextResponse.redirect(url);
   }
 
+  if (normalizedPathname.startsWith("/auth/mfa-setup-required")) {
+    const cookie = request.cookies.get("venshield-mfa-setup-pending");
+    if (!cookie?.value) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${activeLocale}/auth/sign-in`;
+      return NextResponse.redirect(url);
+    }
+  }
+
+  if (normalizedPathname.startsWith("/external/mfa-verify")) {
+    const cookie = request.cookies.get("venshield-vendor-mfa-pending");
+    if (!cookie?.value) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${activeLocale}/external/portal`;
+      return NextResponse.redirect(url);
+    }
+  }
+
   return response;
 }
 

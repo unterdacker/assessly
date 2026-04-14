@@ -35,12 +35,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { updateUserRole, deleteUser } from "@/app/actions/iam";
+import { setUserMfaEnforced } from "@/app/actions/mfa";
+import { ADMIN_ONLY_ROLES } from "@/lib/auth/permissions";
 
 export type InternalUser = {
   id: string;
   email: string | null;
   displayName: string | null;
   role: UserRole;
+  mfaEnabled: boolean;
+  mfaEnforced: boolean;
   createdAt: string; // ISO string – serialised from the server component
 };
 
@@ -73,6 +77,18 @@ function formatDate(iso: string) {
   }
 }
 
+function MfaBadge({ enabled, enforced }: { enabled: boolean; enforced: boolean }) {
+  const t = useTranslations("UserManagement");
+
+  if (enforced) {
+    return <Badge variant="high">{t("mfaBadgeEnforced")}</Badge>;
+  }
+  if (enabled) {
+    return <Badge variant="medium">{t("mfaBadgeEnabled")}</Badge>;
+  }
+  return <Badge variant="outline">{t("mfaBadgeNone")}</Badge>;
+}
+
 function ActionsCell({
   user,
   isSelf,
@@ -83,6 +99,7 @@ function ActionsCell({
   const t = useTranslations("UserManagement");
   const [isPending, startTransition] = useTransition();
   const [revokeOpen, setRevokeOpen] = React.useState(false);
+  const isAdminRole = ADMIN_ONLY_ROLES.includes(user.role);
 
   function handleRoleChange(newRole: UserRole) {
     startTransition(async () => {
@@ -102,6 +119,17 @@ function ActionsCell({
         toast.success(t("revokeSuccess"));
       } catch {
         toast.error(t("revokeError"));
+      }
+    });
+  }
+
+  function handleMfaEnforcementChange(enforced: boolean) {
+    startTransition(async () => {
+      try {
+        await setUserMfaEnforced(user.id, enforced);
+        toast.success(t("enforceMfaSuccess"));
+      } catch {
+        toast.error(t("enforceMfaError"));
       }
     });
   }
@@ -164,6 +192,24 @@ function ActionsCell({
             {t("changeRoleToAuditor")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
+          {!isAdminRole ? (
+            user.mfaEnforced ? (
+              <DropdownMenuItem
+                disabled={isPending}
+                onSelect={() => handleMfaEnforcementChange(false)}
+              >
+                {t("removeMfaEnforcement")}
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                disabled={isPending}
+                onSelect={() => handleMfaEnforcementChange(true)}
+              >
+                {t("enforceMfa")}
+              </DropdownMenuItem>
+            )
+          ) : null}
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             disabled={isPending}
             className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
@@ -188,6 +234,7 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
           <TableHead>{t("colEmail")}</TableHead>
           <TableHead>{t("colDisplayName")}</TableHead>
           <TableHead>{t("colRole")}</TableHead>
+          <TableHead>{t("colMfa")}</TableHead>
           <TableHead>{t("colCreatedAt")}</TableHead>
           <TableHead className="w-14 text-right">{t("colActions")}</TableHead>
         </TableRow>
@@ -195,7 +242,7 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
       <TableBody>
         {users.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+            <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
               {t("noUsers")}
             </TableCell>
           </TableRow>
@@ -206,6 +253,9 @@ export function UsersTable({ users, currentUserId }: UsersTableProps) {
               <TableCell className="text-muted-foreground">{user.displayName ?? "—"}</TableCell>
               <TableCell>
                 <RoleBadge role={user.role} />
+              </TableCell>
+              <TableCell>
+                <MfaBadge enabled={user.mfaEnabled} enforced={user.mfaEnforced} />
               </TableCell>
               <TableCell className="text-muted-foreground">{formatDate(user.createdAt)}</TableCell>
               <TableCell className="text-right">

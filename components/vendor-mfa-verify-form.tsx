@@ -3,8 +3,8 @@
 import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ShieldCheck } from "lucide-react";
-import { verifyMfaAndAuthenticate } from "@/app/actions/mfa";
-import type { MfaVerifyState } from "@/app/actions/mfa";
+import { verifyVendorMfaAndAuthenticate } from "@/app/actions/mfa";
+import type { VendorMfaVerifyState } from "@/app/actions/mfa";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,15 +17,15 @@ const errorKeyMap: Record<string, string> = {
   RECOVERY_CODE_INVALID: "errorRecoveryCodeInvalid",
 };
 
-const initialState: MfaVerifyState = { error: null };
+const initialState: VendorMfaVerifyState = { error: null };
 
-export function MfaVerifyForm({ locale }: { locale: string }) {
-  const t = useTranslations("MfaVerify");
+export function VendorMfaVerifyForm({ locale }: { locale: string }) {
+  const t = useTranslations("VendorMfaVerify");
   const [state, formAction, isPending] = useActionState(
-    verifyMfaAndAuthenticate,
+    verifyVendorMfaAndAuthenticate,
     initialState,
   );
-
+  
   const [mode, setMode] = useState<"totp" | "recovery">("totp");
   const [inputValue, setInputValue] = useState("");
 
@@ -49,13 +49,14 @@ export function MfaVerifyForm({ locale }: { locale: string }) {
         <form action={formAction} className="space-y-4">
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="mode" value={mode} />
+          
           <div className="space-y-2">
-            <Label htmlFor="mfa-token">
+            <Label htmlFor="vendor-mfa-input">
               {t(mode === "totp" ? "tokenLabel" : "recoveryCodeLabel")}
             </Label>
             {mode === "totp" ? (
               <Input
-                id="mfa-token"
+                id="vendor-mfa-input"
                 name="token"
                 type="text"
                 inputMode="numeric"
@@ -71,7 +72,7 @@ export function MfaVerifyForm({ locale }: { locale: string }) {
               />
             ) : (
               <Input
-                id="mfa-token"
+                id="vendor-mfa-input"
                 name="token"
                 type="text"
                 inputMode="text"
@@ -99,9 +100,9 @@ export function MfaVerifyForm({ locale }: { locale: string }) {
           </div>
 
           {state.error ? (
-            <p role="alert" aria-live="polite" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <div role="alert" aria-live="polite" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {t(errorKeyMap[state.error] as Parameters<typeof t>[0] ?? state.error)}
-            </p>
+            </div>
           ) : null}
 
           <Button type="submit" className="w-full" disabled={isPending}>
@@ -111,7 +112,7 @@ export function MfaVerifyForm({ locale }: { locale: string }) {
           <p className="text-center text-xs text-muted-foreground">
             {t("backHint")}{" "}
             <a
-              href={`/${locale}/auth/sign-in`}
+              href={`/${locale}/external/portal`}
               className="text-indigo-600 underline-offset-4 hover:underline dark:text-indigo-400"
             >
               {t("backLink")}

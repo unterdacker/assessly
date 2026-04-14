@@ -317,6 +317,11 @@ jobs:
           # Auditor defaults — override via repo secrets if credentials change
           VENSHIELD_AUDITOR_EMAIL: auditor@venshield.local
           VENSHIELD_AUDITOR_PASSWORD: auditor123
+          MFA_ENCRYPTION_KEY: "1111111111111111111111111111111111111111111111111111111111111111"
+          E2E_MFA_USER_EMAIL: mfa-user@venshield.local
+          E2E_MFA_USER_PASSWORD: MfaUser1234!
+          E2E_MFA_ENFORCED_EMAIL: mfa-enforced@venshield.local
+          E2E_MFA_ENFORCED_PASSWORD: Enforced1234!
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - name: Start Next.js server
@@ -352,6 +357,12 @@ jobs:
         env:
           CI: "true"
           PLAYWRIGHT_BASE_URL: http://localhost:3000
+          E2E_MFA_USER_EMAIL: mfa-user@venshield.local
+          E2E_MFA_USER_PASSWORD: MfaUser1234!
+          E2E_MFA_TOTP_SECRET: JBSWY3DPEHPK3PXP
+          E2E_MFA_RECOVERY_CODE: AABBCCDD-11223344-55667788-99AABBCC
+          E2E_MFA_ENFORCED_EMAIL: mfa-enforced@venshield.local
+          E2E_MFA_ENFORCED_PASSWORD: Enforced1234!
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         if: always()
         with:
@@ -406,6 +417,7 @@ jobs:
         run: npx prisma db seed
         env:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
+          MFA_ENCRYPTION_KEY: "1111111111111111111111111111111111111111111111111111111111111111"
       - name: Start Next.js server
         run: npm run start &
         env:

@@ -5,7 +5,7 @@ import { useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
-import { ShieldCheck, ShieldOff, KeyRound, Copy, Check } from "lucide-react";
+import { ShieldCheck, ShieldOff, KeyRound, Copy, Check, TriangleAlert, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,12 +21,18 @@ import {
   generateMfaSecret,
   verifyAndEnableMfa,
   disableMfa,
+  regenerateRecoveryCodes,
 } from "@/app/actions/mfa";
 
 type Phase =
   | "idle"
-  | "enrolling-setup"   // QR code displayed, waiting for first token
-  | "disabling";        // Confirm disable with TOTP
+  | "enrolling-setup"
+  | "disabling";
+
+type MfaSettingsProps = {
+  mfaEnabled: boolean;
+  hasRecoveryCodes: boolean;
+};
 
 const ENROLL_ERROR_MAP: Record<string, string> = {
   INVALID_MFA_TOKEN: "errorInvalidToken",
@@ -38,8 +44,9 @@ const DISABLE_ERROR_MAP: Record<string, string> = {
   MFA_NOT_ENABLED: "errorNotEnabled",
 };
 
-function CopyButton({ value }: { value: string }) {
+function CopyButton({ value, label }: { value: string; label: string }) {
   const [copied, setCopied] = React.useState(false);
+
   function handleCopy() {
     void navigator.clipboard.writeText(value).then(() => {
       setCopied(true);
@@ -50,7 +57,7 @@ function CopyButton({ value }: { value: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      aria-label="Copy secret key"
+      aria-label={label}
       className="ml-1.5 inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
     >
       {copied ? (
@@ -62,15 +69,20 @@ function CopyButton({ value }: { value: string }) {
   );
 }
 
-export function MfaSettings({ mfaEnabled }: { mfaEnabled: boolean }) {
+export function MfaSettings({ mfaEnabled, hasRecoveryCodes }: MfaSettingsProps) {
   const t = useTranslations("MfaSettings");
+
   const [phase, setPhase] = React.useState<Phase>("idle");
   const [enrollUri, setEnrollUri] = React.useState<string>("");
   const [enrollSecret, setEnrollSecret] = React.useState<string>("");
   const [enrollToken, setEnrollToken] = React.useState("");
   const [disableToken, setDisableToken] = React.useState("");
+  const [regenToken, setRegenToken] = React.useState("");
   const [isEnabled, setIsEnabled] = React.useState(mfaEnabled);
+  const [codesExists, setCodesExists] = React.useState(hasRecoveryCodes);
+  const [justGeneratedCodes, setJustGeneratedCodes] = React.useState<string[] | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [showRegen, setShowRegen] = React.useState(false);
 
   function startEnrollment() {
     startTransition(async () => {
@@ -89,12 +101,16 @@ export function MfaSettings({ mfaEnabled }: { mfaEnabled: boolean }) {
   function confirmEnrollment() {
     startTransition(async () => {
       try {
-        await verifyAndEnableMfa(enrollToken);
+        const result = await verifyAndEnableMfa(enrollToken);
         setIsEnabled(true);
         setPhase("idle");
         setEnrollUri("");
         setEnrollSecret("");
         setEnrollToken("");
+        if (result && result.success && result.recoveryCodes) {
+          setJustGeneratedCodes(result.recoveryCodes);
+          setCodesExists(true);
+        }
         toast.success(t("enabledSuccess"));
       } catch (err) {
         const code = err instanceof Error ? err.message : "UNKNOWN";
@@ -111,6 +127,8 @@ export function MfaSettings({ mfaEnabled }: { mfaEnabled: boolean }) {
         setIsEnabled(false);
         setPhase("idle");
         setDisableToken("");
+        setCodesExists(false);
+        setJustGeneratedCodes(null);
         toast.success(t("disabledSuccess"));
       } catch (err) {
         const code = err instanceof Error ? err.message : "UNKNOWN";
@@ -118,6 +136,36 @@ export function MfaSettings({ mfaEnabled }: { mfaEnabled: boolean }) {
         toast.error(t(key as Parameters<typeof t>[0]));
       }
     });
+  }
+
+  function handleRegenerateCodes() {
+    startTransition(async () => {
+      try {
+        const result = await regenerateRecoveryCodes(regenToken);
+        if (result && result.success && result.recoveryCodes) {
+          setJustGeneratedCodes(result.recoveryCodes);
+          setCodesExists(true);
+          setShowRegen(false);
+          setRegenToken("");
+          toast.success(t("recoveryCodes.regenerateSuccess"));
+        }
+      } catch {
+        toast.error(t("recoveryCodes.errorRegenerate"));
+      }
+    });
+  }
+
+  function downloadRecoveryCodes(codes: string[]) {
+    const text = codes.join("\n");
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "recovery-codes.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -206,7 +254,7 @@ export function MfaSettings({ mfaEnabled }: { mfaEnabled: boolean }) {
                 <code className="text-xs font-mono tracking-widest break-all">
                   {enrollSecret}
                 </code>
-                <CopyButton value={enrollSecret} />
+                <CopyButton value={enrollSecret} label={t("copyButtonLabel")} />
               </div>
               <p className="text-xs text-muted-foreground">{t("manualKeyHint")}</p>
             </div>
@@ -294,6 +342,110 @@ export function MfaSettings({ mfaEnabled }: { mfaEnabled: boolean }) {
                 {t("cancel")}
               </Button>
             </div>
+          </div>
+        )}
+
+        {/* Recovery Codes section */}
+        {phase === "idle" && isEnabled && (
+          <div className="pt-6 mt-6 border-t border-border">
+            <h3 className="text-sm font-medium mb-1">{t("recoveryCodes.sectionTitle")}</h3>
+            <p className="mb-3 text-xs text-muted-foreground">{t("recoveryCodes.sectionDesc")}</p>
+            
+            {justGeneratedCodes !== null ? (
+              <div className="space-y-4">
+                <div
+                  role="alert"
+                  className="flex items-start gap-3 rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-amber-900 dark:text-amber-200"
+                >
+                  <TriangleAlert className="min-h-5 min-w-5 shrink-0" aria-hidden />
+                  <p className="text-sm">{t("recoveryCodes.warningOnce")}</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 rounded-md bg-muted p-4">
+                  {justGeneratedCodes.map((code) => (
+                    <code key={code} className="text-xs font-mono select-all">
+                      {code}
+                    </code>
+                  ))}
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => downloadRecoveryCodes(justGeneratedCodes)}
+                  >
+                    <Download className="h-4 w-4" aria-hidden />
+                    {t("recoveryCodes.downloadButton")}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => setJustGeneratedCodes(null)}
+                  >
+                    {t("cancel")}
+                  </Button>
+                </div>
+              </div>
+            ) : codesExists ? (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  {t("recoveryCodes.codesExistHint")}
+                </p>
+                {!showRegen ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowRegen(true)}
+                  >
+                    {t("recoveryCodes.regenerateButton")}
+                  </Button>
+                ) : (
+                  <div className="space-y-3 max-w-xs p-4 border rounded-md bg-slate-50/50 dark:bg-slate-900/30">
+                    <p className="text-sm font-medium">{t("recoveryCodes.regenerateTitle")}</p>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {t("recoveryCodes.regenerateDesc")}
+                    </p>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="regen-token">{t("verifyLabel")}</Label>
+                      <Input
+                        id="regen-token"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]{6}"
+                        maxLength={6}
+                        placeholder="000000"
+                        required
+                        disabled={isPending}
+                        value={regenToken}
+                        onChange={(e) => setRegenToken(e.target.value.replace(/\D/g, ""))}
+                        className="text-center font-mono text-lg tracking-[0.4em]"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        disabled={isPending || regenToken.length !== 6}
+                        onClick={handleRegenerateCodes}
+                      >
+                        {isPending ? t("recoveryCodes.regenerating") : t("recoveryCodes.regenerateButton")}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={isPending}
+                        onClick={() => {
+                          setShowRegen(false);
+                          setRegenToken("");
+                        }}
+                      >
+                        {t("cancel")}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         )}
       </CardContent>

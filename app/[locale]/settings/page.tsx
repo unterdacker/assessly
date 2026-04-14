@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { AiSettingsForm } from "@/components/ai-settings-form";
 import { PasswordSettings } from "@/components/password-settings";
 import { MfaSettings } from "@/components/mfa-settings";
+import { OrgMfaPolicyForm } from "@/components/org-mfa-policy-form";
 import { prisma } from "@/lib/prisma";
 import { requirePageRole } from "@/lib/auth/server";
 import { ClipboardList } from "lucide-react";
@@ -35,11 +36,24 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   const isAdmin = session.role === "ADMIN";
   const [company, currentUser, customQuestions] = await Promise.all([
     isAdmin
-      ? prisma.company.findUnique({ where: { id: session.companyId ?? "" } })
+      ? prisma.company.findUnique({
+          where: { id: session.companyId ?? "" },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            aiProvider: true,
+            aiDisabled: true,
+            mistralApiKey: true,
+            localAiEndpoint: true,
+            localAiModel: true,
+            mfaRequired: true,
+          },
+        })
       : Promise.resolve(null),
     prisma.user.findUnique({
       where: { id: session.userId },
-      select: { mfaEnabled: true },
+      select: { mfaEnabled: true, mfaRecoveryCodes: true },
     }),
     isAdmin && session.companyId
       ? getCustomQuestions(session.companyId)
@@ -154,7 +168,17 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
         )}
 
         <PasswordSettings />
-        <MfaSettings mfaEnabled={currentUser?.mfaEnabled ?? false} />
+        <MfaSettings
+          mfaEnabled={currentUser?.mfaEnabled ?? false}
+          hasRecoveryCodes={Boolean(currentUser?.mfaRecoveryCodes?.length)}
+        />
+
+        {isAdmin && company && (
+          <OrgMfaPolicyForm
+            mfaRequired={company.mfaRequired}
+            adminHasMfa={currentUser?.mfaEnabled ?? false}
+          />
+        )}
 
         {isAdmin && (
           <Link
