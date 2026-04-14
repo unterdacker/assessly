@@ -1,6 +1,6 @@
 ﻿![Version](https://img.shields.io/badge/version-0.1.0-informational) [![CI](https://github.com/unterdacker/venshield/actions/workflows/ci.yml/badge.svg)](https://github.com/unterdacker/venshield/actions/workflows/ci.yml) [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org) [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com) ![Visitors](https://visitor-badge.laobi.icu/badge?page_id=venshield.assessly)
 
-[![Stack](https://skillicons.dev/icons?i=nextjs,postgres,docker,ts,prisma,redis)](https://skillicons.dev)
+[![Stack](https://skillicons.dev/icons?i=nextjs,postgres,docker,ts,prisma)](https://skillicons.dev)
 
 # Venshield — Sovereign Vendor Risk Assessment Platform
 

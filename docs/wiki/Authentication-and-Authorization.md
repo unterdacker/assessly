@@ -14,7 +14,7 @@ POST /api/auth/sign-in
   4. Create AuthSession row:
        - id = crypto.randomUUID()
        - tokenHash = HMAC-SHA256(token, AUTH_SESSION_SECRET)
-       - expiresAt = now + 7 days
+      - expiresAt = now + 12 hours
   5. Set HTTP-only, SameSite=Lax session cookie
   6. Write LOGIN_SUCCESS audit event
   7. Return { role, redirectTo }

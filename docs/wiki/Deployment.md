@@ -156,13 +156,23 @@ The production `Dockerfile` builds a Next.js standalone output:
 The entrypoint script runs on container startup:
 
 1. Waits for the database to be reachable
-2. Runs `prisma migrate deploy` to apply pending migrations
+2. Runs `prisma db push --accept-data-loss` to apply schema changes. For a full production workflow with migration history, replace this with `prisma migrate deploy` in `entrypoint.sh`
 3. Runs the seed if the DB is empty (development/first-run only)
 4. Starts `node server.js`
 
 ---
 
 ## Production Deployment Steps
+
+> ⚠️ **Before going to production:** The default `entrypoint.sh` uses `prisma db push --accept-data-loss` for developer convenience. This command will **silently drop columns and tables** when the schema changes, which can destroy audit log rows and break the cryptographic hash chain. For real production deployments, edit `entrypoint.sh` to replace:
+> ```
+> $PRISMA db push --accept-data-loss
+> ```
+> with:
+> ```
+> $PRISMA migrate deploy
+> ```
+> Then create a baseline migration with `npm run db:migrate` before first deployment.
 
 ### 1 — Generate Secrets
 

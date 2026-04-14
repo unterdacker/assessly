@@ -35,4 +35,4 @@ Venshield replaces disconnected spreadsheets and inboxes with one auditable work
 ## Quick Links
 
 - **Live demo accounts:** `admin@venshield.local / admin123` · `auditor@venshield.local / auditor123`
-- **License:** Apache 2.0
+- **License:** GNU AGPL 3.0

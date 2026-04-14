@@ -186,4 +186,5 @@ Each ref gets at most one in-progress run (`cancel-in-progress: true`). All jobs
 | `CI_AUDIT_BUNDLE_SECRET` | ≥32 chars |
 | `CI_CRON_SECRET` | ≥32 chars |
 | `CI_SERVER_ACTIONS_KEY` | Base64-encoded 32 bytes |
+| `SUBMODULE_PAT` | GitHub Personal Access Token with **`Contents: Read`** on the private `modules/` submodule repository. Required for all jobs that check out code with submodules (`lint`, `unit-test`, `build`, `codeql`). Without this, those jobs will fail with a 403. |
 | `GITLEAKS_LICENSE` | Optional (open-source tier needs no license) |
