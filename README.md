@@ -181,16 +181,16 @@ Configure per-company via **Settings → SSO** (Premium plan).
 
 ## Documentation
 
-Full documentation is available in the [wiki](docs/wiki/Home.md):
+Full documentation is available in the [wiki](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Home.md):
 
-- [Getting Started](docs/wiki/Getting-Started.md)
-- [Architecture Overview](docs/wiki/Architecture-Overview.md)
-- [Enterprise Features (SSO & Advanced Reporting)](docs/wiki/Enterprise-Features.md)
-- [Deployment](docs/wiki/Deployment.md)
-- [Security Architecture](docs/wiki/Security-Architecture.md)
+- [Getting Started](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Getting-Started.md)
+- [Architecture Overview](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Architecture-Overview.md)
+- [Enterprise Features (SSO & Advanced Reporting)](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Enterprise-Features.md)
+- [Deployment](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Deployment.md)
+- [Security Architecture](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Security-Architecture.md)
 
 ## Premium Distribution
 
-The Premium plan is delivered as a pre-built Docker image hosted on **GitHub Container Registry (GHCR)**. Paying customers are granted pull access to the image for their organisation. For standard deployments, access is controlled at the registry level with no license file required. Air-gapped or on-premise deployments may use the `LICENSE_FILE_PATH` / `LICENSE_KEY` / `LICENSE_AUDIENCE` environment variable bundle — see [Enterprise Features](docs/wiki/Enterprise-Features.md) for details.
+The Premium plan is delivered as a pre-built Docker image hosted on **GitHub Container Registry (GHCR)**. Paying customers are granted pull access to the image for their organisation. For standard deployments, access is controlled at the registry level with no license file required. Air-gapped or on-premise deployments may use the `LICENSE_FILE_PATH` / `LICENSE_KEY` / `LICENSE_AUDIENCE` environment variable bundle — see [Enterprise Features](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Enterprise-Features.md) for details.
 
-[Contact us](mailto:venshield@proton.me) to subscribe. See [Enterprise Features](docs/wiki/Enterprise-Features.md) for full details.
+[Contact us](mailto:venshield@proton.me) to subscribe. See [Enterprise Features](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Enterprise-Features.md) for full details.
