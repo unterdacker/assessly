@@ -20,7 +20,7 @@ Venshield replaces disconnected spreadsheets and inboxes with one auditable work
 | [Audit Trail & Forensic Logging](Audit-Trail-and-Forensic-Logging.md) | Hash-chain, GDPR redaction, compliance categories |
 | [Security Architecture](Security-Architecture.md) | Cryptography, CSP, rate limiting, secrets |
 | [Mail System](Mail-System.md) | SMTP / Resend strategies, invitation flow |
-| [SMS System](SMS-System.md) | SMS delivery providers (46elks / Sinch / Infobip), GDPR pseudonymisation, temp-password flow |
+| [SMS System](SMS-System.md) | ~~Removed~~ — SMS was removed in April 2026 (`20260415000000_invite_link_flow`). Vendor credentials are now delivered via email invite-link only. See page for GDPR migration notes. |
 | [Vendor Portal](Vendor-Portal.md) | External portal for vendors, invite-token flow |
 | [Internationalisation](Internationalisation.md) | Locale routing (en / de), next-intl setup |
 | [Testing](Testing.md) | Vitest unit tests, Playwright E2E, audit-chain verification |
@@ -34,5 +34,5 @@ Venshield replaces disconnected spreadsheets and inboxes with one auditable work
 
 ## Quick Links
 
-- **Live demo accounts:** `admin@venshield.local / admin123` · `auditor@venshield.local / auditor123`
+- **Demo accounts (development only):** `admin@venshield.local / admin123` · `auditor@venshield.local / auditor123` — never use against a production database.
 - **License:** GNU AGPL 3.0

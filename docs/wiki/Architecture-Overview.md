@@ -54,7 +54,7 @@ venshield/
 |-- app/                          # Next.js App Router
 |   |-- [locale]/                 # Localised routes (en / de)
 |   |   |-- auth/                 # Sign-in page
-|   |   |-- dashboard/            # Dashboard for ADMIN / AUDITOR
+|   |   |-- dashboard/            # Dashboard for ADMIN, RISK_REVIEWER, AUDITOR
 |   |   |-- vendors/              # Vendor list & workspace
 |   |   |-- settings/             # Company & user settings
 |   |   |-- reporting/            # Compliance reports (Premium)
@@ -80,7 +80,7 @@ venshield/
 |-- lib/                          # Server-side business logic
 |   |-- auth/                     # Session token, permissions, MFA pending
 |   |-- ai/                       # AI provider abstraction, executive summaries
-|   |-- sms/                      # SMS delivery (46elks / Sinch / Infobip / log), GDPR pseudonymisation
+|   |-- sms/                      # SMS provider stubs (dead code — delivery removed in 20260415000000_invite_link_flow; pending cleanup)
 |   |-- queries/                  # Prisma read queries (dashboard, assessments)
 |   |-- types/                    # Shared TypeScript types
 |   |-- validation/               # Zod schemas for actions

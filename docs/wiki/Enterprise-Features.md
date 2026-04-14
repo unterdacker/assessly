@@ -59,6 +59,8 @@ Advanced Reporting generates structured compliance reports that combine vendor a
 
 Premium features are delivered as a pre-built Docker image hosted on GitHub Container Registry (GHCR). Paying customers are granted pull access to the image for their organisation — no license file to manage.
 
+> **Note:** Certain deployment configurations (air-gapped or on-premise) additionally accept a `LICENSE_FILE_PATH` / `LICENSE_KEY` / `LICENSE_AUDIENCE` environment variable bundle. These are documented in [Environment Variables Reference](Environment-Variables-Reference.md#premium-features).
+
 To get started, [contact the Venshield team](mailto:venshield@proton.me). Once your subscription is confirmed you will receive GHCR credentials and deployment instructions.
 
 ```bash

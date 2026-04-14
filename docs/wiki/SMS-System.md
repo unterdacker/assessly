@@ -1,3 +1,9 @@
+> ⚠️ **Removed.** SMS delivery was removed in April 2026 (migration `20260415000000_invite_link_flow`). Vendor credentials are now delivered via email invite-link only. This page is retained for operators upgrading from pre-April 2026 versions.
+>
+> **GDPR note:** If you ran a version prior to this migration, ensure you have applied `prisma migrate deploy` — this migration drops the `VendorSmsLog` table and records the deletion in the audit log per GDPR Art. 17 / Art. 30. Phone number hashes stored in `VendorSmsLog` constitute personal data under GDPR Recital 26 and must not be retained.
+
+---
+
 # SMS System
 
 ## Overview
@@ -102,7 +108,7 @@ Phone numbers are never stored in plaintext. Every `VendorSmsLog` entry stores o
 
 ### Key Rotation Warning
 
-> **Rotating or losing `SMS_PSEUDONYM_KEY` severs the HMAC linkage between `VendorSmsLog` entries and original phone numbers.** Existing pseudonyms become irrecoverable. This creates a GDPR obligation to re-pseudonymise affected log entries using the new key, or to purge them entirely from the `VendorSmsLog` table. Treat `SMS_PSEUDONYM_KEY` with the same care as `AUDIT_PSEUDONYMIZATION_KEY` — store it in a secrets manager and never rotate it without a migration plan.
+> **Rotating or losing `SMS_PSEUDONYM_KEY` severs the HMAC linkage between `VendorSmsLog` entries and original phone numbers.** Existing pseudonyms become irrecoverable. This creates a GDPR obligation to purge the affected `VendorSmsLog` entries entirely — re-pseudonymisation is not possible because plaintext phone numbers are never stored. Treat `SMS_PSEUDONYM_KEY` with the same care as `AUDIT_PSEUDONYMIZATION_KEY` — store it in a secrets manager and never rotate it without a migration plan.
 
 Generate a key:
 

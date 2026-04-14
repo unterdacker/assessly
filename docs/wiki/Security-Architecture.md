@@ -33,6 +33,15 @@ Used for encrypting sensitive values at rest (SMTP passwords, API keys, Mistral 
 
 Same AES-256-GCM scheme, separate key (`MFA_ENCRYPTION_KEY`). TOTP secrets are encrypted before being stored in `User.mfaSecret`.
 
+### Evidence File Encryption (`lib/storage.ts`)
+
+Uploaded PDF evidence files stored in `.venshield-storage/` are encrypted at rest using the same AES-256-GCM scheme:
+
+- **Key:** `STORAGE_ENCRYPTION_KEY` (64 hex chars / 32 bytes), validated at startup by `lib/env.ts`
+- **Scope:** Every file written by `lib/storage.ts` is encrypted on write and decrypted on read; raw plaintext bytes never reach disk
+- **Format:** Same `<iv_hex>:<tag_hex>:<ciphertext_hex>` structure as OIDC client secrets
+- **Key rotation:** Requires re-encrypting stored files; no automated rotation is built in — incorporate into your key management policy
+
 ### Session Token Integrity (`lib/auth/token.ts`)
 
 - Session tokens are signed with **HMAC-SHA256** using `AUTH_SESSION_SECRET`

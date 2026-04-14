@@ -15,11 +15,12 @@ Vendor onboarding flow: Admin enters vendor email -> vendor receives email with 
 - **EU AI Act compliant by design** — every AI-assisted action is traceable, human-reviewable, and logged. Meets transparency and oversight requirements out of the box.
 - **Cryptographic audit trail** — tamper-evident chain-of-custody for all compliance events, exportable for auditors and regulators.
 - **Invite-link based onboarding** — vendors and internal users receive a single email invite with a one-time password-setup link that expires after 48 hours.
+- **Multi-Factor Authentication (MFA)** — TOTP-based second factor for both internal users and vendor portal users. Supports admin-enforced MFA per user, org-wide mandatory MFA policy, 10 single-use recovery codes (bcrypt-hardened), and vendor TOTP enrollment via the external portal.
 - **Air-gap capable** — fully self-hostable with no mandatory external dependencies.
 - **Enterprise SSO (Premium)** — OIDC single sign-on with PKCE support, just-in-time user provisioning, and per-company identity provider configuration. Available on the Premium plan.
 - **Advanced Reporting (Premium)** — AI-generated compliance reports with one-click PDF export, executive summaries, and a built-in report editor. Available on the Premium plan.
 
-**Stack:** Next.js 15.1 · React 19 · TypeScript 5.7 · Prisma 6 · PostgreSQL 16 · Tailwind CSS 3 · Radix UI · next-intl 4
+**Stack:** Next.js 15 · React 19 · TypeScript 5.7 · Prisma 6 · PostgreSQL 16 · Tailwind CSS 3 · Radix UI · next-intl 4
 
 ---
 
@@ -190,6 +191,6 @@ Full documentation is available in the [wiki](docs/wiki/Home.md):
 
 ## Premium Distribution
 
-The Premium plan is delivered as a pre-built Docker image hosted on **GitHub Container Registry (GHCR)**. Paying customers are granted pull access to the image for their organisation. There is no license file to manage — access is controlled at the registry level.
+The Premium plan is delivered as a pre-built Docker image hosted on **GitHub Container Registry (GHCR)**. Paying customers are granted pull access to the image for their organisation. For standard deployments, access is controlled at the registry level with no license file required. Air-gapped or on-premise deployments may use the `LICENSE_FILE_PATH` / `LICENSE_KEY` / `LICENSE_AUDIENCE` environment variable bundle — see [Enterprise Features](docs/wiki/Enterprise-Features.md) for details.
 
 [Contact us](mailto:venshield@proton.me) to subscribe. See [Enterprise Features](docs/wiki/Enterprise-Features.md) for full details.
