@@ -1,0 +1,20 @@
+title = "VenShield Gitleaks Configuration"
+
+# ---------------------------------------------------------------------------
+# Build-time stub secrets in the Dockerfile builder stage are intentional
+# dummy values used only to satisfy Next.js production env validation during
+# `next build`. They carry zero security weight and are always overridden at
+# runtime by real secrets injected via docker-compose or a secrets manager.
+#
+# Pattern: ARG SOME_KEY="<64 lowercase hex chars>"
+# Scope:   Dockerfile only
+# ---------------------------------------------------------------------------
+[allowlist]
+  description = "Dockerfile build-time dummy ARG values (false positives)"
+  regexTarget = "line"
+  regexes = [
+    '''ARG\s+\w+(?:_KEY|_SECRET)\s*=\s*"[0-9a-f]{64}"'''
+  ]
+  paths = [
+    '''Dockerfile'''
+  ]
