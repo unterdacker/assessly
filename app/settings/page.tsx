@@ -35,7 +35,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
       : Promise.resolve(null),
     prisma.user.findUnique({
       where: { id: session.userId },
-      select: { mfaEnabled: true },
+      select: { mfaEnabled: true, mfaRecoveryCodes: true },
     }),
   ]);
 
@@ -135,7 +135,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
         )}
 
         <PasswordSettings />
-        <MfaSettings mfaEnabled={currentUser?.mfaEnabled ?? false} />
+        <MfaSettings mfaEnabled={currentUser?.mfaEnabled ?? false} hasRecoveryCodes={(currentUser?.mfaRecoveryCodes?.length ?? 0) > 0} />
 
         {isAdmin && (
           <Link

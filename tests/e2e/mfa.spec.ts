@@ -20,7 +20,7 @@
  */
 
 import { test, expect, type Page } from "@playwright/test";
-import { authenticator } from "otplib";
+import { generateSync } from "otplib";
 import { signInAsAdmin } from "./helpers/auth";
 
 // --- Env-injected fixtures --------------------------------------------------
@@ -54,7 +54,7 @@ test("MFA: valid TOTP code completes login and reaches dashboard", async ({ page
   await signInAsMfaUser(page);
 
   // Generate a fresh code immediately before submitting to maximize window
-  const code = authenticator.generate(TOTP_SECRET);
+  const code = generateSync({ secret: TOTP_SECRET });
   await page.getByRole("textbox").fill(code);
   await page.getByRole("button", { name: /verify|confirm|submit/i }).click();
   await page.waitForURL(/\/en\/dashboard/, { timeout: 30_000 });
@@ -149,7 +149,7 @@ test("MFA: admin can toggle MFA enforcement for a user in the users table", asyn
 test("MFA: admin with MFA enrolled can enable org-wide MFA policy", async ({ page }) => {
   // Sign in as mfa-user (ADMIN with mfaEnabled=true) using the full TOTP flow
   await signInAsMfaUser(page);
-  const code = authenticator.generate(TOTP_SECRET);
+  const code = generateSync({ secret: TOTP_SECRET });
   await page.getByRole("textbox").fill(code);
   await page.getByRole("button", { name: /verify|confirm|submit/i }).click();
   await page.waitForURL(/\/en\/dashboard/, { timeout: 30_000 });

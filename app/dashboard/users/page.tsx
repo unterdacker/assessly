@@ -44,6 +44,8 @@ export default async function UsersPage({ params }: UsersPageProps) {
       email: true,
       displayName: true,
       role: true,
+      mfaEnabled: true,
+      mfaEnforced: true,
       createdAt: true,
     },
     orderBy: { createdAt: "asc" },
@@ -54,6 +56,8 @@ export default async function UsersPage({ params }: UsersPageProps) {
     email: u.email,
     displayName: u.displayName,
     role: u.role,
+    mfaEnabled: u.mfaEnabled,
+    mfaEnforced: u.mfaEnforced,
     createdAt: u.createdAt.toISOString(),
   }));
 
