@@ -124,7 +124,6 @@ Venshield integrates with the following external services. All are optional exce
 |---|---|---|
 | **SMTP** | Any RFC 5321-compliant relay (e.g. Postfix, AWS SES, Mailgun) | — |
 | **Resend** | SaaS email API, developer-friendly | [resend.com](https://resend.com) |
-| **Mailpit** | Local dev SMTP trap (dev only, blocked in production) | [mailpit.axllent.org](https://mailpit.axllent.org) |
 
 Configure with: `MAIL_STRATEGY=smtp|resend|log`
 

@@ -125,11 +125,9 @@ const rawEnvSchema = z.object({
    *   log     → console simulation (default, no config required)
    *   smtp    → real SMTP relay
    *   resend  → Resend SaaS API
-   *   mailpit → local Mailpit SMTP trap (dev only; BLOCKED in production)
-   *   mailhog → backward-compat alias for mailpit (dev only; BLOCKED in production)
    */
   MAIL_STRATEGY: z
-    .enum(["log", "smtp", "resend", "mailpit", "mailhog"])
+    .enum(["log", "smtp", "resend"])
     .default("log"),
   MAIL_FROM: z.string().default("Venshield <noreply@venshield.local>"),
   MAIL_COMPANY_NAME: z.string().default("Venshield"),
@@ -147,57 +145,9 @@ const rawEnvSchema = z.object({
   SMTP_PASSWORD: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
   /**
-   * Mailpit SMTP trap hostname (dev only).
-   * Must be a plain hostname — not a URL (no http:// prefix).
-   * Default: "localhost". Docker Compose overrides this to "venshield-mailpit".
-   */
-  MAILPIT_SMTP_HOST: z
-    .string()
-    .regex(
-      /^[a-zA-Z0-9._-]+$/,
-      "MAILPIT_SMTP_HOST must be a hostname (not a URL)",
-    )
-    .default("localhost"),
-  /**
-   * Mailpit SMTP trap port (dev only). Must be a valid port number string.
-   * Default: "1025". Consumers should parseInt().
-   */
-  MAILPIT_SMTP_PORT: z
-    .string()
-    .regex(/^\d{1,5}$/, "MAILPIT_SMTP_PORT must be a port number (1–65535)")
-    .refine(
-      (v) => { const n = parseInt(v, 10); return n >= 1 && n <= 65535; },
-      "MAILPIT_SMTP_PORT must be between 1 and 65535",
-    )
-    .default("1025"),
-  /**
-   * Backward-compat alias for MAILPIT_SMTP_HOST. Validated identically.
-   * For new setups use MAILPIT_SMTP_HOST instead.
-   */
-  MAILHOG_SMTP_HOST: z
-    .string()
-    .regex(
-      /^[a-zA-Z0-9._-]+$/,
-      "MAILHOG_SMTP_HOST must be a plain hostname (no http:// prefix)",
-    )
-    .default("localhost"),
-  /**
-   * Backward-compat alias for MAILPIT_SMTP_PORT. Validated identically.
-   * For new setups use MAILPIT_SMTP_PORT instead.
-   */
-  MAILHOG_SMTP_PORT: z
-    .string()
-    .regex(/^\d{1,5}$/, "MAILHOG_SMTP_PORT must be a port number (1–65535)")
-    .refine(
-      (v) => { const n = parseInt(v, 10); return n >= 1 && n <= 65535; },
-      "MAILHOG_SMTP_PORT must be between 1 and 65535",
-    )
-    .default("1025"),
-  /**
    * Development escape hatch. When "true", lib/mail.ts skips the DB lookup
-   * and reads all mail settings from env vars. Use when the DB already stores
-   * a different mailStrategy and a Mailpit test run is needed without resetting
-   * the DB. BLOCKED in production by envSchema superRefine.
+   * and reads all mail settings from env vars, even when DB settings exist.
+   * BLOCKED in production by envSchema superRefine.
    * NOTE: This guard only activates when NODE_ENV=production — ensure your
    * deployment environment always sets NODE_ENV=production.
    */
@@ -549,17 +499,6 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
     }
   }
 
-  // ── MAIL_STRATEGY: block dev-only transports in production ────────────────
-  if (data.MAIL_STRATEGY === "mailpit" || data.MAIL_STRATEGY === "mailhog") {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["MAIL_STRATEGY"],
-      message:
-        `MAIL_STRATEGY="${data.MAIL_STRATEGY}" is a development-only transport ` +
-        "and is BLOCKED in production. Set MAIL_STRATEGY=smtp or MAIL_STRATEGY=resend.",
-    });
-  }
-
   // ── MAIL_FORCE_ENV: only valid in development ─────────────────────────────
   if (data.MAIL_FORCE_ENV === "true") {
     ctx.addIssue({
@@ -882,7 +821,7 @@ export const aiEnv = {
 
 /** Mail delivery configuration. */
 export const mailEnv = {
-  /** Active delivery strategy: "log" | "smtp" | "resend" | "mailpit" | "mailhog". */
+  /** Active delivery strategy: "log" | "smtp" | "resend". */
   strategy: env.MAIL_STRATEGY,
   /** Sender address / display name used in all outbound emails. */
   from: env.MAIL_FROM,
@@ -898,10 +837,6 @@ export const mailEnv = {
   smtpPassword: env.SMTP_PASSWORD,
   /** Resend API key for serverless/edge mail delivery. */
   resendApiKey: env.RESEND_API_KEY,
-  /** Mailpit SMTP trap hostname (dev only, default: "localhost"). */
-  mailpitHost: env.MAILPIT_SMTP_HOST,
-  /** Mailpit SMTP trap port, parsed to a number (dev only, default: 1025). */
-  mailpitPort: parseInt(env.MAILPIT_SMTP_PORT, 10),
   /**
    * True when MAIL_FORCE_ENV=true — instructs resolveMailConfig() to skip the
    * DB lookup and read all mail settings from env vars instead.

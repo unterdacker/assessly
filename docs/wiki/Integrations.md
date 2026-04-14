@@ -15,9 +15,6 @@ Mail is used for vendor invitation emails, password resets, and system notificat
 | **SMTP** | Any RFC 5321-compliant relay | `MAIL_STRATEGY=smtp` | — |
 | **Resend** | SaaS email API | `MAIL_STRATEGY=resend` | [resend.com](https://resend.com) |
 | **Log** | Console simulation (dev default) | `MAIL_STRATEGY=log` | — |
-| **Mailpit** | Local SMTP trap (dev only) | `MAIL_STRATEGY=mailpit` | [mailpit.axllent.org](https://mailpit.axllent.org) |
-
-> `mailpit` and `mailhog` are **blocked in production** by the env validator.
 
 ### SMTP configuration
 

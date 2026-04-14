@@ -47,26 +47,6 @@ Required settings:
 
 Prints the email content (recipient, subject, HTML body) to `stdout`. No mail is actually sent. Safe for development and testing.
 
-### `MAILHOG` (Local dev SMTP trap — Mailpit)
-
-Routes email to a local [Mailpit](https://github.com/axllent/mailpit) container via
-SMTP on port 1025. All captured messages are visible in the Mailpit web UI at
-`http://localhost:8025`. No email is delivered to real recipients.
-
-> **Security constraints**
-> - Opt-in only: requires `MAIL_STRATEGY=mailhog` explicitly. Never inferred from `NODE_ENV`.
-> - **Blocked at runtime** when `NODE_ENV=production` — falls back to `log`.
-> - Docker ports are bound to `127.0.0.1` only (not exposed to the network).
-> - Inbox is **ephemeral** — all messages are lost on container restart.
-
-Required environment variables:
-| Variable | Default (host-only dev) | Docker Compose default |
-|---|---|---|
-| `MAILHOG_SMTP_HOST` | `localhost` | `venshield-mailpit` (auto-set) |
-| `MAILHOG_SMTP_PORT` | `1025` | `1025` (auto-set) |
-
----
-
 ## Email Templates
 
 Email templates are React components in `components/emails/`:
@@ -117,7 +97,7 @@ Accessible at **Settings → Mail** (ADMIN and AUDITOR roles):
 If the SystemSettings row has `mailStrategy = LOG` (the default), these environment variables are used:
 
 ```env
-MAIL_STRATEGY=smtp          # smtp | resend | log | mailhog
+MAIL_STRATEGY=smtp          # smtp | resend | log
 MAIL_FROM="Venshield <noreply@yourdomain.com>"
 SMTP_HOST=mail.yourdomain.com
 SMTP_PORT=587
@@ -126,14 +106,3 @@ SMTP_PASSWORD=your_smtp_password
 # or:
 RESEND_API_KEY=re_your_resend_key
 ```
-
-### Local dev trap (Mailpit)
-
-```env
-MAIL_STRATEGY=mailhog
-MAILHOG_SMTP_HOST=localhost    # or venshield-mailpit inside Docker Compose
-MAILHOG_SMTP_PORT=1025
-```
-
-Start Mailpit: `docker compose up mailpit`
-View captured mail at: `http://localhost:8025`

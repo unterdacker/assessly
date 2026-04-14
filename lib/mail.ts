@@ -5,12 +5,10 @@
  *   1. MAIL_FORCE_ENV=true check — if set, skips DB and reads env vars directly.
  *   2. SystemSettings table (DB) — configured via Admin › Settings › Mail.
  *   3. Environment variables (fallback):
- *        MAIL_STRATEGY=smtp|resend|log|mailpit|mailhog
+ *        MAIL_STRATEGY=smtp|resend|log
  *        MAIL_FROM="Venshield <noreply@yourdomain.com>"
  *        SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD
  *        RESEND_API_KEY
- *        MAILPIT_SMTP_HOST (default: "localhost"), MAILPIT_SMTP_PORT (default: "1025")
- *        MAILHOG_SMTP_HOST / MAILHOG_SMTP_PORT — backward-compat aliases for MAILPIT_*
  */
 
 import nodemailer from "nodemailer";
@@ -43,9 +41,8 @@ type ResolvedConfig = {
  */
 async function resolveMailConfig(): Promise<ResolvedConfig> {
   // ── MAIL_FORCE_ENV escape hatch ─────────────────────────────────────────
-  // Skip DB entirely and use env vars. Useful for local Mailpit testing when
-  // the DB already holds a different mailStrategy (e.g. from a previous
-  // web-UI configuration that doesn't need to be reset just for a dev run).
+  // Skip DB entirely and use env vars. Useful for local testing when
+  // the DB already holds a different strategy from a previous web-UI config.
   // The value comparison is case-insensitive to tolerate common typos.
   const forceEnv =
     (process.env.MAIL_FORCE_ENV ?? "false").toLowerCase().trim() === "true";
@@ -141,22 +138,12 @@ export async function sendMail(payload: MailPayload): Promise<MailResult> {
       return sendViaSMTP({ ...payload, from: resolvedFrom }, config.smtp);
     case "resend":
       return sendViaResend({ ...payload, from: resolvedFrom }, config.resendApiKey);
-    case "mailpit":
-    case "mailhog":
-      if (process.env.NODE_ENV === "production") {
-        console.error(
-          "[Venshield Mail] mailpit/mailhog strategy is BLOCKED in production. " +
-            "Set MAIL_STRATEGY=smtp|resend|log. Falling back to log.",
-        );
-        return logSimulatedEmail({ ...payload, from: resolvedFrom });
-      }
-      return sendViaMailhog({ ...payload, from: resolvedFrom });
     case "log":
       return logSimulatedEmail({ ...payload, from: resolvedFrom });
     default:
       console.warn(
         `[Venshield Mail] Unknown mail strategy "${config.strategy}". ` +
-          `Valid values: smtp | resend | log | mailpit | mailhog. Falling back to "log".`,
+          `Valid values: smtp | resend | log. Falling back to "log".`,
       );
       return logSimulatedEmail({ ...payload, from: resolvedFrom });
   }
@@ -233,57 +220,6 @@ async function sendViaResend(
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     console.error("[Venshield Mail] Resend delivery failed:", error);
-    return { ok: false, error };
-  }
-}
-
-// ─── MAILPIT / MAILHOG (local dev SMTP trap) ─────────────────────────────────
-
-async function sendViaMailhog(
-  payload: Required<MailPayload>,
-): Promise<MailResult> {
-  // MAILPIT_SMTP_PORT is the canonical name; MAILHOG_SMTP_PORT is retained for
-  // backward compatibility with existing .env files that use the old name.
-  const rawPort = parseInt(
-    process.env.MAILPIT_SMTP_PORT ??
-    process.env.MAILHOG_SMTP_PORT ??
-    "1025",
-    10,
-  );
-  const port =
-    Number.isInteger(rawPort) && rawPort > 0 && rawPort < 65536
-      ? rawPort
-      : 1025;
-
-  // MAILPIT_SMTP_HOST is the canonical name; MAILHOG_SMTP_HOST is retained for
-  // backward compatibility with existing .env files that use the old name.
-  const host =
-    process.env.MAILPIT_SMTP_HOST ??
-    process.env.MAILHOG_SMTP_HOST ??
-    "localhost";
-
-  try {
-    const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: false,
-      tls: { rejectUnauthorized: false },
-    });
-
-    await transporter.sendMail({
-      from: payload.from,
-      to: payload.to,
-      subject: payload.subject,
-      html: payload.html,
-    });
-
-    console.log(
-      `[Venshield Mail] Mailpit delivery → ${payload.to} (${host}:${port})`,
-    );
-    return { ok: true };
-  } catch (err) {
-    const error = err instanceof Error ? err.message : String(err);
-    console.error("[Venshield Mail] Mailpit delivery failed:", error);
     return { ok: false, error };
   }
 }

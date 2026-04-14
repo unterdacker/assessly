@@ -87,7 +87,7 @@ The `lib/env.ts` module validates all environment variables at server startup us
 
 ## Rate Limiting
 
-Login and authentication endpoints use a consecutive-failure rate limiter (`lib/rate-limit.ts`). See [Authentication & Authorization](Authentication-and-Authorization#rate-limiting) for details.
+Login and authentication endpoints use a consecutive-failure rate limiter (`lib/rate-limit.ts`). See [Authentication & Authorization](Authentication-and-Authorization.md#rate-limiting) for details.
 
 ---
 

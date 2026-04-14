@@ -225,7 +225,6 @@ LOCAL_AI_MODEL=ministral-3:8b
 
 # ── Mail ─────────────────────────────────────────────────────────────────────
 # MAIL_STRATEGY: smtp | resend | log
-# mailpit and mailhog are BLOCKED in production
 MAIL_STRATEGY=smtp
 MAIL_FROM=Venshield <noreply@yourdomain.com>
 MAIL_COMPANY_NAME=Venshield

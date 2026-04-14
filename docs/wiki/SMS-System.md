@@ -34,7 +34,7 @@ Providers are loaded lazily via dynamic `import()` so unused provider SDKs do no
 
 The `log` provider prints a **masked** phone number to stdout and explicitly redacts the message body. It is the safest default because it never transmits PII over a network.
 
-> **Production block:** `SMS_PROVIDER=log` with `NODE_ENV=production` causes a **fatal startup error** unless `ALLOW_INSECURE_LOCALHOST=true` is also set. When that escape hatch is active, `log` is permitted and SMS codes are silently dropped — no real delivery occurs. This override is intended exclusively for Docker Compose / CI environments and must never appear in a real production deployment. This behaviour mirrors the `mailpit` block in the Mail System.
+> **Production block:** `SMS_PROVIDER=log` with `NODE_ENV=production` causes a **fatal startup error** unless `ALLOW_INSECURE_LOCALHOST=true` is also set. When that escape hatch is active, `log` is permitted and SMS codes are silently dropped — no real delivery occurs. This override is intended exclusively for Docker Compose / CI environments and must never appear in a real production deployment. This behaviour mirrors the production strategy block in the Mail System.
 
 ---
 
