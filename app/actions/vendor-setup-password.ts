@@ -24,7 +24,7 @@ function isPasswordComplex(password: string): boolean {
 }
 
 export async function acceptVendorSetupAction(
-  _prevState: VendorSetupPasswordState,
+  _prevState: VendorSetupPasswordState | null,
   formData: FormData,
 ): Promise<VendorSetupPasswordState> {
   const token = formData.get("token");

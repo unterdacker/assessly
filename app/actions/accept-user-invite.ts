@@ -23,7 +23,7 @@ function isPasswordComplex(password: string): boolean {
 }
 
 export async function acceptUserInviteAction(
-  _prevState: UserInviteState,
+  _prevState: UserInviteState | null,
   formData: FormData,
 ): Promise<UserInviteState> {
   const token = formData.get("token");

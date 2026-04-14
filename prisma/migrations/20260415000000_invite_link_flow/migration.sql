@@ -8,7 +8,7 @@
 -- Record personal data deletion in AuditLog before dropping the table.
 -- This INSERT is a best-effort: if AuditLog table structure differs, the migration 
 -- will still proceed (the DROP TABLE below is the authoritative erasure action).
-INSERT INTO "AuditLog" ("id", "companyId", "userId", "action", "entityType", "entityId", "newValue", "timestamp", "complianceCategory")
+INSERT INTO "AuditLog" ("id", "companyId", "userId", "action", "entityType", "entityId", "newValue", "timestamp", "actorId", "createdBy", "updatedAt", "complianceCategory")
 SELECT
   gen_random_uuid()::text,
   'system',
@@ -17,6 +17,9 @@ SELECT
   'VendorSmsLog',
   'ALL',
   '{"table": "VendorSmsLog", "reason": "SMS feature removed; phone hashes constitute personal data under GDPR Recital 26. Feature replaced by email invite-link flow.", "migration": "20260415000000_invite_link_flow"}'::jsonb,
+  NOW(),
+  'migration',
+  'migration',
   NOW(),
   'DATA_OPERATIONS'
 WHERE EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'AuditLog');
