@@ -13,6 +13,9 @@ $$;
 -- Create replacement enum without SUPER_ADMIN
 CREATE TYPE "UserRole_new" AS ENUM ('ADMIN', 'RISK_REVIEWER', 'AUDITOR', 'VENDOR');
 
+-- Drop default on User.role before type change (default is typed against the old enum)
+ALTER TABLE "User" ALTER COLUMN "role" DROP DEFAULT;
+
 -- Migrate columns
 ALTER TABLE "User"
   ALTER COLUMN "role" TYPE "UserRole_new"
@@ -25,3 +28,6 @@ ALTER TABLE "AuthSession"
 -- Swap type names
 DROP TYPE "UserRole";
 ALTER TYPE "UserRole_new" RENAME TO "UserRole";
+
+-- Restore default now that the type has been renamed
+ALTER TABLE "User" ALTER COLUMN "role" SET DEFAULT 'VENDOR'::"UserRole";
