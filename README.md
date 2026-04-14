@@ -27,33 +27,33 @@ New screenshots are being prepared. Below is an overview of the five key screens
 ### 1 — Dashboard: Supply Chain Risk at a Glance
 Mission-control overview of your vendor portfolio: aggregated NIS2 compliance score, pending and completed assessment counters, category compliance radar chart, vendors-by-risk distribution bar chart, and an AI-generated executive risk summary. The ideal first screen for security and compliance teams starting their morning review.
 
-<!-- screenshot placeholder: docs/screenshots/dashboard2.png -->
-<!-- screenshot placeholder: docs/screenshots/dashboard1.png -->
+![Dashboard Screenshot 1](docs/screenshots/dashboard2.png)
+![Dashboard Screenshot 2](docs/screenshots/dashboard2.png)
 
 ### 2 — Vendor Assessment Workspace: NIS2 Review in One Place
 The internal auditor view of a live vendor assessment: 20 NIS2 control questions with AI-pre-filled answers, an embedded evidence document viewer, side-panel compliance scoring, and a remediation action panel. Replaces the spreadsheet-and-inbox workflow entirely.
 
-<!-- screenshot placeholder: docs/screenshots/assessment-workspace2.png -->
-<!-- screenshot placeholder: docs/screenshots/assessment-workspace1.png -->
+![Assessment Workspace Screenshot 1](docs/screenshots/assessment-workspace2.png)
+![Assessment Workspace Screenshot 2](docs/screenshots/assessment-workspace1.png)
 
 ### 3 — Audit Trail: Cryptographic Chain of Custody
 Every compliance event — logins, assessments, file uploads, AI actions, role changes — is hash-chained, timestamped, IP-truncated, and exportable for regulators. Demonstrates built-in NIS2 Article 21, DORA Art. 9, and EU AI Act Art. 12/14 readiness at a glance.
 
-<!-- screenshot placeholder: docs/screenshots/audit-trail2.png -->
-<!-- screenshot placeholder: docs/screenshots/audit-trail1.png -->
+![Audit Trail Screenshot 1](docs/screenshots/audit-trail2.png)
+![Audit Trail Screenshot 2](docs/screenshots/audit-trail1.png)
 
 
 ### 4 — Advanced Reporting: AI Compliance Reports with PDF Export *(Premium)*
 The reporting dashboard listing all generated compliance reports. Opening a report shows the AI-written executive summary, per-category risk breakdown, and a one-click PDF export button for sharing with boards, auditors, and regulators. Available exclusively on the Premium plan.
 
-<!-- screenshot placeholder: docs/screenshots/advanced-reporting2.png -->
-<!-- screenshot placeholder: docs/screenshots/advanced-reporting1.png -->
+![Advanced Reporting Screenshot 1](docs/screenshots/advanced-reporting1.png)
+![Advanced Reporting Screenshot 2](docs/screenshots/advanced-reporting2.png)
 
 
 ### 5 — Enterprise SSO: Identity Provider Configuration *(Premium)*
 The **Settings → SSO** admin panel where an ADMIN configures the OIDC issuer URL, client credentials, and just-in-time provisioning rules including email domain allow-listing. Enterprise-grade identity management with a full cryptographic audit trail. Available exclusively on the Premium plan.
 
-<!-- screenshot placeholder: docs/screenshots/sso-settings.png -->
+![SSO Screenshot](docs/screenshots/sso-settings.png)
 
 ---
 
