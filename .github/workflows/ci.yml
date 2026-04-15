@@ -353,7 +353,16 @@ jobs:
           MAIL_STRATEGY: log
           NEXT_TELEMETRY_DISABLED: "1"
       - name: Wait for server to be ready
-        run: timeout 90 bash -c 'until curl -sf http://localhost:3000/en/auth/sign-in > /dev/null; do sleep 2; done'
+        run: |
+          timeout 180 bash -c '
+            until curl -sf http://localhost:3000/en/auth/sign-in > /dev/null 2>&1; do
+              if ! pgrep -f "next start" > /dev/null 2>&1; then
+                echo "Next.js server process exited prematurely"
+                exit 1
+              fi
+              sleep 2
+            done
+          ' || { echo "=== Server log (last 80 lines) ==="; tail -80 /tmp/nextjs-server.log; exit 1; }
       - name: Run Playwright tests
         run: npm run test:e2e
         env:
@@ -454,7 +463,16 @@ jobs:
           MAIL_STRATEGY: log
           NEXT_TELEMETRY_DISABLED: "1"
       - name: Wait for server to be ready
-        run: timeout 90 bash -c 'until curl -sf http://localhost:3000/en/auth/sign-in > /dev/null; do sleep 2; done'
+        run: |
+          timeout 180 bash -c '
+            until curl -sf http://localhost:3000/en/auth/sign-in > /dev/null 2>&1; do
+              if ! pgrep -f "next start" > /dev/null 2>&1; then
+                echo "Next.js server process exited prematurely"
+                exit 1
+              fi
+              sleep 2
+            done
+          ' || { echo "=== Server log (last 80 lines) ==="; tail -80 /tmp/nextjs-server.log; exit 1; }
       # NOTE: Only unauthenticated public routes are scanned in this job.
       # Scanning authenticated routes (dashboard, settings, admin) requires an
       # active session cookie, which is not available in this CI configuration.
