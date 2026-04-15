@@ -8,7 +8,7 @@ async function createWebhook(page: Page, name: string) {
   await page.getByLabel(/name/i).fill(name);
   await page.getByLabel(/endpoint url/i).fill(`https://hooks.example.com/${Date.now()}`);
   await page.locator('input[name="events"]').first().check();
-  await page.getByRole("button", { name: /^save$/i }).click();
+  await page.getByRole("button", { name: /save webhook/i }).click();
   await expect(page.getByText(name)).toBeVisible({ timeout: 10_000 });
 }
 
