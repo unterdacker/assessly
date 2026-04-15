@@ -1,9 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { signInAsAdmin } from "./helpers/auth";
 
 const SETTINGS_URL = "/en/settings";
 
-async function createWebhook(page: Parameters<typeof test>[0]["page"], name: string) {
+async function createWebhook(page: Page, name: string) {
   await page.getByRole("button", { name: /add webhook/i }).click();
   await page.getByLabel(/name/i).fill(name);
   await page.getByLabel(/endpoint url/i).fill(`https://hooks.example.com/${Date.now()}`);

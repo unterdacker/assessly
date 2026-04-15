@@ -269,14 +269,15 @@ export async function importVendorsCsvAction(
       created += 1;
       existingEmails.add(email);
       results.push({ row: rowNumber, status: "created" });
-      if (csvRowVendorSnapshot && webhookDeliveriesQueued < WEBHOOK_DELIVERY_BUDGET) {
+      const rowSnapshot: { id: string; serviceType: string; createdAt: Date } | null = csvRowVendorSnapshot;
+      if (rowSnapshot && webhookDeliveriesQueued < WEBHOOK_DELIVERY_BUDGET) {
         webhookDeliveriesQueued++;
         void fireWebhookEvent(companyId, {
           event: "vendor.created" as const,
-          vendorId: csvRowVendorSnapshot.id,
+          vendorId: rowSnapshot.id,
           companyId,
-          serviceType: csvRowVendorSnapshot.serviceType,
-          createdAt: csvRowVendorSnapshot.createdAt.toISOString(),
+          serviceType: rowSnapshot.serviceType,
+          createdAt: rowSnapshot.createdAt.toISOString(),
         });
       }
     } catch (error) {
