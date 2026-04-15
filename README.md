@@ -186,7 +186,9 @@ Full documentation is available in the [wiki](https://github.com/unterdacker/ven
 
 - [Getting Started](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Getting-Started.md)
 - [Architecture Overview](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Architecture-Overview.md)
-- [Enterprise Features (SSO & Advanced Reporting)](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Enterprise-Features.md)
+- [Enterprise Features (SSO, Advanced Reporting & Webhooks)](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Enterprise-Features.md)
+- [REST API Reference](https://github.com/unterdacker/venshield/blob/main/docs/wiki/REST-API.md)
+- [Outbound Webhooks](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Webhooks.md)
 - [Deployment](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Deployment.md)
 - [Security Architecture](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Security-Architecture.md)
 

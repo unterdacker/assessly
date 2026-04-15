@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logErrorReport } from "@/lib/logger";
@@ -7,8 +8,11 @@ function isAuthorized(request: NextRequest): boolean {
   // Deny all requests when CRON_SECRET is not configured — fail closed, never open.
   if (!secret) return false;
 
-  const bearer = request.headers.get("authorization");
-  return bearer === `Bearer ${secret}`;
+  const bearer = request.headers.get("authorization") ?? "";
+  const expected = `Bearer ${secret}`;
+
+  if (bearer.length !== expected.length) return false;
+  return timingSafeEqual(Buffer.from(bearer), Buffer.from(expected));
 }
 
 export async function GET(request: NextRequest) {

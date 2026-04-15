@@ -55,6 +55,43 @@ Advanced Reporting generates structured compliance reports that combine vendor a
 
 ---
 
+## Outbound Webhooks
+
+Outbound Webhooks let you push real-time HTTP event notifications to external endpoints when key events occur in your organisation. Webhooks are HMAC-signed for authenticity and delivered over HTTPS — no polling required.
+
+**Who configures it:** An **Admin** at **Settings → Webhooks**.
+
+### Supported Events
+
+| Event | Trigger |
+|---|---|
+| `assessment.completed` | An assessment is marked completed by a reviewer |
+| `assessment.submitted` | A vendor submits their assessment questionnaire |
+| `vendor.created` | A new vendor is added to the organisation |
+| `vendor.risk_changed` | A vendor's risk level changes on assessment update |
+
+### Capabilities
+
+- **HMAC-SHA256 signatures** — every delivery is signed so receivers can verify authenticity
+- **Replay attack prevention** — 5-minute timestamp window enforced on the `X-Venshield-Timestamp` header
+- **SSRF protection** — private IPs, loopback, and cloud metadata endpoints are blocked at registration and delivery time
+- **DNS rebinding protection** — DNS resolved fresh at delivery rather than trusted from registration
+- **Secrets encrypted at rest** — signing secrets stored with AES-256-GCM using a dedicated `WEBHOOK_ENCRYPTION_KEY`
+- **Displayed once** — the signing secret is shown only at creation and after explicit regeneration; store it in your secret manager immediately
+- **Full audit trail** — webhook creation, updates, deletions, secret rotations, and delivery attempts are all logged
+
+### Limits
+
+- Max 25 webhooks per organisation
+- Delivery timeout: 30 seconds
+- HTTPS public endpoints only (no private IPs)
+- 1–4 events per webhook subscription
+- Fire-and-forget delivery (single attempt; no automatic retry)
+
+For the full payload schemas, signature verification algorithm, Node.js receiver example, and GDPR compliance notes, see the [Outbound Webhooks](Webhooks.md) documentation page.
+
+---
+
 ## Getting Access — Premium Docker Image
 
 Premium features are delivered as a pre-built Docker image hosted on GitHub Container Registry (GHCR). Paying customers are granted pull access to the image for their organisation — no license file to manage.

@@ -6,7 +6,7 @@ const SETTINGS_URL = "/en/settings/webhooks";
 async function createWebhook(page: Page, name: string) {
   await page.getByRole("button", { name: /add webhook/i }).click();
   await page.getByLabel(/name/i).fill(name);
-  await page.getByLabel(/endpoint url/i).fill(`https://hooks.example.com/${Date.now()}`);
+  await page.getByLabel(/endpoint url/i).fill(`https://example.com/e2e-webhook/${Date.now()}`);
   await page.locator('input[name="events"]').first().check();
   await page.getByRole("button", { name: /save webhook/i }).click();
   await expect(page.getByText(name)).toBeVisible({ timeout: 10_000 });

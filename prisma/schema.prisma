@@ -80,6 +80,7 @@ model Company {
   customQuestions            Question[]
   remediationTasks           RemediationTask[]
   webhooks                   Webhook[]
+  apiKeys                    ApiKey[]
 }
 
 model OidcConfig {
@@ -145,6 +146,7 @@ model User {
   execReports  ExecReport[]
   assignedRemediationTasks RemediationTask[] @relation("AssignedRemediationTasks")
   createdWebhooks          Webhook[]         @relation("WebhookCreatedBy")
+  createdApiKeys           ApiKey[]          @relation("ApiKeyCreatedBy")
   @@index([companyId])
   @@index([role])
   @@unique([companyId, ssoProviderId])
@@ -475,4 +477,46 @@ model RemediationTask {
   @@index([assessmentId])
   @@index([assigneeUserId])
   @@index([companyId, status])
+}
+
+/// Premium feature - management UI in modules/api-keys/
+model ApiKey {
+  id              String    @id @default(cuid())
+  companyId       String
+  company         Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name            String
+  /// SHA-256 hex digest of the raw key. Only used for constant-time verification. Never logged or returned.
+  keyHash         String    @unique
+  /// First 8 hex chars after "vs_live_" prefix - displayed in UI to identify the key.
+  keyPrefix       String
+  scopes          String[]  @default([])
+  isActive        Boolean   @default(true)
+  usageCount      Int       @default(0)
+  lastUsedAt      DateTime?
+  expiresAt       DateTime?
+  createdByUserId String?
+  createdBy       User?     @relation("ApiKeyCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  usageLogs ApiKeyUsageLog[]
+
+  @@index([companyId])
+  @@index([companyId, isActive])
+}
+
+model ApiKeyUsageLog {
+  id             String   @id @default(cuid())
+  apiKeyId       String
+  apiKey         ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  endpoint       String
+  method         String
+  statusCode     Int
+  requestedAt    DateTime @default(now())
+  /// GDPR storage limitation: calculated at write time (90 days from requestedAt).
+  retentionUntil DateTime
+
+  @@index([apiKeyId])
+  @@index([requestedAt])
+  @@index([retentionUntil])
 }

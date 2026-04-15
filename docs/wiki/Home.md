@@ -28,6 +28,8 @@ Venshield replaces disconnected spreadsheets and inboxes with one auditable work
 | [Deployment](Deployment.md) | Docker Compose, production hardening, key generation |
 | [Environment Variables Reference](Environment-Variables-Reference.md) | Full variable list with requirements |
 | [Scripts Reference](Scripts-Reference.md) | All npm scripts explained |
+| [REST API Reference](REST-API.md) | Programmatic access to vendors and assessments via API keys (Premium) |
+| [Outbound Webhooks](Webhooks.md) | Real-time HMAC-signed event notifications for downstream integrations (Premium) |
 | [Product Roadmap](Product-Roadmap.md) | Strategic roadmap for platform growth and commercial expansion |
 
 ---
