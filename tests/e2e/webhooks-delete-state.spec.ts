@@ -28,7 +28,7 @@ test.describe("Webhooks delete flow", () => {
 
     const rowA = page.getByRole("listitem").filter({ hasText: hookA }).first();
     await rowA.getByRole("button", { name: new RegExp(`delete ${hookA}`, "i") }).click();
-    await rowA.getByRole("button", { name: /^delete$/i }).click();
+    await rowA.getByRole("button", { name: new RegExp(`delete ${hookA}`, "i") }).click();
 
     await expect(page.getByText(hookA)).not.toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(hookB)).toBeVisible({ timeout: 10_000 });

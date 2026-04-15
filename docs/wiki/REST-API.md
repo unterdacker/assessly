@@ -70,15 +70,15 @@ curl https://<your-instance>/api/v1/vendors \
 
 Each API key is granted a fixed set of scopes at creation time. Calling an endpoint without the required scope returns `403 INSUFFICIENT_SCOPE`.
 
-| Scope | Required plan | What it grants |
+| Scope | Availability | What it grants |
 |---|---|---|
-| `vendors:read` | Premium | List and fetch vendors |
-| `vendors:write` | **Premium** ⚡ | Create and update vendors |
-| `assessments:read` | Premium | List and fetch assessments |
-| `assessments:write` | **Premium** ⚡ | Create and update assessments |
-| `metrics:read` | Premium | View API key usage metrics |
+| `vendors:read` | Included on all Premium keys | List and fetch vendors |
+| `vendors:write` | Must be explicitly granted at key creation | Create and update vendors |
+| `assessments:read` | Included on all Premium keys | List and fetch assessments |
+| `assessments:write` | Must be explicitly granted at key creation | Create and update assessments |
+| `metrics:read` | Included on all Premium keys | View API key usage metrics |
 
-Write scopes (`vendors:write`, `assessments:write`) require the Premium plan. Calling a Premium-write endpoint without this plan returns `403 PREMIUM_REQUIRED`.
+Calling a write-scope endpoint without the scope returns `403 INSUFFICIENT_SCOPE`. Calling it with the scope but without a Premium plan returns `403 PREMIUM_REQUIRED`.
 
 ---
 

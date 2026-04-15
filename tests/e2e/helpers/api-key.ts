@@ -49,7 +49,7 @@ export async function getTestApiKey(page: Page): Promise<string> {
   }
 
   // Submit the form
-  await page.getByRole("button", { name: /create api key/i }).click();
+  await page.getByRole("button", { name: /create key/i }).click();
 
   // Wait for the secret banner and read the raw key
   const codeEl = page.locator('[role="alert"] code').first();
