@@ -3,6 +3,7 @@
 import { createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { fireWebhookEvent } from "@/modules/webhooks/lib/fire-webhook-event";
 
 const EXPIRY_GRACE_PERIOD_MS = 2 * 60 * 1000;
 
@@ -54,6 +55,8 @@ export async function submitExternalAssessment(input: {
         assessment: {
           select: {
             id: true,
+            riskLevel: true,
+            complianceScore: true,
           },
         },
       },
@@ -81,6 +84,16 @@ export async function submitExternalAssessment(input: {
     await prisma.assessment.update({
       where: { id: assessmentId },
       data: { status: "COMPLETED" }
+    });
+
+    void fireWebhookEvent(vendor.companyId, {
+      event: "assessment.completed" as const,
+      assessmentId,
+      vendorId,
+      companyId: vendor.companyId,
+      riskLevel: vendor.assessment.riskLevel,
+      complianceScore: vendor.assessment.complianceScore,
+      completedAt: new Date().toISOString(),
     });
 
     // Revalidate affected routes

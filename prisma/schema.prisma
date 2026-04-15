@@ -79,6 +79,7 @@ model Company {
   execReports                ExecReport[]
   customQuestions            Question[]
   remediationTasks           RemediationTask[]
+  webhooks                   Webhook[]
 }
 
 model OidcConfig {
@@ -95,6 +96,24 @@ model OidcConfig {
   updatedAt              DateTime @updatedAt
 
   @@index([companyId])
+}
+
+model Webhook {
+  id              String   @id @default(cuid())
+  companyId       String
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  url             String
+  secretEncrypted String
+  events          String[] @default([])
+  isEnabled       Boolean  @default(true)
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([companyId, isEnabled])
 }
 
 model User {

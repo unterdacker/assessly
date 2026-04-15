@@ -19,6 +19,7 @@ import {
 } from "@/lib/assessment-compliance";
 import { extractPdfText } from "@/lib/pdf-utils";
 import { isAccessControlError, requireAuthSession } from "@/lib/auth/server";
+import { fireWebhookEvent } from "@/modules/webhooks/lib/fire-webhook-event";
 
 const STORAGE_DIR = path.join(process.cwd(), ".venshield-storage");
 
@@ -160,13 +161,24 @@ export async function reanalyzeStoredDocument(
     select: { status: true },
   });
   const totalQuestions = questions.length;
-  const { score: newScore } = await syncAssessmentComplianceToDatabase(
+  const { score: newScore, riskLevel: newRiskLevel } = await syncAssessmentComplianceToDatabase(
     assessmentId,
     persistedAnswers,
     totalQuestions,
     assessment.complianceScore,
     assessment.riskLevel,
   );
+  if (newRiskLevel !== assessment.riskLevel) {
+    void fireWebhookEvent(assessment.companyId, {
+      event: "vendor.risk_changed" as const,
+      assessmentId,
+      vendorId: assessment.vendorId,
+      companyId: assessment.companyId,
+      previousRiskLevel: assessment.riskLevel,
+      newRiskLevel,
+      changedAt: new Date().toISOString(),
+    });
+  }
   const compliantCount = countStrictlyCompliantAnswers(persistedAnswers);
 
   try {

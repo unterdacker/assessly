@@ -19,6 +19,7 @@ Vendor onboarding flow: Admin enters vendor email -> vendor receives email with 
 - **Air-gap capable** — fully self-hostable with no mandatory external dependencies.
 - **Enterprise SSO (Premium)** — OIDC single sign-on with PKCE support, just-in-time user provisioning, and per-company identity provider configuration. Available on the Premium plan.
 - **Advanced Reporting (Premium)** — AI-generated compliance reports with one-click PDF export, executive summaries, and a built-in report editor. Available on the Premium plan.
+- **Outbound Webhooks (Premium)** — HMAC-signed HTTP event notifications for assessment completions, vendor risk changes, and more
 
 **Stack:** Next.js 15 · React 19 · TypeScript 5.7 · Prisma 6 · PostgreSQL 16 · Tailwind CSS 3 · Radix UI · next-intl 4
 
@@ -175,7 +176,7 @@ Configure per-company via **Settings → SSO** (Premium plan).
 | Plan | Description |
 |------|-------------|
 | **Free** | Full access to NIS2 questionnaires, vendor portal, AI analysis, audit trail, and dashboard. |
-| **Premium** | Everything in Free, plus **OIDC/SSO** (single sign-on with just-in-time provisioning), **Advanced Reporting** (AI compliance reports, PDF export, executive summaries), and priority support. |
+| **Premium** | Everything in Free, plus **OIDC/SSO** (single sign-on with just-in-time provisioning), **Advanced Reporting** (AI compliance reports, PDF export, executive summaries), **Outbound Webhooks** (HMAC-signed event notifications), and priority support. |
 
 > Interested in Premium? [Contact us](mailto:venshield@proton.me) — paying customers receive access to the pre-built Docker image hosted on GitHub Container Registry (GHCR).
 

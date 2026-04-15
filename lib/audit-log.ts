@@ -61,6 +61,12 @@ export type AuditAction =
   | "USER_ROLE_CHANGED"
   | "SSO_USER_PROVISIONED"
   | "OIDC_CONFIG_UPDATED"
+  // --- Webhooks (CONFIG) ---
+  | "WEBHOOK_CREATED"
+  | "WEBHOOK_UPDATED"
+  | "WEBHOOK_DELETED"
+  | "WEBHOOK_SECRET_REGENERATED"
+  | "WEBHOOK_DELIVERY_ATTEMPTED"
   // --- Fallback ---
   | "OTHER";
 
@@ -127,10 +133,15 @@ const CONFIG_ACTIONS = new Set([
   "SETTINGS_UPDATED",
   "COMPANY_PLAN_UPDATED",
   "OIDC_CONFIG_UPDATED",
+  "WEBHOOK_CREATED",
+  "WEBHOOK_UPDATED",
+  "WEBHOOK_DELETED",
+  "WEBHOOK_SECRET_REGENERATED",
   "MAIL_DELIVERY_FAILED",
   "SMS_DELIVERY_FAILED",
   "SMS_RATE_LIMITED",
 ]);
+const WEBHOOK_DELIVERY_ACTIONS = new Set(["WEBHOOK_DELIVERY_ATTEMPTED"]);
 const NIS2_DORA_ACTIONS = new Set([
   "VENDOR_CREATED",
   "VENDOR_DELETED",
@@ -153,6 +164,7 @@ function deriveComplianceCategory(action: string): string {
   if (CONFIG_ACTIONS.has(action)) return "CONFIG";
   if (NIS2_DORA_ACTIONS.has(action)) return "NIS2_DORA";
   if (ISO27001_ACTIONS.has(action)) return "ISO27001_SOC2";
+  if (WEBHOOK_DELIVERY_ACTIONS.has(action)) return "OTHER"; // SYSTEM_HEALTH via COMPLIANCE_TO_AUDIT_CATEGORY
   return "OTHER";
 }
 

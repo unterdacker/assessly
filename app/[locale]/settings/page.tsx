@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
-import { ShieldCheck, Server, Globe, Mail, ChevronRight, Ban } from "lucide-react";
+import { ShieldCheck, Server, Globe, Mail, ChevronRight, Ban, Webhook } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AiSettingsForm } from "@/components/ai-settings-form";
@@ -33,6 +33,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   const session = await requirePageRole(["ADMIN"], locale);
   const t = await getTranslations();
   const oidcT = await getTranslations("OidcSettings");
+  const webhooksT = await getTranslations("WebhooksSettings");
   const isAdmin = session.role === "ADMIN";
   const [company, currentUser, customQuestions] = await Promise.all([
     isAdmin
@@ -210,6 +211,24 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
               <div>
                 <p className="text-sm font-semibold">{oidcT("title")}</p>
                 <p className="text-xs text-muted-foreground">{oidcT("description")}</p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        )}
+
+        {isAdmin && (
+          <Link
+            href={`/${locale}/settings/webhooks`}
+            className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-indigo-300 hover:bg-indigo-50/40 dark:border-slate-800 dark:bg-card dark:hover:border-indigo-700 dark:hover:bg-indigo-950/20"
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+                <Webhook className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">{webhooksT("title")}</p>
+                <p className="text-xs text-muted-foreground">{webhooksT("description")}</p>
               </div>
             </div>
             <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />

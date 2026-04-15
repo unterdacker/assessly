@@ -10,6 +10,7 @@ import { calculateRiskLevel } from "@/lib/risk-level";
 import { logAuditEvent } from "@/lib/audit-log";
 import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 import { AuditLogger } from "@/lib/structured-logger";
+import { fireWebhookEvent } from "@/modules/webhooks/lib/fire-webhook-event";
 const ACCESS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const ACCESS_CODE_SCHEMA_NOT_READY = "ACCESS_CODE_SCHEMA_NOT_READY";
 const TEMP_PASSWORD_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#%";
@@ -104,6 +105,7 @@ export async function createVendorAction(
 
   const complianceScore = 0;
   const riskLevel = calculateRiskLevel(complianceScore);
+  let createdVendorSnapshot: { id: string; serviceType: string; createdAt: Date } | null = null;
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -138,6 +140,12 @@ export async function createVendorAction(
         });
       }
 
+      createdVendorSnapshot = {
+        id: vendor.id,
+        serviceType: vendor.serviceType,
+        createdAt: vendor.createdAt,
+      };
+
       await tx.assessment.create({
         data: {
           companyId,
@@ -168,6 +176,16 @@ export async function createVendorAction(
       entityType: "Vendor",
       message: `Vendor "${name.trim()}" created`,
     });
+
+    if (createdVendorSnapshot) {
+      void fireWebhookEvent(companyId, {
+        event: "vendor.created" as const,
+        vendorId: createdVendorSnapshot.id,
+        companyId,
+        serviceType: createdVendorSnapshot.serviceType,
+        createdAt: createdVendorSnapshot.createdAt.toISOString(),
+      });
+    }
 
     revalidatePath("/dashboard");
     revalidatePath("/vendors");

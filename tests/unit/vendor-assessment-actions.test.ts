@@ -11,6 +11,7 @@ const {
   mockCountVendorAssessmentQuestions,
   mockSyncAssessmentComplianceToDatabase,
   mockRevalidatePath,
+  mockFireWebhookEvent,
 } = vi.hoisted(() => ({
   mockPrisma: {
     assessment: { findUnique: vi.fn() },
@@ -28,6 +29,7 @@ const {
   mockCountVendorAssessmentQuestions: vi.fn(),
   mockSyncAssessmentComplianceToDatabase: vi.fn(),
   mockRevalidatePath: vi.fn(),
+  mockFireWebhookEvent: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));
@@ -40,6 +42,9 @@ vi.mock("next/cache", () => ({ revalidatePath: mockRevalidatePath, revalidateTag
 vi.mock("@/lib/audit-log", () => ({ logAuditEvent: vi.fn() }));
 vi.mock("@/lib/assessment-compliance", () => ({
   syncAssessmentComplianceToDatabase: mockSyncAssessmentComplianceToDatabase,
+}));
+vi.mock("@/modules/webhooks/lib/fire-webhook-event", () => ({
+  fireWebhookEvent: mockFireWebhookEvent,
 }));
 vi.mock("@/lib/queries/custom-questions", () => ({
   countVendorAssessmentQuestions: mockCountVendorAssessmentQuestions,
@@ -74,7 +79,8 @@ beforeEach(() => {
   mockPrisma.assessmentAnswer.findMany.mockResolvedValue([{ status: "COMPLIANT" }]);
 
   mockCountVendorAssessmentQuestions.mockResolvedValue(5);
-  mockSyncAssessmentComplianceToDatabase.mockResolvedValue({ score: 70 });
+  mockSyncAssessmentComplianceToDatabase.mockResolvedValue({ score: 70, riskLevel: "LOW" });
+  mockFireWebhookEvent.mockResolvedValue(undefined);
 });
 
 describe("saveAssessmentAnswer encryption/decryption behavior", () => {
@@ -205,5 +211,43 @@ describe("saveAssessmentAnswer encryption/decryption behavior", () => {
     });
 
     expect(result).toEqual({ success: false, error: "Unauthorized." });
+  });
+});
+
+describe("saveAssessmentAnswer webhook behavior", () => {
+  it("fires vendor.risk_changed when riskLevel changes after sync", async () => {
+    mockSyncAssessmentComplianceToDatabase.mockResolvedValueOnce({
+      score: 80,
+      riskLevel: "HIGH",
+    });
+
+    await saveAssessmentAnswer({
+      assessmentId: "a1",
+      questionId: "q1",
+      status: "COMPLIANT",
+      findings: "finding text",
+    });
+
+    expect(mockFireWebhookEvent).toHaveBeenCalledOnce();
+    expect(mockFireWebhookEvent).toHaveBeenCalledWith("co1", {
+      event: "vendor.risk_changed",
+      assessmentId: "a1",
+      vendorId: "v1",
+      companyId: "co1",
+      previousRiskLevel: "LOW",
+      newRiskLevel: "HIGH",
+      changedAt: expect.any(String),
+    });
+  });
+
+  it("does not fire vendor.risk_changed when riskLevel is unchanged", async () => {
+    await saveAssessmentAnswer({
+      assessmentId: "a1",
+      questionId: "q1",
+      status: "COMPLIANT",
+      findings: "finding text",
+    });
+
+    expect(mockFireWebhookEvent).not.toHaveBeenCalled();
   });
 });

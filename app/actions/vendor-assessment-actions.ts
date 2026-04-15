@@ -7,6 +7,7 @@ import { logAuditEvent } from "@/lib/audit-log";
 import { isAccessControlError, requireAdminUser } from "@/lib/auth/server";
 import { countVendorAssessmentQuestions } from "@/lib/queries/custom-questions";
 import { encrypt, decrypt } from "@/lib/crypto";
+import { fireWebhookEvent } from "@/modules/webhooks/lib/fire-webhook-event";
 
 const CIPHER_FORMAT_RE = /^[0-9a-f]+:[0-9a-f]+:[0-9a-f]+$/i;
 
@@ -80,13 +81,25 @@ export async function saveAssessmentAnswer({
       select: { status: true },
     });
     const totalQuestions = await countVendorAssessmentQuestions(assessment.companyId);
-    const { score: newScore } = await syncAssessmentComplianceToDatabase(
+    const { score: newScore, riskLevel: newRiskLevel } = await syncAssessmentComplianceToDatabase(
       assessmentId,
       allAnswers,
       totalQuestions,
       assessment.complianceScore,
       assessment.riskLevel,
     );
+
+    if (newRiskLevel !== assessment.riskLevel) {
+      void fireWebhookEvent(assessment.companyId, {
+        event: "vendor.risk_changed" as const,
+        assessmentId: assessment.id,
+        vendorId: assessment.vendorId,
+        companyId: assessment.companyId,
+        previousRiskLevel: assessment.riskLevel,
+        newRiskLevel,
+        changedAt: new Date().toISOString(),
+      });
+    }
 
     // 4. Create Audit Log (with safe JSON serialization)
     try {

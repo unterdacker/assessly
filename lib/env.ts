@@ -88,6 +88,18 @@ const rawEnvSchema = z.object({
    * Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
    */
   STORAGE_ENCRYPTION_KEY: z.string().optional(),
+  /**
+   * AES-256-GCM key for webhook signing-secret encryption at rest.
+   * Intentionally separate from SETTINGS_ENCRYPTION_KEY to limit blast radius.
+   * MUST be exactly 64 hex characters (32 bytes) in production.
+   * Generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   */
+  WEBHOOK_ENCRYPTION_KEY: z.string().optional(),
+  /**
+   * Delivery timeout in milliseconds for outbound webhook HTTP requests.
+   * Min: 1000 (1s), Max: 60000 (60s), Default: 30000 (30s).
+   */
+  WEBHOOK_DELIVERY_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(30000),
 
   // ── Application URL ────────────────────────────────────────────────────────
   NEXT_PUBLIC_APP_URL: z
@@ -272,6 +284,35 @@ const envSchema = rawEnvSchema.superRefine((data, ctx) => {
         path: ["STORAGE_ENCRYPTION_KEY"],
         message:
           "STORAGE_ENCRYPTION_KEY contains a placeholder value. " +
+          "Generate a real cryptographic key before deploying.",
+      });
+    }
+  }
+
+  // ── WEBHOOK_ENCRYPTION_KEY ─────────────────────────────────────────────
+  if (
+    require(
+      "WEBHOOK_ENCRYPTION_KEY",
+      data.WEBHOOK_ENCRYPTION_KEY,
+      "WEBHOOK_ENCRYPTION_KEY is required in production. " +
+        'Generate: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"',
+    ) &&
+    data.WEBHOOK_ENCRYPTION_KEY
+  ) {
+    if (!HEX_64_RE.test(data.WEBHOOK_ENCRYPTION_KEY)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["WEBHOOK_ENCRYPTION_KEY"],
+        message:
+          "WEBHOOK_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes / 256 bits). " +
+          'Generate: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"',
+      });
+    } else if (isPlaceholder(data.WEBHOOK_ENCRYPTION_KEY)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["WEBHOOK_ENCRYPTION_KEY"],
+        message:
+          "WEBHOOK_ENCRYPTION_KEY contains a placeholder value. " +
           "Generate a real cryptographic key before deploying.",
       });
     }
@@ -593,6 +634,10 @@ function validateEnv(): Env {
   if (!data.STORAGE_ENCRYPTION_KEY) {
     data.STORAGE_ENCRYPTION_KEY = devFallbackKey("STORAGE_ENCRYPTION_KEY");
     fallbacksUsed.push("STORAGE_ENCRYPTION_KEY");
+  }
+  if (!data.WEBHOOK_ENCRYPTION_KEY) {
+    data.WEBHOOK_ENCRYPTION_KEY = devFallbackKey("WEBHOOK_ENCRYPTION_KEY");
+    fallbacksUsed.push("WEBHOOK_ENCRYPTION_KEY");
   }
   if (!data.AUDIT_BUNDLE_SECRET) {
     data.AUDIT_BUNDLE_SECRET = devFallbackKey("AUDIT_BUNDLE_SECRET");

@@ -9,6 +9,7 @@ import { isRateLimited, registerFailure, resetFailures } from "@/lib/rate-limit"
 import { calculateRiskLevel } from "@/lib/risk-level";
 import { RISK_POSTURE_CACHE_TAG } from "@/lib/queries/dashboard-risk-posture";
 import { AuditLogger } from "@/lib/structured-logger";
+import { fireWebhookEvent } from "@/modules/webhooks/lib/fire-webhook-event";
 
 export type ImportRowStatus = "created" | "skipped" | "failed";
 
@@ -136,6 +137,8 @@ export async function importVendorsCsvAction(
   let failed = 0;
   const results: ImportRowResult[] = [];
   const seenInBatch = new Set<string>();
+  const WEBHOOK_DELIVERY_BUDGET = 50;
+  let webhookDeliveriesQueued = 0;
 
   for (let index = 0; index < dataRows.length; index += 1) {
     const csvRow = dataRows[index] ?? [];
@@ -176,6 +179,7 @@ export async function importVendorsCsvAction(
     const riskLevel = calculateRiskLevel(complianceScore);
 
     try {
+      let csvRowVendorSnapshot: { id: string; serviceType: string; createdAt: Date } | null = null;
       // Intentionally one transaction per row. A single 200-row transaction
       // would hold DB locks for too long and risk a full rollback for an unrelated row failure.
       await prisma.$transaction(async (tx) => {
@@ -241,6 +245,12 @@ export async function importVendorsCsvAction(
           });
         }
 
+        csvRowVendorSnapshot = {
+          id: vendor.id,
+          serviceType: vendor.serviceType,
+          createdAt: vendor.createdAt,
+        };
+
         await tx.assessment.create({
           data: {
             companyId,
@@ -259,6 +269,16 @@ export async function importVendorsCsvAction(
       created += 1;
       existingEmails.add(email);
       results.push({ row: rowNumber, status: "created" });
+      if (csvRowVendorSnapshot && webhookDeliveriesQueued < WEBHOOK_DELIVERY_BUDGET) {
+        webhookDeliveriesQueued++;
+        void fireWebhookEvent(companyId, {
+          event: "vendor.created" as const,
+          vendorId: csvRowVendorSnapshot.id,
+          companyId,
+          serviceType: csvRowVendorSnapshot.serviceType,
+          createdAt: csvRowVendorSnapshot.createdAt.toISOString(),
+        });
+      }
     } catch (error) {
       if (isUniqueConstraintError(error)) {
         skipped += 1;

@@ -14,6 +14,7 @@ const {
   mockSyncAssessmentComplianceToDatabase,
   mockCountStrictlyCompliantAnswers,
   mockRevalidatePath,
+  mockFireWebhookEvent,
 } = vi.hoisted(() => ({
   mockFsReadFile: vi.fn(),
   mockPrisma: {
@@ -35,6 +36,7 @@ const {
   mockSyncAssessmentComplianceToDatabase: vi.fn(),
   mockCountStrictlyCompliantAnswers: vi.fn(),
   mockRevalidatePath: vi.fn(),
+  mockFireWebhookEvent: vi.fn(),
 }));
 
 vi.mock("fs/promises", () => ({ default: { readFile: mockFsReadFile } }));
@@ -52,6 +54,9 @@ vi.mock("@/lib/pdf-utils", () => ({ extractPdfText: mockExtractPdfText }));
 vi.mock("@/lib/assessment-compliance", () => ({
   syncAssessmentComplianceToDatabase: mockSyncAssessmentComplianceToDatabase,
   countStrictlyCompliantAnswers: mockCountStrictlyCompliantAnswers,
+}));
+vi.mock("@/modules/webhooks/lib/fire-webhook-event", () => ({
+  fireWebhookEvent: mockFireWebhookEvent,
 }));
 
 import { reanalyzeStoredDocument } from "@/app/actions/reanalyze-document";
@@ -105,8 +110,9 @@ beforeEach(() => {
   mockPrisma.assessmentAnswer.update.mockResolvedValue({ id: "ans1" });
   mockPrisma.assessmentAnswer.findMany.mockResolvedValue([{ status: "COMPLIANT" }]);
 
-  mockSyncAssessmentComplianceToDatabase.mockResolvedValue({ score: 80 });
+  mockSyncAssessmentComplianceToDatabase.mockResolvedValue({ score: 80, riskLevel: "LOW" });
   mockCountStrictlyCompliantAnswers.mockReturnValue(1);
+  mockFireWebhookEvent.mockResolvedValue(undefined);
 });
 
 describe("reanalyzeStoredDocument encryption behavior", () => {
@@ -166,5 +172,34 @@ describe("reanalyzeStoredDocument encryption behavior", () => {
     expect(result).toEqual({ ok: false, error: "Unauthorized." });
     expect(mockPrisma.assessmentAnswer.create).not.toHaveBeenCalled();
     expect(mockPrisma.assessmentAnswer.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("reanalyzeStoredDocument webhook behavior", () => {
+  it("fires vendor.risk_changed when riskLevel changes after sync", async () => {
+    mockSyncAssessmentComplianceToDatabase.mockResolvedValueOnce({
+      score: 95,
+      riskLevel: "HIGH",
+    });
+
+    const result = await reanalyzeStoredDocument("a1");
+
+    expect(result.ok).toBe(true);
+    expect(mockFireWebhookEvent).toHaveBeenCalledOnce();
+    expect(mockFireWebhookEvent).toHaveBeenCalledWith("co1", {
+      event: "vendor.risk_changed",
+      assessmentId: "a1",
+      vendorId: "v1",
+      companyId: "co1",
+      previousRiskLevel: "LOW",
+      newRiskLevel: "HIGH",
+      changedAt: expect.any(String),
+    });
+  });
+
+  it("does not fire vendor.risk_changed when riskLevel is unchanged", async () => {
+    await reanalyzeStoredDocument("a1");
+
+    expect(mockFireWebhookEvent).not.toHaveBeenCalled();
   });
 });

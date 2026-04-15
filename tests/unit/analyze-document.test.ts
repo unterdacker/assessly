@@ -16,6 +16,7 @@ const {
   mockRevalidatePath,
   mockLogAuditEvent,
   mockLogErrorReport,
+  mockFireWebhookEvent,
 } = vi.hoisted(() => ({
   mockPrisma: {
     assessment: { findFirst: vi.fn() },
@@ -39,6 +40,7 @@ const {
   mockRevalidatePath: vi.fn(),
   mockLogAuditEvent: vi.fn(),
   mockLogErrorReport: vi.fn(),
+  mockFireWebhookEvent: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));
@@ -61,6 +63,9 @@ vi.mock("@/lib/pdf-utils", () => ({
 vi.mock("@/lib/assessment-compliance", () => ({
   syncAssessmentComplianceToDatabase: mockSyncAssessmentComplianceToDatabase,
   countStrictlyCompliantAnswers: mockCountStrictlyCompliantAnswers,
+}));
+vi.mock("@/modules/webhooks/lib/fire-webhook-event", () => ({
+  fireWebhookEvent: mockFireWebhookEvent,
 }));
 
 import { analyzeDocument } from "@/app/actions/analyze-document";
@@ -124,10 +129,11 @@ beforeEach(() => {
   mockPrisma.assessmentAnswer.update.mockResolvedValue({ id: "ans1" });
   mockPrisma.assessmentAnswer.findMany.mockResolvedValue([{ status: "COMPLIANT" }]);
 
-  mockSyncAssessmentComplianceToDatabase.mockResolvedValue({ score: 80 });
+  mockSyncAssessmentComplianceToDatabase.mockResolvedValue({ score: 80, riskLevel: "LOW" });
   mockCountStrictlyCompliantAnswers.mockReturnValue(1);
   mockLogAuditEvent.mockResolvedValue(undefined);
   mockPersistEvidencePdf.mockResolvedValue(undefined);
+  mockFireWebhookEvent.mockResolvedValue(undefined);
 });
 
 describe("analyzeDocument encryption behavior", () => {
@@ -216,5 +222,49 @@ describe("analyzeDocument encryption behavior", () => {
     expect(mockRunNis2AnalysisWithTrace).not.toHaveBeenCalled();
     expect(mockPrisma.assessmentAnswer.create).not.toHaveBeenCalled();
     expect(mockPrisma.assessmentAnswer.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("analyzeDocument webhook behavior", () => {
+  it("fires vendor.risk_changed when riskLevel changes after sync", async () => {
+    mockSyncAssessmentComplianceToDatabase.mockResolvedValueOnce({
+      score: 95,
+      riskLevel: "HIGH",
+    });
+
+    const result = await analyzeDocument(makeFormData());
+
+    expect(result.ok).toBe(true);
+    expect(mockFireWebhookEvent).toHaveBeenCalledOnce();
+    expect(mockFireWebhookEvent).toHaveBeenCalledWith("co1", {
+      event: "vendor.risk_changed",
+      assessmentId: "a1",
+      vendorId: "v1",
+      companyId: "co1",
+      previousRiskLevel: "LOW",
+      newRiskLevel: "HIGH",
+      changedAt: expect.any(String),
+    });
+  });
+
+  it("does not fire vendor.risk_changed when riskLevel is unchanged", async () => {
+    await analyzeDocument(makeFormData());
+
+    expect(mockFireWebhookEvent).not.toHaveBeenCalled();
+  });
+
+  it("does not fire when aiDisabled is true", async () => {
+    mockPrisma.assessment.findFirst.mockResolvedValueOnce({
+      id: "a1",
+      vendorId: "v1",
+      companyId: "co1",
+      company: { aiDisabled: true },
+      complianceScore: 20,
+      riskLevel: "LOW",
+    });
+
+    await analyzeDocument(makeFormData());
+
+    expect(mockFireWebhookEvent).not.toHaveBeenCalled();
   });
 });

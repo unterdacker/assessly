@@ -13,6 +13,7 @@ import {
 } from "@/lib/assessment-compliance";
 import { isAccessControlError, requireAuthSession } from "@/lib/auth/server";
 import { extractPdfText, persistEvidencePdf } from "@/lib/pdf-utils";
+import { fireWebhookEvent } from "@/modules/webhooks/lib/fire-webhook-event";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -211,13 +212,24 @@ export async function analyzeDocument(
     select: { status: true },
   });
   const totalQuestions = questions.length;
-  const { score: newScore } = await syncAssessmentComplianceToDatabase(
+  const { score: newScore, riskLevel: newRiskLevel } = await syncAssessmentComplianceToDatabase(
     assessment.id,
     persistedAnswers,
     totalQuestions,
     assessment.complianceScore,
     assessment.riskLevel,
   );
+  if (newRiskLevel !== assessment.riskLevel) {
+    void fireWebhookEvent(assessment.companyId, {
+      event: "vendor.risk_changed" as const,
+      assessmentId: assessment.id,
+      vendorId: assessment.vendorId,
+      companyId: assessment.companyId,
+      previousRiskLevel: assessment.riskLevel,
+      newRiskLevel,
+      changedAt: new Date().toISOString(),
+    });
+  }
   const compliantCount = countStrictlyCompliantAnswers(persistedAnswers);
 
   try {
