@@ -78,7 +78,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   const companyForForm = company
     ? { ...company, mistralApiKey: company.mistralApiKey ? "" : null }
     : null;
-
+  const isPremium = company?.plan === "PREMIUM";
   const aiTranslations = {
     AIProviderConfiguration: t("AIProviderConfiguration"),
     SelectAIProvider: t("SelectAIProvider"),
@@ -231,7 +231,14 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
                 <p className="text-xs text-muted-foreground">{webhooksT("description")}</p>
               </div>
             </div>
-            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+            <div className="flex items-center gap-2 shrink-0">
+              {!isPremium && (
+                <Badge variant="outline" className="text-xs text-amber-700 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-700 dark:bg-amber-950/30">
+                  {t("Premium")}
+                </Badge>
+              )}
+              <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+            </div>
           </Link>
         )}
 

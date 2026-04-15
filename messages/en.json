@@ -1181,6 +1181,7 @@
     "successTitle": "Account activated",
     "successMessage": "Your account is ready. You can now sign in.",
     "loginLink": "Go to Sign In"
-  }
+  },
+  "Premium": "Premium"
 }
 
