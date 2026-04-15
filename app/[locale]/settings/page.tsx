@@ -49,6 +49,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
             localAiEndpoint: true,
             localAiModel: true,
             mfaRequired: true,
+            plan: true,
           },
         })
       : Promise.resolve(null),
