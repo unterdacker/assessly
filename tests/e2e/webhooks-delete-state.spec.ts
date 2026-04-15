@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { signInAsAdmin } from "./helpers/auth";
 
-const SETTINGS_URL = "/en/settings";
+const SETTINGS_URL = "/en/settings/webhooks";
 
 async function createWebhook(page: Page, name: string) {
   await page.getByRole("button", { name: /add webhook/i }).click();
