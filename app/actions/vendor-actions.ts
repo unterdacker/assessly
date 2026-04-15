@@ -177,7 +177,7 @@ export async function createVendorAction(
       message: `Vendor "${name.trim()}" created`,
     });
 
-    const vendorSnapshot: { id: string; serviceType: string; createdAt: Date } | null = createdVendorSnapshot;
+    const vendorSnapshot = createdVendorSnapshot as { id: string; serviceType: string; createdAt: Date } | null;
     if (vendorSnapshot) {
       void fireWebhookEvent(companyId, {
         event: "vendor.created" as const,

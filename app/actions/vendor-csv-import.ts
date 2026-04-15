@@ -269,7 +269,7 @@ export async function importVendorsCsvAction(
       created += 1;
       existingEmails.add(email);
       results.push({ row: rowNumber, status: "created" });
-      const rowSnapshot: { id: string; serviceType: string; createdAt: Date } | null = csvRowVendorSnapshot;
+      const rowSnapshot = csvRowVendorSnapshot as { id: string; serviceType: string; createdAt: Date } | null;
       if (rowSnapshot && webhookDeliveriesQueued < WEBHOOK_DELIVERY_BUDGET) {
         webhookDeliveriesQueued++;
         void fireWebhookEvent(companyId, {
