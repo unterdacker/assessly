@@ -60,6 +60,13 @@ vi.mock("@/lib/structured-logger", () => ({
   AuditCategory: {
     CONFIGURATION: "CONFIGURATION",
   },
+  LogLevel: {
+    DEBUG: "debug",
+    INFO: "info",
+    WARN: "warn",
+    ERROR: "error",
+    FATAL: "fatal",
+  },
 }));
 vi.mock("next/cache", () => ({
   revalidatePath: mockRevalidatePath,
@@ -138,7 +145,7 @@ describe("createQuestion", () => {
     });
     expect(mockAuditLogger.log).toHaveBeenCalledWith(
       expect.objectContaining({
-        action_name: "template_question.created",
+        action: "template_question.created",
         status: "success",
       })
     );

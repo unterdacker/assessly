@@ -56,6 +56,13 @@ vi.mock("@/lib/structured-logger", () => ({
     CONFIGURATION: "CONFIGURATION",
     DATA_OPERATIONS: "DATA_OPERATIONS",
   },
+  LogLevel: {
+    DEBUG: "debug",
+    INFO: "info",
+    WARN: "warn",
+    ERROR: "error",
+    FATAL: "fatal",
+  },
 }));
 vi.mock("next/cache", () => ({ revalidatePath: mockRevalidatePath }));
 vi.mock("@/lib/logger", () => ({ logErrorReport: mockLogErrorReport }));
@@ -93,7 +100,7 @@ describe("updateSection", () => {
     expect(mockPrisma.templateSection.update).toHaveBeenCalled();
     expect(mockAuditLogger.log).toHaveBeenCalledWith(
       expect.objectContaining({
-        action_name: "template_section.updated",
+        action: "template_section.updated",
       })
     );
     expect(mockRevalidatePath).toHaveBeenCalledWith("/settings/questionnaires");
@@ -169,7 +176,7 @@ describe("deleteSection", () => {
     expect(mockPrisma.templateSection.delete).toHaveBeenCalled();
     expect(mockAuditLogger.log).toHaveBeenCalledWith(
       expect.objectContaining({
-        action_name: "template_section.deleted",
+        action: "template_section.deleted",
       })
     );
     expect(mockRevalidatePath).toHaveBeenCalledWith("/settings/questionnaires");
@@ -241,7 +248,7 @@ describe("reorderSections", () => {
     expect(result.success).toBe(true);
     expect(mockAuditLogger.log).toHaveBeenCalledWith(
       expect.objectContaining({
-        action_name: "template_sections.reordered",
+        action: "template_sections.reordered",
       })
     );
     expect(mockRevalidatePath).toHaveBeenCalledWith("/settings/questionnaires");

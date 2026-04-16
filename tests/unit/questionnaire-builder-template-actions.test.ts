@@ -61,6 +61,13 @@ vi.mock("@/lib/structured-logger", () => ({
     CONFIGURATION: "CONFIGURATION",
     DATA_OPERATIONS: "DATA_OPERATIONS",
   },
+  LogLevel: {
+    DEBUG: "debug",
+    INFO: "info",
+    WARN: "warn",
+    ERROR: "error",
+    FATAL: "fatal",
+  },
 }));
 vi.mock("next/cache", () => ({ revalidatePath: mockRevalidatePath }));
 vi.mock("@/lib/logger", () => ({ logErrorReport: mockLogErrorReport }));
@@ -402,7 +409,7 @@ describe("duplicateTemplate", () => {
     );
     expect(mockAuditLogger.log).toHaveBeenCalledWith(
       expect.objectContaining({
-        action_name: "questionnaire_template.duplicated",
+        action: "questionnaire_template.duplicated",
       })
     );
     expect(mockRevalidatePath).toHaveBeenCalledWith("/settings/questionnaires");
@@ -509,8 +516,8 @@ describe("exportTemplate", () => {
     );
     expect(mockAuditLogger.log).toHaveBeenCalledWith(
       expect.objectContaining({
-        action_name: "questionnaire_template.exported",
-        event_type: "DATA_OPERATIONS",
+        action: "questionnaire_template.exported",
+        category: "DATA_OPERATIONS",
         status: "success",
       })
     );
@@ -559,7 +566,7 @@ describe("exportTemplate", () => {
     expect(result.error).toBeDefined();
     expect(mockAuditLogger.log).toHaveBeenCalledWith(
       expect.objectContaining({
-        action_name: "questionnaire_template.export_failed",
+        action: "questionnaire_template.export_failed",
         status: "failure",
       })
     );
@@ -607,8 +614,8 @@ describe("importTemplate", () => {
     );
     expect(mockAuditLogger.log).toHaveBeenCalledWith(
       expect.objectContaining({
-        action_name: "questionnaire_template.imported",
-        event_type: "DATA_OPERATIONS",
+        action: "questionnaire_template.imported",
+        category: "DATA_OPERATIONS",
         status: "success",
       })
     );
