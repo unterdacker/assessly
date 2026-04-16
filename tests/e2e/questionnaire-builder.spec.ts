@@ -30,7 +30,7 @@ test.describe("Questionnaire Builder — Navigation", () => {
 
   test("settings page shows Questionnaires nav card", async ({ page }) => {
     await page.goto(SETTINGS_URL);
-    await expect(page.getByText(/questionnaires/i)).toBeVisible();
+    await expect(page.getByText(/questionnaire templates/i)).toBeVisible();
   });
 
   test("admin can navigate to the questionnaires page", async ({ page }) => {
