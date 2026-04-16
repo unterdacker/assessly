@@ -15,7 +15,14 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov", "html"],
-      include: ["lib/**/*.ts"],
+      include: [
+        "lib/**/*.ts",
+        "app/actions/internal-auth.ts",
+        "app/actions/vendor-auth.ts",
+        "app/actions/mfa.ts",
+        "app/actions/iam.ts",
+        "app/actions/vendor-actions.ts",
+      ],
       exclude: [
         "lib/prisma.ts",
         "lib/env.ts",
