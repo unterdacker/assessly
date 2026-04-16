@@ -16,6 +16,7 @@ Venshield replaces disconnected spreadsheets and inboxes with one auditable work
 | [Authentication & Authorization](Authentication-and-Authorization.md) | Session model, roles, MFA, OIDC/SSO (Premium), permissions |
 | [Enterprise Features](Enterprise-Features.md) | Premium OIDC/SSO and Advanced Reporting |
 | [NIS2 Compliance Module](NIS2-Compliance-Module.md) | Questionnaire catalogue, scoring, risk levels |
+| [Questionnaire Builder](Questionnaire-Builder.md) | Custom vendor questionnaire templates, multiple question types, import/export — Premium |
 | [AI Integration](AI-Integration.md) | Ollama / Mistral provider, document analysis, executive summaries, Advanced Reporting (Premium) |
 | [Audit Trail & Forensic Logging](Audit-Trail-and-Forensic-Logging.md) | Hash-chain, GDPR redaction, compliance categories |
 | [Security Architecture](Security-Architecture.md) | Cryptography, CSP, rate limiting, secrets |

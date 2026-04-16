@@ -20,6 +20,7 @@ Vendor onboarding flow: Admin enters vendor email -> vendor receives email with 
 - **Enterprise SSO (Premium)** — OIDC single sign-on with PKCE support, just-in-time user provisioning, and per-company identity provider configuration. Available on the Premium plan.
 - **Advanced Reporting (Premium)** — AI-generated compliance reports with one-click PDF export, executive summaries, and a built-in report editor. Available on the Premium plan.
 - **Outbound Webhooks (Premium)** — HMAC-signed HTTP event notifications for assessment completions, vendor risk changes, and more
+- **Custom Questionnaire Builder (Premium)** — build fully custom vendor questionnaire templates with sections, six question types, and import/export. Complements the built-in NIS2 catalogue for any framework (ISO 27001, SOC2, DORA, etc.)
 
 **Stack:** Next.js 15 · React 19 · TypeScript 5.7 · Prisma 6 · PostgreSQL 16 · Tailwind CSS 3 · Radix UI · next-intl 4
 
@@ -175,8 +176,8 @@ Configure per-company via **Settings → SSO** (Premium plan).
 
 | Plan | Description |
 |------|-------------|
-| **Free** | Full access to NIS2 questionnaires, vendor portal, AI analysis, audit trail, and dashboard. |
-| **Premium** | Everything in Free, plus **OIDC/SSO** (single sign-on with just-in-time provisioning), **Advanced Reporting** (AI compliance reports, PDF export, executive summaries), **Outbound Webhooks** (HMAC-signed event notifications), and priority support. |
+| **Free** | Full access to the built-in NIS2 questionnaire catalogue (20 questions), vendor portal, AI analysis, audit trail, and dashboard. |
+| **Premium** | Everything in Free, plus **OIDC/SSO** (single sign-on with just-in-time provisioning), **Advanced Reporting** (AI compliance reports, PDF export, executive summaries), **Outbound Webhooks** (HMAC-signed event notifications), **Custom Questionnaire Builder** (custom templates with sections and multiple question types), and priority support. |
 
 > Interested in Premium?(currently its free for testers) [Contact us](mailto:venshield@proton.me) — premium customers receive access to the pre-built Docker image hosted on GitHub Container Registry (GHCR).
 
@@ -189,6 +190,7 @@ Full documentation is available in the [wiki](https://github.com/unterdacker/ven
 - [Enterprise Features (SSO, Advanced Reporting & Webhooks)](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Enterprise-Features.md)
 - [REST API Reference](https://github.com/unterdacker/venshield/blob/main/docs/wiki/REST-API.md)
 - [Outbound Webhooks](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Webhooks.md)
+- [Questionnaire Builder (Custom Templates)](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Questionnaire-Builder.md)
 - [Deployment](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Deployment.md)
 - [Security Architecture](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Security-Architecture.md)
 

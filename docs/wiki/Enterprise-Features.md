@@ -92,6 +92,23 @@ For the full payload schemas, signature verification algorithm, Node.js receiver
 
 ---
 
+## Custom Questionnaire Builder
+
+ADMIN users can build fully custom questionnaire templates as an alternative to the fixed NIS2 catalogue. Templates contain sections; sections contain questions of six configurable types.
+
+**Who configures it:** An **ADMIN** at **Settings → Questionnaires**.
+
+**Capabilities:**
+- Up to 20 templates per company, 15 sections per template, 50 questions per section
+- Six question types: Text, Single Choice, Multi Choice, Scale, Boolean, File Upload
+- Templates can be **duplicated** (deep copy), **exported** (JSON), and **imported**
+- Per-operation rate limiting to prevent abuse
+- Active/inactive toggle to control visibility without deleting
+
+_See [Questionnaire Builder](Questionnaire-Builder.md) for the full reference._
+
+---
+
 ## Getting Access — Premium Docker Image
 
 Premium features are delivered as a pre-built Docker image hosted on GitHub Container Registry (GHCR). Paying customers are granted pull access to the image for their organisation — no license file to manage.
