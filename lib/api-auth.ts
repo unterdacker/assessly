@@ -6,7 +6,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isPremiumPlan } from "@/lib/plan-gate";
-import { consumeApiKeyRequest } from "@/lib/api-rate-limit";
+import { consumeApiKeyRequest, consumeIpRequest, normalizeIp } from "@/lib/api-rate-limit";
 import { AuditLogger } from "@/lib/structured-logger";
 import { readClientIp } from "@/lib/rate-limit";
 import { hashApiKey } from "@/modules/api-keys/lib/key-generator";
@@ -58,8 +58,11 @@ export function apiError(
   status: number,
   code: string,
   message: string,
+  extraHeaders?: Record<string, string>,
 ): NextResponse {
-  return NextResponse.json({ data: null, error: { code, message } }, { status });
+  const init: ResponseInit = { status };
+  if (extraHeaders) init.headers = extraHeaders;
+  return NextResponse.json({ data: null, error: { code, message } }, init);
 }
 
 /**
@@ -74,6 +77,24 @@ export async function authenticateApiKey(
   const rawKey = authHeader?.startsWith("Bearer ")
     ? authHeader.slice(7).trim()
     : null;
+
+  // Per-IP rate limit — checked before key validation to prevent timing-based
+  // key enumeration attacks
+  const ip = readClientIp({ get: (name: string) => request.headers.get(name) });
+  if (consumeIpRequest(ip)) {
+    AuditLogger.auth("API_RATE_LIMIT_EXCEEDED", "failure", {
+      sourceIp: normalizeIp(ip),
+      details: { reason: "IP_LIMIT" },
+      entityType: "ApiKey",
+      entityId: "unknown",
+      securityIncident: true,
+    });
+    throw new ApiAuthError(
+      429,
+      "RATE_LIMIT_EXCEEDED",
+      "Too many requests. Please try again later.",
+    );
+  }
 
   if (!rawKey || !rawKey.startsWith("vs_live_") || rawKey.length !== 72) {
     throw new ApiAuthError(
@@ -97,7 +118,6 @@ export async function authenticateApiKey(
     },
   });
 
-  const ip = readClientIp({ get: (name: string) => request.headers.get(name) });
   const truncatedIp = ip.replace(/\.\d+$/, ".0").replace(/:[\da-f]+$/, ":0");
 
   if (!apiKey || !apiKey.isActive) {
@@ -128,7 +148,14 @@ export async function authenticateApiKey(
 
   const exceeded = consumeApiKeyRequest(apiKey.id);
   if (exceeded) {
-    throw new ApiAuthError(429, "RATE_LIMIT_EXCEEDED", "Too many requests. Limit: 100/minute.");
+    AuditLogger.auth("API_RATE_LIMIT_EXCEEDED", "failure", {
+      sourceIp: normalizeIp(ip),
+      details: { reason: "KEY_LIMIT" },
+      entityType: "ApiKey",
+      entityId: apiKey.id,
+      securityIncident: true,
+    });
+    throw new ApiAuthError(429, "RATE_LIMIT_EXCEEDED", "Too many requests. Please try again later.");
   }
 
   after(async () => {

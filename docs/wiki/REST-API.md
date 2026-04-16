@@ -84,7 +84,22 @@ Calling a write-scope endpoint without the scope returns `403 INSUFFICIENT_SCOPE
 
 ## Rate Limiting
 
-The API allows **100 requests per minute** per API key. Exceeding this limit returns HTTP `429` with error code `RATE_LIMIT_EXCEEDED`. Back off and retry after the limit window resets (60 seconds).
+The API enforces two independent fixed-window rate limits per 60-second window:
+
+| Limit type | Threshold | Scope |
+|---|---|---|
+| **Per API key** | 100 requests/minute | Each individual API key |
+| **Per IP address** | 300 requests/minute | Each source IP address (IPv6: per /64 subnet) |
+| **Unknown IP** | 30 requests/minute | Requests with no detectable source IP |
+
+Exceeding either limit returns HTTP `429` with:
+- `error.code`: `RATE_LIMIT_EXCEEDED`
+- `error.message`: Indicates whether the IP or API key limit was hit
+- `Retry-After: 60` response header
+
+The per-IP limit is higher than the per-key limit to accommodate corporate environments where multiple API keys share a single public IP address. Both limits reset at the start of each 60-second window.
+
+> **Deployment note:** Accurate IP-based rate limiting requires a trusted reverse proxy (nginx `real_ip_from`, Cloudflare, or equivalent) to set the `X-Real-IP` or `X-Forwarded-For` header at the network edge. Without this, all traffic may appear as a single IP to the application.
 
 ---
 
@@ -139,7 +154,7 @@ The `error.message` field is intended for debugging. Do not parse it programmati
 | `403` | `PREMIUM_REQUIRED` | Endpoint requires a Premium plan organisation |
 | `404` | `NOT_FOUND` | Resource not found within your organisation |
 | `415` | `UNSUPPORTED_MEDIA_TYPE` | `Content-Type` must be `application/json` |
-| `429` | `RATE_LIMIT_EXCEEDED` | 100 requests/minute limit exceeded |
+| `429` | `RATE_LIMIT_EXCEEDED` | Per-key (100/min) or per-IP (300/min) rate limit exceeded; see `Retry-After` header |
 | `500` | `INTERNAL_ERROR` | Unexpected server error |
 
 ---

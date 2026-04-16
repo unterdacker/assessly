@@ -43,7 +43,7 @@ The roadmap is organized around four phases. Each phase is designed to advance t
 - [x] **Webhook delivery engine** — implement `modules/webhooks/` module; HMAC-signed payloads, retry logic, delivery log, Premium gate
 - [ ] **Wire rate limiting to all public API routes** — consistent per-IP and per-key limits
 - [ ] **OpenAPI 3.1 spec** — auto-generated from route handlers; hosted at `/api/v1/openapi.json` + Swagger UI at `/api/v1/docs`
-- [ ] **Expand test coverage to > 80%** — auth, audit trail, GDPR flows, plan gate paths; required for due diligence
+- [x] **Expand test coverage to > 80%** — auth, audit trail, GDPR flows, plan gate paths; required for due diligence
 
 ---
 

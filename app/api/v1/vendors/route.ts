@@ -49,7 +49,12 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     if (err instanceof ApiAuthError) {
       logApiUsage(apiKeyId, ENDPOINT, "GET", err.statusCode);
-      return apiError(err.statusCode, err.code, err.message);
+      return apiError(
+        err.statusCode,
+        err.code,
+        err.message,
+        err.statusCode === 429 ? { "Retry-After": "60" } : undefined,
+      );
     }
     console.error("[API v1]", err);
     return apiError(500, "INTERNAL_ERROR", "An unexpected error occurred");
@@ -100,7 +105,12 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     if (err instanceof ApiAuthError) {
       logApiUsage(apiKeyId, ENDPOINT, "POST", err.statusCode);
-      return apiError(err.statusCode, err.code, err.message);
+      return apiError(
+        err.statusCode,
+        err.code,
+        err.message,
+        err.statusCode === 429 ? { "Retry-After": "60" } : undefined,
+      );
     }
     console.error("[API v1]", err);
     return apiError(500, "INTERNAL_ERROR", "An unexpected error occurred");

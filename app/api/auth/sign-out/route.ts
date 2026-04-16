@@ -5,8 +5,17 @@ import { clearAuthSessionCookie } from "@/lib/auth/server";
 import { AUTH_SESSION_COOKIE_NAME, hashSessionToken, verifySessionToken } from "@/lib/auth/token";
 import { AuditLogger } from "@/lib/structured-logger";
 import { logErrorReport } from "@/lib/logger";
+import { consumeIpRequest } from "@/lib/api-rate-limit";
+import { readClientIp } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
+  const ip = readClientIp({ get: (name) => request.headers.get(name) });
+  if (consumeIpRequest(ip)) {
+    return NextResponse.json(
+      { ok: false, error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": "60" } },
+    );
+  }
   try {
     const body = (await request.json().catch(() => ({}))) as { locale?: string };
     const locale = typeof body.locale === "string" ? body.locale : "en";
