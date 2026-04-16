@@ -22,7 +22,9 @@
 - **[Premium]** Custom questionnaire builder (multi-section, 6 question types, import/export, reordering)
 - **[Premium]** REST API v1 with Bearer token auth, plan-scoped permissions (`vendors:read/write`, `assessments:read/write`, `metrics:read`)
 - FREE / PREMIUM subscription tier model with `lib/enterprise-bridge.ts` plan gate
-- Webhook model (DB schema + Premium nav badge) — implementation in progress
+- S3-compatible file storage (`lib/storage.ts`) — S3 adapter with local-disk fallback; AES-256 SSE; `@aws-sdk/client-s3`
+- **[Premium]** API key management UI — issue/revoke/rotate keys in Settings → API Keys; scoped permissions, usage tracking, expiry; `modules/api-keys/`
+- **[Premium]** Webhook delivery engine — HMAC-SHA256 signed payloads, SSRF guard, fire-and-forget dispatch; `modules/webhooks/`
 
 ---
 
@@ -36,9 +38,9 @@ The roadmap is organized around four phases. Each phase is designed to advance t
 *Goal: demonstrate real MRR to acquirers. A product without billing is worth zero on a term sheet.*
 
 - [ ] **Stripe billing** — self-service plan upgrades (FREE → PREMIUM), subscription management portal, webhook-based plan sync, Stripe Customer Portal (cancellation, invoice history)
-- [ ] **S3-compatible file storage** — replace local disk uploads (MinIO for self-hosted, S3 for cloud); prerequisite for SaaS offering
-- [ ] **API key management UI** — issue/revoke API keys in Settings → API Keys (Premium); key rotation, last-used tracking
-- [ ] **Webhook delivery engine** — implement `modules/webhooks/` module; HMAC-signed payloads, retry logic, delivery log, Premium gate
+- [x] **S3-compatible file storage** — replace local disk uploads (MinIO for self-hosted, S3 for cloud); prerequisite for SaaS offering
+- [x] **API key management UI** — issue/revoke API keys in Settings → API Keys (Premium); key rotation, last-used tracking
+- [x] **Webhook delivery engine** — implement `modules/webhooks/` module; HMAC-signed payloads, retry logic, delivery log, Premium gate
 - [ ] **Wire rate limiting to all public API routes** — consistent per-IP and per-key limits
 - [ ] **OpenAPI 3.1 spec** — auto-generated from route handlers; hosted at `/api/v1/openapi.json` + Swagger UI at `/api/v1/docs`
 - [ ] **Expand test coverage to > 80%** — auth, audit trail, GDPR flows, plan gate paths; required for due diligence

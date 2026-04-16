@@ -10,7 +10,6 @@ import { MfaSettings } from "@/components/mfa-settings";
 import { OrgMfaPolicyForm } from "@/components/org-mfa-policy-form";
 import { prisma } from "@/lib/prisma";
 import { requirePageRole } from "@/lib/auth/server";
-import { ClipboardList } from "lucide-react";
 import { CustomQuestionsManager } from "@/components/custom-questions-manager";
 import { getCustomQuestions } from "@/lib/queries/custom-questions";
 
