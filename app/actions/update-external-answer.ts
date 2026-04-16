@@ -283,6 +283,7 @@ export async function updateExternalAnswer(formData: FormData) {
             action: "EXTERNAL_ASSESSMENT_UPDATED",
             entityType: "assessment_answer",
             entityId: updated.id,
+            hitlVerifiedBy: existing.isAiSuggested ? `vendor:${tokenVendor.id}` : null,
             previousValue: previousValuePayload,
             newValue: newValuePayload,
           },

@@ -93,7 +93,7 @@ type SerializableAssessment = {
 type RiskPostureRawData = {
   questions: Array<{ id: string; category: string }>;
   assessments: SerializableAssessment[];
-  aiAuditEvents: Array<{ action: string; metadata: unknown }>;
+  aiAuditEvents: Array<{ action: string; metadata: unknown; hitlVerifiedBy: string | null }>;
   totalAuditCount: number;
   lastAiSummary: string | null;
   aiDisabled: boolean;
@@ -123,8 +123,8 @@ async function fetchRiskPostureRawData(companyId: string): Promise<RiskPostureRa
         orderBy: { updatedAt: "desc" },
       }),
       prisma.auditLog.findMany({
-        where: { companyId, action: { in: ["AI_GENERATION", "AI_REMEDIATION_SENT"] } },
-        select: { action: true, metadata: true },
+        where: { companyId, action: { in: ["AI_GENERATION", "AI_REMEDIATION_SENT", "EXTERNAL_ASSESSMENT_UPDATED"] } },
+        select: { action: true, metadata: true, hitlVerifiedBy: true },
       }),
       prisma.auditLog.count({ where: { companyId } }),
       prisma.company.findUnique({
@@ -397,30 +397,25 @@ export async function getDashboardRiskPostureOverview(
   let finalizedSuggestionCount = 0;
 
   for (const event of aiAuditEvents) {
-    if (event.action !== "AI_REMEDIATION_SENT") {
+    if (event.action === "AI_REMEDIATION_SENT") {
+      finalizedSuggestionCount += 1;
+      if (event.hitlVerifiedBy) editedByHumanCount += 1;
       continue;
     }
 
-    const metadata =
-      event.metadata && typeof event.metadata === "object"
-        ? (event.metadata as Record<string, unknown>)
-        : null;
-    const newValue =
-      metadata?.newValue && typeof metadata.newValue === "object"
-        ? (metadata.newValue as Record<string, unknown>)
-        : null;
-
-    if (!newValue) {
-      continue;
-    }
-
-    if (typeof newValue.was_edited_by_human !== "boolean") {
-      continue;
-    }
-
-    finalizedSuggestionCount += 1;
-    if (newValue.was_edited_by_human) {
-      editedByHumanCount += 1;
+    if (event.action === "EXTERNAL_ASSESSMENT_UPDATED") {
+      const metadata =
+        event.metadata && typeof event.metadata === "object"
+          ? (event.metadata as Record<string, unknown>)
+          : null;
+      const newValue =
+        metadata?.newValue && typeof metadata.newValue === "object"
+          ? (metadata.newValue as Record<string, unknown>)
+          : null;
+      if (newValue?.aiSuggestionUsed === true) {
+        finalizedSuggestionCount += 1;
+        if (event.hitlVerifiedBy) editedByHumanCount += 1;
+      }
     }
   }
 

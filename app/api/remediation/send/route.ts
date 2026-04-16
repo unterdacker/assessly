@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
         action: "AI_REMEDIATION_SENT",
         entityType: "remediation_email",
         entityId: assessment.id,
+        hitlVerifiedBy: session.userId,
         previousValue: {
           raw_ai_output: originalAiOutput,
         },
