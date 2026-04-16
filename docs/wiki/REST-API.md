@@ -10,6 +10,7 @@ The Venshield REST API gives you programmatic access to your vendors, assessment
 
 ## Table of Contents
 
+- [Interactive Documentation](#interactive-documentation)
 - [Getting an API Key](#getting-an-api-key)
 - [Authentication](#authentication)
 - [Scopes](#scopes)
@@ -31,6 +32,17 @@ The Venshield REST API gives you programmatic access to your vendors, assessment
   - [Metrics](#metrics)
     - [GET /metrics — View API key usage](#get-apiv1metrics)
 - [GDPR Considerations](#gdpr-considerations)
+
+---
+
+## Interactive Documentation
+
+The full OpenAPI 3.1 specification is available as a machine-readable document:
+
+- **Spec (JSON)**: `GET /api/v1/openapi.json` — no authentication required
+- **Swagger UI**: `GET /api/v1/docs` — interactive browser-based API explorer
+
+Both endpoints are public and do not require an API key. Use the OpenAPI spec to generate client SDKs, import into Postman/Insomnia, or validate request/response shapes against the live schema.
 
 ---
 

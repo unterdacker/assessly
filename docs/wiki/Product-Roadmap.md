@@ -21,10 +21,13 @@
 - **[Premium]** Advanced Reporting — AI-generated compliance reports, interactive editor, one-click PDF export, AI executive summaries
 - **[Premium]** Custom questionnaire builder (multi-section, 6 question types, import/export, reordering)
 - **[Premium]** REST API v1 with Bearer token auth, plan-scoped permissions (`vendors:read/write`, `assessments:read/write`, `metrics:read`)
+- **[Premium]** Rate limiting on all public API routes — per-IP (300 req/min, LRU eviction, IPv6 /64 subnet grouping) and per-key (100 req/min); `Retry-After: 60` on all 429 responses; audit-logged with `securityIncident` flag
 - FREE / PREMIUM subscription tier model with `lib/enterprise-bridge.ts` plan gate
 - S3-compatible file storage (`lib/storage.ts`) — S3 adapter with local-disk fallback; AES-256 SSE; `@aws-sdk/client-s3`
 - **[Premium]** API key management UI — issue/revoke/rotate keys in Settings → API Keys; scoped permissions, usage tracking, expiry; `modules/api-keys/`
 - **[Premium]** Webhook delivery engine — HMAC-SHA256 signed payloads, SSRF guard, fire-and-forget dispatch; `modules/webhooks/`
+- **[Premium]** OpenAPI 3.1 spec — auto-generated from route handlers; served at `/api/v1/openapi.json`; interactive Swagger UI at `/api/v1/docs` (CDN-loaded, nonce-secured CSP, rate-limited, audit-logged)
+- E2E test coverage for OpenAPI endpoints (`tests/e2e/api-v1-openapi.spec.ts`)
 
 ---
 

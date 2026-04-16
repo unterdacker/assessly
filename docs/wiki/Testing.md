@@ -38,6 +38,8 @@ tests/unit/
 - Cryptographic helpers (encrypt/decrypt round-trip)
 - Zod validation schemas for server actions
 - NIS2 question catalogue completeness
+- API rate limiting (`consumeApiKeyRequest`, `consumeIpRequest`) — window enforcement, LRU eviction, per-IP vs per-key limits
+- IP normalization (`normalizeIp`) — IPv4 passthrough, IPv6 /64 prefix extraction, IPv4-mapped IPv6 unwrapping, injection payload rejection
 
 ---
 

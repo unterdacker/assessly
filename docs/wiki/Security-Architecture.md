@@ -65,6 +65,29 @@ The middleware enforces CSRF protection for all state-changing HTTP methods (POS
 
 ---
 
+## API Rate Limiting
+
+All public API routes (`/api/v1/*` and `/api/auth/sign-out`) enforce two independent fixed-window rate limits per 60-second window. Both limits are applied in-process without an external dependency such as Redis.
+
+| Limit type | Threshold | Scope | Eviction |
+|---|---|---|---|
+| Per API key | 100 req/min | Each individual API key | FIFO |
+| Per source IP | 300 req/min | Each source IP or IPv6 /64 subnet | LRU |
+| Unknown source IP | 30 req/min | All requests with no detectable source IP | LRU (shared bucket) |
+
+**Implementation details (`lib/api-rate-limit.ts`):**
+
+- **IP check before key validation** — the IP limit is checked before any database lookup, preventing timing-based API key enumeration.
+- **LRU eviction for the IP store** — active IP entries are moved to the tail of the Map on every access (delete + re-insert); eviction targets the head (least-recently-used), ensuring high-traffic IPs are never displaced.
+- **IPv6 /64 grouping** — all addresses within the same /64 subnet share a counter, preventing host-hopping within a subnet. IPv4-mapped IPv6 addresses (`::ffff:x.x.x.x`) are unwrapped to their embedded IPv4 address before bucketing.
+- **Injection resistance** — `normalizeIp()` validates all values via Node's `net.isIPv4` / `net.isIPv6` before use; XSS payloads and arbitrary strings fall through to the strict `"unknown"` bucket.
+- **Audit logging** — every rate limit violation emits an `AuditLogger.auth("API_RATE_LIMIT_EXCEEDED")` event with `securityIncident: true`, preserving the normalized IP without truncation for forensic purposes.
+- **`Retry-After: 60`** — all 429 responses across every route include this header.
+
+> **Deployment note:** Accurate IP-based limiting requires a trusted reverse proxy (nginx `real_ip_from`, Cloudflare, or equivalent) to populate `X-Real-IP` or `X-Forwarded-For`. Without this, all traffic appears as a single IP to the application.
+
+---
+
 ## Input Sanitization
 
 User-supplied HTML input (e.g. rich-text fields) is sanitized with `sanitize-html` before persistence. The `lib/audit-sanitize.ts` module additionally scrubs known PII field names from audit payloads.

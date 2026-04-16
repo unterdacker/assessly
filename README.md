@@ -21,6 +21,7 @@ Vendor onboarding flow: Admin enters vendor email -> vendor receives email with 
 - **Advanced Reporting (Premium)** — AI-generated compliance reports with one-click PDF export, executive summaries, and a built-in report editor. Available on the Premium plan.
 - **Outbound Webhooks (Premium)** — HMAC-signed HTTP event notifications for assessment completions, vendor risk changes, and more
 - **Custom Questionnaire Builder (Premium)** — build fully custom vendor questionnaire templates with sections, six question types, and import/export. Complements the built-in NIS2 catalogue for any framework (ISO 27001, SOC2, DORA, etc.)
+- **[Premium]** REST API v1 with Bearer token auth, plan-scoped permissions (`vendors:read/write`, `assessments:read/write`, `metrics:read`), dual-layer rate limiting (100 req/min per key · 300 req/min per IP), OpenAPI 3.1 spec at `/api/v1/openapi.json`, and interactive Swagger UI at `/api/v1/docs`
 
 **Stack:** Next.js 15 · React 19 · TypeScript 5.7 · Prisma 6 · PostgreSQL 16 · Tailwind CSS 3 · Radix UI · next-intl 4
 
@@ -188,7 +189,7 @@ Full documentation is available in the [wiki](https://github.com/unterdacker/ven
 - [Getting Started](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Getting-Started.md)
 - [Architecture Overview](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Architecture-Overview.md)
 - [Enterprise Features (SSO, Advanced Reporting & Webhooks)](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Enterprise-Features.md)
-- [REST API Reference](https://github.com/unterdacker/venshield/blob/main/docs/wiki/REST-API.md)
+- [REST API Reference](https://github.com/unterdacker/venshield/blob/main/docs/wiki/REST-API.md) · [Interactive Swagger UI](/api/v1/docs) · [OpenAPI 3.1 Spec](/api/v1/openapi.json)
 - [Outbound Webhooks](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Webhooks.md)
 - [Questionnaire Builder (Custom Templates)](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Questionnaire-Builder.md)
 - [Deployment](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Deployment.md)
