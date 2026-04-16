@@ -30,10 +30,6 @@
 
 ## Roadmap
 
-The roadmap is organized around four phases. Each phase is designed to advance the product toward an acquisition exit by a large enterprise GRC, cybersecurity, or ERP vendor (e.g. ServiceNow, SAP, OneTrust, IBM OpenPages, Qualys).
-
----
-
 ### Phase 1 — Revenue Proof (0–3 months)
 *Goal: demonstrate real MRR to acquirers. A product without billing is worth zero on a term sheet.*
 
@@ -41,8 +37,8 @@ The roadmap is organized around four phases. Each phase is designed to advance t
 - [x] **S3-compatible file storage** — replace local disk uploads (MinIO for self-hosted, S3 for cloud); prerequisite for SaaS offering
 - [x] **API key management UI** — issue/revoke API keys in Settings → API Keys (Premium); key rotation, last-used tracking
 - [x] **Webhook delivery engine** — implement `modules/webhooks/` module; HMAC-signed payloads, retry logic, delivery log, Premium gate
-- [ ] **Wire rate limiting to all public API routes** — consistent per-IP and per-key limits
-- [ ] **OpenAPI 3.1 spec** — auto-generated from route handlers; hosted at `/api/v1/openapi.json` + Swagger UI at `/api/v1/docs`
+- [x] **Wire rate limiting to all public API routes** — consistent per-IP and per-key limits
+- [x] **OpenAPI 3.1 spec** — auto-generated from route handlers; hosted at `/api/v1/openapi.json` + Swagger UI at `/api/v1/docs`
 - [x] **Expand test coverage to > 80%** — auth, audit trail, GDPR flows, plan gate paths; required for due diligence
 
 ---
