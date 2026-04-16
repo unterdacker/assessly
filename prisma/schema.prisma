@@ -53,6 +53,15 @@ enum ExecReportStatus {
   FINALIZED
 }
 
+enum QuestionType {
+  TEXT
+  SINGLE_CHOICE
+  MULTI_CHOICE
+  SCALE
+  BOOLEAN
+  FILE_UPLOAD
+}
+
 model Company {
   id        String   @id @default(cuid())
   name      String
@@ -81,6 +90,7 @@ model Company {
   remediationTasks           RemediationTask[]
   webhooks                   Webhook[]
   apiKeys                    ApiKey[]
+  questionnaireTemplates     QuestionnaireTemplate[]
 }
 
 model OidcConfig {
@@ -146,6 +156,7 @@ model User {
   execReports  ExecReport[]
   assignedRemediationTasks RemediationTask[] @relation("AssignedRemediationTasks")
   createdWebhooks          Webhook[]         @relation("WebhookCreatedBy")
+  createdQuestionnaireTemplates QuestionnaireTemplate[] @relation("TemplateCreatedBy")
   createdApiKeys           ApiKey[]          @relation("ApiKeyCreatedBy")
   @@index([companyId])
   @@index([role])
@@ -519,4 +530,64 @@ model ApiKeyUsageLog {
   @@index([apiKeyId])
   @@index([requestedAt])
   @@index([retentionUntil])
+}
+
+/// Premium feature — implementation in modules/questionnaire-builder/
+model QuestionnaireTemplate {
+  id              String   @id @default(cuid())
+  companyId       String
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdByUserId String?
+  createdBy       User?    @relation("TemplateCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  sections        TemplateSection[]
+
+  @@index([companyId])
+  @@index([companyId, isActive])
+}
+
+model TemplateSection {
+  id          String                @id @default(cuid())
+  templateId  String
+  template    QuestionnaireTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  orderIndex  Int
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  questions   TemplateQuestion[]
+
+  @@index([templateId])
+  @@index([templateId, orderIndex])
+}
+
+model TemplateQuestion {
+  id         String          @id @default(cuid())
+  sectionId  String
+  section    TemplateSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  text       String
+  helpText   String?
+  type       QuestionType
+  isRequired Boolean         @default(false)
+  orderIndex Int
+  options    Json?
+  scaleMin   Int?
+  scaleMax   Int?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([sectionId])
+  @@index([sectionId, orderIndex])
+}
+
+model RateLimitEntry {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
 }

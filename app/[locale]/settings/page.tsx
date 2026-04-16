@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
-import { ShieldCheck, Server, Globe, Mail, ChevronRight, Ban, Webhook, Key } from "lucide-react";
+import { ShieldCheck, Server, Globe, Mail, ChevronRight, Ban, Webhook, Key, ClipboardList } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AiSettingsForm } from "@/components/ai-settings-form";
@@ -35,6 +35,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   const oidcT = await getTranslations("OidcSettings");
   const webhooksT = await getTranslations("WebhooksSettings");
   const apiKeysT = await getTranslations("ApiKeys");
+  const questionnairesT = await getTranslations("QuestionnaireBuilder");
   const isAdmin = session.role === "ADMIN";
   const [company, currentUser, customQuestions] = await Promise.all([
     isAdmin
@@ -256,6 +257,31 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
               <div>
                 <p className="text-sm font-semibold">{apiKeysT("title")}</p>
                 <p className="text-xs text-muted-foreground">{apiKeysT("description")}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {!isPremium && (
+                <Badge variant="outline" className="text-xs text-amber-700 border-amber-300 bg-amber-50 dark:text-amber-400 dark:border-amber-700 dark:bg-amber-950/30">
+                  {t("Premium")}
+                </Badge>
+              )}
+              <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+            </div>
+          </Link>
+        )}
+
+        {isAdmin && (
+          <Link
+            href={`/${locale}/settings/questionnaires`}
+            className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-indigo-300 hover:bg-indigo-50/40 dark:border-slate-800 dark:bg-card dark:hover:border-indigo-700 dark:hover:bg-indigo-950/20"
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
+                <ClipboardList className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">{questionnairesT("title")}</p>
+                <p className="text-xs text-muted-foreground">{questionnairesT("description")}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">

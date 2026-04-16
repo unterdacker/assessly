@@ -1234,6 +1234,111 @@
     "successMessage": "Your account is ready. You can now sign in.",
     "loginLink": "Go to Sign In"
   },
+  "QuestionnaireBuilder": {
+    "title": "Questionnaire Templates",
+    "description": "Build and manage reusable assessment questionnaire templates",
+    "planRequired": "Questionnaire templates are a Premium feature. Upgrade your plan to create custom assessment workflows.",
+    "upgradeLabel": "Upgrade to Premium",
+    "list": {
+      "createButton": "Create Template",
+      "importButton": "Import",
+      "noTemplates": "No templates yet. Create your first questionnaire template.",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "detail": {
+      "addSection": "Add Section",
+      "noSections": "No sections yet. Add a section to start building your questionnaire.",
+      "confirmDelete": "Are you sure you want to delete this template? This cannot be undone."
+    },
+    "templateForm": {
+      "createTitle": "Create Template",
+      "editTitle": "Edit Template",
+      "nameLabel": "Template Name",
+      "namePlaceholder": "e.g., NIS2 Vendor Assessment",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Optional: describe the purpose of this template",
+      "isActiveLabel": "Active",
+      "isActiveDesc": "Inactive templates cannot be used for new assessments",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saving": "Saving..."
+    },
+    "sectionForm": {
+      "createTitle": "Add Section",
+      "editTitle": "Edit Section",
+      "titleLabel": "Section Title",
+      "titlePlaceholder": "e.g., Access Control",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Optional: guidance for this section",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saving": "Saving..."
+    },
+    "questionForm": {
+      "createTitle": "Add Question",
+      "editTitle": "Edit Question",
+      "textLabel": "Question",
+      "textPlaceholder": "Enter your question",
+      "helpTextLabel": "Help Text",
+      "helpTextPlaceholder": "Optional: additional guidance for respondents",
+      "typeLabel": "Question Type",
+      "isRequiredLabel": "Required",
+      "optionsLabel": "Answer Options",
+      "addOption": "Add Option",
+      "removeOption": "Remove",
+      "scaleMinLabel": "Minimum Value",
+      "scaleMaxLabel": "Maximum Value",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saving": "Saving..."
+    },
+    "questionTypes": {
+      "TEXT": "Text",
+      "SINGLE_CHOICE": "Single Choice",
+      "MULTI_CHOICE": "Multiple Choice",
+      "SCALE": "Scale",
+      "BOOLEAN": "Yes / No",
+      "FILE_UPLOAD": "File Upload"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "duplicate": "Duplicate",
+      "export": "Export",
+      "import": "Import",
+      "moveUp": "Move Up",
+      "moveDown": "Move Down"
+    },
+    "errors": {
+      "templateCapReached": "Maximum of 20 templates per company reached.",
+      "sectionCapReached": "Maximum of 15 sections per template reached.",
+      "questionCapReached": "Maximum of 50 questions per section reached.",
+      "invalidImport": "Invalid template file. Please check the format and try again.",
+      "importTooLarge": "Import file exceeds the 512 KB limit.",
+      "rateLimitExceeded": "Too many requests. Please wait a moment and try again.",
+      "unexpected": "An unexpected error occurred. Please try again."
+    },
+    "success": {
+      "templateCreated": "Template created.",
+      "templateUpdated": "Template updated.",
+      "templateDeleted": "Template deleted.",
+      "templateDuplicated": "Template duplicated.",
+      "templateImported": "Template imported.",
+      "sectionCreated": "Section created.",
+      "sectionUpdated": "Section updated.",
+      "sectionDeleted": "Section deleted.",
+      "sectionReordered": "Sections reordered.",
+      "questionCreated": "Question created.",
+      "questionUpdated": "Question updated.",
+      "questionDeleted": "Question deleted.",
+      "questionReordered": "Questions reordered."
+    },
+    "sectionAccordion": {
+      "required": "Required",
+      "optional": "Optional"
+    }
+  },
   "Premium": "Premium"
 }
 

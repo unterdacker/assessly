@@ -1272,5 +1272,110 @@
     "successMessage": "Ihr Konto ist bereit. Sie können sich jetzt anmelden.",
     "loginLink": "Zur Anmeldung"
   },
+  "QuestionnaireBuilder": {
+    "title": "Fragebogen-Vorlagen",
+    "description": "Erstellen und verwalten Sie wiederverwendbare Fragebogen-Vorlagen für Bewertungen",
+    "planRequired": "Fragebogen-Vorlagen sind eine Premium-Funktion. Upgraden Sie Ihren Plan, um benutzerdefinierte Assessment-Workflows zu erstellen.",
+    "upgradeLabel": "Auf Premium upgraden",
+    "list": {
+      "createButton": "Vorlage erstellen",
+      "importButton": "Importieren",
+      "noTemplates": "Noch keine Vorlagen. Erstellen Sie Ihre erste Fragebogen-Vorlage.",
+      "active": "Aktiv",
+      "inactive": "Inaktiv"
+    },
+    "detail": {
+      "addSection": "Abschnitt hinzufügen",
+      "noSections": "Noch keine Abschnitte. Fügen Sie einen Abschnitt hinzu, um Ihren Fragebogen zu erstellen.",
+      "confirmDelete": "Möchten Sie diese Vorlage wirklich löschen? Dies kann nicht rückgängig gemacht werden."
+    },
+    "templateForm": {
+      "createTitle": "Vorlage erstellen",
+      "editTitle": "Vorlage bearbeiten",
+      "nameLabel": "Vorlagenname",
+      "namePlaceholder": "z.B. NIS2 Lieferantenbewertung",
+      "descriptionLabel": "Beschreibung",
+      "descriptionPlaceholder": "Optional: Zweck dieser Vorlage beschreiben",
+      "isActiveLabel": "Aktiv",
+      "isActiveDesc": "Inaktive Vorlagen können nicht für neue Bewertungen verwendet werden",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "saving": "Wird gespeichert..."
+    },
+    "sectionForm": {
+      "createTitle": "Abschnitt hinzufügen",
+      "editTitle": "Abschnitt bearbeiten",
+      "titleLabel": "Abschnittstitel",
+      "titlePlaceholder": "z.B. Zugangskontrolle",
+      "descriptionLabel": "Beschreibung",
+      "descriptionPlaceholder": "Optional: Hinweise für diesen Abschnitt",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "saving": "Wird gespeichert..."
+    },
+    "questionForm": {
+      "createTitle": "Frage hinzufügen",
+      "editTitle": "Frage bearbeiten",
+      "textLabel": "Frage",
+      "textPlaceholder": "Frage eingeben",
+      "helpTextLabel": "Hilfetext",
+      "helpTextPlaceholder": "Optional: zusätzliche Hinweise für Befragte",
+      "typeLabel": "Fragetyp",
+      "isRequiredLabel": "Pflichtfeld",
+      "optionsLabel": "Antwortoptionen",
+      "addOption": "Option hinzufügen",
+      "removeOption": "Entfernen",
+      "scaleMinLabel": "Minimalwert",
+      "scaleMaxLabel": "Maximalwert",
+      "save": "Speichern",
+      "cancel": "Abbrechen",
+      "saving": "Wird gespeichert..."
+    },
+    "questionTypes": {
+      "TEXT": "Text",
+      "SINGLE_CHOICE": "Einzelauswahl",
+      "MULTI_CHOICE": "Mehrfachauswahl",
+      "SCALE": "Skala",
+      "BOOLEAN": "Ja / Nein",
+      "FILE_UPLOAD": "Datei-Upload"
+    },
+    "actions": {
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "duplicate": "Duplizieren",
+      "export": "Exportieren",
+      "import": "Importieren",
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten"
+    },
+    "errors": {
+      "templateCapReached": "Maximale Anzahl von 20 Vorlagen pro Unternehmen erreicht.",
+      "sectionCapReached": "Maximale Anzahl von 15 Abschnitten pro Vorlage erreicht.",
+      "questionCapReached": "Maximale Anzahl von 50 Fragen pro Abschnitt erreicht.",
+      "invalidImport": "Ungültige Vorlagendatei. Bitte Format überprüfen und erneut versuchen.",
+      "importTooLarge": "Importdatei überschreitet das 512-KB-Limit.",
+      "rateLimitExceeded": "Zu viele Anfragen. Bitte einen Moment warten und erneut versuchen.",
+      "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte erneut versuchen."
+    },
+    "success": {
+      "templateCreated": "Vorlage erstellt.",
+      "templateUpdated": "Vorlage aktualisiert.",
+      "templateDeleted": "Vorlage gelöscht.",
+      "templateDuplicated": "Vorlage dupliziert.",
+      "templateImported": "Vorlage importiert.",
+      "sectionCreated": "Abschnitt erstellt.",
+      "sectionUpdated": "Abschnitt aktualisiert.",
+      "sectionDeleted": "Abschnitt gelöscht.",
+      "sectionReordered": "Abschnitte umsortiert.",
+      "questionCreated": "Frage erstellt.",
+      "questionUpdated": "Frage aktualisiert.",
+      "questionDeleted": "Frage gelöscht.",
+      "questionReordered": "Fragen umsortiert."
+    },
+    "sectionAccordion": {
+      "required": "Pflichtfeld",
+      "optional": "Optional"
+    }
+  },
   "Premium": "Premium"
 }
