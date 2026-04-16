@@ -9,6 +9,7 @@ import {
   listInternalUsersForCompany,
   listRemediationTasksByAssessmentId,
 } from "@/lib/queries/remediation-tasks";
+import { ApprovalWorkflowPanel } from "@/modules/approval-workflow/components/approval-workflow-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -50,19 +51,28 @@ export default async function AssessmentPage({ params }: PageProps) {
   ]);
 
   return (
-    <AssessmentWorkspace
-      vendorAssessment={detail.vendorAssessment}
-      assessmentId={detail.assessmentId}
-      initialAnswers={detail.answers}
-      documentUrl={detail.documentUrl}
-      documentFilename={detail.documentFilename}
-      documentFileSize={detail.documentFileSize}
-      lastAuditedAt={detail.lastAuditedAt}
-      companyId={detail.companyId}
-      role={session.role}
-      customQuestions={customQuestions}
-      initialRemediationTasks={initialRemediationTasks}
-      internalUsers={internalUsers}
-    />
+    <>
+      <AssessmentWorkspace
+        vendorAssessment={detail.vendorAssessment}
+        assessmentId={detail.assessmentId}
+        initialAnswers={detail.answers}
+        documentUrl={detail.documentUrl}
+        documentFilename={detail.documentFilename}
+        documentFileSize={detail.documentFileSize}
+        lastAuditedAt={detail.lastAuditedAt}
+        companyId={detail.companyId}
+        role={session.role}
+        customQuestions={customQuestions}
+        initialRemediationTasks={initialRemediationTasks}
+        internalUsers={internalUsers}
+      />
+      <div className="mx-auto mt-6 max-w-screen-xl px-4 sm:px-6 lg:px-8">
+        <ApprovalWorkflowPanel
+          assessmentId={detail.assessmentId}
+          companyId={detail.companyId}
+          role={session.role}
+        />
+      </div>
+    </>
   );
 }

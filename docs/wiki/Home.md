@@ -17,6 +17,8 @@ Venshield replaces disconnected spreadsheets and inboxes with one auditable work
 | [Enterprise Features](Enterprise-Features.md) | Premium OIDC/SSO and Advanced Reporting |
 | [NIS2 Compliance Module](NIS2-Compliance-Module.md) | Questionnaire catalogue, scoring, risk levels |
 | [Questionnaire Builder](Questionnaire-Builder.md) | Custom vendor questionnaire templates, multiple question types, import/export — Premium |
+| [Compliance Template Library](Compliance-Library.md) | Deploy pre-built NIS2 & DORA templates (free) or ISO 27001, SOC 2, HIPAA, NIST CSF, and CIS Controls v8 (Premium) into your questionnaire workspace |
+| [Assessment Approval Workflow](Assessment-Approval-Workflow.md) | Multi-step assessment review lifecycle with role-gated transitions, rejection comments, reviewer assignment, and email notifications — full lifecycle requires Premium |
 | [AI Integration](AI-Integration.md) | Ollama / Mistral provider, document analysis, executive summaries, Advanced Reporting (Premium) |
 | [Audit Trail & Forensic Logging](Audit-Trail-and-Forensic-Logging.md) | Hash-chain, GDPR redaction, compliance categories |
 | [Security Architecture](Security-Architecture.md) | Cryptography, CSP, rate limiting, secrets |

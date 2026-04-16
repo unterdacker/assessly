@@ -21,6 +21,8 @@ Vendor onboarding flow: Admin enters vendor email -> vendor receives email with 
 - **Advanced Reporting (Premium)** — AI-generated compliance reports with one-click PDF export, executive summaries, and a built-in report editor. Available on the Premium plan.
 - **Outbound Webhooks (Premium)** — HMAC-signed HTTP event notifications for assessment completions, vendor risk changes, and more
 - **Custom Questionnaire Builder (Premium)** — build fully custom vendor questionnaire templates with sections, six question types, and import/export. Complements the built-in NIS2 catalogue for any framework (ISO 27001, SOC2, DORA, etc.)
+- **Compliance Template Library** — browse and deploy pre-built questionnaire templates for NIS2 and DORA (free on all plans), plus ISO 27001, SOC 2 Type II, HIPAA, NIST CSF, and CIS Controls v8 (Premium). Templates are deployed as editable copies into your questionnaire workspace.
+- **Assessment Approval Workflow** — structured multi-step review lifecycle for vendor assessments: PENDING → UNDER_REVIEW → COMPLETED (free) or a full 5-step chain with SUBMITTED, REVIEWER_APPROVED, SIGN_OFF, and ARCHIVED (Premium). Every transition is actor-stamped and audited. Rejections require a written comment. Premium includes reviewer assignment and email notifications to all ADMIN and RISK_REVIEWER users.
 - **[Premium]** REST API v1 with Bearer token auth, plan-scoped permissions (`vendors:read/write`, `assessments:read/write`, `metrics:read`), dual-layer rate limiting (100 req/min per key · 300 req/min per IP), OpenAPI 3.1 spec at `/api/v1/openapi.json`, and interactive Swagger UI at `/api/v1/docs`
 
 **Stack:** Next.js 15 · React 19 · TypeScript 5.7 · Prisma 6 · PostgreSQL 16 · Tailwind CSS 3 · Radix UI · next-intl 4
@@ -177,8 +179,8 @@ Configure per-company via **Settings → SSO** (Premium plan).
 
 | Plan | Description |
 |------|-------------|
-| **Free** | Full access to the built-in NIS2 questionnaire catalogue (20 questions), vendor portal, AI analysis, audit trail, and dashboard. |
-| **Premium** | Everything in Free, plus **OIDC/SSO** (single sign-on with just-in-time provisioning), **Advanced Reporting** (AI compliance reports, PDF export, executive summaries), **Outbound Webhooks** (HMAC-signed event notifications), **Custom Questionnaire Builder** (custom templates with sections and multiple question types), and priority support. |
+| **Free** | Full access to the built-in NIS2 questionnaire catalogue (20 questions), vendor portal, AI analysis, audit trail, dashboard, and pre-built NIS2 & DORA compliance templates. |
+| **Premium** | Everything in Free, plus **OIDC/SSO** (single sign-on with just-in-time provisioning), **Advanced Reporting** (AI compliance reports, PDF export, executive summaries), **Outbound Webhooks** (HMAC-signed event notifications), **Custom Questionnaire Builder** (custom templates with sections and multiple question types), **Compliance Template Library** (ISO 27001, SOC 2, HIPAA, NIST CSF, CIS Controls v8 pre-built templates), **Assessment Approval Workflow** (full 5-step review chain, reviewer assignment, email notifications), and priority support. |
 
 > Interested in Premium?(currently its free for testers) [Contact us](mailto:venshield@proton.me) — premium customers receive access to the pre-built Docker image hosted on GitHub Container Registry (GHCR).
 
@@ -192,6 +194,8 @@ Full documentation is available in the [wiki](https://github.com/unterdacker/ven
 - [REST API Reference](https://github.com/unterdacker/venshield/blob/main/docs/wiki/REST-API.md) · [Interactive Swagger UI](/api/v1/docs) · [OpenAPI 3.1 Spec](/api/v1/openapi.json)
 - [Outbound Webhooks](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Webhooks.md)
 - [Questionnaire Builder (Custom Templates)](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Questionnaire-Builder.md)
+- [Compliance Template Library](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Compliance-Library.md)
+- [Assessment Approval Workflow](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Assessment-Approval-Workflow.md)
 - [Deployment](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Deployment.md)
 - [Security Architecture](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Security-Architecture.md)
 

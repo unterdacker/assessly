@@ -1367,6 +1367,49 @@
       "nist_csf": { "name": "NIST CSF", "description": "Cybersecurity Framework — Identify, Protect, Detect, Respond, Recover functions." },
       "cis_controls_v8": { "name": "CIS Controls v8", "description": "18 prioritized safeguard groups for enterprise cyber defense." }
     }
+  },
+  "ApprovalWorkflow": {
+    "title": "Approval Workflow",
+    "currentStatus": "Current Status",
+    "availableActions": "Available Actions",
+    "approvalHistory": "Approval History",
+    "noHistoryYet": "No approval history yet.",
+    "reassignReviewer": "Reassign Reviewer",
+    "reassignReviewerDesc": "Change the assigned reviewer for this assessment (Premium only).",
+    "commentRequired": "Comment required (minimum 10 characters)",
+    "commentPlaceholder": "Enter reason…",
+    "cancel": "Cancel",
+    "reassign": "Reassign",
+    "reassigning": "Reassigning…",
+    "reviewerReassigned": "Reviewer Reassigned",
+    "selectNewReviewer": "Select new reviewer",
+    "selectReviewerPlaceholder": "-- Select a reviewer --",
+    "status": {
+      "PENDING": "Pending",
+      "UNDER_REVIEW": "Under Review",
+      "SUBMITTED": "Submitted",
+      "REVIEWER_APPROVED": "Approved",
+      "SIGN_OFF": "Sign-Off",
+      "COMPLETED": "Completed",
+      "REJECTED": "Rejected",
+      "ARCHIVED": "Archived"
+    },
+    "actions": {
+      "submitForReview": "Submit for Review",
+      "approve": "Approve",
+      "requestSignOff": "Request Sign-Off",
+      "archive": "Archive",
+      "reject": "Reject",
+      "complete": "Mark as Completed",
+      "moveToUnderReview": "Move to Under Review"
+    },
+    "premiumRequired": "Premium plan required for advanced approval workflow.",
+    "transitionSuccess": "Status updated successfully.",
+    "transitionError": "Failed to update status. Please try again.",
+    "reassignSuccess": "Reviewer reassigned successfully.",
+    "reassignError": "Failed to reassign reviewer.",
+    "actorLabel": "Changed by",
+    "systemActor": "System"
   }
 }
 

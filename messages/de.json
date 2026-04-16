@@ -1405,5 +1405,48 @@
       "nist_csf": { "name": "NIST CSF", "description": "Cybersicherheits-Framework — Identifizieren, Schützen, Erkennen, Reagieren, Wiederherstellen." },
       "cis_controls_v8": { "name": "CIS Controls v8", "description": "18 priorisierte Sicherheitsmaßnahmen für die Unternehmens-Cyberabwehr." }
     }
+  },
+  "ApprovalWorkflow": {
+    "title": "Genehmigungsworkflow",
+    "currentStatus": "Aktueller Status",
+    "availableActions": "Verf�gbare Aktionen",
+    "approvalHistory": "Genehmigungsverlauf",
+    "noHistoryYet": "Noch kein Genehmigungsverlauf.",
+    "reassignReviewer": "Pr�fer neu zuweisen",
+    "reassignReviewerDesc": "�ndern Sie den zugewiesenen Pr�fer f�r diese Bewertung (nur Premium).",
+    "commentRequired": "Kommentar erforderlich (mindestens 10 Zeichen)",
+    "commentPlaceholder": "Grund eingeben�",
+    "cancel": "Abbrechen",
+    "reassign": "Neu zuweisen",
+    "reassigning": "Wird neu zugewiesen…",
+    "reviewerReassigned": "Prüfer neu zugewiesen",
+    "selectNewReviewer": "Neuen Prüfer auswählen",
+    "selectReviewerPlaceholder": "-- Prüfer auswählen --",
+    "status": {
+      "PENDING": "Ausstehend",
+      "UNDER_REVIEW": "In Pr�fung",
+      "SUBMITTED": "Eingereicht",
+      "REVIEWER_APPROVED": "Genehmigt",
+      "SIGN_OFF": "Freigabe",
+      "COMPLETED": "Abgeschlossen",
+      "REJECTED": "Abgelehnt",
+      "ARCHIVED": "Archiviert"
+    },
+    "actions": {
+      "submitForReview": "Zur Pr�fung einreichen",
+      "approve": "Genehmigen",
+      "requestSignOff": "Freigabe anfordern",
+      "archive": "Archivieren",
+      "reject": "Ablehnen",
+      "complete": "Als abgeschlossen markieren",
+      "moveToUnderReview": "In Prüfung verschieben"
+    },
+    "premiumRequired": "Premium-Plan f�r erweiterten Genehmigungsworkflow erforderlich.",
+    "transitionSuccess": "Status erfolgreich aktualisiert.",
+    "transitionError": "Status konnte nicht aktualisiert werden. Bitte erneut versuchen.",
+    "reassignSuccess": "Pr�fer erfolgreich neu zugewiesen.",
+    "reassignError": "Pr�fer konnte nicht neu zugewiesen werden.",
+    "actorLabel": "Ge�ndert von",
+    "systemActor": "System"
   }
 }

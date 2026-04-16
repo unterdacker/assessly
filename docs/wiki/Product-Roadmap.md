@@ -50,7 +50,7 @@
 *Goal: land large enterprise logos. Acquirers pay multiples for ARR from named enterprise accounts.*
 
 - [ ] **SAML 2.0** — IdP-initiated and SP-initiated flows; metadata import; attribute mapping; Premium plan only
-- [ ] **Assessment approval workflow** — multi-step review → approve → sign-off; role-gated; full audit trail per step; email notifications at each transition
+- [x] **Assessment approval workflow** — multi-step review → approve → sign-off; role-gated; full audit trail per step; email notifications at each transition
 - [ ] **SLA tracking and automated vendor reminders** — due-date enforcement, escalation rules, overdue notifications
 - [ ] **Compliance template library** — ISO 27001, SOC 2, DORA, HIPAA, NIST CSF, CIS Controls; Premium unlocks additional frameworks beyond NIS2
 - [ ] **Continuous compliance monitoring** — recurring assessment schedules, risk trend charts, regression detection, automated re-assessment triggers

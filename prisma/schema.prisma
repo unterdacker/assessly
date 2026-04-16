@@ -13,8 +13,13 @@ datasource db {
 
 enum AssessmentStatus {
   PENDING
-  IN_REVIEW
+  UNDER_REVIEW
+  SUBMITTED
+  REVIEWER_APPROVED
+  SIGN_OFF
   COMPLETED
+  REJECTED
+  ARCHIVED
 }
 
 enum RiskLevel {
@@ -159,6 +164,8 @@ model User {
   createdWebhooks               Webhook[]               @relation("WebhookCreatedBy")
   createdQuestionnaireTemplates QuestionnaireTemplate[] @relation("TemplateCreatedBy")
   createdApiKeys                ApiKey[]                @relation("ApiKeyCreatedBy")
+  reviewedAssessments           Assessment[]            @relation("AssessmentReviewer")
+  assessmentApprovalSteps       AssessmentApprovalStep[] @relation("ApprovalStepActor")
 
   @@unique([companyId, ssoProviderId])
   @@index([companyId])
@@ -249,9 +256,29 @@ model Assessment {
   documents        Document[]
   execReports      ExecReport[]
   remediationTasks RemediationTask[]
+  approvalSteps    AssessmentApprovalStep[]
+  reviewerUserId   String?
+  reviewerUser     User?   @relation("AssessmentReviewer", fields: [reviewerUserId], references: [id], onDelete: SetNull)
 
   @@index([companyId])
   @@index([vendorId])
+}
+
+/// Approval workflow audit trail — each row records one state transition.
+/// GDPR: actorUserId SET NULL on user deletion; comment nullified in deleteUser $transaction.
+model AssessmentApprovalStep {
+  id           String           @id @default(cuid())
+  assessmentId String
+  assessment   Assessment       @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  fromStatus   AssessmentStatus
+  toStatus     AssessmentStatus
+  actorUserId  String?
+  actorUser    User?            @relation("ApprovalStepActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  comment      String?
+  createdAt    DateTime         @default(now())
+
+  @@index([assessmentId])
+  @@index([actorUserId])
 }
 
 model ExecReport {

@@ -247,6 +247,12 @@ export async function deleteUser(
       where: { userId: targetUserId, revokedAt: null },
       data: { revokedAt: new Date() },
     });
+
+    // GDPR Art. 17 — anonymize approval step comments authored by deleted user
+    await tx.assessmentApprovalStep.updateMany({
+      where: { actorUserId: targetUserId },
+      data: { comment: null },
+    });
   });
 
   await logAuditEvent(
