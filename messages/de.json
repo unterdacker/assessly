@@ -1377,5 +1377,33 @@
       "optional": "Optional"
     }
   },
-  "Premium": "Premium"
+  "Premium": "Premium",
+  "ComplianceLibrary": {
+    "title": "Compliance-Vorlagenbibliothek",
+    "description": "Vorgefertigte Compliance-Framework-Fragebögen durchsuchen und bereitstellen",
+    "navTitle": "Compliance-Vorlagenbibliothek",
+    "navDesc": "NIS2-, DORA-, ISO 27001-, SOC 2-, HIPAA-, NIST-CSF- und CIS-Controls-Vorlagen bereitstellen",
+    "pageTitle": "Compliance-Vorlagenbibliothek",
+    "pageDescription": "Stellen Sie vorgefertigte Compliance-Framework-Fragebögen in Ihrer Vorlagensammlung bereit. Kostenlose Frameworks sind sofort verfügbar; Premium-Frameworks erfordern einen Premium-Plan.",
+    "deployButton": "Bereitstellen",
+    "deployedLabel": "Bereitgestellt",
+    "deployingLabel": "Wird bereitgestellt...",
+    "freeLabel": "Kostenlos",
+    "premiumLabel": "Premium",
+    "deploySuccess": "Vorlage erfolgreich bereitgestellt.",
+    "deployFailed": "Vorlage konnte nicht bereitgestellt werden. Bitte erneut versuchen.",
+    "premiumRequired": "Premium-Plan erforderlich.",
+    "alreadyDeployed": "Diese Vorlage wurde bereits bereitgestellt.",
+    "upgradeLabel": "Auf Premium upgraden",
+    "premiumGateBanner": "Einige Frameworks erfordern einen Premium-Plan. Upgraden Sie, um ISO 27001, SOC 2, HIPAA, NIST CSF und CIS Controls freizuschalten.",
+    "frameworks": {
+      "nis2": { "name": "NIS2-Richtlinie", "description": "EU-Richtlinie zur Netz- und Informationssicherheit — zentrale Cybersicherheitskontrollen und Incident-Response." },
+      "dora": { "name": "DORA", "description": "Digital Operational Resilience Act — IKT-Risikomanagement für Finanzunternehmen." },
+      "iso27001": { "name": "ISO 27001", "description": "Internationaler Standard für Informationssicherheits-Managementsysteme (ISMS)." },
+      "soc2_type2": { "name": "SOC 2 Typ II", "description": "Trust Services-Kriterien — Sicherheit, Verfügbarkeit, Vertraulichkeit, Verarbeitungsintegrität und Datenschutz." },
+      "hipaa": { "name": "HIPAA", "description": "Health Insurance Portability and Accountability Act — Schutz von PHI und Meldepflichten bei Datenschutzverletzungen." },
+      "nist_csf": { "name": "NIST CSF", "description": "Cybersicherheits-Framework — Identifizieren, Schützen, Erkennen, Reagieren, Wiederherstellen." },
+      "cis_controls_v8": { "name": "CIS Controls v8", "description": "18 priorisierte Sicherheitsmaßnahmen für die Unternehmens-Cyberabwehr." }
+    }
+  }
 }

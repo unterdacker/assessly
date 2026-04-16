@@ -1339,6 +1339,34 @@
       "optional": "Optional"
     }
   },
-  "Premium": "Premium"
+  "Premium": "Premium",
+  "ComplianceLibrary": {
+    "title": "Compliance Template Library",
+    "description": "Browse and deploy pre-built compliance framework questionnaires",
+    "navTitle": "Compliance Template Library",
+    "navDesc": "Browse and deploy NIS2, DORA, ISO 27001, SOC 2, HIPAA, NIST CSF and CIS Controls templates",
+    "pageTitle": "Compliance Template Library",
+    "pageDescription": "Deploy pre-built compliance framework questionnaires to your template collection. Free frameworks are available immediately; premium frameworks require a Premium plan.",
+    "deployButton": "Deploy",
+    "deployedLabel": "Deployed",
+    "deployingLabel": "Deploying...",
+    "freeLabel": "Free",
+    "premiumLabel": "Premium",
+    "deploySuccess": "Template deployed successfully.",
+    "deployFailed": "Failed to deploy template. Please try again.",
+    "premiumRequired": "Premium plan required.",
+    "alreadyDeployed": "This template has already been deployed.",
+    "upgradeLabel": "Upgrade to Premium",
+    "premiumGateBanner": "Some frameworks require a Premium plan. Upgrade to unlock ISO 27001, SOC 2, HIPAA, NIST CSF, and CIS Controls.",
+    "frameworks": {
+      "nis2": { "name": "NIS2 Directive", "description": "EU Network and Information Security directive — core cybersecurity governance and incident response controls." },
+      "dora": { "name": "DORA", "description": "Digital Operational Resilience Act — ICT risk management for financial sector entities." },
+      "iso27001": { "name": "ISO 27001", "description": "International standard for information security management systems (ISMS)." },
+      "soc2_type2": { "name": "SOC 2 Type II", "description": "Trust Services Criteria — Security, Availability, Confidentiality, Processing Integrity, and Privacy." },
+      "hipaa": { "name": "HIPAA", "description": "Health Insurance Portability and Accountability Act — PHI protection and breach notification." },
+      "nist_csf": { "name": "NIST CSF", "description": "Cybersecurity Framework — Identify, Protect, Detect, Respond, Recover functions." },
+      "cis_controls_v8": { "name": "CIS Controls v8", "description": "18 prioritized safeguard groups for enterprise cyber defense." }
+    }
+  }
 }
 
