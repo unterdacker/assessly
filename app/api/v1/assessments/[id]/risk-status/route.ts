@@ -19,7 +19,7 @@ const ENDPOINT = "/api/v1/assessments/{id}/risk-status";
 
 const riskStatusSchema = z
   .object({
-    status: z.enum(["PENDING", "IN_REVIEW", "COMPLETED"]).optional(),
+    status: z.enum(["PENDING", "UNDER_REVIEW", "SUBMITTED", "REVIEWER_APPROVED", "SIGN_OFF", "COMPLETED", "REJECTED", "ARCHIVED"]).optional(),
     riskLevel: z.enum(["LOW", "MEDIUM", "HIGH"]).optional(),
   })
   .refine(

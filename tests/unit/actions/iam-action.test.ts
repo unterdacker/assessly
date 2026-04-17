@@ -8,6 +8,7 @@ const {
   mockUserCreate,
   mockUserUpdateInTx,
   mockAuthSessionUpdateMany,
+  mockAssessmentApprovalStepUpdateMany,
   mockPrismaTransaction,
   mockRequireAdminUser,
   mockLogAuditEvent,
@@ -21,6 +22,7 @@ const {
   mockUserCreate: vi.fn(),
   mockUserUpdateInTx: vi.fn(),
   mockAuthSessionUpdateMany: vi.fn(),
+  mockAssessmentApprovalStepUpdateMany: vi.fn(),
   mockPrismaTransaction: vi.fn(),
   mockRequireAdminUser: vi.fn(),
   mockLogAuditEvent: vi.fn(),
@@ -63,6 +65,7 @@ describe("iam actions", () => {
         fn({
           user: { update: mockUserUpdateInTx, findUniqueOrThrow: mockUserFindUniqueOrThrow },
           authSession: { updateMany: mockAuthSessionUpdateMany },
+          assessmentApprovalStep: { updateMany: mockAssessmentApprovalStepUpdateMany },
         }),
     );
     mockLogAuditEvent.mockResolvedValue(undefined);

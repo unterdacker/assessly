@@ -84,7 +84,7 @@ const demoVendors: DemoVendor[] = [
     name: "Contoso Cloud IAM",
     email: "trust@contoso.example",
     serviceType: "Identity & Access",
-    status: AssessmentStatus.IN_REVIEW,
+    status: AssessmentStatus.UNDER_REVIEW,
     riskLevel: RiskLevel.MEDIUM,
     complianceScore: 58,
     lastAssessmentDate: new Date("2026-02-02T12:00:00.000Z"),

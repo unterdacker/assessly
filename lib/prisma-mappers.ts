@@ -45,7 +45,7 @@ export function deriveVendorStatus(
 ): VendorStatus {
   if (answerCount === 0) {
     if (assessmentStatus === "COMPLETED") return "completed";
-    if (assessmentStatus === "IN_REVIEW") return "incomplete";
+    if (assessmentStatus === "UNDER_REVIEW") return "incomplete";
     return "pending";
   }
   if (answerCount >= totalQuestions && totalQuestions > 0) return "completed";

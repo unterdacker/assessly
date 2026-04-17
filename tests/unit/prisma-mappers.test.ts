@@ -21,8 +21,8 @@ describe("deriveVendorStatus", () => {
     expect(deriveVendorStatus("COMPLETED", 0, 20)).toBe("completed");
   });
 
-  it("derives incomplete when status is IN_REVIEW and answerCount is zero", () => {
-    expect(deriveVendorStatus("IN_REVIEW", 0, 20)).toBe("incomplete");
+  it("derives incomplete when status is UNDER_REVIEW and answerCount is zero", () => {
+    expect(deriveVendorStatus("UNDER_REVIEW", 0, 20)).toBe("incomplete");
   });
 
   it("derives pending for PENDING with zero answers", () => {

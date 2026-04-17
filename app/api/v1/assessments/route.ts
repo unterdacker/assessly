@@ -22,7 +22,7 @@ const createAssessmentSchema = z.object({
   vendorId: z.string().cuid(),
   riskLevel: z.enum(["LOW", "MEDIUM", "HIGH"]),
   complianceScore: z.number().int().min(0).max(100).optional().default(0),
-  status: z.enum(["PENDING", "IN_REVIEW", "COMPLETED"]).optional().default("PENDING"),
+  status: z.enum(["PENDING", "UNDER_REVIEW", "SUBMITTED", "REVIEWER_APPROVED", "SIGN_OFF", "COMPLETED", "REJECTED", "ARCHIVED"]).optional().default("PENDING"),
 });
 
 export async function GET(request: NextRequest) {
