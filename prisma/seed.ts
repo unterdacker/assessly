@@ -100,8 +100,8 @@ const demoVendors: DemoVendor[] = [
     riskLevel: RiskLevel.HIGH,
     complianceScore: 34,
     lastAssessmentDate: null,
-    vendorCreatedAt: new Date("2025-11-20T09:00:00.000Z"),
-    assessmentUpdatedAt: new Date("2025-11-20T09:00:00.000Z"),
+    vendorCreatedAt: new Date("2026-03-15T09:00:00.000Z"),
+    assessmentUpdatedAt: new Date("2026-03-15T09:00:00.000Z"),
   },
 ];
 
