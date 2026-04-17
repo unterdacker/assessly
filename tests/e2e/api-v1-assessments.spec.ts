@@ -217,11 +217,11 @@ test.describe("/api/v1/assessments", () => {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      data: { status: "IN_REVIEW" },
+      data: { status: "UNDER_REVIEW" },
     });
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body.data.status).toBe("IN_REVIEW");
+    expect(body.data.status).toBe("UNDER_REVIEW");
     expect(body.error).toBeNull();
   });
 

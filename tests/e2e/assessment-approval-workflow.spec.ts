@@ -44,11 +44,13 @@ test.describe("Assessment Approval Workflow - Panel structure", () => {
   });
 
   test("approval history section is present", async ({ page }) => {
-    await expect(page.getByText(/approval history/i)).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText('Approval History', { exact: true })).toBeVisible({ timeout: 8_000 });
   });
 
-  test("free plan shows locked Premium transitions", async ({ page }) => {
-    await expect(page.getByText("Premium").first()).toBeVisible({ timeout: 8_000 });
+  test("premium plan shows submit-for-review transition", async ({ page }) => {
+    await expect(
+      page.getByRole("button", { name: /submit for review/i }),
+    ).toBeVisible({ timeout: 8_000 });
   });
 });
 
@@ -59,7 +61,9 @@ test.describe.serial("Assessment Approval Workflow - Transition flow", () => {
     await signInAsAdmin(page);
     await navigateToApprovalPanel(page);
 
-    await expect(page.getByText("Pending")).toBeVisible({ timeout: 8_000 });
+    await expect(
+      page.getByRole("region", { name: /approval workflow/i }).getByText("Pending", { exact: true }),
+    ).toBeVisible({ timeout: 8_000 });
     await expect(
       page.getByRole("button", { name: /move to under review/i }),
     ).toBeVisible({ timeout: 8_000 });
