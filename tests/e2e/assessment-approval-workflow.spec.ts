@@ -85,7 +85,7 @@ test.describe.serial("Assessment Approval Workflow - Transition flow", () => {
     await expect(
       page.getByRole("status").filter({ hasText: /updated successfully/i }),
     ).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText("Under Review")).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByRole("region", { name: /approval workflow/i }).getByText("Under Review", { exact: true })).toBeVisible({ timeout: 8_000 });
   });
 
   test("Reject button opens inline comment section", async ({ page }) => {
@@ -120,7 +120,7 @@ test.describe.serial("Assessment Approval Workflow - Transition flow", () => {
     await expect(
       page.getByRole("status").filter({ hasText: /updated successfully/i }),
     ).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText("Rejected")).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByRole("region", { name: /approval workflow/i }).getByText("Rejected", { exact: true })).toBeVisible({ timeout: 8_000 });
   });
 
   test("approval history shows the recorded transitions", async ({ page }) => {
