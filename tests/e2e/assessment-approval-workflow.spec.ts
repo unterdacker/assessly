@@ -17,7 +17,14 @@ import { signInAsAdmin, signInAsAuditor } from "./helpers/auth";
 async function navigateToApprovalPanel(page: Page): Promise<void> {
   await page.goto("/en/vendors");
 
-  await page.getByRole("row").nth(1).getByRole("link").first().click();
+  // Target the seeded PENDING vendor (Fabrikam Payments) explicitly - the vendor
+  // list order is not guaranteed and other seeded vendors start in non-PENDING states.
+  await page
+    .getByRole("row")
+    .filter({ hasText: /fabrikam payments/i })
+    .getByRole("link")
+    .first()
+    .click();
   await page.waitForURL(/\/en\/vendors\/.+/, { timeout: 15_000 });
 
   const currentUrl = page.url();
