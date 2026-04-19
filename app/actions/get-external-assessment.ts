@@ -39,6 +39,7 @@ const EMPTY_VENDOR_ASSESSMENT: VendorAssessment = {
   documentFilename: null,
   createdAt: "",
   updatedAt: "",
+  dueDate: null,
   createdBy: "",
   dossierCompletion: 0,
   questionnaireProgress: 0,

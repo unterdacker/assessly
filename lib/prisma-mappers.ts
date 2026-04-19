@@ -112,6 +112,7 @@ export function toVendorAssessment(
     documentFilename: assessment.documentFilename ?? null,
     createdAt: vendor.createdAt.toISOString(),
     updatedAt: vendor.updatedAt.toISOString(),
+    dueDate: assessment.dueDate ? assessment.dueDate.toISOString() : null,
     createdBy: vendor.createdBy,
     dossierCompletion: calculateDossierCompletion({
       registrationId: vendor.registrationId,
