@@ -207,7 +207,7 @@ export default async function AssessmentPage({ params }: PageProps) {
           schedule={schedule ? {
             id: schedule.id,
             interval: schedule.interval,
-            templateId: schedule.templateId,
+            templateId: schedule.templateId ?? undefined,
             autoSend: schedule.autoSend,
             regressionThreshold: schedule.regressionThreshold,
           } : undefined}

@@ -41,6 +41,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: mockPrisma }));
 vi.mock("@/lib/mail", () => ({ sendMail: mockSendMail }));
 vi.mock("@/lib/structured-logger", () => ({
   AuditLogger: mockAuditLogger,
+  AuditCategory: { DATA_OPERATIONS: "DATA_OPERATIONS" },
   LogLevel: { INFO: "INFO", WARN: "WARN", ERROR: "ERROR" },
 }));
 vi.mock("@/lib/env", () => ({ 
@@ -302,7 +303,7 @@ describe("POST /api/cron/compliance-snapshot", () => {
     expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
       where: {
         companyId: "company-4",
-        role: { in: ["ADMIN", "SUPER_ADMIN", "RISK_REVIEWER"] },
+        role: { in: ["ADMIN", "RISK_REVIEWER"] },
         isActive: true,
       },
       select: {
