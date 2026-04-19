@@ -11,7 +11,7 @@ import { sendMail } from "@/lib/mail";
 import { buildVendorInviteEmail } from "@/components/emails/vendor-invite";
 import { logAuditEvent } from "@/lib/audit-log";
 import { AuditLogger } from "@/lib/structured-logger";
-import { BCRYPT_COST_FACTOR, INVITE_TOKEN_EXPIRES_MS } from "@/lib/auth/constants";
+import { INVITE_TOKEN_EXPIRES_MS } from "@/lib/auth/constants";
 
 const ACCESS_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 

@@ -70,7 +70,7 @@ function escapeAttr(str: string): string {
 }
 
 export function buildUserInviteEmail(props: UserInviteEmailProps): UserInviteEmailResult {
-  const { locale, companyName, inviteUrl } = props;
+  const { locale, inviteUrl } = props;
   const c = copy[locale] ?? copy.en;
 
   const subject = c.subject;

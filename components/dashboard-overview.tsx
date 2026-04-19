@@ -19,6 +19,12 @@ import { VendorsByRiskBarChartLazy } from "@/components/vendors-by-risk-bar-char
 import { ComplianceTrustWidget } from "@/components/compliance-trust-widget";
 import { RefreshAiSummaryButton } from "@/components/refresh-ai-summary-button";
 
+type OverdueAssessment = {
+  id: string;
+  vendor?: { name: string };
+  daysOverdue: number;
+};
+
 export type DashboardOverviewProps = {
   vendorAssessments: VendorAssessment[];
   riskPosture: DashboardRiskPostureOverview;
@@ -26,7 +32,7 @@ export type DashboardOverviewProps = {
   locale: string;
   openRemediationCount: number;
   isPremium: boolean;
-  overdueAssessments: any[];
+  overdueAssessments: OverdueAssessment[];
   slaComplianceRate: number;
   translations: {
     Dashboard: string;
@@ -400,7 +406,7 @@ export function DashboardOverview({
                 </p>
                 {overdueAssessments.length > 0 && (
                   <ul className="mt-3 space-y-1.5 text-xs">
-                    {overdueAssessments.slice(0, 3).map((a: any) => (
+                    {overdueAssessments.slice(0, 3).map((a) => (
                       <li key={a.id} className="text-muted-foreground">
                         • {a.vendor?.name ?? "Unknown vendor"} ({a.daysOverdue} days overdue)
                       </li>
