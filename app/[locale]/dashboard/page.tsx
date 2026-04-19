@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { DashboardOverview } from "@/components/dashboard-overview";
+import { PortfolioComplianceWidget } from "@/components/portfolio-compliance-widget";
+import { ComplianceTimelineChartLazy } from "@/components/compliance-timeline-chart-lazy";
 import { getDashboardRiskPostureOverview } from "@/lib/queries/dashboard-risk-posture";
 import { listVendorAssessments } from "@/lib/queries/vendor-assessments";
 import { requirePageRole } from "@/lib/auth/server";
 import { countOpenRemediationTasks } from "@/lib/queries/remediation-tasks";
 import { listOverdueAssessments, getSlaComplianceRate } from "@/modules/sla-tracking/lib/sla-queries";
+import { getComplianceTimeline } from "@/modules/continuous-monitoring/actions/schedule-actions";
 import { isPremiumFeatureEnabled } from "@/lib/enterprise-bridge";
+import type { ComplianceSnapshotItem } from "@/modules/continuous-monitoring/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +36,23 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   const locale = (await getLocale()) as "en" | "de";
   
   const isPremium = await isPremiumFeatureEnabled(session.companyId ?? "");
+  
+  // Fetch compliance data for Premium users
+  let portfolioScore = 0;
+  let portfolioTrend: "up" | "down" | "stable" = "stable";
+  let complianceSnapshots: ComplianceSnapshotItem[] = [];
+  
+  if (isPremium) {
+    const result = await getComplianceTimeline(2);
+    if (result.success && result.data.length > 0) {
+      portfolioScore = result.data[0].overallScore;
+      complianceSnapshots = result.data;
+      if (result.data.length >= 2) {
+        const diff = result.data[0].overallScore - result.data[1].overallScore;
+        portfolioTrend = diff > 1 ? "up" : diff < -1 ? "down" : "stable";
+      }
+    }
+  }
   
   const [vendorAssessments, riskPosture, openRemediationCount, overdueAssessments, slaComplianceRate] = await Promise.all([
     listVendorAssessments(),
@@ -120,17 +141,52 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     DownloadForensicAuditFailed: t("DownloadForensicAuditFailed"),
   };
 
+  // Continuous monitoring translations
+  const cmTranslations = isPremium ? {
+    widget: {
+      title: t("ContinuousMonitoring.widget.title"),
+      trendUp: t("ContinuousMonitoring.widget.trendUp"),
+      trendDown: t("ContinuousMonitoring.widget.trendDown"),
+      trendStable: t("ContinuousMonitoring.widget.trendStable"),
+      vendors: t("ContinuousMonitoring.widget.vendors"),
+      noData: t("ContinuousMonitoring.widget.noData"),
+    },
+    chart: {
+      title: t("ContinuousMonitoring.timeline.title"),
+      noData: t("ContinuousMonitoring.timeline.noData"),
+      xAxisLabel: t("ContinuousMonitoring.timeline.xAxis"),
+      yAxisLabel: t("ContinuousMonitoring.timeline.yAxis"),
+    },
+  } : null;
+
   return (
-    <DashboardOverview
-      isPremium={isPremium}
-      overdueAssessments={overdueAssessments}
-      slaComplianceRate={slaComplianceRate}
-      vendorAssessments={vendorAssessments}
-      riskPosture={riskPosture}
-      role={session.role}
-      locale={locale}
-      openRemediationCount={openRemediationCount}
-      translations={translations}
-    />
+    <>
+      <DashboardOverview
+        isPremium={isPremium}
+        overdueAssessments={overdueAssessments}
+        slaComplianceRate={slaComplianceRate}
+        vendorAssessments={vendorAssessments}
+        riskPosture={riskPosture}
+        role={session.role}
+        locale={locale}
+        openRemediationCount={openRemediationCount}
+        translations={translations}
+      />
+      
+      {isPremium && cmTranslations && (
+        <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 mt-8 space-y-6">
+          <PortfolioComplianceWidget
+            score={portfolioScore}
+            trend={portfolioTrend}
+            vendorCount={vendorAssessments.length}
+            translations={cmTranslations.widget}
+          />
+          <ComplianceTimelineChartLazy
+            snapshots={complianceSnapshots}
+            translations={cmTranslations.chart}
+          />
+        </div>
+      )}
+    </>
   );
 }

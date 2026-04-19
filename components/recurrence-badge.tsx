@@ -1,0 +1,53 @@
+import { differenceInDays } from "date-fns";
+
+type RecurrenceBadgeProps = {
+  interval: "MONTHLY" | "QUARTERLY" | "SEMI_ANNUAL" | "ANNUAL";
+  nextDueAt: Date;
+  translations: {
+    monthly: string;
+    quarterly: string;
+    semiAnnual: string;
+    annual: string;
+    daysUntilDue: string;
+    daysOverdue: string;
+  };
+};
+
+export function RecurrenceBadge({ interval, nextDueAt, translations }: RecurrenceBadgeProps) {
+  const now = new Date();
+  const daysUntilDue = differenceInDays(nextDueAt, now);
+  const isOverdue = daysUntilDue < 0;
+  const daysAbsolute = Math.abs(daysUntilDue);
+  const isApproachingDue = daysUntilDue >= 0 && daysUntilDue < 7;
+
+  const intervalLabel = {
+    MONTHLY: translations.monthly,
+    QUARTERLY: translations.quarterly,
+    SEMI_ANNUAL: translations.semiAnnual,
+    ANNUAL: translations.annual,
+  }[interval];
+
+  const statusText = isOverdue
+    ? translations.daysOverdue.replace("{days}", String(daysAbsolute))
+    : translations.daysUntilDue.replace("{days}", String(daysAbsolute));
+
+  const ariaLabel = isOverdue
+    ? `Recurrence: ${intervalLabel}, overdue by ${daysAbsolute} days`
+    : `Recurrence: ${intervalLabel}, due in ${daysAbsolute} days`;
+
+  const colorClasses = isOverdue
+    ? "border-red-300 bg-red-100 text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-300"
+    : isApproachingDue
+      ? "border-amber-300 bg-amber-100 text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
+      : "border-slate-300 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
+
+  return (
+    <span
+      role="status"
+      aria-label={ariaLabel}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${colorClasses}`}
+    >
+      {intervalLabel} · {statusText}
+    </span>
+  );
+}

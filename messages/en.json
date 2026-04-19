@@ -1340,6 +1340,68 @@
     }
   },
   "Premium": "Premium",
+  "ContinuousMonitoring": {
+    "intervalMonthly": "Monthly",
+    "intervalQuarterly": "Quarterly",
+    "intervalSemiAnnual": "Semi-annual",
+    "intervalAnnual": "Annual",
+    "badge": {
+      "daysUntilDue": "due in {days}d",
+      "daysOverdue": "overdue {days}d",
+      "today": "due today"
+    },
+    "form": {
+      "title": "Recurrence Schedule",
+      "titleEdit": "Edit Recurrence Schedule",
+      "intervalLabel": "Assessment Frequency",
+      "templateLabel": "Questionnaire Template",
+      "templateNone": "No template",
+      "autoSendLabel": "Automatically send assessment invitations",
+      "autoSendHint": "Premium: Invitations are sent automatically on the due date.",
+      "regressionThresholdLabel": "Regression Alert Threshold (%)",
+      "regressionThresholdHint": "Premium: Alert when category score drops by this percentage.",
+      "submitCreate": "Create Schedule",
+      "submitUpdate": "Save Changes",
+      "cancel": "Cancel",
+      "successCreate": "Schedule created successfully",
+      "successUpdate": "Schedule updated successfully",
+      "errorDuplicate": "A schedule already exists for this vendor",
+      "errorPremiumRequired": "Upgrade to Premium to enable auto-send",
+      "errorRateLimit": "Too many requests. Please try again later.",
+      "premiumLabel": "Premium",
+      "premiumRequired": "Premium plan required for this feature"
+    },
+    "manualReassessment": {
+      "button": "Start Re-assessment",
+      "dialogTitle": "Trigger Reassessment",
+      "dialogDescription": "This will schedule a new assessment for {vendorName} and reset the next due date.",
+      "confirm": "Trigger",
+      "cancel": "Cancel",
+      "success": "Reassessment triggered successfully",
+      "error": "Failed to trigger reassessment",
+      "rateLimit": "Rate limit exceeded. Maximum 5 reassessments per hour per vendor."
+    },
+    "timeline": {
+      "title": "Compliance Posture Timeline",
+      "noData": "No compliance data yet. Snapshots are generated daily.",
+      "xAxis": "Month",
+      "yAxis": "Overall Score (%)"
+    },
+    "regressionAlert": {
+      "title": "Compliance Regression Detected",
+      "message": "The following categories show a significant decline:",
+      "dismiss": "Dismiss",
+      "category": "Category"
+    },
+    "widget": {
+      "title": "Compliance Posture",
+      "trendUp": "Improving",
+      "trendDown": "Declining",
+      "trendStable": "Stable",
+      "vendors": "vendors monitored",
+      "noData": "No data available"
+    }
+  },
   "ComplianceLibrary": {
     "title": "Compliance Template Library",
     "description": "Browse and deploy pre-built compliance framework questionnaires",

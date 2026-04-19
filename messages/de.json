@@ -1378,6 +1378,68 @@
     }
   },
   "Premium": "Premium",
+  "ContinuousMonitoring": {
+    "intervalMonthly": "Monatlich",
+    "intervalQuarterly": "Vierteljährlich",
+    "intervalSemiAnnual": "Halbjährlich",
+    "intervalAnnual": "Jährlich",
+    "badge": {
+      "daysUntilDue": "fällig in {days}T",
+      "daysOverdue": "überfällig {days}T",
+      "today": "heute fällig"
+    },
+    "form": {
+      "title": "Wiederholungszeitplan",
+      "titleEdit": "Wiederholungszeitplan bearbeiten",
+      "intervalLabel": "Bewertungshäufigkeit",
+      "templateLabel": "Fragebogenvorlage",
+      "templateNone": "Keine Vorlage",
+      "autoSendLabel": "Bewertungseinladungen automatisch versenden",
+      "autoSendHint": "Premium: Einladungen werden automatisch am Fälligkeitsdatum versendet.",
+      "regressionThresholdLabel": "Regressions-Alarmschwelle (%)",
+      "regressionThresholdHint": "Premium: Alarm bei Rückgang der Kategorie-Punktzahl um diesen Prozentsatz.",
+      "submitCreate": "Zeitplan erstellen",
+      "submitUpdate": "Änderungen speichern",
+      "cancel": "Abbrechen",
+      "successCreate": "Zeitplan erfolgreich erstellt",
+      "successUpdate": "Zeitplan erfolgreich aktualisiert",
+      "errorDuplicate": "Für diesen Anbieter existiert bereits ein Zeitplan",
+      "errorPremiumRequired": "Upgrade auf Premium erforderlich, um Auto-Versand zu aktivieren",
+      "errorRateLimit": "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
+      "premiumLabel": "Premium",
+      "premiumRequired": "Premium-Plan für diese Funktion erforderlich"
+    },
+    "manualReassessment": {
+      "button": "Neubewertung starten",
+      "dialogTitle": "Neubewertung auslösen",
+      "dialogDescription": "Dies plant eine neue Bewertung für {vendorName} und setzt das nächste Fälligkeitsdatum zurück.",
+      "confirm": "Auslösen",
+      "cancel": "Abbrechen",
+      "success": "Neubewertung erfolgreich ausgelöst",
+      "error": "Neubewertung konnte nicht ausgelöst werden",
+      "rateLimit": "Ratenbegrenzung überschritten. Maximal 5 Neubewertungen pro Stunde pro Anbieter."
+    },
+    "timeline": {
+      "title": "Compliance-Lage-Zeitlinie",
+      "noData": "Noch keine Compliance-Daten. Snapshots werden täglich generiert.",
+      "xAxis": "Monat",
+      "yAxis": "Gesamtpunktzahl (%)"
+    },
+    "regressionAlert": {
+      "title": "Compliance-Rückgang erkannt",
+      "message": "Die folgenden Kategorien zeigen einen signifikanten Rückgang:",
+      "dismiss": "Verwerfen",
+      "category": "Kategorie"
+    },
+    "widget": {
+      "title": "Compliance-Lage",
+      "trendUp": "Verbesserung",
+      "trendDown": "Rückgang",
+      "trendStable": "Stabil",
+      "vendors": "Anbieter überwacht",
+      "noData": "Keine Daten verfügbar"
+    }
+  },
   "ComplianceLibrary": {
     "title": "Compliance-Vorlagenbibliothek",
     "description": "Vorgefertigte Compliance-Framework-Fragebögen durchsuchen und bereitstellen",

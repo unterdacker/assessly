@@ -74,6 +74,13 @@ enum ReminderType {
   MANUAL
 }
 
+enum RecurrenceInterval {
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUAL
+  ANNUAL
+}
+
 model Company {
   id                 String      @id @default(cuid())
   name               String
@@ -104,6 +111,8 @@ model Company {
   apiKeys                  ApiKey[]
   questionnaireTemplates   QuestionnaireTemplate[]
   slaPolicies              SlaPolicy[]
+  recurrenceSchedules      RecurrenceSchedule[]
+  complianceSnapshots      ComplianceSnapshot[]
 }
 
 model OidcConfig {
@@ -173,6 +182,7 @@ model User {
   createdQuestionnaireTemplates QuestionnaireTemplate[] @relation("TemplateCreatedBy")
   createdApiKeys                ApiKey[]                @relation("ApiKeyCreatedBy")
   reviewedAssessments           Assessment[]            @relation("AssessmentReviewer")
+  createdRecurrenceSchedules    RecurrenceSchedule[]    @relation("RecurrenceScheduleCreatedBy")
   assessmentApprovalSteps       AssessmentApprovalStep[] @relation("ApprovalStepActor")
   escalationSlaPolicies         SlaPolicy[]             @relation("SlaEscalationRecipient")
 
@@ -235,11 +245,12 @@ model Vendor {
   inviteTokenExpires      DateTime?
   /// SHA-256 hash of the 32-byte random one-time setup token (plaintext never stored).
   setupToken              String?   @unique
-  /// Expiry for the setup token (48 hours from invite creation).
-  setupTokenExpires       DateTime?
+  /// Expiry for the one-time setup token (48 hours from access code generation).
+  setupTokenExpires   DateTime?
 
-  assessment Assessment?
-  user       User?
+  assessment         Assessment?
+  user               User?
+  recurrenceSchedule RecurrenceSchedule?
 
   @@index([companyId])
 }
@@ -263,16 +274,17 @@ model Assessment {
 
   dueDate          DateTime?
   slaPolicyId      String?
-  slaPolicy        SlaPolicy?         @relation(fields: [slaPolicyId], references: [id], onDelete: SetNull)
-  slaBreached      Boolean            @default(false)
+  slaPolicy        SlaPolicy?               @relation(fields: [slaPolicyId], references: [id], onDelete: SetNull)
+  slaBreached      Boolean                  @default(false)
   answers          AssessmentAnswer[]
   documents        Document[]
   execReports      ExecReport[]
-  remediationTasks RemediationTask[]
   approvalSteps    AssessmentApprovalStep[]
   reminders        AssessmentReminder[]
   reviewerUserId   String?
-  reviewerUser     User?   @relation("AssessmentReviewer", fields: [reviewerUserId], references: [id], onDelete: SetNull)
+  reviewerUser     User?                    @relation("AssessmentReviewer", fields: [reviewerUserId], references: [id], onDelete: SetNull)
+  recurrenceSchedules RecurrenceSchedule[]  @relation("RecurrenceLastAssessment")
+  remediationTasks RemediationTask[]
 
   @@index([companyId])
   @@index([vendorId])
@@ -579,18 +591,20 @@ model ApiKeyUsageLog {
 
 /// Premium feature — implementation in modules/questionnaire-builder/
 model QuestionnaireTemplate {
-  id                String            @id @default(cuid())
-  companyId         String
-  company           Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  name              String
-  description       String?
-  systemTemplateKey String?
-  isActive          Boolean           @default(true)
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  createdByUserId   String?
-  createdBy         User?             @relation("TemplateCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
-  sections          TemplateSection[]
+  id                   String                @id @default(cuid())
+  companyId            String
+  company              Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name                 String
+  description          String?
+  systemTemplateKey    String?
+  frameworkCategory    String?
+  isActive             Boolean               @default(true)
+  createdByUserId      String?
+  createdBy            User?                 @relation("TemplateCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  sections             TemplateSection[]
+  recurrenceSchedules  RecurrenceSchedule[]
 
   @@unique([companyId, systemTemplateKey])
   @@index([companyId])
@@ -675,4 +689,47 @@ model AssessmentReminder {
 
   @@index([assessmentId])
   @@index([sentAt, scheduledAt])
+}
+
+/// Recurring assessment schedule per vendor. Tracks when next assessment is due.
+model RecurrenceSchedule {
+  id                  String                  @id @default(cuid())
+  vendorId            String
+  vendor              Vendor                  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  companyId           String
+  company             Company                 @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  templateId          String?
+  template            QuestionnaireTemplate?  @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  interval            RecurrenceInterval
+  lastAssessmentId    String?
+  lastAssessment      Assessment?             @relation("RecurrenceLastAssessment", fields: [lastAssessmentId], references: [id], onDelete: SetNull)
+  nextDueAt           DateTime
+  isActive            Boolean                 @default(true)
+  autoSend            Boolean                 @default(false)
+  regressionThreshold Int                     @default(10)
+  createdByUserId     String?
+  createdBy           User?                   @relation("RecurrenceScheduleCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+
+  @@unique([vendorId, companyId])
+  @@index([companyId])
+  @@index([nextDueAt])
+  @@index([companyId, isActive])
+}
+
+/// NIS2 Art. 21 compliance record. Retain for 5 years. Anonymized (no PII).
+/// categoryScores: Record<string, number> — aggregated numeric scores per category only.
+model ComplianceSnapshot {
+  id             String   @id @default(cuid())
+  companyId      String
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  snapshotDate   DateTime
+  overallScore   Decimal  @db.Decimal(5, 2)
+  categoryScores Json
+  frameworkKey   String?
+  vendorCount    Int
+  createdAt      DateTime @default(now())
+
+  @@index([companyId, snapshotDate])
 }
