@@ -131,7 +131,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           subject: buildEscalationSubject({
             vendorName: assessment.vendor?.name ?? "Vendor",
             companyName: assessment.vendor?.company?.name ?? "Company",
+            assessmentUrl: `${appEnv.url}/external/portal`,
+            daysOverdue,
             policyName: assessment.slaPolicy?.name ?? "SLA Policy",
+            escalationRecipientName: recipientUser.displayName ?? recipientUser.email,
           }),
           html: buildEscalationHtml({
             vendorName: assessment.vendor?.name ?? "Vendor",

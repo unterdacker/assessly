@@ -32,6 +32,7 @@ export type VendorAssessment = {
   documentFilename: string | null;
   createdAt: string;
   updatedAt: string;
+  dueDate: string | null;
   /** Opaque user/service id when authenticated; placeholder in this prototype. */
   createdBy: string;
   /** Completeness of the vendor profile master data (0–100). */

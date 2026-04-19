@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { type NextRequest } from "next/server";
 
 const {
   mockListPendingReminders,
@@ -66,7 +67,7 @@ describe("POST /api/cron/sla-reminders", () => {
       method: "POST",
     });
 
-    const response = await POST(request);
+    const response = await POST(request as unknown as NextRequest);
 
     expect(response.status).toBe(401);
     const body = await response.json();
@@ -81,7 +82,7 @@ describe("POST /api/cron/sla-reminders", () => {
       },
     });
 
-    const response = await POST(request);
+    const response = await POST(request as unknown as NextRequest);
 
     expect(response.status).toBe(401);
     const body = await response.json();
@@ -96,7 +97,7 @@ describe("POST /api/cron/sla-reminders", () => {
       },
     });
 
-    const response = await POST(request);
+    const response = await POST(request as unknown as NextRequest);
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -143,7 +144,7 @@ describe("POST /api/cron/sla-reminders", () => {
       },
     });
 
-    const response = await POST(request);
+    const response = await POST(request as unknown as NextRequest);
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -203,7 +204,7 @@ describe("POST /api/cron/sla-reminders", () => {
       },
     });
 
-    await POST(request);
+    await POST(request as unknown as NextRequest);
 
     expect(mockPrisma.assessment.update).toHaveBeenCalledWith({
       where: { id: "assessment-2" },
@@ -263,7 +264,7 @@ describe("POST /api/cron/sla-reminders", () => {
       },
     });
 
-    await POST(request);
+    await POST(request as unknown as NextRequest);
 
     expect(mockSendMail).not.toHaveBeenCalled();
     expect(mockPrisma.assessmentReminder.update).toHaveBeenCalledWith({
@@ -313,7 +314,7 @@ describe("POST /api/cron/sla-reminders", () => {
       },
     });
 
-    await POST(request);
+    await POST(request as unknown as NextRequest);
 
     expect(mockSendMail).not.toHaveBeenCalled();
     expect(mockPrisma.assessmentReminder.update).toHaveBeenCalledWith({
@@ -362,7 +363,7 @@ describe("POST /api/cron/sla-reminders", () => {
       },
     });
 
-    await POST(request);
+    await POST(request as unknown as NextRequest);
 
     expect(mockAuditLogger.systemHealth).toHaveBeenCalledWith(
       "cron.sla_reminders.batch_capped",
@@ -386,7 +387,7 @@ describe("POST /api/cron/sla-reminders", () => {
       },
     });
 
-    const response = await POST(request);
+    const response = await POST(request as unknown as NextRequest);
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -435,7 +436,7 @@ describe("POST /api/cron/sla-reminders", () => {
       },
     });
 
-    const response = await POST(request);
+    const response = await POST(request as unknown as NextRequest);
 
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -488,7 +489,7 @@ describe("POST /api/cron/sla-reminders", () => {
       },
     });
 
-    await POST(request);
+    await POST(request as unknown as NextRequest);
 
     expect(mockIsPremiumPlan).toHaveBeenCalledWith("company-1");
   });

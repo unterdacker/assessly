@@ -36,6 +36,7 @@ const {
     assessment: {
       findFirst: vi.fn(),
       update: vi.fn(),
+      findMany: vi.fn(),
     },
     slaPolicy: {
       create: vi.fn(),
@@ -198,8 +199,7 @@ describe("setAssessmentDueDate", () => {
 
     expect(result.success).toBe(true);
     expect(mockPrisma.assessment.findFirst).toHaveBeenCalledWith({
-      where: { id: "assessment-1" },
-      include: { vendor: true },
+      where: { id: "assessment-1", companyId: "company-1" },
     });
     expect(mockPrisma.assessment.update).toHaveBeenCalledWith({
       where: { id: "assessment-1" },

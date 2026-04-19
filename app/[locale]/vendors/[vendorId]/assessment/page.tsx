@@ -58,8 +58,7 @@ export default async function AssessmentPage({ params }: PageProps) {
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 mb-4 flex items-center gap-3 flex-wrap">
         <OverdueBadge dueDate={detail.vendorAssessment.dueDate} />
         {(session.role === "ADMIN" ||
-          session.role === "RISK_REVIEWER" ||
-          session.role === "SUPER_ADMIN") && (
+          session.role === "RISK_REVIEWER") && (
           <>
             <DueDatePicker
               assessmentId={detail.assessmentId}

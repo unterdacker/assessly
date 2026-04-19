@@ -31,9 +31,9 @@ export type DashboardOverviewProps = {
   role: UserRole;
   locale: string;
   openRemediationCount: number;
-  isPremium: boolean;
-  overdueAssessments: OverdueAssessment[];
-  slaComplianceRate: number;
+  isPremium?: boolean;
+  overdueAssessments?: OverdueAssessment[];
+  slaComplianceRate?: number;
   translations: {
     Dashboard: string;
     DashboardDesc: string;
@@ -118,9 +118,9 @@ export function DashboardOverview({
   role,
   locale,
   openRemediationCount,
-  isPremium,
-  overdueAssessments,
-  slaComplianceRate,
+  isPremium = false,
+  overdueAssessments = [],
+  slaComplianceRate = 0,
   translations,
 }: DashboardOverviewProps) {
   const score = supplyChainRiskScore(vendorAssessments);
