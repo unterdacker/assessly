@@ -1410,6 +1410,81 @@
     "reassignError": "Failed to reassign reviewer.",
     "actorLabel": "Changed by",
     "systemActor": "System"
+  },
+  "SlaTracking": {
+    "overdueBadge": {
+      "overdue": "{days} days overdue",
+      "overdueOne": "1 day overdue",
+      "dueToday": "Due today",
+      "dueIn": "Due in {days} days",
+      "dueInOne": "Due in 1 day"
+    },
+    "dueDatePicker": {
+      "label": "Set due date",
+      "placeholder": "No due date",
+      "clear": "Clear due date",
+      "success": "Due date updated",
+      "error": "Failed to update due date"
+    },
+    "manualReminderButton": {
+      "send": "Send reminder",
+      "title": "Send reminder",
+      "description": "This will send an email reminder to the vendor to complete the assessment.",
+      "confirm": "Send",
+      "cancel": "Cancel",
+      "success": "Reminder sent",
+      "error": "Failed to send reminder",
+      "lastSent": "Last sent: {time}"
+    },
+    "slaPolicyForm": {
+      "nameLabel": "Policy name",
+      "namePlaceholder": "e.g. Standard 30-day SLA",
+      "nameRequired": "Policy name is required",
+      "responseDaysLabel": "Response time (days)",
+      "responseDaysPlaceholder": "30",
+      "reminderIntervalsLabel": "Reminder intervals (days before due)",
+      "reminderIntervalsHelp": "Comma-separated days before due date, e.g. 7, 3, 1",
+      "escalationDaysLabel": "Escalation after (days overdue)",
+      "escalationDaysPlaceholder": "7",
+      "escalationRecipientLabel": "Escalation recipient",
+      "escalationRecipientPlaceholder": "None",
+      "escalationRecipientHelp": "User notified when assessment is escalated",
+      "isDefaultLabel": "Set as company default",
+      "submitCreate": "Create policy",
+      "submitUpdate": "Save changes",
+      "deleteButton": "Delete",
+      "deleteConfirm": "Delete policy {name}? This cannot be undone.",
+      "deleteCancel": "Cancel",
+      "deleteTitle": "Delete SLA policy",
+      "saveSuccess": "Policy saved",
+      "saveError": "Failed to save policy",
+      "deleteSuccess": "Policy deleted",
+      "deleteError": "Failed to delete policy",
+      "noUsers": "No users available"
+    },
+    "slaPolicySelector": {
+      "label": "SLA policy",
+      "noPolicy": "No policy",
+      "selectPlaceholder": "Select a policy..."
+    },
+    "overdueDashboardWidget": {
+      "title": "Overdue assessments",
+      "description": "Assessments past their due date",
+      "empty": "No overdue assessments",
+      "vendorColumn": "Vendor",
+      "dueDateColumn": "Due date",
+      "daysOverdueColumn": "Days overdue",
+      "showing": "Showing {count} most overdue"
+    },
+    "slaComplianceRate": {
+      "label": "SLA compliance rate",
+      "description": "Percentage of assessments completed on time"
+    },
+    "slaPoliciesPage": {
+      "title": "SLA Policies",
+      "description": "Manage automated SLA tracking and reminder policies",
+      "premiumRequired": "SLA policies require a Premium plan. Upgrade to enable automated reminders and escalation."
+    }
   }
 }
 

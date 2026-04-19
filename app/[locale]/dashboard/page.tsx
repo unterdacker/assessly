@@ -5,6 +5,8 @@ import { getDashboardRiskPostureOverview } from "@/lib/queries/dashboard-risk-po
 import { listVendorAssessments } from "@/lib/queries/vendor-assessments";
 import { requirePageRole } from "@/lib/auth/server";
 import { countOpenRemediationTasks } from "@/lib/queries/remediation-tasks";
+import { listOverdueAssessments, getSlaComplianceRate } from "@/modules/sla-tracking/lib/sla-queries";
+import { isPremiumFeatureEnabled } from "@/lib/enterprise-bridge";
 
 export const dynamic = "force-dynamic";
 
@@ -28,10 +30,15 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   const session = await requirePageRole(["ADMIN", "RISK_REVIEWER", "AUDITOR"], routeLocale);
   const t = await getTranslations();
   const locale = (await getLocale()) as "en" | "de";
-  const [vendorAssessments, riskPosture, openRemediationCount] = await Promise.all([
+  
+  const isPremium = await isPremiumFeatureEnabled(session.companyId ?? "");
+  
+  const [vendorAssessments, riskPosture, openRemediationCount, overdueAssessments, slaComplianceRate] = await Promise.all([
     listVendorAssessments(),
     getDashboardRiskPostureOverview(locale),
     countOpenRemediationTasks(session.companyId ?? ""),
+    isPremium ? listOverdueAssessments(session.companyId ?? "", 100).catch(() => []) : Promise.resolve([]),
+    isPremium ? getSlaComplianceRate(session.companyId ?? "").catch(() => 0) : Promise.resolve(0),
   ]);
 
   const translations = {
@@ -115,6 +122,9 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
 
   return (
     <DashboardOverview
+      isPremium={isPremium}
+      overdueAssessments={overdueAssessments}
+      slaComplianceRate={slaComplianceRate}
       vendorAssessments={vendorAssessments}
       riskPosture={riskPosture}
       role={session.role}

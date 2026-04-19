@@ -25,6 +25,9 @@ export type DashboardOverviewProps = {
   role: UserRole;
   locale: string;
   openRemediationCount: number;
+  isPremium: boolean;
+  overdueAssessments: any[];
+  slaComplianceRate: number;
   translations: {
     Dashboard: string;
     DashboardDesc: string;
@@ -109,6 +112,9 @@ export function DashboardOverview({
   role,
   locale,
   openRemediationCount,
+  isPremium,
+  overdueAssessments,
+  slaComplianceRate,
   translations,
 }: DashboardOverviewProps) {
   const score = supplyChainRiskScore(vendorAssessments);
@@ -351,6 +357,66 @@ export function DashboardOverview({
           </ul>
         </CardContent>
       </Card>
+
+      {isPremium && (overdueAssessments.length > 0 || slaComplianceRate > 0) && (
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-slate-50">
+              SLA Tracking
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Monitor assessment SLA compliance and overdue vendors
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">SLA Compliance Rate</CardTitle>
+                <p className="text-sm font-normal text-muted-foreground">
+                  Percentage of assessments meeting SLA targets
+                </p>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-semibold tabular-nums">
+                  {Math.round(slaComplianceRate)}%
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Based on completed assessments in last 90 days
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Overdue Assessments</CardTitle>
+                <p className="text-sm font-normal text-muted-foreground">
+                  Vendors requiring immediate attention
+                </p>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-semibold tabular-nums text-destructive">
+                  {overdueAssessments.length}
+                </p>
+                {overdueAssessments.length > 0 && (
+                  <ul className="mt-3 space-y-1.5 text-xs">
+                    {overdueAssessments.slice(0, 3).map((a: any) => (
+                      <li key={a.id} className="text-muted-foreground">
+                        • {a.vendor?.name ?? "Unknown vendor"} ({a.daysOverdue} days overdue)
+                      </li>
+                    ))}
+                    {overdueAssessments.length > 3 && (
+                      <li className="text-muted-foreground">
+                        + {overdueAssessments.length - 3} more
+                      </li>
+                    )}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      )}
 
       <ComplianceTrustWidget
         metrics={riskPosture.complianceTrust}

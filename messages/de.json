@@ -1448,5 +1448,80 @@
     "reassignError": "Pr�fer konnte nicht neu zugewiesen werden.",
     "actorLabel": "Ge�ndert von",
     "systemActor": "System"
+  },
+  "SlaTracking": {
+    "overdueBadge": {
+      "overdue": "{days} Tage überfällig",
+      "overdueOne": "1 Tag überfällig",
+      "dueToday": "Heute fällig",
+      "dueIn": "Fällig in {days} Tagen",
+      "dueInOne": "Fällig in 1 Tag"
+    },
+    "dueDatePicker": {
+      "label": "Fälligkeitsdatum setzen",
+      "placeholder": "Kein Fälligkeitsdatum",
+      "clear": "Fälligkeitsdatum löschen",
+      "success": "Fälligkeitsdatum aktualisiert",
+      "error": "Fälligkeitsdatum konnte nicht aktualisiert werden"
+    },
+    "manualReminderButton": {
+      "send": "Erinnerung senden",
+      "title": "Erinnerung senden",
+      "description": "Dies sendet eine E-Mail-Erinnerung an den Anbieter, die Bewertung abzuschließen.",
+      "confirm": "Senden",
+      "cancel": "Abbrechen",
+      "success": "Erinnerung gesendet",
+      "error": "Erinnerung konnte nicht gesendet werden",
+      "lastSent": "Zuletzt gesendet: {time}"
+    },
+    "slaPolicyForm": {
+      "nameLabel": "Richtlinienname",
+      "namePlaceholder": "z.B. Standard-30-Tage-SLA",
+      "nameRequired": "Richtlinienname ist erforderlich",
+      "responseDaysLabel": "Reaktionszeit (Tage)",
+      "responseDaysPlaceholder": "30",
+      "reminderIntervalsLabel": "Erinnerungsintervalle (Tage vor Fälligkeit)",
+      "reminderIntervalsHelp": "Kommagetrennte Tage vor Fälligkeit, z.B. 7, 3, 1",
+      "escalationDaysLabel": "Eskalation nach (Tage überfällig)",
+      "escalationDaysPlaceholder": "7",
+      "escalationRecipientLabel": "Eskalationsempfänger",
+      "escalationRecipientPlaceholder": "Keiner",
+      "escalationRecipientHelp": "Benutzer, der benachrichtigt wird, wenn die Bewertung eskaliert wird",
+      "isDefaultLabel": "Als Unternehmensstandard festlegen",
+      "submitCreate": "Richtlinie erstellen",
+      "submitUpdate": "Änderungen speichern",
+      "deleteButton": "Löschen",
+      "deleteConfirm": "Richtlinie {name} löschen? Dies kann nicht rückgängig gemacht werden.",
+      "deleteCancel": "Abbrechen",
+      "deleteTitle": "SLA-Richtlinie löschen",
+      "saveSuccess": "Richtlinie gespeichert",
+      "saveError": "Richtlinie konnte nicht gespeichert werden",
+      "deleteSuccess": "Richtlinie gelöscht",
+      "deleteError": "Richtlinie konnte nicht gelöscht werden",
+      "noUsers": "Keine Benutzer verfügbar"
+    },
+    "slaPolicySelector": {
+      "label": "SLA-Richtlinie",
+      "noPolicy": "Keine Richtlinie",
+      "selectPlaceholder": "Richtlinie auswählen..."
+    },
+    "overdueDashboardWidget": {
+      "title": "Überfällige Bewertungen",
+      "description": "Bewertungen nach ihrem Fälligkeitsdatum",
+      "empty": "Keine überfälligen Bewertungen",
+      "vendorColumn": "Anbieter",
+      "dueDateColumn": "Fälligkeitsdatum",
+      "daysOverdueColumn": "Tage überfällig",
+      "showing": "{count} überfälligste werden angezeigt"
+    },
+    "slaComplianceRate": {
+      "label": "SLA-Konformitätsrate",
+      "description": "Prozentsatz der pünktlich abgeschlossenen Bewertungen"
+    },
+    "slaPoliciesPage": {
+      "title": "SLA-Richtlinien",
+      "description": "Automatische SLA-Verfolgung und Erinnerungsrichtlinien verwalten",
+      "premiumRequired": "SLA-Richtlinien erfordern einen Premium-Plan. Upgraden Sie, um automatische Erinnerungen und Eskalationen zu aktivieren."
+    }
   }
 }

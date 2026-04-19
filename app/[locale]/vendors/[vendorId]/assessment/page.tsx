@@ -10,6 +10,9 @@ import {
   listRemediationTasksByAssessmentId,
 } from "@/lib/queries/remediation-tasks";
 import { ApprovalWorkflowPanel } from "@/modules/approval-workflow/components/approval-workflow-panel";
+import { OverdueBadge } from "@/modules/sla-tracking/components/overdue-badge";
+import { DueDatePicker } from "@/modules/sla-tracking/components/due-date-picker";
+import { ManualReminderButton } from "@/modules/sla-tracking/components/manual-reminder-button";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +55,21 @@ export default async function AssessmentPage({ params }: PageProps) {
 
   return (
     <>
+      <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 mb-4 flex items-center gap-3 flex-wrap">
+        <OverdueBadge dueDate={detail.vendorAssessment.dueDate} />
+        {(session.role === "ADMIN" ||
+          session.role === "RISK_REVIEWER" ||
+          session.role === "SUPER_ADMIN") && (
+          <>
+            <DueDatePicker
+              assessmentId={detail.assessmentId}
+              initialDueDate={detail.vendorAssessment.dueDate}
+            />
+            <ManualReminderButton assessmentId={detail.assessmentId} />
+          </>
+        )}
+      </div>
+
       <AssessmentWorkspace
         vendorAssessment={detail.vendorAssessment}
         assessmentId={detail.assessmentId}
