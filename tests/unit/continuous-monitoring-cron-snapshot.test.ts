@@ -302,7 +302,7 @@ describe("POST /api/cron/compliance-snapshot", () => {
     expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
       where: {
         companyId: "company-4",
-        role: { in: ["ADMIN", "SUPER_ADMIN", "RISK_REVIEWER"] },
+        role: { in: ["ADMIN", "RISK_REVIEWER"] },
         isActive: true,
       },
       select: {

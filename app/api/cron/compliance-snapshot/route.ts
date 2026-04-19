@@ -6,7 +6,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { appEnv } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { sendMail } from "@/lib/mail";
-import { AuditLogger, LogLevel } from "@/lib/structured-logger";
+import { AuditCategory, AuditLogger, LogLevel } from "@/lib/structured-logger";
 import { detectRegression, calculateOverallScore } from "@/modules/continuous-monitoring/lib/regression-detection";
 import { regressionAlertEmail } from "@/modules/continuous-monitoring/lib/email-templates";
 
@@ -153,7 +153,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
             // Log regression in audit trail (stdout for log aggregation)
             AuditLogger.log({
-              category: "DATA_OPERATIONS",
+              category: AuditCategory.DATA_OPERATIONS,
               action: "compliance.regression_detected",
               status: "success",
               level: LogLevel.WARN,
