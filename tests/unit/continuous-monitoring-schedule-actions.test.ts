@@ -215,6 +215,7 @@ describe("createRecurrenceSchedule", () => {
     });
 
     expect(result.success).toBe(true);
+    if (!result.success) return;
     expect(result.data).toMatchObject({
       vendorId: "clxvendor0001",
       companyId: "clxcompany001",
@@ -259,6 +260,7 @@ describe("createRecurrenceSchedule", () => {
     });
 
     expect(result.success).toBe(false);
+    if (result.success) return;
     expect(result.error).toBe("PREMIUM_REQUIRED");
     expect(mockRequirePremiumPlan).toHaveBeenCalledWith("clxcompany001");
     expect(mockPrisma.recurrenceSchedule.create).not.toHaveBeenCalled();
@@ -280,6 +282,7 @@ describe("createRecurrenceSchedule", () => {
     });
 
     expect(result.success).toBe(false);
+    if (result.success) return;
     expect(result.error).toBe("Vendor not found");
     expect(mockPrisma.recurrenceSchedule.create).not.toHaveBeenCalled();
   });
@@ -299,6 +302,7 @@ describe("createRecurrenceSchedule", () => {
     });
 
     expect(result.success).toBe(false);
+    if (result.success) return;
     expect(result.error).toContain("Rate limit");
     expect(mockPrisma.recurrenceSchedule.create).not.toHaveBeenCalled();
   });
@@ -343,6 +347,7 @@ describe("createRecurrenceSchedule", () => {
     });
 
     expect(result.success).toBe(false);
+    if (result.success) return;
     expect(result.error).toBe("Template not found");
     expect(mockPrisma.recurrenceSchedule.create).not.toHaveBeenCalled();
   });
@@ -380,6 +385,7 @@ describe("updateRecurrenceSchedule", () => {
     });
 
     expect(result.success).toBe(false);
+    if (result.success) return;
     expect(result.error).toBe("PREMIUM_REQUIRED");
     expect(mockRequirePremiumPlan).toHaveBeenCalledWith("clxcompany001");
   });
@@ -397,6 +403,7 @@ describe("updateRecurrenceSchedule", () => {
     });
 
     expect(result.success).toBe(false);
+    if (result.success) return;
     expect(result.error).toBe("Schedule not found");
     expect(mockPrisma.recurrenceSchedule.update).not.toHaveBeenCalled();
   });
@@ -409,6 +416,7 @@ describe("updateRecurrenceSchedule", () => {
     });
 
     expect(result.success).toBe(false);
+    if (result.success) return;
     expect(result.error).toBe("Schedule not found");
     expect(mockPrisma.recurrenceSchedule.update).not.toHaveBeenCalled();
   });
@@ -444,6 +452,7 @@ describe("deleteRecurrenceSchedule", () => {
     const result = await deleteRecurrenceSchedule("clxsched00001");
 
     expect(result.success).toBe(false);
+    if (result.success) return;
     expect(result.error).toBe("Schedule not found");
     expect(mockPrisma.recurrenceSchedule.delete).not.toHaveBeenCalled();
   });
@@ -485,6 +494,7 @@ describe("triggerManualReassessment", () => {
     const result = await triggerManualReassessment("clxsched00001");
 
     expect(result.success).toBe(false);
+    if (result.success) return;
     expect(result.error).toBe("Schedule not found");
     expect(mockPrisma.recurrenceSchedule.update).not.toHaveBeenCalled();
   });
@@ -501,6 +511,7 @@ describe("triggerManualReassessment", () => {
     const result = await triggerManualReassessment("clxsched00001");
 
     expect(result.success).toBe(false);
+    if (result.success) return;
     expect(result.error).toBe("Schedule not found");
     expect(mockPrisma.recurrenceSchedule.update).not.toHaveBeenCalled();
   });
@@ -513,6 +524,7 @@ describe("triggerManualReassessment", () => {
     const result = await triggerManualReassessment("clxsched00001");
 
     expect(result.success).toBe(false);
+    if (result.success) return;
     expect(result.error).toContain("Rate limit");
     expect(mockPrisma.recurrenceSchedule.update).not.toHaveBeenCalled();
   });
@@ -548,6 +560,7 @@ describe("getComplianceTimeline", () => {
     const result = await getComplianceTimeline(12);
 
     expect(result.success).toBe(true);
+    if (!result.success) return;
     expect(result.data).toEqual(mockSnapshots);
     expect(mockRequirePremiumPlan).toHaveBeenCalledWith("clxcompany001");
     expect(mockGetComplianceTimelineQuery).toHaveBeenCalledWith("clxcompany001", 12);
@@ -559,6 +572,7 @@ describe("getComplianceTimeline", () => {
     const result = await getComplianceTimeline(12);
 
     expect(result.success).toBe(false);
+    if (result.success) return;
     expect(result.error).toBe("PREMIUM_REQUIRED");
     expect(mockGetComplianceTimelineQuery).not.toHaveBeenCalled();
   });
@@ -569,6 +583,7 @@ describe("getComplianceTimeline", () => {
     const result = await getComplianceTimeline(12);
 
     expect(result.success).toBe(true);
+    if (!result.success) return;
     expect(result.data).toEqual([]);
   });
 

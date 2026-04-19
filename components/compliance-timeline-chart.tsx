@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import {
   AreaChart,
   Area,
@@ -28,6 +27,10 @@ type ComplianceTimelineChartProps = {
   };
 };
 
+function formatSnapshotDate(date: Date): string {
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
 export function ComplianceTimelineChart({
   snapshots,
   translations,
@@ -41,7 +44,7 @@ export function ComplianceTimelineChart({
   }
 
   const chartData = snapshots.map((snapshot) => ({
-    date: format(snapshot.snapshotDate, "MMM d, yyyy"),
+    date: formatSnapshotDate(snapshot.snapshotDate),
     score: snapshot.overallScore,
   }));
 

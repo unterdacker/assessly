@@ -1,4 +1,7 @@
-import { differenceInDays } from "date-fns";
+function differenceInDays(dateLeft: Date, dateRight: Date): number {
+  const MS_PER_DAY = 1000 * 60 * 60 * 24;
+  return Math.trunc((dateLeft.getTime() - dateRight.getTime()) / MS_PER_DAY);
+}
 
 type RecurrenceBadgeProps = {
   interval: "MONTHLY" | "QUARTERLY" | "SEMI_ANNUAL" | "ANNUAL";

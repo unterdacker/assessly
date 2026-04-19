@@ -23,6 +23,9 @@ const {
     user: {
       findMany: vi.fn(),
     },
+    auditLog: {
+      create: vi.fn(),
+    },
   },
   mockSendMail: vi.fn(),
   mockAuditLogger: {
@@ -63,6 +66,7 @@ beforeEach(() => {
   mockPrisma.complianceSnapshot.create.mockResolvedValue({ id: "snapshot-1" });
   mockPrisma.assessment.findMany.mockResolvedValue([]);
   mockPrisma.user.findMany.mockResolvedValue([]);
+  mockPrisma.auditLog.create.mockResolvedValue({ id: "audit-1" });
   mockSendMail.mockResolvedValue(undefined);
   mockDetectRegression.mockReturnValue([]);
   mockCalculateOverallScore.mockReturnValue(0);

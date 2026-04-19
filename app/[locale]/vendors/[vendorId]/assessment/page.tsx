@@ -19,7 +19,7 @@ import { DueDatePicker } from "@/modules/sla-tracking/components/due-date-picker
 import { ManualReminderButton } from "@/modules/sla-tracking/components/manual-reminder-button";
 import { getRegressionAlerts } from "@/modules/continuous-monitoring/actions/schedule-actions";
 import { isPremiumFeatureEnabled } from "@/lib/enterprise-bridge";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -180,7 +180,7 @@ export default async function AssessmentPage({ params }: PageProps) {
             {schedule && (
               <ManualReassessmentButton
                 scheduleId={schedule.id}
-                vendorName={detail.vendorAssessment.vendorName}
+                vendorName={detail.vendorAssessment.name}
                 translations={cmTranslations.manualReassessment}
               />
             )}

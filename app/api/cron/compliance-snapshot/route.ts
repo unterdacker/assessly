@@ -152,7 +152,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             const previousOverallScore = Number(previousSnapshot.overallScore);
 
             // Log regression in audit trail (stdout for log aggregation)
-            AuditLogger.dataOp("compliance.regression_detected", "success", {
+            AuditLogger.log({
+              category: "DATA_OPERATIONS",
+              action: "compliance.regression_detected",
+              status: "success",
               level: LogLevel.WARN,
               details: {
                 companyId: company.id,
@@ -190,7 +193,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             const admins = await prisma.user.findMany({
               where: {
                 companyId: company.id,
-                role: { in: ["ADMIN", "SUPER_ADMIN", "RISK_REVIEWER"] },
+                role: { in: ["ADMIN", "RISK_REVIEWER"] },
                 isActive: true,
               },
               select: {
