@@ -67,6 +67,13 @@ enum QuestionType {
   FILE_UPLOAD
 }
 
+enum ReminderType {
+  PRE_DUE
+  OVERDUE
+  ESCALATION
+  MANUAL
+}
+
 model Company {
   id                 String      @id @default(cuid())
   name               String
@@ -96,6 +103,7 @@ model Company {
   webhooks                 Webhook[]
   apiKeys                  ApiKey[]
   questionnaireTemplates   QuestionnaireTemplate[]
+  slaPolicies              SlaPolicy[]
 }
 
 model OidcConfig {
@@ -166,6 +174,7 @@ model User {
   createdApiKeys                ApiKey[]                @relation("ApiKeyCreatedBy")
   reviewedAssessments           Assessment[]            @relation("AssessmentReviewer")
   assessmentApprovalSteps       AssessmentApprovalStep[] @relation("ApprovalStepActor")
+  escalationSlaPolicies         SlaPolicy[]             @relation("SlaEscalationRecipient")
 
   @@unique([companyId, ssoProviderId])
   @@index([companyId])
@@ -252,16 +261,23 @@ model Assessment {
   updatedAt          DateTime         @updatedAt
   createdBy          String
 
+  dueDate          DateTime?
+  slaPolicyId      String?
+  slaPolicy        SlaPolicy?         @relation(fields: [slaPolicyId], references: [id], onDelete: SetNull)
+  slaBreached      Boolean            @default(false)
   answers          AssessmentAnswer[]
   documents        Document[]
   execReports      ExecReport[]
   remediationTasks RemediationTask[]
   approvalSteps    AssessmentApprovalStep[]
+  reminders        AssessmentReminder[]
   reviewerUserId   String?
   reviewerUser     User?   @relation("AssessmentReviewer", fields: [reviewerUserId], references: [id], onDelete: SetNull)
 
   @@index([companyId])
   @@index([vendorId])
+  @@index([slaPolicyId])
+  @@index([dueDate])
 }
 
 /// Approval workflow audit trail — each row records one state transition.
@@ -621,4 +637,42 @@ model RateLimitEntry {
   createdAt DateTime @default(now())
 
   @@index([key, createdAt])
+}
+
+/// Premium feature — implementation in modules/sla-tracking/
+model SlaPolicy {
+  id                        String    @id @default(cuid())
+  companyId                 String
+  company                   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name                      String
+  responseDays              Int
+  reminderIntervals         Int[]     @default([])
+  escalationDays            Int       @default(0)
+  escalationRecipientUserId String?
+  escalationRecipient       User?     @relation("SlaEscalationRecipient", fields: [escalationRecipientUserId], references: [id], onDelete: SetNull)
+  isDefault                 Boolean   @default(false)
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+
+  assessments Assessment[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@index([escalationRecipientUserId])
+}
+
+/// SLA reminder log — one row per scheduled or sent reminder.
+/// GDPR: recipientEmail is PII — 90-day purge scheduled.
+model AssessmentReminder {
+  id             String       @id @default(cuid())
+  assessmentId   String
+  assessment     Assessment   @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  type           ReminderType
+  recipientEmail String
+  scheduledAt    DateTime
+  sentAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([assessmentId])
+  @@index([sentAt, scheduledAt])
 }
