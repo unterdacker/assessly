@@ -250,7 +250,7 @@ model Vendor {
 
   assessment         Assessment?
   user               User?
-  recurrenceSchedule RecurrenceSchedule?
+  recurrenceSchedules RecurrenceSchedule[]
 
   @@index([companyId])
 }
