@@ -3,12 +3,15 @@ import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { DashboardOverview } from "@/components/dashboard-overview";
 import { PortfolioComplianceWidget } from "@/components/portfolio-compliance-widget";
 import { ComplianceTimelineChartLazy } from "@/components/compliance-timeline-chart-lazy";
+import { DashboardCountsRow } from "@/modules/analytics/components/dashboard-counts-row";
+import { StatusBreakdownBar } from "@/modules/analytics/components/status-breakdown-bar";
 import { getDashboardRiskPostureOverview } from "@/lib/queries/dashboard-risk-posture";
 import { listVendorAssessments } from "@/lib/queries/vendor-assessments";
 import { requirePageRole } from "@/lib/auth/server";
 import { countOpenRemediationTasks } from "@/lib/queries/remediation-tasks";
 import { listOverdueAssessments, getSlaComplianceRate } from "@/modules/sla-tracking/lib/sla-queries";
 import { getComplianceTimeline } from "@/modules/continuous-monitoring/actions/schedule-actions";
+import { queryDashboardCounts } from "@/modules/analytics/lib/queries";
 import { isPremiumFeatureEnabled } from "@/lib/enterprise-bridge";
 import type { ComplianceSnapshotItem } from "@/modules/continuous-monitoring/lib/types";
 
@@ -54,12 +57,13 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     }
   }
   
-  const [vendorAssessments, riskPosture, openRemediationCount, overdueAssessments, slaComplianceRate] = await Promise.all([
+  const [vendorAssessments, riskPosture, openRemediationCount, overdueAssessments, slaComplianceRate, dashboardCounts] = await Promise.all([
     listVendorAssessments(),
     getDashboardRiskPostureOverview(locale),
     countOpenRemediationTasks(session.companyId ?? ""),
     isPremium ? listOverdueAssessments(session.companyId ?? "", 100).catch(() => []) : Promise.resolve([]),
     isPremium ? getSlaComplianceRate(session.companyId ?? "").catch(() => 0) : Promise.resolve(0),
+    queryDashboardCounts(session.companyId ?? ""),
   ]);
 
   const translations = {
@@ -141,7 +145,29 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     DownloadForensicAuditFailed: t("DownloadForensicAuditFailed"),
   };
 
-  // Continuous monitoring translations
+  const analyticsCountsLabels = {
+    title: t("Analytics.overview.counts.title"),
+    vendors: t("Analytics.overview.counts.vendors"),
+    assessmentsSent: t("Analytics.overview.counts.assessmentsSent"),
+    completed: t("Analytics.overview.counts.completed"),
+    overdue: t("Analytics.overview.counts.overdue"),
+  };
+
+  const analyticsStatusLabels = {
+    title: t("Analytics.overview.statusBreakdown.title"),
+    noData: t("Analytics.overview.statusBreakdown.noData"),
+    statuses: {
+      PENDING: t("Analytics.statuses.PENDING"),
+      UNDER_REVIEW: t("Analytics.statuses.UNDER_REVIEW"),
+      SUBMITTED: t("Analytics.statuses.SUBMITTED"),
+      REVIEWER_APPROVED: t("Analytics.statuses.REVIEWER_APPROVED"),
+      SIGN_OFF: t("Analytics.statuses.SIGN_OFF"),
+      COMPLETED: t("Analytics.statuses.COMPLETED"),
+      REJECTED: t("Analytics.statuses.REJECTED"),
+      ARCHIVED: t("Analytics.statuses.ARCHIVED"),
+    },
+  };
+
   const cmTranslations = isPremium ? {
     widget: {
       title: t("ContinuousMonitoring.widget.title"),
@@ -172,6 +198,18 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
         openRemediationCount={openRemediationCount}
         translations={translations}
       />
+
+      {/* Analytics Overview - Free tier */}
+      <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 mt-8 space-y-6">
+        <DashboardCountsRow
+          counts={dashboardCounts}
+          labels={analyticsCountsLabels}
+        />
+        <StatusBreakdownBar
+          byStatus={dashboardCounts.byStatus}
+          labels={analyticsStatusLabels}
+        />
+      </div>
       
       {isPremium && cmTranslations && (
         <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 mt-8 space-y-6">

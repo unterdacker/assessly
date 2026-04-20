@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, LayoutDashboard, Users, Activity, LogOut, BarChart3 } from "lucide-react";
+import { Settings, LayoutDashboard, Users, Activity, LogOut, BarChart3, LineChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -17,6 +17,7 @@ const NAV_LABELS = {
     overview: "Übersicht",
     vendors: "Anbieter",
     reporting: "Berichte",
+    analytics: "Analysen",
     settings: "Einstellungen",
     users: "Benutzerverwaltung",
     auditLogs: "Audit-Trail",
@@ -27,6 +28,7 @@ const NAV_LABELS = {
     overview: "Overview",
     vendors: "Vendors",
     reporting: "Reports",
+    analytics: "Analytics",
     settings: "Settings",
     users: "User Management",
     auditLogs: "Audit Trail",
@@ -55,11 +57,12 @@ function stripLocale(pathname: string): string {
 function getNav(locale: "de" | "en", role: string | null) {
   const base = [
     { href: "/dashboard", label: NAV_LABELS[locale].overview, icon: LayoutDashboard },
-    { href: "/vendors", label: NAV_LABELS[locale].vendors, icon: Users },
-    { href: "/reporting", label: NAV_LABELS[locale].reporting, icon: BarChart3 },
+    { href: "/analytics", label: NAV_LABELS[locale].analytics, icon: LineChart },
     { href: "/admin/audit-logs", label: NAV_LABELS[locale].auditLogs, icon: Activity },
   ];
 
+  if (role === "ADMIN" || role === "AUDITOR") {
+    base.splice(3
   if (role === "ADMIN" || role === "AUDITOR") {
     base.splice(2, 0, {
       href: "/settings",
@@ -69,7 +72,7 @@ function getNav(locale: "de" | "en", role: string | null) {
   }
 
   if (role === "ADMIN") {
-    base.splice(3, 0, {
+    base.splice(4, 0, {
       href: "/dashboard/users",
       label: NAV_LABELS[locale].users,
       icon: Users,

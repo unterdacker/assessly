@@ -290,6 +290,7 @@ model Assessment {
   @@index([vendorId])
   @@index([slaPolicyId])
   @@index([dueDate])
+  @@index([companyId, createdAt])
 }
 
 /// Approval workflow audit trail — each row records one state transition.

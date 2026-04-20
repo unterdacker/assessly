@@ -1585,5 +1585,91 @@
       "description": "Automatische SLA-Verfolgung und Erinnerungsrichtlinien verwalten",
       "premiumRequired": "SLA-Richtlinien erfordern einen Premium-Plan. Upgraden Sie, um automatische Erinnerungen und Eskalationen zu aktivieren."
     }
+  },
+  "Analytics": {
+    "title": "Analysen",
+    "description": "Operative Einblicke und Compliance-Analysen für Ihr Lieferantenrisikoprogramm.",
+    "nav": "Analysen",
+    "overview": {
+      "title": "Analyse-Übersicht",
+      "counts": {
+        "title": "Übersicht",
+        "vendors": "Anbieter gesamt",
+        "assessmentsSent": "Versendete Bewertungen",
+        "completed": "Abgeschlossen",
+        "overdue": "Überfällig"
+      },
+      "statusBreakdown": {
+        "title": "Bewertungsstatus-Verteilung",
+        "noData": "Noch keine Bewertungen"
+      }
+    },
+    "completionRate": {
+      "title": "Abschlussrate",
+      "last30d": "30T",
+      "last90d": "90T",
+      "last365d": "12M",
+      "vsPreviousPeriod": "vs. Vorperiode",
+      "premiumRequired": "Premium-Upgrade erforderlich für Abschlussraten-Analysen.",
+      "noData": "Keine Daten für diesen Zeitraum.",
+      "loading": "Laden..."
+    },
+    "timeToCompletion": {
+      "title": "Bearbeitungszeit",
+      "p50Label": "P50",
+      "p90Label": "P90",
+      "daysUnit": "Tage",
+      "estimationNote": "Geschätzte Bearbeitungszeit basierend auf letzter Statusänderung.",
+      "premiumRequired": "Premium-Upgrade erforderlich für Bearbeitungszeit-Analysen.",
+      "noData": "Keine abgeschlossenen Bewertungen in diesem Zeitraum."
+    },
+    "featureAdoption": {
+      "title": "Funktionsnutzung",
+      "slaPolicies": "Aktive SLA-Richtlinien",
+      "approvalSteps": "Verwendete Genehmigungsschritte",
+      "recurringSchedules": "Aktive Wiederholungspläne",
+      "frameworksDeployed": "Bereitgestellte Frameworks",
+      "premiumRequired": "Premium-Upgrade erforderlich für Funktionsnutzungs-Metriken."
+    },
+    "vendorLeaderboard": {
+      "title": "Anbieter-Reaktionszeit-Rangliste",
+      "fastest": "Schnellste",
+      "slowest": "Langsamste",
+      "rankCol": "#",
+      "vendorCol": "Anbieter",
+      "avgDaysCol": "Ø Tage",
+      "daysUnit": "Tage",
+      "premiumRequired": "Premium-Upgrade erforderlich für die Anbieter-Rangliste.",
+      "noData": "Keine abgeschlossenen Bewertungen zur Bewertung.",
+      "estimationNote": "Basiert auf geschätzter Bearbeitungszeit (letzte Statusänderung)."
+    },
+    "riskPosture": {
+      "title": "Risikostatus im Zeitverlauf",
+      "premiumRequired": "Premium-Upgrade erforderlich für den Compliance-Zeitverlauf."
+    },
+    "export": {
+      "exportCsv": "CSV exportieren",
+      "exportPdf": "PDF exportieren",
+      "exporting": "Exportiere...",
+      "premiumRequired": "Premium-Plan für Datenexport erforderlich.",
+      "csvCompletion": "Abschlussraten-Daten",
+      "csvResponseTimes": "Reaktionszeit-Daten",
+      "successCsv": "CSV heruntergeladen.",
+      "successPdf": "PDF heruntergeladen.",
+      "errorCsv": "CSV-Export fehlgeschlagen.",
+      "errorPdf": "PDF-Export fehlgeschlagen.",
+      "rateLimitCsv": "Zu viele CSV-Exporte. Bitte später erneut versuchen.",
+      "rateLimitPdf": "Zu viele PDF-Exporte. Bitte später erneut versuchen."
+    },
+    "statuses": {
+      "PENDING": "Ausstehend",
+      "UNDER_REVIEW": "In Prüfung",
+      "SUBMITTED": "Eingereicht",
+      "REVIEWER_APPROVED": "Genehmigt",
+      "SIGN_OFF": "Freigabe",
+      "COMPLETED": "Abgeschlossen",
+      "REJECTED": "Abgelehnt",
+      "ARCHIVED": "Archiviert"
+    }
   }
 }

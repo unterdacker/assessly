@@ -1547,6 +1547,92 @@
       "description": "Manage automated SLA tracking and reminder policies",
       "premiumRequired": "SLA policies require a Premium plan. Upgrade to enable automated reminders and escalation."
     }
+  },
+  "Analytics": {
+    "title": "Analytics",
+    "description": "Operational insights and compliance analytics for your vendor risk program.",
+    "nav": "Analytics",
+    "overview": {
+      "title": "Analytics Overview",
+      "counts": {
+        "title": "Overview",
+        "vendors": "Total Vendors",
+        "assessmentsSent": "Assessments Sent",
+        "completed": "Completed",
+        "overdue": "Overdue"
+      },
+      "statusBreakdown": {
+        "title": "Assessment Status Distribution",
+        "noData": "No assessments yet"
+      }
+    },
+    "completionRate": {
+      "title": "Completion Rate",
+      "last30d": "30d",
+      "last90d": "90d",
+      "last365d": "12m",
+      "vsPreviousPeriod": "vs previous period",
+      "premiumRequired": "Upgrade to Premium to view completion rate analytics.",
+      "noData": "No data for this period.",
+      "loading": "Loading..."
+    },
+    "timeToCompletion": {
+      "title": "Time to Completion",
+      "p50Label": "P50",
+      "p90Label": "P90",
+      "daysUnit": "days",
+      "estimationNote": "Estimated completion time based on last status update.",
+      "premiumRequired": "Upgrade to Premium to view time-to-completion analytics.",
+      "noData": "No completed assessments in this period."
+    },
+    "featureAdoption": {
+      "title": "Feature Adoption",
+      "slaPolicies": "SLA Policies Active",
+      "approvalSteps": "Approval Steps Used",
+      "recurringSchedules": "Recurring Schedules Active",
+      "frameworksDeployed": "Frameworks Deployed",
+      "premiumRequired": "Upgrade to Premium to view feature adoption metrics."
+    },
+    "vendorLeaderboard": {
+      "title": "Vendor Response Leaderboard",
+      "fastest": "Fastest",
+      "slowest": "Slowest",
+      "rankCol": "#",
+      "vendorCol": "Vendor",
+      "avgDaysCol": "Avg Days",
+      "daysUnit": "days",
+      "premiumRequired": "Upgrade to Premium to view vendor response leaderboard.",
+      "noData": "No completed assessments to rank.",
+      "estimationNote": "Based on estimated completion time (last status update)."
+    },
+    "riskPosture": {
+      "title": "Risk Posture Over Time",
+      "premiumRequired": "Upgrade to Premium to view compliance timeline."
+    },
+    "export": {
+      "exportCsv": "Export CSV",
+      "exportPdf": "Export PDF",
+      "exporting": "Exporting...",
+      "premiumRequired": "Premium plan required for data export.",
+      "csvCompletion": "Completion Rate Data",
+      "csvResponseTimes": "Response Time Data",
+      "successCsv": "CSV downloaded.",
+      "successPdf": "PDF downloaded.",
+      "errorCsv": "Failed to export CSV.",
+      "errorPdf": "Failed to export PDF.",
+      "rateLimitCsv": "Too many CSV exports. Try again later.",
+      "rateLimitPdf": "Too many PDF exports. Try again later."
+    },
+    "statuses": {
+      "PENDING": "Pending",
+      "UNDER_REVIEW": "Under Review",
+      "SUBMITTED": "Submitted",
+      "REVIEWER_APPROVED": "Approved",
+      "SIGN_OFF": "Sign-Off",
+      "COMPLETED": "Completed",
+      "REJECTED": "Rejected",
+      "ARCHIVED": "Archived"
+    }
   }
 }
 
