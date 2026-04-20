@@ -62,8 +62,6 @@ function getNav(locale: "de" | "en", role: string | null) {
   ];
 
   if (role === "ADMIN" || role === "AUDITOR") {
-    base.splice(3
-  if (role === "ADMIN" || role === "AUDITOR") {
     base.splice(2, 0, {
       href: "/settings",
       label: NAV_LABELS[locale].settings,

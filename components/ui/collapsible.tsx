@@ -45,6 +45,7 @@ function Collapsible({
 function CollapsibleTrigger({
   children,
   className,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   asChild: _asChild,
   ...props
 }: React.HTMLAttributes<HTMLButtonElement> & { asChild?: boolean }) {

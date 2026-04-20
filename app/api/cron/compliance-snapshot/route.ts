@@ -7,7 +7,7 @@ import { appEnv } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 import { sendMail } from "@/lib/mail";
 import { AuditCategory, AuditLogger, LogLevel } from "@/lib/structured-logger";
-import { detectRegression, calculateOverallScore } from "@/modules/continuous-monitoring/lib/regression-detection";
+import { detectRegression } from "@/modules/continuous-monitoring/lib/regression-detection";
 import { regressionAlertEmail } from "@/modules/continuous-monitoring/lib/email-templates";
 
 function verifyCronSecret(authHeader: string | null): boolean {
