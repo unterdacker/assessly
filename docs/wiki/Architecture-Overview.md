@@ -67,7 +67,10 @@ venshield/
 |   |   |-- documents/            # PDF upload/download
 |   |   |-- remediation/          # Remediation email endpoint
 |   |   |-- audit-logs/           # Audit log query endpoint
-|   |   |-- cron/                 # Cron-protected maintenance routes
+|   |   |-- cron/                 # Cron-protected maintenance routes (all require Authorization: Bearer ${CRON_SECRET})
+|   |   |   |-- sla-reminders/   # Automated SLA reminder dispatch (every 15 min)
+|   |   |   |-- compliance-scheduler/  # Advances recurring assessment schedules
+|   |   |   `-- compliance-snapshot/   # Captures compliance snapshots & detects regressions
 |   |   |-- health/               # Liveness probe
 |   |   `-- exit-portal/          # Vendor session termination
 |   |-- actions/                  # Next.js Server Actions
@@ -97,7 +100,7 @@ venshield/
 |-- tests/
 |   |-- unit/                     # Vitest test suites
 |   `-- e2e/                      # Playwright specs
-|-- modules/                      # Optional Premium extensions (SSO, Advanced Reporting)
+|-- modules/                      # Optional Premium extensions (SSO, Advanced Reporting, and more)
 |-- docs/                         # Project documentation
 |-- Dockerfile                    # Production container image
 `-- docker-compose.yml            # Local all-in-one stack
@@ -138,6 +141,8 @@ The `modules/` directory contains optional Premium extensions that are activated
 |--------|-------------------|
 | `modules/sso/` | OIDC single sign-on - sign-in page, SSO settings, identity provider callback |
 | `modules/advanced-reporting/` | Compliance reporting - report list, report detail, PDF export |
+| `modules/sla-tracking/` | SLA policy CRUD, escalation recipient assignment, SLA compliance rate widget, overdue dashboard table, automated email reminders |
+| `modules/continuous-monitoring/` | Recurring assessment scheduling, compliance snapshot capture, regression detection with ADMIN + RISK_REVIEWER email alerts, compliance timeline charts |
 
 Without a valid license, these modules degrade silently and do not affect the Free-tier platform.
 

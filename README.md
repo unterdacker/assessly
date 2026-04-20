@@ -13,6 +13,8 @@ Vendor onboarding flow: Admin enters vendor email -> vendor receives email with 
 - **NIS2 & DORA ready** — structured vendor questionnaires, control traceability, and remediation workflows aligned to NIS2 Article 21 supply chain obligations.
 - **Data stays in Europe** — AI analysis runs on your own infrastructure via [Ollama](https://ollama.com/) or EU-hosted providers. No assessment data is sent to US cloud services.
 - **EU AI Act compliant by design** — every AI-assisted action is traceable, human-reviewable, and logged. Meets transparency and oversight requirements out of the box.
+- **SLA Tracking & Automated Vendor Reminders** — set assessment due dates, view overdue alerts, and send manual reminders on any plan. Premium unlocks automated email notifications (pre-due, overdue, escalation), SLA policy configuration, escalation recipient assignment, SLA compliance rate widget, and an overdue assessments dashboard table.
+- **Continuous Compliance Monitoring** — schedule recurring assessments (monthly, quarterly, semi-annual, annual) to keep vendor risk data current. Free plan supports manual reassessment triggers and schedule creation; Premium enables auto-send, compliance regression detection with email alerts to admins, compliance timeline charts, and portfolio-wide trend analysis.
 - **Cryptographic audit trail** — tamper-evident chain-of-custody for all compliance events, exportable for auditors and regulators.
 - **Invite-link based onboarding** — vendors and internal users receive a single email invite with a one-time password-setup link that expires after 48 hours.
 - **Multi-Factor Authentication (MFA)** — TOTP-based second factor for both internal users and vendor portal users. Supports admin-enforced MFA per user, org-wide mandatory MFA policy, 10 single-use recovery codes (bcrypt-hardened), and vendor TOTP enrollment via the external portal.
@@ -179,8 +181,8 @@ Configure per-company via **Settings → SSO** (Premium plan).
 
 | Plan | Description |
 |------|-------------|
-| **Free** | Full access to the built-in NIS2 questionnaire catalogue (20 questions), vendor portal, AI analysis, audit trail, dashboard, and pre-built NIS2 & DORA compliance templates. |
-| **Premium** | Everything in Free, plus **OIDC/SSO** (single sign-on with just-in-time provisioning), **Advanced Reporting** (AI compliance reports, PDF export, executive summaries), **Outbound Webhooks** (HMAC-signed event notifications), **Custom Questionnaire Builder** (custom templates with sections and multiple question types), **Compliance Template Library** (ISO 27001, SOC 2, HIPAA, NIST CSF, CIS Controls v8 pre-built templates), **Assessment Approval Workflow** (full 5-step review chain, reviewer assignment, email notifications), and priority support. |
+| **Free** | Full access to the built-in NIS2 questionnaire catalogue (20 questions), vendor portal, AI analysis, audit trail, dashboard, pre-built NIS2 & DORA compliance templates, assessment due dates with overdue alerts, and manual vendor reminders. |
+| **Premium** | Everything in Free, plus **OIDC/SSO** (single sign-on with just-in-time provisioning), **Advanced Reporting** (AI compliance reports, PDF export, executive summaries), **Outbound Webhooks** (HMAC-signed event notifications), **Custom Questionnaire Builder** (custom templates with sections and multiple question types), **Compliance Template Library** (ISO 27001, SOC 2, HIPAA, NIST CSF, CIS Controls v8 pre-built templates), **Assessment Approval Workflow** (full 5-step review chain, reviewer assignment, email notifications), **SLA Tracking** (automated pre-due/overdue/escalation email reminders, SLA policy configuration, SLA compliance rate dashboard widget), **Continuous Compliance Monitoring** (auto-send recurring assessments, regression detection with admin email alerts, compliance timeline charts), and priority support. |
 
 > Interested in Premium?(currently its free for testers) [Contact us](mailto:venshield@proton.me) — premium customers receive access to the pre-built Docker image hosted on GitHub Container Registry (GHCR).
 
@@ -196,6 +198,8 @@ Full documentation is available in the [wiki](https://github.com/unterdacker/ven
 - [Questionnaire Builder (Custom Templates)](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Questionnaire-Builder.md)
 - [Compliance Template Library](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Compliance-Library.md)
 - [Assessment Approval Workflow](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Assessment-Approval-Workflow.md)
+- [SLA Tracking & Automated Vendor Reminders](https://github.com/unterdacker/venshield/blob/main/docs/wiki/SLA-Tracking.md)
+- [Continuous Compliance Monitoring](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Continuous-Monitoring.md)
 - [Deployment](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Deployment.md)
 - [Security Architecture](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Security-Architecture.md)
 

@@ -19,6 +19,8 @@ Venshield replaces disconnected spreadsheets and inboxes with one auditable work
 | [Questionnaire Builder](Questionnaire-Builder.md) | Custom vendor questionnaire templates, multiple question types, import/export — Premium |
 | [Compliance Template Library](Compliance-Library.md) | Deploy pre-built NIS2 & DORA templates (free) or ISO 27001, SOC 2, HIPAA, NIST CSF, and CIS Controls v8 (Premium) into your questionnaire workspace |
 | [Assessment Approval Workflow](Assessment-Approval-Workflow.md) | Multi-step assessment review lifecycle with role-gated transitions, rejection comments, reviewer assignment, and email notifications — full lifecycle requires Premium |
+| [SLA Tracking & Automated Vendor Reminders](SLA-Tracking.md) | Set assessment due dates, send manual or automated reminders, configure SLA policies and escalation recipients, track SLA compliance rate — Free core features, Premium automation |
+| [Continuous Compliance Monitoring](Continuous-Monitoring.md) | Schedule recurring vendor assessments (monthly/quarterly/semi-annual/annual), detect compliance regressions, view compliance timeline trends — Free manual, Premium auto-send and alerts |
 | [AI Integration](AI-Integration.md) | Ollama / Mistral provider, document analysis, executive summaries, Advanced Reporting (Premium) |
 | [Audit Trail & Forensic Logging](Audit-Trail-and-Forensic-Logging.md) | Hash-chain, GDPR redaction, compliance categories |
 | [Security Architecture](Security-Architecture.md) | Cryptography, CSP, rate limiting, secrets |
