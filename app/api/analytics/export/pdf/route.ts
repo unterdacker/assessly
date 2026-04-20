@@ -8,7 +8,7 @@ import { AuditLogger } from "@/lib/structured-logger";
 import { generateAnalyticsPdf } from "@/modules/analytics/services/analytics-pdf";
 import { queryCompletionRate, queryTimeToCompletion, queryFeatureAdoption, queryVendorResponseLeaderboard } from "@/modules/analytics/lib/queries";
 
-const logger = new AuditLogger();
+const logger = AuditLogger;
 
 export async function GET() {
   try {

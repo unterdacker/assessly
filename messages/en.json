@@ -1607,7 +1607,10 @@
     },
     "riskPosture": {
       "title": "Risk Posture Over Time",
-      "premiumRequired": "Upgrade to Premium to view compliance timeline."
+      "premiumRequired": "Upgrade to Premium to view compliance timeline.",
+      "noData": "No compliance snapshots available yet.",
+      "xAxisLabel": "Date",
+      "yAxisLabel": "Compliance Score (%)"
     },
     "export": {
       "exportCsv": "Export CSV",

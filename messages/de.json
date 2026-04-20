@@ -1645,7 +1645,10 @@
     },
     "riskPosture": {
       "title": "Risikostatus im Zeitverlauf",
-      "premiumRequired": "Premium-Upgrade erforderlich für den Compliance-Zeitverlauf."
+      "premiumRequired": "Premium-Upgrade erforderlich für den Compliance-Zeitverlauf.",
+      "noData": "Noch keine Compliance-Snapshots verfügbar.",
+      "xAxisLabel": "Datum",
+      "yAxisLabel": "Compliance-Score (%)"
     },
     "export": {
       "exportCsv": "CSV exportieren",
