@@ -185,6 +185,12 @@ const rawEnvSchema = z.object({
   S3_SECRET_ACCESS_KEY: z.string().optional(),
   S3_FORCE_PATH_STYLE: z.enum(["true", "false"]).default("false"),
 
+  // ── License ───────────────────────────────────────────────────────────────
+  /** PEM-encoded Ed25519 public key used to verify license JWT signatures. */
+  LICENSE_PUBLIC_KEY: z.string().optional(),
+  /** Base URL of the license server for activation and heartbeat calls. */
+  LICENSE_SERVER_URL: z.string().url().optional(),
+
 });
 
 // ---------------------------------------------------------------------------

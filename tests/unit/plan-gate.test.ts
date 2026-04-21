@@ -10,6 +10,14 @@ vi.mock("@/lib/prisma", () => ({
   prisma: { company: { findUnique: mockFindUnique } },
 }));
 
+vi.mock("@/lib/env", () => ({
+  env: { LICENSE_PUBLIC_KEY: undefined },
+}));
+
+vi.mock("@/lib/license/gate", () => ({
+  checkLicense: vi.fn().mockResolvedValue({ allowed: false }),
+}));
+
 import { getCompanyPlan, isPremiumPlan } from "@/lib/plan-gate";
 
 beforeEach(() => {
