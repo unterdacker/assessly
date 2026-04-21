@@ -1,6 +1,8 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
+import { env } from "@/lib/env";
+import { checkLicense } from "@/lib/license/gate";
 
 /**
  * Returns the Company's current plan, or "FREE" if the company is not found.
@@ -26,5 +28,11 @@ export async function getCompanyPlan(
 export async function isPremiumPlan(
   companyId: string | null | undefined,
 ): Promise<boolean> {
+  if (process.env.NODE_ENV === "development") return true;
+  if (env.LICENSE_PUBLIC_KEY) {
+    const licenseCheck = await checkLicense();
+    if (licenseCheck.allowed) return true;
+  }
+
   return (await getCompanyPlan(companyId)) === "PREMIUM";
 }

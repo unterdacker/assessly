@@ -734,3 +734,17 @@ model ComplianceSnapshot {
 
   @@index([companyId, snapshotDate])
 }
+
+/// License verification cache — singleton row storing the instance's license key.
+/// Used by premium feature gating when LICENSE_PUBLIC_KEY is configured.
+model LicenseCache {
+  id               String    @id @default("singleton")
+  instanceUuid     String
+  encodedLicense   String?   @db.Text
+  lastVerifiedAt   DateTime?
+  lastHeartbeatAt  DateTime?
+  cachedStatus     String?
+  cachedMessage    String?
+  updatedAt        DateTime  @updatedAt
+}
+

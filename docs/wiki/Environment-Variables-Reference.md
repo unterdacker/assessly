@@ -115,14 +115,14 @@ The placeholder detector rejects values matching:
 
 ---
 
-## Premium Features
+## License Verification (Optional)
 
-The following environment variables are required only when Premium modules (SSO and/or Advanced Reporting) are enabled.
+The following environment variables are used for license verification in licensed deployments. When not configured, license enforcement is disabled and premium features rely on the plan field in the database.
 
-| Variable | Description |
-|----------|-------------|
-| `LICENSE_FILE_PATH` | Path to the license file provided by Venshield for Premium features. Default: `modules/license.json` relative to the application root. |
-| `LICENSE_KEY` | License activation key for Premium modules. Provided by Venshield with your license package. Store as a multiline value or mount as a file — it must not be prefixed with `NEXT_PUBLIC_`. |
-| `LICENSE_AUDIENCE` | License audience identifier that must match the value issued with your license. Case-sensitive. Provided in your license delivery. |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LICENSE_PUBLIC_KEY` | — | Ed25519 public key for verifying license signatures (64-char hex). Baked into the Docker image at build time. Obtain from your license server administrator. |
+| `LICENSE_SERVER_URL` | — | License server base URL for activation and heartbeat checks. Example: `https://licensing.venshield.com`. When not set, offline license verification is used (no activation or heartbeat). |
+| `LICENSE_OFFLINE_MODE` | `false` | Set to `true` for air-gapped deployments. Skips heartbeat checks while still verifying license signatures offline using `LICENSE_PUBLIC_KEY`. |
 
-> All Premium-specific secrets (`OIDC_STATE_SECRET`, `SETTINGS_ENCRYPTION_KEY`) are operator-generated and covered in the **Security Secrets** section above — they are not provided by Venshield.
+**Offline-first architecture:** License keys use Ed25519 asymmetric signatures. The public key is baked into the VenShield Docker image and verifies licenses locally without requiring an internet connection. Activation is a one-time call on first startup to register the instance fingerprint. Heartbeat is an optional 24h check-in to detect revocation (skipped when `LICENSE_OFFLINE_MODE=true`).
