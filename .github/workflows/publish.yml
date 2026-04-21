@@ -50,3 +50,5 @@ jobs:
           tags: |
             ghcr.io/unterdacker/venshield:latest
             ghcr.io/unterdacker/venshield:${{ github.ref_name }}
+          build-args: |
+            LICENSE_PUBLIC_KEY=${{ secrets.LICENSE_PUBLIC_KEY }}

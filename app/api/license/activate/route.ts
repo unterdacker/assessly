@@ -4,10 +4,16 @@ import { env } from "@/lib/env";
 import { getOrCreateInstanceUuid, generateFingerprint } from "@/lib/license/instance";
 import { verifyLicenseSignatureSync, isLicenseExpired } from "@/lib/license/verifier";
 import { cacheLicense } from "@/lib/license/storage";
+import { getAuthSessionFromRequest } from "@/lib/auth/server";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
+  const session = await getAuthSessionFromRequest(request);
+  if (!session || session.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
+
   let body: { licenseKey?: string };
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });

@@ -322,6 +322,78 @@ Returns `200 OK` with `{ status: "ok" }` when the application and database are r
 
 ---
 
+## Activating Premium Features
+
+Premium features require two independent steps. Both must be completed — either one alone is not sufficient.
+
+### Step 1 — Install the License Key
+
+The Venshield team delivers a license key string when your subscription is confirmed. This key is an Ed25519-signed token that is verified locally against the public key baked into the Docker image.
+
+**Add the license environment variables** to your `.env` / `docker-compose.yml`:
+
+```env
+# Provided by the Venshield team
+LICENSE_PUBLIC_KEY=<64-char hex Ed25519 public key>
+
+# Optional: URL of the Venshield license server for online activation and revocation checks
+LICENSE_SERVER_URL=https://licensing.venshield.com
+
+# Optional: set to true for air-gapped deployments (skips heartbeat; offline verification still works)
+# LICENSE_OFFLINE_MODE=true
+```
+
+**Restart the container** after adding these variables so the application picks them up.
+
+**Activate the license key** by calling the activation endpoint as an authenticated ADMIN user:
+
+```bash
+# Replace <admin-session-cookie> with a valid session cookie from an admin login
+curl -X POST https://venshield.yourdomain.com/api/license/activate \
+  -H "Content-Type: application/json" \
+  -H "Cookie: venshield-session=<admin-session-cookie>" \
+  -d '{ "licenseKey": "<your-license-key-string>" }'
+```
+
+A successful response returns:
+
+```json
+{ "status": "activated", "plan": "PREMIUM" }
+```
+
+> **Requires ADMIN role.** The activation endpoint rejects requests without an active administrator session.
+
+> **Air-gapped deployments:** If no `LICENSE_SERVER_URL` is set (or `LICENSE_OFFLINE_MODE=true`), activation stores the license locally in the database without contacting an external server. License signature verification still works fully offline.
+
+### Step 2 — Set the Database Plan Flag
+
+After activation, an admin must also upgrade the company record in the database:
+
+**Option A — SQL:**
+
+```bash
+# Find your company ID
+docker exec <postgres-container> psql -U postgres venshield -c 'SELECT id, name FROM "Company";'
+
+# Upgrade the plan
+docker exec <postgres-container> psql -U postgres venshield \
+  -c "UPDATE \"Company\" SET plan = 'PREMIUM' WHERE id = '<your-company-id>';"
+```
+
+**Option B — Prisma Studio:**
+
+```bash
+npx prisma studio
+```
+
+Navigate to the **Company** table, open your company record, change `plan` from `FREE` to `PREMIUM`, and save.
+
+> ⚠️ **Both steps are required.** A valid license without `plan = 'PREMIUM'` in the database keeps Premium features locked. Setting `plan = 'PREMIUM'` without a valid license key does the same. Complete Step 1 before Step 2.
+
+_See [Enterprise Features](Enterprise-Features.md) for the full list of what the Premium plan includes._
+
+---
+
 ## Resource Requirements
 
 | Resource | Minimum | Recommended |

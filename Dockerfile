@@ -120,6 +120,12 @@ ENV OIDC_STATE_SECRET=$OIDC_STATE_SECRET
 ARG APP_URL="https://build-time-dummy.local"
 ENV APP_URL=$APP_URL
 
+# Ed25519 public key for license signature verification (64-char hex).
+# Baked into the image at build time. Empty default disables license enforcement.
+# Override via --build-arg LICENSE_PUBLIC_KEY=<key> or GitHub Actions secret.
+ARG LICENSE_PUBLIC_KEY=""
+ENV LICENSE_PUBLIC_KEY=$LICENSE_PUBLIC_KEY
+
 # Disable Next.js telemetry during build.
 ENV NEXT_TELEMETRY_DISABLED=1
 
