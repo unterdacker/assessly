@@ -1,4 +1,4 @@
-﻿# Product Roadmap
+# Product Roadmap
 
 ## What's built
 
@@ -28,6 +28,9 @@
 - **[Premium]** Webhook delivery engine — HMAC-SHA256 signed payloads, SSRF guard, fire-and-forget dispatch; `modules/webhooks/`
 - **[Premium]** OpenAPI 3.1 spec — auto-generated from route handlers; served at `/api/v1/openapi.json`; interactive Swagger UI at `/api/v1/docs` (CDN-loaded, nonce-secured CSP, rate-limited, audit-logged)
 - E2E test coverage for OpenAPI endpoints (`tests/e2e/api-v1-openapi.spec.ts`)
+- **[Free + Premium]** SLA Tracking — assessment due dates, overdue alerts, and manual vendor reminders (Free); automated pre-due / overdue / escalation email reminders, SLA policy configuration, escalation recipient assignment, SLA compliance rate dashboard widget, and overdue assessments table (Premium)
+- **[Free + Premium]** Compliance Template Library — deploy pre-built NIS2 & DORA templates into your questionnaire workspace (Free); ISO 27001, SOC 2 Type II, HIPAA, NIST CSF, and CIS Controls v8 templates (Premium)
+- **[Free + Premium]** Continuous Compliance Monitoring — create recurring assessment schedules and trigger manual reassessments (Free); auto-send recurring assessments to vendors, compliance regression detection with admin email alerts, compliance timeline charts, and portfolio-wide trend analysis (Premium)
 
 ---
 
@@ -51,9 +54,9 @@
 
 - [ ] **SAML 2.0** — IdP-initiated and SP-initiated flows; metadata import; attribute mapping; Premium plan only
 - [x] **Assessment approval workflow** — multi-step review → approve → sign-off; role-gated; full audit trail per step; email notifications at each transition
-- [ ] **SLA tracking and automated vendor reminders** — due-date enforcement, escalation rules, overdue notifications
-- [ ] **Compliance template library** — ISO 27001, SOC 2, DORA, HIPAA, NIST CSF, CIS Controls; Premium unlocks additional frameworks beyond NIS2
-- [ ] **Continuous compliance monitoring** — recurring assessment schedules, risk trend charts, regression detection, automated re-assessment triggers
+- [x] **SLA tracking and automated vendor reminders** — due-date enforcement, escalation rules, overdue notifications
+- [x] **Compliance template library** — ISO 27001, SOC 2, DORA, HIPAA, NIST CSF, CIS Controls; Premium unlocks additional frameworks beyond NIS2
+- [x] **Continuous compliance monitoring** — recurring assessment schedules, risk trend charts, regression detection, automated re-assessment triggers
 - [ ] **Vendor risk scoring v2** — weighted category scoring, industry benchmarks, peer comparison, risk delta since last assessment
 - [ ] **Admin analytics dashboard** — feature adoption metrics, active vendors per tenant, assessment completion rates, time-to-completion histograms (also useful for acquirer due diligence data room)
 - [ ] **SOC 2 Type II certification prep** — select a readiness audit partner; map controls to existing audit trail and security architecture
@@ -103,6 +106,7 @@
 | REST API (write scopes) | — | ✓ |
 | Webhooks | — | ✓ |
 | SAML 2.0 | — | ✓ |
-| Compliance template library | NIS2 only | ✓ All frameworks |
+| Compliance template library | NIS2 + DORA | ✓ All frameworks |
 | Assessment approval workflow | — | ✓ |
-| Continuous monitoring | — | ✓ |
+| Continuous monitoring | manual schedules + triggers | auto-send + regression alerts + timeline charts |
+| SLA Tracking | due dates + manual reminders | full automation (pre-due / overdue / escalation emails, SLA policies, compliance rate widget) |

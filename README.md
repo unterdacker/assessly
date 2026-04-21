@@ -1,4 +1,4 @@
-﻿![Version](https://img.shields.io/badge/version-0.1.0-informational) [![CI](https://github.com/unterdacker/venshield/actions/workflows/ci.yml/badge.svg)](https://github.com/unterdacker/venshield/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/unterdacker/venshield/branch/main/graph/badge.svg)](https://codecov.io/gh/unterdacker/venshield) [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org) [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com) ![Visitors](https://visitor-badge.laobi.icu/badge?page_id=venshield.assessly)
+![Version](https://img.shields.io/badge/version-0.1.0-informational) [![CI](https://github.com/unterdacker/venshield/actions/workflows/ci.yml/badge.svg)](https://github.com/unterdacker/venshield/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/unterdacker/venshield/branch/main/graph/badge.svg)](https://codecov.io/gh/unterdacker/venshield) [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org) [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com) ![Visitors](https://visitor-badge.laobi.icu/badge?page_id=venshield.assessly)
 
 [![Stack](https://skillicons.dev/icons?i=nextjs,postgres,docker,ts,prisma)](https://skillicons.dev)
 
@@ -192,12 +192,13 @@ Full documentation is available in the [wiki](https://github.com/unterdacker/ven
 
 - [Getting Started](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Getting-Started.md)
 - [Architecture Overview](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Architecture-Overview.md)
-- [Enterprise Features (SSO, Advanced Reporting & Webhooks)](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Enterprise-Features.md)
+- [Enterprise Features](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Enterprise-Features.md)
 - [REST API Reference](https://github.com/unterdacker/venshield/blob/main/docs/wiki/REST-API.md) · [Interactive Swagger UI](/api/v1/docs) · [OpenAPI 3.1 Spec](/api/v1/openapi.json)
 - [Outbound Webhooks](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Webhooks.md)
 - [Questionnaire Builder (Custom Templates)](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Questionnaire-Builder.md)
 - [Compliance Template Library](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Compliance-Library.md)
 - [Assessment Approval Workflow](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Assessment-Approval-Workflow.md)
+- [Authentication & Authorization](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Authentication-and-Authorization.md)
 - [SLA Tracking & Automated Vendor Reminders](https://github.com/unterdacker/venshield/blob/main/docs/wiki/SLA-Tracking.md)
 - [Continuous Compliance Monitoring](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Continuous-Monitoring.md)
 - [Deployment](https://github.com/unterdacker/venshield/blob/main/docs/wiki/Deployment.md)
