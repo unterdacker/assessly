@@ -1,9 +1,9 @@
 import "server-only";
 import * as ed from "@noble/ed25519";
-import { sha512 } from "@noble/hashes/sha512";
+import { sha512 } from "@noble/hashes/sha2.js";
 import type { SignedLicense } from "./types";
 
-ed.etc.sha512Sync = (...m: Parameters<typeof sha512>) => sha512(...m);
+ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));
 
 export function verifyLicenseSignatureSync(
   encoded: string,
@@ -15,7 +15,7 @@ export function verifyLicenseSignatureSync(
     const message = Buffer.from(JSON.stringify(signed.payload));
     const signature = Buffer.from(signed.signature, "hex");
     const publicKey = Buffer.from(publicKeyHex, "hex");
-    const valid = ed.verifySync(signature, message, publicKey);
+    const valid = ed.verify(signature, message, publicKey);
     if (!valid) return null;
     return signed;
   } catch {
