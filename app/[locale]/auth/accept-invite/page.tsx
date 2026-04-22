@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AuthAcceptInviteForm } from "@/components/auth-accept-invite-form";
 
 export const dynamic = "force-dynamic";
@@ -11,10 +11,14 @@ export async function generateMetadata() {
 }
 
 export default async function AuthAcceptInvitePage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ token?: string }>;
 }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const { token } = await searchParams;
   const t = await getTranslations("userAcceptInvite");
 

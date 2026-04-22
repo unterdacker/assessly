@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useActionState, useEffect } from "react";
 import { useTranslations } from "next-intl";
@@ -65,9 +64,8 @@ export function InternalSignInForm({
   return (
     <Card className="mx-auto w-full max-w-md border-border bg-card shadow-sm">
       <CardHeader className="space-y-3">
-        <Image src="/logo.png" alt="Venshield logo" width={40} height={40} className="rounded-full" priority />
         <div>
-          <CardTitle className="text-foreground">{t("title")}</CardTitle>
+          <CardTitle className="font-semibold tracking-tight text-foreground">{t("title")}</CardTitle>
           <CardDescription>{t("description")}</CardDescription>
         </div>
       </CardHeader>
@@ -77,12 +75,12 @@ export function InternalSignInForm({
           <input type="hidden" name="next" value={nextPath} />
 
           <div className="space-y-2">
-            <Label htmlFor="email">{t("emailLabel")}</Label>
+            <Label htmlFor="email" className="text-[0.8125rem] font-medium">{t("emailLabel")}</Label>
             <Input id="email" name="email" type="email" autoComplete="email" required />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">{t("passwordLabel")}</Label>
+            <Label htmlFor="password" className="text-[0.8125rem] font-medium">{t("passwordLabel")}</Label>
             <div className="relative">
               <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
               <Input id="password" name="password" type="password" autoComplete="current-password" className="pl-9" required />
@@ -90,7 +88,7 @@ export function InternalSignInForm({
           </div>
 
           {errorMessageKey ? (
-            <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-[0.8125rem] text-destructive">
               {t(errorMessageKey)}
             </p>
           ) : null}

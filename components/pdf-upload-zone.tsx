@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -89,6 +89,7 @@ export function PdfUploadZone({
   lastAuditedAt,
 }: PdfUploadZoneProps) {
   const t = useTranslations("pdfUpload");
+  const locale = useLocale();
   const router = useRouter();
   const { aiDisabled } = useAiMode();
   const requiresConsent = !isAdminView;
@@ -430,7 +431,7 @@ export function PdfUploadZone({
                       <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
                       <p className="leading-snug">
                         {t("aiFeaturesDisabled")}{" "}
-                        <Link href="/settings" className="font-semibold underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-100">
+                        <Link href={`/${locale}/settings`} className="font-semibold underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-100">
                           {t("settingsLink")}
                         </Link>
                         .

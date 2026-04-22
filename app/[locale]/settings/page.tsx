@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from "next";
 import { ShieldCheck, Server, Globe, Mail, ChevronRight, Ban, Webhook, Key, ClipboardList, Library } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +15,9 @@ import { getCustomQuestions } from "@/lib/queries/custom-questions";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({ params }: SettingsPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations();
   return {
     title: t("Settings"),
@@ -29,6 +31,7 @@ type SettingsPageProps = {
 
 export default async function SettingsPage({ params }: SettingsPageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const session = await requirePageRole(["ADMIN"], locale);
   const t = await getTranslations();
   const oidcT = await getTranslations("OidcSettings");
@@ -71,9 +74,9 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   const isLocal = company?.aiProvider === "local";
   const isNoAi = company?.aiProvider === "no-ai" || company?.aiDisabled === true;
   const providerDisplayName =
-    company?.aiProvider === "mistral" ? "Mistral AI"
-    : company?.aiProvider === "local" ? "Local Server"
-    : "No AI Mode";
+    company?.aiProvider === "mistral" ? t("MistralAI")
+    : company?.aiProvider === "local" ? t("LocalServer")
+    : t("noAiMode");
 
   // Never send the encrypted key value to the browser — pass null so the form
   // shows an empty password field.  The action preserves the existing encrypted

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AssessmentWorkspace } from "@/components/assessment-workspace";
 import { RecurrenceBadge } from "@/components/recurrence-badge";
 import { RecurrenceScheduleForm } from "@/components/recurrence-schedule-form";
@@ -34,6 +34,7 @@ type PageProps = {
  */
 export default async function AssessmentPage({ params }: PageProps) {
   const { locale, vendorId } = await params;
+  setRequestLocale(locale);
   const session = await requirePageRole(["ADMIN", "RISK_REVIEWER", "AUDITOR"], locale);
   const [detail, customQuestions] = await Promise.all([
     getVendorAssessmentDetail(vendorId),
@@ -110,8 +111,8 @@ export default async function AssessmentPage({ params }: PageProps) {
       quarterly: t("ContinuousMonitoring.intervalQuarterly"),
       semiAnnual: t("ContinuousMonitoring.intervalSemiAnnual"),
       annual: t("ContinuousMonitoring.intervalAnnual"),
-      daysUntilDue: t("ContinuousMonitoring.badge.daysUntilDue"),
-      daysOverdue: t("ContinuousMonitoring.badge.daysOverdue"),
+      daysUntilDue: t.raw("ContinuousMonitoring.badge.daysUntilDue") as string,
+      daysOverdue: t.raw("ContinuousMonitoring.badge.daysOverdue") as string,
     },
     form: {
       title: t("ContinuousMonitoring.form.title"),
@@ -143,7 +144,7 @@ export default async function AssessmentPage({ params }: PageProps) {
     manualReassessment: {
       buttonLabel: t("ContinuousMonitoring.manualReassessment.button"),
       dialogTitle: t("ContinuousMonitoring.manualReassessment.dialogTitle"),
-      dialogDescription: t("ContinuousMonitoring.manualReassessment.dialogDescription"),
+      dialogDescription: t.raw("ContinuousMonitoring.manualReassessment.dialogDescription") as string,
       confirm: t("ContinuousMonitoring.manualReassessment.confirm"),
       cancel: t("ContinuousMonitoring.manualReassessment.cancel"),
       success: t("ContinuousMonitoring.manualReassessment.success"),

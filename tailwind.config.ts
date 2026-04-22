@@ -11,35 +11,53 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
+        sans: ["var(--font-libre-franklin)", "system-ui", "sans-serif"],
+        display: ["var(--font-barlow-sc)", "system-ui", "sans-serif"],
+        mono: ["var(--font-jetbrains-mono)", "ui-monospace", "monospace"],
       },
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        border: "var(--border)",
+        input: "var(--input)",
+        ring: "var(--ring)",
+        background: "var(--background)",
+        foreground: "var(--foreground)",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "var(--primary)",
+          foreground: "var(--primary-foreground)",
+          hover: "var(--primary-hover)",
+        },
+        secondary: {
+          DEFAULT: "var(--secondary)",
+          foreground: "var(--secondary-foreground)",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "var(--muted)",
+          foreground: "var(--muted-foreground)",
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: "var(--card)",
+          foreground: "var(--card-foreground)",
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: "var(--popover)",
+          foreground: "var(--popover-foreground)",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "var(--accent)",
+          foreground: "var(--accent-foreground)",
         },
+        destructive: {
+          DEFAULT: "var(--destructive)",
+          foreground: "var(--destructive-foreground)",
+        },
+        risk: {
+          low: "var(--risk-low)",
+          "low-fg": "var(--risk-low-fg)",
+          medium: "var(--risk-medium)",
+          "medium-fg": "var(--risk-medium-fg)",
+          high: "var(--risk-high)",
+          "high-fg": "var(--risk-high-fg)",
+        }
       },
       borderRadius: {
         lg: "var(--radius)",

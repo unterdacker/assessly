@@ -1,9 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, LayoutDashboard, Users, Activity, LogOut, BarChart3, LineChart } from "lucide-react";
+import { Settings, LayoutDashboard, Users, Activity, LogOut, LineChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -106,7 +105,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (isExternal || isAuth) {
     return (
-      <div className="min-h-screen bg-slate-50/80 dark:bg-background">
+      <div className="min-h-screen bg-[var(--background)] dark:bg-background">
         <main
           id="main-content"
           className="flex-1"
@@ -119,16 +118,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/80 dark:bg-background">
+    <div className="min-h-screen bg-[var(--background)] dark:bg-background">
       <div className="flex min-h-screen">
         <aside
-          className="hidden w-56 shrink-0 border-r border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-card md:flex md:flex-col"
+          className="hidden w-52 shrink-0 border-r border-[var(--border)] bg-[var(--card)] dark:bg-card md:flex md:flex-col"
           aria-label="Workspace navigation"
         >
-          <div className="flex h-14 items-center gap-2 border-b border-slate-200 px-4 dark:border-slate-800">
-            <Image src="/logo.png" alt="Venshield logo" width={32} height={32} className="rounded-md" priority />
+          <div className="flex h-14 items-center gap-2 border-b border-[var(--border)] px-4">
             <div className="leading-tight">
-              <p className="text-sm font-semibold tracking-tight">Venshield</p>
+              <p className="font-display text-[0.8125rem] font-medium tracking-tight">Venshield</p>
               <p className="text-[10px] text-muted-foreground">
                 {session?.role === "ADMIN" ? "Admin workspace" : session?.role === "AUDITOR" ? "Auditor workspace" : "Vendor risk"}
               </p>
@@ -148,37 +146,36 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   href={localizedHref}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                    "flex items-center gap-2 rounded-md px-3 py-1.5 text-[0.8125rem] transition-colors",
                     active
-                      ? "bg-indigo-50 text-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-100"
-                      : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80",
+                      ? "bg-[var(--accent)] text-[var(--accent-foreground)] font-medium"
+                      : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]",
                   )}
                 >
-                  <Icon className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+                  <Icon className="h-[15px] w-[15px] shrink-0 opacity-80" aria-hidden />
                   {label}
                 </Link>
               );
             })}
           </nav>
-          <div className="border-t border-slate-200 p-3 dark:border-slate-800">
-            <p className="px-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+          <div className="border-t border-[var(--border)] p-3">
+            <p className="px-3 text-[0.5625rem] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
               {NAV_LABELS[locale].nis2Label}
             </p>
             <button
               type="button"
               onClick={handleSignOut}
-              className="mt-2 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
+              className="mt-2 flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[0.8125rem] font-medium text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
             >
-              <LogOut className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+              <LogOut className="h-[15px] w-[15px] shrink-0 opacity-80" aria-hidden />
               {NAV_LABELS[locale].signOut}
             </button>
           </div>
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur-sm dark:border-slate-800 dark:bg-card/95 md:px-6">
+          <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--card)]/90 px-4 backdrop-blur-sm dark:bg-card/95 md:px-6">
             <div className="flex min-w-0 items-center gap-3 md:hidden">
-              <Image src="/logo.png" alt="Venshield logo" width={32} height={32} className="rounded-md" priority />
               <span className="truncate text-sm font-semibold">Venshield</span>
             </div>
             <div className="hidden md:block" />
@@ -196,7 +193,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                       className={cn(
                         "rounded-md px-2 py-1 text-xs font-medium",
                         active
-                          ? "bg-indigo-100 text-indigo-900 dark:bg-indigo-950 dark:text-indigo-200"
+                              ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
                           : "text-muted-foreground",
                       )}
                     >
@@ -211,7 +208,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 type="button"
                 onClick={handleSignOut}
                 title={NAV_LABELS[locale].signOut}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-slate-600 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800/80"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
                 aria-label={NAV_LABELS[locale].signOut}
               >
                 <LogOut className="h-4 w-4" aria-hidden />

@@ -1,8 +1,28 @@
 import type { Metadata } from "next";
 import { cookies, headers } from "next/headers";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
+import { Barlow_Semi_Condensed, Libre_Franklin, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+
+const barlowSC = Barlow_Semi_Condensed({
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "600"],
+  variable: "--font-barlow-sc",
+  display: "swap",
+});
+
+const libreFranklin = Libre_Franklin({
+  subsets: ["latin", "latin-ext"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-libre-franklin",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
+});
 import { Providers } from "./providers";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { getOptionalAuthSession } from "@/lib/auth/server";
@@ -26,11 +46,6 @@ export const metadata: Metadata = {
   applicationName: "Venshield",
   referrer: "strict-origin-when-cross-origin",
   robots: { index: true, follow: true },
-  icons: {
-    icon: "/logo.png",
-    shortcut: "/logo.png",
-    apple: "/logo.png",
-  },
 };
 
 export default async function RootLayout({
@@ -55,7 +70,7 @@ export default async function RootLayout({
   return (
     <html lang={htmlLang} suppressHydrationWarning>
       <body
-        className={`${GeistSans.variable} ${GeistMono.variable} min-h-screen bg-background font-sans antialiased`}
+        className={`${barlowSC.variable} ${libreFranklin.variable} ${jetbrainsMono.variable} min-h-screen bg-background font-sans antialiased`}
         suppressHydrationWarning
       >
         <a

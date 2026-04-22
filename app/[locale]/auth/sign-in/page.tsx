@@ -21,16 +21,16 @@ export default async function SignInPage({ params, searchParams }: SignInPagePro
   const t = await getTranslations("SignIn");
 
   return (
-    <main className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-5xl items-center px-6 py-12">
-      <div className="grid w-full gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+    <main className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-5xl items-center px-8 py-12">
+      <div className="grid w-full gap-16 md:grid-cols-[1.1fr_0.9fr] md:items-center">
         <div className="space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <p className="font-display text-[0.625rem] uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
             {t("badge")}
           </p>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
             {t("headline")}
           </h1>
-          <p className="max-w-xl text-sm leading-6 text-muted-foreground md:text-base">
+          <p className="max-w-xl text-[0.8125rem] leading-relaxed text-[var(--muted-foreground)]">
             {t("isolationNotice")}
           </p>
         </div>

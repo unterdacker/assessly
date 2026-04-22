@@ -5,7 +5,7 @@ import { AuditLogsTable } from "@/components/admin/audit-logs-table";
 import { getOptionalAuthSession } from "@/lib/auth/server";
 import { withLocalePath } from "@/lib/auth/permissions";
 import { pseudonymizeUserId, scrubPiiFields, truncateIp } from "@/lib/audit-sanitize";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -141,6 +141,7 @@ const REDACTED_FOR_PRIVACY = "[REDACTED_FOR_PRIVACY]";
 
 export default async function AuditLogsPage({ params, searchParams }: AuditLogsPageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const { page: pageParam, category: rawCategory } = await searchParams;
   const session = await getOptionalAuthSession();
   if (!session) {

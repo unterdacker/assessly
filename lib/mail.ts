@@ -226,16 +226,41 @@ async function sendViaResend(
 
 // ─── LOG (local dev fallback) ────────────────────────────────────────────────
 
+/** Converts HTML to a readable plain-text approximation for console output. */
+function htmlToText(html: string): string {
+  return html
+    // Block-level elements → newlines
+    .replace(/<\/?(br|p|div|tr|h[1-6]|li|blockquote)[^>]*>/gi, "\n")
+    // Horizontal rules
+    .replace(/<hr[^>]*>/gi, "\n─────────────────────────────\n")
+    // Table cells → tab separator
+    .replace(/<\/?(td|th)[^>]*>/gi, "  ")
+    // Strip all remaining tags
+    .replace(/<[^>]+>/g, "")
+    // Decode common HTML entities
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    // Collapse 3+ consecutive blank lines to 2
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function logSimulatedEmail(payload: Required<MailPayload>): MailResult {
-  console.log(
-    `\n╔═══════════════════════════════════════════════════════════`,
-  );
+  const border = "═".repeat(63);
+  const bodyText = htmlToText(payload.html);
+
+  console.log(`\n╔${border}`);
   console.log(`║  [Venshield Mail · SIMULATED — set MAIL_STRATEGY to send for real]`);
   console.log(`║  To:      ${payload.to}`);
   console.log(`║  From:    ${payload.from}`);
   console.log(`║  Subject: ${payload.subject}`);
-  console.log(
-    `╚═══════════════════════════════════════════════════════════\n`,
-  );
+  console.log(`╠${border}`);
+  bodyText.split("\n").forEach((line) => console.log(`║  ${line}`));
+  console.log(`╚${border}\n`);
+
   return { ok: true };
 }

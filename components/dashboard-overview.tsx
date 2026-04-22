@@ -152,8 +152,9 @@ export function DashboardOverview({
       value: openRemediationCount,
       icon: ShieldAlert,
       hint: translations.OpenRemediationsHint,
+      isRisk: true,
     },
-  ] as const;
+  ];
 
   const radarData = riskPosture.categoryMetrics
     .filter((metric) => metric.questionCount > 0)
@@ -187,10 +188,10 @@ export function DashboardOverview({
     <div className="space-y-8">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
+          <h1 className="font-display text-xl font-semibold tracking-tight md:text-2xl">
             {translations.Dashboard}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-[var(--muted-foreground)]">
             {translations.DashboardDesc}
           </p>
         </div>
@@ -203,7 +204,7 @@ export function DashboardOverview({
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle className="text-base">{translations.SupplyChainRiskScore}</CardTitle>
-            <p className="text-sm font-normal text-muted-foreground">
+            <p className="text-sm font-normal text-[var(--muted-foreground)]">
               {translations.SupplyChainRiskScoreDesc}
             </p>
           </CardHeader>
@@ -223,17 +224,24 @@ export function DashboardOverview({
         </Card>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-2">
-          {tiles.map(({ label, value, icon: Icon, hint }) => (
+          {tiles.map(({ label, value, icon: Icon, hint, isRisk }) => (
             <Card key={label}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className="text-sm font-medium text-[var(--muted-foreground)]">
                   {label}
                 </CardTitle>
-                <Icon className="h-4 w-4 text-indigo-600 opacity-80 dark:text-indigo-400" aria-hidden />
+                <Icon className="h-4 w-4 text-[var(--primary)] opacity-80" aria-hidden />
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-semibold tabular-nums">{value}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+                <p
+                  className={cn(
+                    "text-2xl font-semibold tabular-nums",
+                    isRisk && value > 0 ? "text-[var(--risk-high)]" : undefined,
+                  )}
+                >
+                  {value}
+                </p>
+                <p className="mt-1 text-xs text-[var(--muted-foreground)]">{hint}</p>
               </CardContent>
             </Card>
           ))}
@@ -243,14 +251,14 @@ export function DashboardOverview({
       <section className="space-y-4">
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-slate-300/80 bg-slate-100/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-slate-300/80 bg-slate-100/80 px-3 py-1 font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
               <Radar className="h-3.5 w-3.5" aria-hidden />
               {translations.RiskPostureOverview}
             </div>
-            <h2 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-slate-50">
+            <h2 className="font-display text-lg font-semibold tracking-tight text-slate-950 dark:text-slate-50">
               {translations.RiskPostureOverview}
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-[var(--muted-foreground)]">
               {translations.RiskPostureOverviewDesc}
             </p>
           </div>
@@ -268,7 +276,7 @@ export function DashboardOverview({
           <Card className="overflow-hidden border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-slate-100 shadow-[0_18px_50px_-28px_rgba(15,23,42,0.38)] dark:border-slate-800 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
             <CardHeader className="border-b border-slate-200/80 bg-white/60 pb-4 dark:border-slate-800 dark:bg-slate-950/40">
               <CardTitle className="text-base">{translations.CategoryComplianceRadarTitle}</CardTitle>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-[var(--muted-foreground)]">
                 {translations.CategoryComplianceRadarDesc}
               </p>
             </CardHeader>
@@ -287,7 +295,7 @@ export function DashboardOverview({
             <Card className="overflow-hidden border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-slate-100 shadow-[0_18px_50px_-28px_rgba(15,23,42,0.38)] dark:border-slate-800 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
               <CardHeader className="border-b border-slate-200/80 bg-white/60 pb-4 dark:border-slate-800 dark:bg-slate-950/40">
                 <CardTitle className="text-base">{translations.VendorsByRiskLevelTitle}</CardTitle>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-[var(--muted-foreground)]">
                   {translations.VendorsByRiskLevelDesc}
                 </p>
               </CardHeader>
@@ -304,13 +312,13 @@ export function DashboardOverview({
 
             <Card className="overflow-hidden border-border bg-card text-card-foreground shadow-[0_18px_50px_-28px_rgba(15,23,42,0.38)]">
               <CardHeader className="border-b border-border pb-4">
-                <div className="flex items-center gap-2 text-primary">
+                <div className="flex items-center gap-2 text-[var(--primary)]">
                   <Sparkles className="h-4 w-4" aria-hidden />
                   <CardTitle className="text-base text-card-foreground">
                     {translations.AIExecutiveSummary}
                   </CardTitle>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-[var(--muted-foreground)]">
                   {translations.AIExecutiveSummaryDesc}
                 </p>
               </CardHeader>
@@ -351,11 +359,11 @@ export function DashboardOverview({
       <Card>
         <CardHeader>
           <CardTitle className="text-base">{translations.TrustAndCompliance}</CardTitle>
-          <p className="text-sm font-normal text-muted-foreground">
+          <p className="text-sm font-normal text-[var(--muted-foreground)]">
             {translations.TrustComplianceDesc}
           </p>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
+        <CardContent className="text-sm text-[var(--muted-foreground)]">
           <ul className="list-inside list-disc space-y-1">
             <li>{translations.RiskColoring}</li>
             <li>{translations.AssessmentWorkspace}</li>
@@ -367,10 +375,10 @@ export function DashboardOverview({
       {isPremium && (overdueAssessments.length > 0 || slaComplianceRate > 0) && (
         <section className="space-y-4">
           <div>
-            <h2 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-slate-50">
+            <h2 className="font-display text-lg font-semibold tracking-tight text-slate-950 dark:text-slate-50">
               SLA Tracking
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-[var(--muted-foreground)]">
               Monitor assessment SLA compliance and overdue vendors
             </p>
           </div>
@@ -379,15 +387,15 @@ export function DashboardOverview({
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">SLA Compliance Rate</CardTitle>
-                <p className="text-sm font-normal text-muted-foreground">
+                <p className="text-sm font-normal text-[var(--muted-foreground)]">
                   Percentage of assessments meeting SLA targets
                 </p>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-semibold tabular-nums">
+                <p className="font-display text-3xl font-semibold tabular-nums">
                   {Math.round(slaComplianceRate)}%
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-xs text-[var(--muted-foreground)]">
                   Based on completed assessments in last 90 days
                 </p>
               </CardContent>
@@ -396,23 +404,23 @@ export function DashboardOverview({
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Overdue Assessments</CardTitle>
-                <p className="text-sm font-normal text-muted-foreground">
+                <p className="text-sm font-normal text-[var(--muted-foreground)]">
                   Vendors requiring immediate attention
                 </p>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-semibold tabular-nums text-destructive">
+                <p className="font-display text-3xl font-semibold tabular-nums text-[var(--risk-high-fg)]">
                   {overdueAssessments.length}
                 </p>
                 {overdueAssessments.length > 0 && (
                   <ul className="mt-3 space-y-1.5 text-xs">
                     {overdueAssessments.slice(0, 3).map((a) => (
-                      <li key={a.id} className="text-muted-foreground">
+                      <li key={a.id} className="text-[var(--muted-foreground)]">
                         • {a.vendor?.name ?? "Unknown vendor"} ({a.daysOverdue} days overdue)
                       </li>
                     ))}
                     {overdueAssessments.length > 3 && (
-                      <li className="text-muted-foreground">
+                      <li className="text-[var(--muted-foreground)]">
                         + {overdueAssessments.length - 3} more
                       </li>
                     )}

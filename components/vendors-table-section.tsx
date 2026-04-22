@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/table";
 import { RiskBadge } from "@/components/risk-badge";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
+import { cn } from "@/lib/utils";
 
 export type VendorsPagination = {
   page: number;
@@ -82,6 +83,12 @@ function formatAccessCodeExpiry(
   return `${expires}: ${formatted}`;
 }
 
+function getStatusDotClass(status: VendorAssessment["status"]) {
+  if (status === "completed") return "bg-[var(--risk-low)]";
+  if (status === "incomplete") return "bg-[var(--risk-medium)]";
+  return "bg-[var(--risk-medium)]";
+}
+
 /** Colour-coded compliance score pill. */
 function ScorePill({ score }: { score: number }) {
   const displayScore = score;
@@ -95,7 +102,7 @@ function ScorePill({ score }: { score: number }) {
 
   return (
     <span
-      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold tabular-nums ${colorCls}`}
+      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold font-mono tabular-nums ${colorCls}`}
       title={`NIS2 compliance score: ${displayScore}/100`}
     >
       {displayScore}%
@@ -108,7 +115,7 @@ function ProgressPill({ progress, filled }: { progress: number; filled: number }
   const t = useTranslations("vendors");
   if (progress === 100) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800">
+      <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-mono text-xs font-bold tabular-nums text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
         </svg>
@@ -122,7 +129,7 @@ function ProgressPill({ progress, filled }: { progress: number; filled: number }
     : "bg-slate-50 text-slate-400 border-slate-200 dark:bg-slate-900/50 dark:text-slate-600 dark:border-slate-800";
 
   return (
-    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold tabular-nums gap-1.5 ${colorCls}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 font-mono text-xs font-semibold tabular-nums ${colorCls}`}>
       {progress}% 
       <span className="opacity-60 font-normal">({filled}/20)</span>
     </span>
@@ -452,7 +459,7 @@ export function VendorsTableSection({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
+          <h1 className="font-display text-xl font-semibold tracking-tight md:text-2xl">
             {t("pageTitle")}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -490,7 +497,7 @@ export function VendorsTableSection({
         </div>
       </div>
 
-      <div className="relative max-w-md">
+      <div className="relative max-w-xs">
         <Search
           className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
           aria-hidden
@@ -504,14 +511,14 @@ export function VendorsTableSection({
         />
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-[var(--radius-card)] border border-[var(--border)]">
         <Table>
           <caption className="sr-only">
             {t("tableCaption")}
           </caption>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-10">
+            <TableRow className="bg-[var(--muted)]">
+              <TableHead className="w-10 px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
                 {canManageVendors ? (
                   <input
                     ref={selectAllRef}
@@ -524,58 +531,58 @@ export function VendorsTableSection({
                   />
                 ) : null}
               </TableHead>
-              <TableHead>
+              <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
                 <Button variant="ghost" onClick={() => handleSort('name')} className="h-auto p-0 font-semibold">
                   {t("columnName")}
                   {sortKey === 'name' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
                 </Button>
               </TableHead>
-              <TableHead>{t("columnAccessCode")}</TableHead>
-              <TableHead>
+              <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">{t("columnAccessCode")}</TableHead>
+              <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
                 <Button variant="ghost" onClick={() => handleSort('serviceType')} className="h-auto p-0 font-semibold">
                   {t("columnServiceType")}
                   {sortKey === 'serviceType' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
                 </Button>
               </TableHead>
-              <TableHead>
+              <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
                 <Button variant="ghost" onClick={() => handleSort('status')} className="h-auto p-0 font-semibold">
                   {t("columnStatus")}
                   {sortKey === 'status' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
                 </Button>
               </TableHead>
-              <TableHead>
+              <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
                 <Button variant="ghost" onClick={() => handleSort('lastAssessmentDate')} className="h-auto p-0 font-semibold">
                   {t("columnLastAssessment")}
                   {sortKey === 'lastAssessmentDate' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
                 </Button>
               </TableHead>
-              <TableHead>
+              <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
                 <Button variant="ghost" onClick={() => handleSort('questionnaireProgress')} className="h-auto p-0 font-semibold">
                   {t("columnQuestionsFilled")}
                   {sortKey === 'questionnaireProgress' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
                 </Button>
               </TableHead>
-              <TableHead>
+              <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
                 <Button variant="ghost" onClick={() => handleSort('complianceScore')} className="h-auto p-0 font-semibold">
                   {t("columnComplianceScore")}
                   {sortKey === 'complianceScore' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
                 </Button>
               </TableHead>
-              <TableHead>
+              <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
                 <Button variant="ghost" onClick={() => handleSort('riskLevel')} className="h-auto p-0 font-semibold">
                   {t("columnRiskLevel")}
                   {sortKey === 'riskLevel' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
                 </Button>
               </TableHead>
-              <TableHead className="text-right">{t("columnActions")}</TableHead>
+              <TableHead className="px-4 py-2.5 text-right text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">{t("columnActions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow>
+              <TableRow className="hover:bg-[var(--muted)]">
                 <TableCell
                   colSpan={10}
-                  className="h-24 text-center text-muted-foreground"
+                  className="h-24 px-4 py-2.5 text-center text-muted-foreground"
                 >
                   {t("noVendorsFound")}
                 </TableCell>
@@ -585,8 +592,8 @@ export function VendorsTableSection({
                 const hasAccessCode = Boolean(v.accessCode);
 
                 return (
-                <TableRow key={v.id}>
-                  <TableCell>
+                <TableRow key={v.id} className="hover:bg-[var(--muted)]">
+                  <TableCell className="px-4 py-2.5">
                     {canManageVendors ? (
                       <input
                         type="checkbox"
@@ -598,8 +605,8 @@ export function VendorsTableSection({
                       />
                     ) : null}
                   </TableCell>
-                  <TableCell className="font-medium">{v.name}</TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-2.5 font-medium">{v.name}</TableCell>
+                  <TableCell className="px-4 py-2.5">
                     <div className="space-y-2">
                       {hasAccessCode ? (
                         <div className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold tracking-wider dark:border-slate-700 dark:bg-slate-900">
@@ -662,10 +669,10 @@ export function VendorsTableSection({
                       ) : null}
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="px-4 py-2.5 text-muted-foreground">
                     {v.serviceType}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-2.5">
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
                       ${ v.status === "completed"
                           ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
@@ -673,22 +680,23 @@ export function VendorsTableSection({
                           ? "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
                           : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                       }`}>
-                      {v.status === "completed" ? t("statusCompleted") : v.status === "incomplete" ? t("statusIncomplete") : t("statusPending")}
+                      <span aria-hidden="true" className={cn("mr-1.5 inline-block h-2 w-2 rounded-full", getStatusDotClass(v.status))} />
+                      <span>{v.status === "completed" ? t("statusCompleted") : v.status === "incomplete" ? t("statusIncomplete") : t("statusPending")}</span>
                     </span>
                   </TableCell>
-                  <TableCell className="tabular-nums text-muted-foreground">
-                    {formatDate(v.lastAssessmentDate)}
+                  <TableCell className="px-4 py-2.5 text-muted-foreground">
+                    <span className="font-mono tabular-nums">{formatDate(v.lastAssessmentDate)}</span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-2.5">
                     <ProgressPill progress={v.questionnaireProgress} filled={v.questionsFilled} />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-2.5">
                     <ScorePill score={v.complianceScore} />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-2.5">
                     <RiskBadge level={v.riskLevel} />
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="px-4 py-2.5 text-right">
                     <VendorActions vendorAssessment={v} role={role} />
                   </TableCell>
                 </TableRow>
@@ -722,7 +730,7 @@ export function VendorsTableSection({
               {t("paginationPrev")}
             </button>
             <span className="tabular-nums">
-              {pagination.page} / {pagination.pageCount}
+              <span className="font-mono tabular-nums">{pagination.page} / {pagination.pageCount}</span>
             </span>
             <button
               type="button"
