@@ -75,6 +75,7 @@
   "RiskPostureOverviewDesc": "Mission-Control-Sicht auf Kategorienabdeckung, Anbieter-Konzentration und KI-gestützte Managementsignale über Ihre Lieferkette.",
   "CategoryComplianceRadarTitle": "Durchschnittliche Compliance nach NIS2-Kategorie",
   "CategoryComplianceRadarDesc": "Über alle Anbieter und Kategorienfragen normalisiert. Fehlende Antworten zählen als unzureichend abgedeckte Kontrollen.",
+  "CategoryComplianceRadarHoverHint": "Bewegen Sie den Cursor über einen Datenpunkt für Details",
   "VendorsByRiskLevelTitle": "Anbieter nach Risikostufe",
   "VendorsByRiskLevelDesc": "Aktuelle Verteilung der Anbieter auf Basis live berechneter Bewertungsergebnisse und abgeglichener Risikostufen.",
   "AIExecutiveSummary": "KI-Executive-Summary",

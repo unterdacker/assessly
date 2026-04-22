@@ -92,6 +92,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     RiskPostureOverviewDesc: t("RiskPostureOverviewDesc"),
     CategoryComplianceRadarTitle: t("CategoryComplianceRadarTitle"),
     CategoryComplianceRadarDesc: t("CategoryComplianceRadarDesc"),
+    CategoryComplianceRadarHoverHint: t("CategoryComplianceRadarHoverHint"),
     VendorsByRiskLevelTitle: t("VendorsByRiskLevelTitle"),
     VendorsByRiskLevelDesc: t("VendorsByRiskLevelDesc"),
     AIExecutiveSummary: t("AIExecutiveSummary"),
@@ -199,8 +200,8 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
         translations={translations}
       />
 
-      {/* Analytics Overview - Free tier */}
-      <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 mt-8 space-y-6">
+      {/* Analytics Overview */}
+      <div className="mt-8 space-y-6 pb-8">
         <DashboardCountsRow
           counts={dashboardCounts}
           labels={analyticsCountsLabels}
@@ -209,22 +210,25 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
           byStatus={dashboardCounts.byStatus}
           labels={analyticsStatusLabels}
         />
+        {isPremium && cmTranslations && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+            <div className="lg:col-span-1">
+              <PortfolioComplianceWidget
+                score={portfolioScore}
+                trend={portfolioTrend}
+                vendorCount={vendorAssessments.length}
+                translations={cmTranslations.widget}
+              />
+            </div>
+            <div className="lg:col-span-2">
+              <ComplianceTimelineChartLazy
+                snapshots={complianceSnapshots}
+                translations={cmTranslations.chart}
+              />
+            </div>
+          </div>
+        )}
       </div>
-      
-      {isPremium && cmTranslations && (
-        <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 mt-8 space-y-6">
-          <PortfolioComplianceWidget
-            score={portfolioScore}
-            trend={portfolioTrend}
-            vendorCount={vendorAssessments.length}
-            translations={cmTranslations.widget}
-          />
-          <ComplianceTimelineChartLazy
-            snapshots={complianceSnapshots}
-            translations={cmTranslations.chart}
-          />
-        </div>
-      )}
     </>
   );
 }

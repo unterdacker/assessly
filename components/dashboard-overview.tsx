@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CategoryComplianceRadarChartLazy } from "@/components/category-compliance-radar-chart-lazy";
 import { VendorsByRiskBarChartLazy } from "@/components/vendors-by-risk-bar-chart-lazy";
-import { ComplianceTrustWidget } from "@/components/compliance-trust-widget";
+import { ComplianceTrustWidgetLazy } from "@/components/compliance-trust-widget-lazy";
 import { RefreshAiSummaryButton } from "@/components/refresh-ai-summary-button";
 
 type OverdueAssessment = {
@@ -60,6 +60,7 @@ export type DashboardOverviewProps = {
     RiskPostureOverviewDesc: string;
     CategoryComplianceRadarTitle: string;
     CategoryComplianceRadarDesc: string;
+    CategoryComplianceRadarHoverHint?: string;
     VendorsByRiskLevelTitle: string;
     VendorsByRiskLevelDesc: string;
     AIExecutiveSummary: string;
@@ -167,12 +168,7 @@ export function DashboardOverview({
   const barData = riskPosture.riskBuckets.map((bucket) => ({
     label: translations.riskLevelLabels[bucket.level],
     count: bucket.count,
-    color:
-      bucket.level === "low"
-        ? "#2f9e44"
-        : bucket.level === "medium"
-          ? "#d97706"
-          : "#dc2626",
+    level: bucket.level,
   }));
 
   const summarySourceLabel =
@@ -286,6 +282,7 @@ export function DashboardOverview({
                   data={radarData}
                   legendLabel={translations.AverageComplianceLegend}
                   emptyLabel={translations.NoVendorData}
+                  hoverHint={translations.CategoryComplianceRadarHoverHint}
                 />
               </div>
             </CardContent>
@@ -432,7 +429,7 @@ export function DashboardOverview({
         </section>
       )}
 
-      <ComplianceTrustWidget
+      <ComplianceTrustWidgetLazy
         metrics={riskPosture.complianceTrust}
         translations={{
           title: translations.ComplianceTrustWidgetTitle,

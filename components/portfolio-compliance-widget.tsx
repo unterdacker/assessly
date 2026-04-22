@@ -53,25 +53,23 @@ export function PortfolioComplianceWidget({
 
   if (vendorCount === 0) {
     return (
-      <Card>
+      <Card className="h-full flex flex-col">
         <CardHeader>
           <CardTitle className="text-base">{translations.title}</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">
-            {translations.noData}
-          </div>
+        <CardContent className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+          {translations.noData}
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle className="text-base">{translations.title}</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center space-y-4 py-8">
+      <CardContent className="flex flex-1 flex-col items-center justify-center space-y-4 py-8">
         {/* Large Score Display */}
         <div className="text-center">
           <div

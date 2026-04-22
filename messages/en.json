@@ -75,6 +75,7 @@
   "RiskPostureOverviewDesc": "Mission-control view of category coverage, vendor concentration, and AI-generated executive signals across your supply chain.",
   "CategoryComplianceRadarTitle": "Average compliance by NIS2 category",
   "CategoryComplianceRadarDesc": "Normalized across all vendors and category questions. Missing answers count as uncovered controls.",
+  "CategoryComplianceRadarHoverHint": "Hover over a data point to view details",
   "VendorsByRiskLevelTitle": "Vendors by risk level",
   "VendorsByRiskLevelDesc": "Current vendor distribution derived from live assessment scores and reconciled risk levels.",
   "AIExecutiveSummary": "AI executive summary",

@@ -57,6 +57,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     RiskPostureOverviewDesc: t("RiskPostureOverviewDesc"),
     CategoryComplianceRadarTitle: t("CategoryComplianceRadarTitle"),
     CategoryComplianceRadarDesc: t("CategoryComplianceRadarDesc"),
+    CategoryComplianceRadarHoverHint: t("CategoryComplianceRadarHoverHint"),
     VendorsByRiskLevelTitle: t("VendorsByRiskLevelTitle"),
     VendorsByRiskLevelDesc: t("VendorsByRiskLevelDesc"),
     AIExecutiveSummary: t("AIExecutiveSummary"),
