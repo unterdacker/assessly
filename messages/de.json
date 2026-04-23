@@ -213,6 +213,7 @@
     "title": "Souveräne Dokumentenprüfung",
     "placeholder": "Sicherheitsdokument hier ablegen oder klicken (Max. 5 MB, PDF)",
     "aiFeaturesDisabled": "KI-Analyse ist nicht verfügbar. Ihr Dokument wird zur manuellen Prüfung hochgeladen. KI konfigurieren in",
+    "aiFeaturesDisabledVendor": "KI-Analyse ist nicht verfügbar. Ihr Dokument wird zur manuellen Prüfung hochgeladen. Bitten Sie Ihren Administrator, die KI-Analyse zu aktivieren.",
     "settingsLink": "Einstellungen",
     "privacyNote": "🛡️ Datenschutz-Garantie: Analyse via Mistral AI (EU) oder lokalem LLM. Kein Training, kein Datentransfer in die USA.",
     "consentLabel": "Ich bestätige, dass dieses Dokument als vertraulicher Nachweis gespeichert und DSGVO-konform verarbeitet wird.",
@@ -868,7 +869,7 @@
     "paginationNext": "Weiter"
   },
   "SignIn": {
-    "badge": "Enterprise RBAC",
+    "badge": "Venshield",
     "headline": "Interner Zugang ist vom Anbieter-Zugang getrennt.",
     "isolationNotice": "Venshield erzwingt dedizierte Admin- und Auditor-Sitzungen für Dashboard-, Anbieter-, Einstellungs- und Audit-Routen. Anbieter-Sitzungen bleiben innerhalb des externen Assessment-Portals isoliert.",
     "title": "Interner Workspace-Login",

@@ -384,6 +384,26 @@ export function PdfUploadZone({
             onChange={onFileChange}
           />
 
+          {/* ── AI disabled notice (full-width, own row) ────── */}
+          {aiDisabled ? (
+            <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2 text-[11px] text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-200">
+              <AlertTriangle className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />
+              <p className="leading-snug">
+                {isAdminView ? (
+                  <>
+                    {t("aiFeaturesDisabled")} {" "}
+                    <Link href={`/${locale}/settings`} className="font-semibold underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-100">
+                      {t("settingsLink")}
+                    </Link>
+                    .
+                  </>
+                ) : (
+                  t("aiFeaturesDisabledVendor")
+                )}
+              </p>
+            </div>
+          ) : null}
+
           {/* ── Inline action row ──────────────────────────── */}
           <div className="flex items-center justify-between gap-2">
             <p className="text-[10px] text-muted-foreground">
@@ -425,44 +445,30 @@ export function PdfUploadZone({
                   </Tooltip>
                 </TooltipProvider>
               ) : (
-                <div className="flex items-center gap-1.5">
-                  {aiDisabled ? (
-                    <div className="inline-flex max-w-xs items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-200">
-                      <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                      <p className="leading-snug">
-                        {t("aiFeaturesDisabled")}{" "}
-                        <Link href={`/${locale}/settings`} className="font-semibold underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-100">
-                          {t("settingsLink")}
-                        </Link>
-                        .
-                      </p>
-                    </div>
-                  ) : null}
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="inline-flex">
-                          <Button
-                            type="submit"
-                            size="sm"
-                            className="h-7 gap-1 bg-indigo-600 px-3 text-[11px] text-white hover:bg-indigo-700"
-                            disabled={!selectedFile || isAuditActionDisabled}
-                          >
-                            {isPending ? (
-                              <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
-                            ) : aiDisabled ? (
-                              <UploadCloud className="h-3 w-3" aria-hidden />
-                            ) : (
-                              <Sparkles className="h-3 w-3" aria-hidden />
-                            )}
-                            {isPending ? t("runningAnalysis") : aiDisabled ? t("uploadPdfNoAi") : t("runAiAudit")}
-                          </Button>
-                        </span>
-                      </TooltipTrigger>
-                      {!aiDisabled ? <TooltipContent>{t("aiTooltip")}</TooltipContent> : null}
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex">
+                        <Button
+                          type="submit"
+                          size="sm"
+                          className="h-7 gap-1 bg-indigo-600 px-3 text-[11px] text-white hover:bg-indigo-700"
+                          disabled={!selectedFile || isAuditActionDisabled}
+                        >
+                          {isPending ? (
+                            <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+                          ) : aiDisabled ? (
+                            <UploadCloud className="h-3 w-3" aria-hidden />
+                          ) : (
+                            <Sparkles className="h-3 w-3" aria-hidden />
+                          )}
+                          {isPending ? t("runningAnalysis") : aiDisabled ? t("uploadPdfNoAi") : t("runAiAudit")}
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    {!aiDisabled ? <TooltipContent>{t("aiTooltip")}</TooltipContent> : null}
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
           </div>

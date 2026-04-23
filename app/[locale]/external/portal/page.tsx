@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { authenticateVendorAccessCode } from "@/app/actions/vendor-auth";
 import { initialPortalActionState } from "@/lib/types/vendor-auth";
 import { LanguageToggle } from "@/components/language-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function ExternalPortalPage() {
   const t = useTranslations();
@@ -19,7 +20,8 @@ export default function ExternalPortalPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-950">
-      <div className="fixed right-4 top-4 z-50">
+      <div className="fixed right-4 top-4 z-50 flex items-center gap-2">
+        <ThemeToggle />
         <LanguageToggle />
       </div>
       <div className="w-full max-w-md space-y-6 rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">

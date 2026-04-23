@@ -102,8 +102,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   const isExternal = normalizedPathname.startsWith("/external/");
   const isAuth = normalizedPathname.startsWith("/auth/");
+  const isVendorInvite = normalizedPathname.startsWith("/vendor/accept-invite");
 
-  if (isExternal || isAuth) {
+  if (isExternal || isAuth || isVendorInvite) {
     return (
       <div className="min-h-screen bg-[var(--background)] dark:bg-background">
         <main

@@ -229,6 +229,15 @@ async function sendViaResend(
 /** Converts HTML to a readable plain-text approximation for console output. */
 function htmlToText(html: string): string {
   return html
+    // Preserve href URLs: replace <a href="url"> with a marker so the URL
+    // appears in the output even though the tag itself is stripped later.
+    .replace(/<a\s[^>]*href="([^"]*)"[^>]*>/gi, (_, href) => {
+      const url = href
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+      return `[→ ${url}] `;
+    })
     // Block-level elements → newlines
     .replace(/<\/?(br|p|div|tr|h[1-6]|li|blockquote)[^>]*>/gi, "\n")
     // Horizontal rules

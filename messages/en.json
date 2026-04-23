@@ -213,6 +213,7 @@
     "title": "Sovereign Document Audit",
     "placeholder": "Drop security document here or click (Max. 5 MB, PDF)",
     "aiFeaturesDisabled": "AI analysis is not available. Your document will be uploaded for manual review. Configure AI in",
+    "aiFeaturesDisabledVendor": "AI analysis is not available. Your document will be uploaded for manual review. Contact your administrator to enable AI analysis.",
     "settingsLink": "Settings",
     "privacyNote": "🛡️ Privacy Guarantee: Analysis via Mistral AI (EU) or local LLM. No training, no data transfer to the USA.",
     "consentLabel": "I confirm that this document is stored as confidential evidence and processed GDPR-compliant.",
@@ -830,7 +831,7 @@
     "paginationNext": "Next"
   },
   "SignIn": {
-    "badge": "Enterprise RBAC",
+    "badge": "Venshield",
     "headline": "Internal access is separated from vendor access.",
     "isolationNotice": "Venshield now enforces dedicated admin and auditor sessions for dashboard, vendor, settings, and audit routes. Vendor sessions stay isolated inside the external assessment portal.",
     "title": "Internal Workspace Sign In",
