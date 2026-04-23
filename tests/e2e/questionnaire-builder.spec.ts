@@ -30,6 +30,7 @@ test.describe("Questionnaire Builder — Navigation", () => {
 
   test("settings page shows Questionnaires nav card", async ({ page }) => {
     await page.goto(SETTINGS_URL);
+    await page.getByRole("tab", { name: /compliance/i }).click();
     await expect(page.getByRole("link", { name: /questionnaire templates/i })).toBeVisible();
   });
 

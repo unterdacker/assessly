@@ -8,6 +8,7 @@ test.describe("API key settings entry", () => {
 
   test("shows API Keys card on settings page and links to api-keys route", async ({ page }) => {
     await page.goto("/en/settings");
+    await page.getByRole("tab", { name: /integrations/i }).click();
 
     const card = page.getByRole("link", { name: /api keys/i }).first();
     await expect(card).toBeVisible({ timeout: 10_000 });

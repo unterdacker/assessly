@@ -22,13 +22,18 @@ import { signInAsAdmin } from "./helpers/auth";
 
 const SETTINGS_URL = "/en/settings";
 
+async function goToComplianceTab(page: import("@playwright/test").Page) {
+  await page.goto(SETTINGS_URL);
+  await page.getByRole("tab", { name: /compliance/i }).click();
+}
+
 test.describe("Custom Questions - Settings UI", () => {
   test.beforeEach(async ({ page }) => {
     await signInAsAdmin(page);
   });
 
   test("settings page loads without crashing and shows custom questions section", async ({ page }) => {
-    await page.goto(SETTINGS_URL);
+    await goToComplianceTab(page);
 
     await expect(
       page.getByRole("heading", { name: /custom assessment questions/i }),
@@ -36,14 +41,14 @@ test.describe("Custom Questions - Settings UI", () => {
   });
 
   test('"Add question" button is visible', async ({ page }) => {
-    await page.goto(SETTINGS_URL);
+    await goToComplianceTab(page);
     await expect(page.getByRole("button", { name: /add question/i })).toBeVisible({
       timeout: 10_000,
     });
   });
 
   test("clicking Add question opens the question form", async ({ page }) => {
-    await page.goto(SETTINGS_URL);
+    await goToComplianceTab(page);
     await page.getByRole("button", { name: /add question/i }).click();
 
     await expect(page.getByLabel(/^question/i).last()).toBeVisible({ timeout: 5_000 });
@@ -52,7 +57,7 @@ test.describe("Custom Questions - Settings UI", () => {
   });
 
   test("submitting add form with empty text shows validation error", async ({ page }) => {
-    await page.goto(SETTINGS_URL);
+    await goToComplianceTab(page);
     await page.getByRole("button", { name: /add question/i }).click();
     await page.getByRole("button", { name: /^save$/i }).click();
 
@@ -60,7 +65,7 @@ test.describe("Custom Questions - Settings UI", () => {
   });
 
   test("can create a new custom question", async ({ page }) => {
-    await page.goto(SETTINGS_URL);
+    await goToComplianceTab(page);
     await page.getByRole("button", { name: /add question/i }).click();
 
     const questionText = `E2E test question ${Date.now()}`;
@@ -74,7 +79,7 @@ test.describe("Custom Questions - Settings UI", () => {
   });
 
   test("can edit an existing custom question", async ({ page }) => {
-    await page.goto(SETTINGS_URL);
+    await goToComplianceTab(page);
 
     const questionText = `E2E editable question ${Date.now()}`;
     await page.getByRole("button", { name: /add question/i }).click();
@@ -93,7 +98,7 @@ test.describe("Custom Questions - Settings UI", () => {
   });
 
   test("can delete a custom question", async ({ page }) => {
-    await page.goto(SETTINGS_URL);
+    await goToComplianceTab(page);
 
     // First create a question to delete
     await page.getByRole("button", { name: /add question/i }).click();

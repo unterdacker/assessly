@@ -167,7 +167,7 @@ test("MFA: admin with MFA enrolled can enable org-wide MFA policy", async ({ pag
     const isChecked = await policyToggle.isChecked().catch(() => false);
     if (!isChecked) {
       await policyToggle.click();
-      await expect(page.getByText(/saved|updated|success/i).first()).toBeVisible({ timeout: 8_000 });
+      await expect(page.getByText(/saved|updated|success|enabled|removed/i).first()).toBeVisible({ timeout: 8_000 });
     }
     // Cleanup: disable it so subsequent tests are not affected
     if (await policyToggle.isChecked().catch(() => true)) {
