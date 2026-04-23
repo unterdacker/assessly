@@ -43,7 +43,7 @@ export function LanguageToggle() {
       <button
         onClick={() => handleLanguageSwitch("en")}
         aria-label="Switch to English"
-        className={`px-3 py-1.5 text-xs font-semibold transition-colors rounded ${
+        className={`px-3 py-1.5 text-xs font-semibold transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 ${
           locale === "en"
             ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
             : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
@@ -54,7 +54,7 @@ export function LanguageToggle() {
       <button
         onClick={() => handleLanguageSwitch("de")}
         aria-label="Switch to German"
-        className={`px-3 py-1.5 text-xs font-semibold transition-colors rounded ${
+        className={`px-3 py-1.5 text-xs font-semibold transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 ${
           locale === "de"
             ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
             : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"

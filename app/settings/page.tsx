@@ -58,6 +58,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
     MistralAI: t("MistralAI"),
     LocalServer: t("LocalServer"),
     MistralAPIKey: t("MistralAPIKey"),
+    mistralApiKeyHint: t("MistralApiKeyHint"),
     KeyAlreadyConfigured: t("KeyAlreadyConfigured"),
     EnterMistralAPIKey: t("EnterMistralAPIKey"),
     LocalAIEndpoint: t("LocalAIEndpoint"),

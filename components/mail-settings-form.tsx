@@ -66,8 +66,7 @@ function PasswordInput({
       />
       <button
         type="button"
-        tabIndex={-1}
-        aria-label={visible ? "Hide" : "Show"}
+        aria-label={visible ? "Hide password" : "Show password"}
         onClick={() => setVisible((v) => !v)}
         className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
       >
@@ -144,7 +143,7 @@ export function MailSettingsForm({ initial }: { initial: MailSettingsInitialData
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              <Mail className="h-5 w-5 text-[var(--primary)]" />
               Mail Delivery Configuration
             </CardTitle>
             <CardDescription>
@@ -323,7 +322,7 @@ export function MailSettingsForm({ initial }: { initial: MailSettingsInitialData
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Send className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+              <Send className="h-4 w-4 text-[var(--primary)]" />
               Send Test Email
             </CardTitle>
             <CardDescription>

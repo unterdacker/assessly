@@ -1,5 +1,8 @@
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+"use client";
+
+import { TrendingUp, TrendingDown, Minus, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type PortfolioComplianceWidgetProps = {
   score: number;
@@ -10,8 +13,12 @@ type PortfolioComplianceWidgetProps = {
     trendUp: string;
     trendDown: string;
     trendStable: string;
+    scoreLabel: string;
+    riskLabel: string;
     vendors: string;
     noData: string;
+    noDataExplanation?: string;
+    widgetTooltip?: string;
   };
 };
 
@@ -51,14 +58,39 @@ export function PortfolioComplianceWidget({
         ? "text-red-600 dark:text-red-400"
         : "text-slate-600 dark:text-slate-400";
 
+  const widgetInfoTooltip = translations.widgetTooltip ? (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          aria-label="More information about Overall Compliance Score"
+          tabIndex={0}
+          className="inline-flex cursor-help mt-0.5"
+        >
+          <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors" />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-[280px]">
+        <p>{translations.widgetTooltip}</p>
+      </TooltipContent>
+    </Tooltip>
+  ) : null;
+
   if (vendorCount === 0) {
     return (
       <Card className="h-full flex flex-col">
         <CardHeader>
-          <CardTitle className="text-base">{translations.title}</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-base">{translations.title}</CardTitle>
+            {widgetInfoTooltip}
+          </div>
         </CardHeader>
         <CardContent className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-          {translations.noData}
+          <div className="text-center">
+            <p>{translations.noData}</p>
+            {translations.noDataExplanation && (
+              <p className="mt-1 text-xs text-[var(--muted-foreground)]">{translations.noDataExplanation}</p>
+            )}
+          </div>
         </CardContent>
       </Card>
     );
@@ -67,22 +99,26 @@ export function PortfolioComplianceWidget({
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
-        <CardTitle className="text-base">{translations.title}</CardTitle>
+        <div className="flex items-center gap-2">
+          <CardTitle className="text-base">{translations.title}</CardTitle>
+          {widgetInfoTooltip}
+        </div>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col items-center justify-center space-y-4 py-8">
+      <CardContent className="flex flex-1 flex-col space-y-3 pt-2 pb-4">
         {/* Large Score Display */}
-        <div className="text-center">
-          <div
-            className={`text-6xl font-bold tabular-nums ${scoreColor}`}
-            aria-label={`Compliance score: ${score.toFixed(1)} percent`}
-          >
-            {score.toFixed(1)}
-            <span className="text-3xl">%</span>
+        <div>
+          <div className={`text-3xl font-semibold tabular-nums ${scoreColor}`}>
+            <span className="sr-only">{score.toFixed(1)}% {translations.scoreLabel}</span>
+            <span aria-hidden="true">{score.toFixed(1)}</span>
+            <span className="text-3xl" aria-hidden="true">%</span>
           </div>
+          <p className="text-xs font-medium text-muted-foreground mt-1">
+            {translations.riskLabel}
+          </p>
         </div>
 
         {/* Trend Indicator */}
-        <div className="flex items-center gap-2">
+        <div className="flex gap-2" role="status" aria-live="polite">
           {trendIcon}
           <span className={`text-sm font-medium ${trendColorClass}`}>
             {trendLabel}
@@ -90,7 +126,7 @@ export function PortfolioComplianceWidget({
         </div>
 
         {/* Vendor Count Footer */}
-        <div className="mt-6 w-full border-t border-border pt-4 text-center">
+        <div className="mt-3 w-full border-t border-border pt-4">
           <p className="text-sm text-muted-foreground">
             {vendorCount} {translations.vendors}
           </p>

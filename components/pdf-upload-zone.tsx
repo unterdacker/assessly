@@ -316,7 +316,7 @@ export function PdfUploadZone({
           {displayFileName ? (
             <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50/60 px-2.5 py-2 dark:border-slate-800 dark:bg-slate-900/40">
               <FileText className="h-4 w-4 shrink-0 text-indigo-500" aria-hidden />
-              <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-foreground">
+              <span title={displayFileName ?? undefined} className="min-w-0 flex-1 truncate text-[11px] font-medium text-foreground">
                 {displayFileName}
               </span>
               <span className="shrink-0 text-[10px] text-muted-foreground">

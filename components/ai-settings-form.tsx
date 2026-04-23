@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Sparkles, Globe, Server, Ban } from "lucide-react";
+import { Sparkles, Globe, Server, Ban, AlertCircle, CheckCircle2 } from "lucide-react";
 import { updateAiSettings } from "@/app/actions/update-settings";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
@@ -26,6 +26,7 @@ interface Translations {
   MistralAI: string;
   LocalServer: string;
   MistralAPIKey: string;
+  mistralApiKeyHint?: string;
   KeyAlreadyConfigured: string;
   EnterMistralAPIKey: string;
   LocalAIEndpoint: string;
@@ -45,20 +46,34 @@ interface Translations {
 export function AiSettingsForm({ company, companyId, translations }: { company: Company; companyId: string; translations: Translations }) {
   const router = useRouter();
   const [aiProvider, setAiProvider] = useState(company.aiDisabled ? "no-ai" : company.aiProvider);
+  const [isDirty, setIsDirty] = useState(false);
 
   const [state, formAction] = useActionState(updateAiSettings, null);
 
   useEffect(() => {
     if (state?.success) {
+      setIsDirty(false);
       router.refresh();
     }
   }, [state, router]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+          <Sparkles className="h-5 w-5 text-[var(--primary)]" />
           {translations.AIProviderConfiguration}
         </CardTitle>
         <CardDescription>
@@ -86,7 +101,14 @@ export function AiSettingsForm({ company, companyId, translations }: { company: 
             </div>
           )}
 
-          <RadioGroup value={aiProvider} onValueChange={setAiProvider} className="space-y-3">
+          <RadioGroup
+            value={aiProvider}
+            onValueChange={(value) => {
+              setAiProvider(value);
+              setIsDirty(true);
+            }}
+            className="space-y-3"
+          >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="no-ai" id="no-ai" />
               <Label htmlFor="no-ai" className="flex items-center gap-2 cursor-pointer text-sm font-medium">
@@ -123,7 +145,11 @@ export function AiSettingsForm({ company, companyId, translations }: { company: 
                     : translations.EnterMistralAPIKey
                 }
                 defaultValue=""
+                onChange={() => setIsDirty(true)}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                {translations.mistralApiKeyHint ?? "This key routes AI analysis to Mistral's EU cloud. Leave blank to keep the existing key."}
+              </p>
             </div>
           )}
 
@@ -136,6 +162,7 @@ export function AiSettingsForm({ company, companyId, translations }: { company: 
                   name="localAiEndpoint"
                   placeholder={translations.LocalAIEndpointPlaceholder}
                   defaultValue={company.localAiEndpoint || ""}
+                  onChange={() => setIsDirty(true)}
                 />
               </div>
               <div className="space-y-2">
@@ -145,13 +172,24 @@ export function AiSettingsForm({ company, companyId, translations }: { company: 
                   name="localAiModel"
                   placeholder={translations.LocalAIModelPlaceholder}
                   defaultValue={company.localAiModel || ""}
+                  onChange={() => setIsDirty(true)}
                 />
               </div>
             </div>
           )}
 
-          {state?.error && <p className="text-red-600 text-sm">{state.error}</p>}
-          {state?.success && <p className="text-green-600 text-sm">{translations.SettingsUpdatedSuccess}</p>}
+          {state?.error && (
+            <div role="alert" className="flex items-center gap-2 rounded-md border border-[var(--destructive)]/30 bg-[var(--destructive)]/10 px-3 py-2 text-sm text-[var(--destructive)]">
+              <AlertCircle className="h-4 w-4 shrink-0" aria-hidden />
+              <span>{state.error}</span>
+            </div>
+          )}
+          {state?.success && (
+            <div role="status" className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
+              <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
+              <span>{translations.SettingsUpdatedSuccess}</span>
+            </div>
+          )}
 
           <Button type="submit">
             {translations.SaveConfiguration}

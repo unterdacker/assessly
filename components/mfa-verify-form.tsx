@@ -89,7 +89,7 @@ export function MfaVerifyForm({ locale }: { locale: string }) {
             <div className="flex justify-end pt-1">
               <button
                 type="button"
-                className="text-xs text-indigo-600 hover:underline dark:text-indigo-400"
+                className="text-xs text-[var(--primary)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2"
                 onClick={toggleMode}
                 disabled={isPending}
               >
@@ -112,7 +112,7 @@ export function MfaVerifyForm({ locale }: { locale: string }) {
             {t("backHint")}{" "}
             <a
               href={`/${locale}/auth/sign-in`}
-              className="text-indigo-600 underline-offset-4 hover:underline dark:text-indigo-400"
+              className="text-[var(--primary)] underline-offset-4 hover:underline"
             >
               {t("backLink")}
             </a>

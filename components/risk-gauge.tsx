@@ -21,7 +21,7 @@ export function RiskGauge({ value, label, className }: RiskGaugeProps) {
     <div
       className={cn("flex flex-col items-center", className)}
       role="img"
-      aria-label={`Score ${clamped} out of 100`}
+      aria-label={`Score ${clamped} out of 100${label ? `, ${label}` : ""}`}
     >
       <svg
         width="200"

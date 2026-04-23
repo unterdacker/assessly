@@ -1,8 +1,21 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { UserRole } from "@prisma/client";
-import { ClipboardList, Mail, Radar, ShieldAlert, Sparkles, UserCheck } from "lucide-react";
+import {
+  BrainCircuit,
+  ChevronDown,
+  ChevronUp,
+  ClipboardList,
+  Info,
+  Mail,
+  Radar,
+  ShieldAlert,
+  UserCheck,
+} from "lucide-react";
 import {
   countByStatus,
   supplyChainRiskScore,
@@ -11,6 +24,7 @@ import {
 import type { DashboardRiskPostureOverview } from "@/lib/queries/dashboard-risk-posture";
 import { scoreGaugeColor } from "@/lib/score-colors";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { RiskGauge } from "@/components/risk-gauge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -56,13 +70,17 @@ export type DashboardOverviewProps = {
     RiskColoring: string;
     AssessmentWorkspace: string;
     InviteNewVendors: string;
+    RiskPostureLabel: string;
     RiskPostureOverview: string;
     RiskPostureOverviewDesc: string;
+    RiskPostureOverviewTooltip?: string;
     CategoryComplianceRadarTitle: string;
     CategoryComplianceRadarDesc: string;
+    CategoryComplianceRadarTooltip?: string;
     CategoryComplianceRadarHoverHint?: string;
     VendorsByRiskLevelTitle: string;
     VendorsByRiskLevelDesc: string;
+    VendorsByRiskLevelTooltip?: string;
     AIExecutiveSummary: string;
     AIExecutiveSummaryDesc: string;
     BiggestSystemicRisk: string;
@@ -76,6 +94,8 @@ export type DashboardOverviewProps = {
     AIAnalysisFallback: string;
     RefreshAISummary: string;
     RefreshAISummaryPending: string;
+    HidePostureAnalytics: string;
+    ShowPostureAnalytics: string;
     categoryLabels: Record<
       | "governanceRisk"
       | "accessIdentity"
@@ -128,6 +148,7 @@ export function DashboardOverview({
   const pending = countByStatus(vendorAssessments, "pending");
   const inProgress = countByStatus(vendorAssessments, "incomplete");
   const completed = countByStatus(vendorAssessments, "completed");
+  const [showCharts, setShowCharts] = useState(true);
 
   const tiles = [
     {
@@ -180,8 +201,15 @@ export function DashboardOverview({
     ? translations.categoryLabels[riskPosture.executiveSummary.recommendedCategoryKey]
     : translations.NoVendorData;
 
+  const riskLabel =
+    score > 70
+      ? translations.riskLevelLabels.low
+      : score >= 40
+        ? translations.riskLevelLabels.medium
+        : translations.riskLevelLabels.high;
+
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-6 md:gap-8">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-display text-xl font-semibold tracking-tight md:text-2xl">
@@ -196,8 +224,12 @@ export function DashboardOverview({
         </Button>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
+      <div>
+        <p className="mb-3 text-[0.6875rem] uppercase tracking-[0.15em] text-foreground/50">
+          {translations.RiskPostureLabel}
+        </p>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6 lg:items-start">
+          <Card className="col-span-1 lg:col-span-7">
           <CardHeader>
             <CardTitle className="text-base">{translations.SupplyChainRiskScore}</CardTitle>
             <p className="text-sm font-normal text-[var(--muted-foreground)]">
@@ -205,7 +237,7 @@ export function DashboardOverview({
             </p>
           </CardHeader>
           <CardContent className="flex flex-col items-center pb-8">
-            <RiskGauge value={score} />
+            <RiskGauge value={score} label={riskLabel} />
             <p
               className={cn(
                 "mt-2 text-center text-xs font-medium",
@@ -217,48 +249,85 @@ export function DashboardOverview({
               {score > 70 && translations.WithinAcceptableBand}
             </p>
           </CardContent>
-        </Card>
+          </Card>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-2">
-          {tiles.map(({ label, value, icon: Icon, hint, isRisk }) => (
-            <Card key={label}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-[var(--muted-foreground)]">
-                  {label}
-                </CardTitle>
-                <Icon className="h-4 w-4 text-[var(--primary)] opacity-80" aria-hidden />
-              </CardHeader>
-              <CardContent>
-                <p
-                  className={cn(
-                    "text-2xl font-semibold tabular-nums",
-                    isRisk && value > 0 ? "text-[var(--risk-high)]" : undefined,
-                  )}
-                >
-                  {value}
-                </p>
-                <p className="mt-1 text-xs text-[var(--muted-foreground)]">{hint}</p>
-              </CardContent>
-            </Card>
-          ))}
+          <div className="col-span-1 grid grid-cols-2 gap-4 lg:col-span-5">
+            {tiles.map(({ label, value, icon: Icon, hint, isRisk }) => (
+              <Card key={label}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
+                    {label}
+                  </CardTitle>
+                  <Icon className="h-4 w-4 text-[var(--primary)]" aria-hidden />
+                </CardHeader>
+                <CardContent>
+                  <p
+                    className={cn(
+                      "text-xl font-semibold tabular-nums",
+                      isRisk && value > 0 ? "text-[var(--risk-high)]" : undefined,
+                    )}
+                  >
+                    {value}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--muted-foreground)]">{hint}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
+
+      <hr className="border-t border-[var(--border)]" />
 
       <section className="space-y-4">
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-slate-300/80 bg-slate-100/80 px-3 py-1 font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
-              <Radar className="h-3.5 w-3.5" aria-hidden />
-              {translations.RiskPostureOverview}
+            <div className="flex items-center gap-2">
+              <h2 className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight text-slate-950 dark:text-slate-50">
+                <Radar className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" aria-hidden />
+                {translations.RiskPostureOverview}
+              </h2>
+              {translations.RiskPostureOverviewTooltip ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      aria-label="More information about Risk Posture Overview"
+                      tabIndex={0}
+                      className="inline-flex cursor-help mt-0.5"
+                    >
+                      <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[280px]">
+                    <p>{translations.RiskPostureOverviewTooltip}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ) : null}
             </div>
-            <h2 className="font-display text-lg font-semibold tracking-tight text-slate-950 dark:text-slate-50">
-              {translations.RiskPostureOverview}
-            </h2>
             <p className="text-sm text-[var(--muted-foreground)]">
               {translations.RiskPostureOverviewDesc}
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowCharts((prev) => !prev)}
+              aria-expanded={showCharts}
+              aria-controls="risk-posture-charts"
+              className="inline-flex items-center gap-1.5 rounded-md border border-transparent px-3 py-1.5 text-xs text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)]/50 hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2"
+            >
+              {showCharts ? (
+                <>
+                  <ChevronUp className="h-3.5 w-3.5" aria-hidden />
+                  {translations.HidePostureAnalytics}
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-3.5 w-3.5" aria-hidden />
+                  {translations.ShowPostureAnalytics}
+                </>
+              )}
+            </button>
             <div className="rounded-full border border-slate-300/80 bg-white/80 px-3 py-1 text-xs text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
               {summarySourceLabel}
             </div>
@@ -268,89 +337,130 @@ export function DashboardOverview({
           </div>
         </div>
 
-        <div className="grid gap-4 xl:grid-cols-[1.25fr_1fr]">
-          <Card className="overflow-hidden border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-slate-100 shadow-[0_18px_50px_-28px_rgba(15,23,42,0.38)] dark:border-slate-800 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
-            <CardHeader className="border-b border-slate-200/80 bg-white/60 pb-4 dark:border-slate-800 dark:bg-slate-950/40">
-              <CardTitle className="text-base">{translations.CategoryComplianceRadarTitle}</CardTitle>
-              <p className="text-sm text-[var(--muted-foreground)]">
-                {translations.CategoryComplianceRadarDesc}
-              </p>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="min-h-[320px]">
-                <CategoryComplianceRadarChartLazy
-                  data={radarData}
-                  legendLabel={translations.AverageComplianceLegend}
-                  emptyLabel={translations.NoVendorData}
-                  hoverHint={translations.CategoryComplianceRadarHoverHint}
-                />
+        <div
+          id="risk-posture-charts"
+          className={showCharts ? undefined : "hidden"}
+        >
+            <div className="grid gap-4 xl:grid-cols-[1.25fr_1fr]">
+              <Card className="overflow-hidden border-slate-200/80 bg-card shadow-[0_18px_50px_-28px_rgba(15,23,42,0.38)] dark:border-slate-800 dark:bg-card">
+                <CardHeader className="border-b border-slate-200/80 pb-4 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-base">{translations.CategoryComplianceRadarTitle}</CardTitle>
+                    {translations.CategoryComplianceRadarTooltip ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span
+                            aria-label="More information about Compliance by Category"
+                            tabIndex={0}
+                            className="inline-flex cursor-help mt-0.5"
+                          >
+                            <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-[280px]">
+                          <p>{translations.CategoryComplianceRadarTooltip}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : null}
+                  </div>
+                  <p className="text-sm text-[var(--muted-foreground)]">
+                    {translations.CategoryComplianceRadarDesc}
+                  </p>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="min-h-[320px]">
+                    <CategoryComplianceRadarChartLazy
+                      data={radarData}
+                      legendLabel={translations.AverageComplianceLegend}
+                      emptyLabel={translations.NoVendorData}
+                      hoverHint={translations.CategoryComplianceRadarHoverHint}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="grid gap-4">
+                <Card className="overflow-hidden border-slate-200/80 bg-card shadow-[0_18px_50px_-28px_rgba(15,23,42,0.38)] dark:border-slate-800 dark:bg-card">
+                  <CardHeader className="border-b border-slate-200/80 pb-4 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-base">{translations.VendorsByRiskLevelTitle}</CardTitle>
+                      {translations.VendorsByRiskLevelTooltip ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span
+                              aria-label="More information about Vendors by Risk Level"
+                              tabIndex={0}
+                              className="inline-flex cursor-help mt-0.5"
+                            >
+                              <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground transition-colors" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-[280px]">
+                            <p>{translations.VendorsByRiskLevelTooltip}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : null}
+                    </div>
+                    <p className="text-sm text-[var(--muted-foreground)]">
+                      {translations.VendorsByRiskLevelDesc}
+                    </p>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="min-h-[320px]">
+                      <VendorsByRiskBarChartLazy
+                        data={barData}
+                        legendLabel={translations.VendorCountLegend}
+                        emptyLabel={translations.NoVendorData}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="overflow-hidden border-border bg-card text-card-foreground shadow-[0_18px_50px_-28px_rgba(15,23,42,0.38)]">
+                  <CardHeader className="border-b border-border pb-4">
+                    <div className="flex items-center gap-2 text-[var(--primary)]">
+                      <BrainCircuit className="h-4 w-4" aria-hidden />
+                      <CardTitle className="text-base text-card-foreground">
+                        {translations.AIExecutiveSummary}
+                      </CardTitle>
+                    </div>
+                    <p className="text-sm text-[var(--muted-foreground)]">
+                      {translations.AIExecutiveSummaryDesc}
+                    </p>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <ul className="divide-y divide-border text-sm leading-6 text-foreground">
+                      <li className="flex gap-3 py-3">
+                        <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+                        <span>
+                          <span className="font-semibold">{translations.BiggestSystemicRisk}</span>{" "}
+                          <span className="prose prose-sm dark:prose-invert max-w-none [&_p]:inline [&_p]:m-0">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {riskPosture.executiveSummary.systemicRisk}
+                            </ReactMarkdown>
+                          </span>
+                        </span>
+                      </li>
+                      <li className="flex gap-3 py-3">
+                        <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+                        <span>
+                          <span className="font-semibold">{translations.AverageRemediationTime}</span>{" "}
+                          {riskPosture.executiveSummary.averageRemediationTimeDays} {translations.Days}
+                        </span>
+                      </li>
+                      <li className="flex gap-3 py-3">
+                        <Radar className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+                        <span>
+                          <span className="font-semibold">{translations.RecommendedNextStep}</span>{" "}
+                          {recommendedCategory}
+                        </span>
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
               </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-4">
-            <Card className="overflow-hidden border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-slate-100 shadow-[0_18px_50px_-28px_rgba(15,23,42,0.38)] dark:border-slate-800 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
-              <CardHeader className="border-b border-slate-200/80 bg-white/60 pb-4 dark:border-slate-800 dark:bg-slate-950/40">
-                <CardTitle className="text-base">{translations.VendorsByRiskLevelTitle}</CardTitle>
-                <p className="text-sm text-[var(--muted-foreground)]">
-                  {translations.VendorsByRiskLevelDesc}
-                </p>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="min-h-[320px]">
-                  <VendorsByRiskBarChartLazy
-                    data={barData}
-                    legendLabel={translations.VendorCountLegend}
-                    emptyLabel={translations.NoVendorData}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="overflow-hidden border-border bg-card text-card-foreground shadow-[0_18px_50px_-28px_rgba(15,23,42,0.38)]">
-              <CardHeader className="border-b border-border pb-4">
-                <div className="flex items-center gap-2 text-[var(--primary)]">
-                  <Sparkles className="h-4 w-4" aria-hidden />
-                  <CardTitle className="text-base text-card-foreground">
-                    {translations.AIExecutiveSummary}
-                  </CardTitle>
-                </div>
-                <p className="text-sm text-[var(--muted-foreground)]">
-                  {translations.AIExecutiveSummaryDesc}
-                </p>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <ul className="space-y-3 text-sm leading-6 text-foreground">
-                  <li className="flex gap-3 rounded-xl border border-border bg-muted p-3">
-                    <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                    <span>
-                      <span className="font-semibold">{translations.BiggestSystemicRisk}</span>{" "}
-                      <span className="prose prose-sm dark:prose-invert max-w-none [&_p]:inline [&_p]:m-0">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {riskPosture.executiveSummary.systemicRisk}
-                        </ReactMarkdown>
-                      </span>
-                    </span>
-                  </li>
-                  <li className="flex gap-3 rounded-xl border border-border bg-muted p-3">
-                    <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                    <span>
-                      <span className="font-semibold">{translations.AverageRemediationTime}</span>{" "}
-                      {riskPosture.executiveSummary.averageRemediationTimeDays} {translations.Days}
-                    </span>
-                  </li>
-                  <li className="flex gap-3 rounded-xl border border-border bg-muted p-3">
-                    <Radar className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                    <span>
-                      <span className="font-semibold">{translations.RecommendedNextStep}</span>{" "}
-                      {recommendedCategory}
-                    </span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
+            </div>
           </div>
-        </div>
       </section>
 
       <Card>

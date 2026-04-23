@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import type { UserRole } from "@prisma/client";
-import { Search, ChevronUp, ChevronDown, Copy, SendHorizonal, ShieldAlert, ShieldCheck, RefreshCw } from "lucide-react";
+import { Search, ChevronUp, ChevronDown, Copy, SendHorizonal, ShieldAlert, ShieldCheck, RefreshCw, Building2, SearchX } from "lucide-react";
 import { AddVendorModal } from "@/components/add-vendor-modal";
 import { VendorCsvImportModal } from "@/components/vendor-csv-import-modal";
 import { InviteVendorModal } from "@/components/admin/invite-vendor-modal";
@@ -20,6 +20,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Table,
   TableBody,
@@ -125,8 +135,8 @@ function ProgressPill({ progress, filled }: { progress: number; filled: number }
   }
 
   const colorCls = progress > 0 
-    ? "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800"
-    : "bg-slate-50 text-slate-400 border-slate-200 dark:bg-slate-900/50 dark:text-slate-600 dark:border-slate-800";
+    ? "bg-[var(--accent)] text-[var(--primary)] border-[var(--border)]"
+    : "bg-slate-50 text-slate-400 border-slate-200 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800";
 
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 font-mono text-xs font-semibold tabular-nums ${colorCls}`}>
@@ -206,6 +216,7 @@ export function VendorsTableSection({
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
   const [selectedVendorIds, setSelectedVendorIds] = React.useState<Set<string>>(new Set());
   const [isBulkDeleting, setIsBulkDeleting] = React.useState(false);
+  const [showDeleteAlert, setShowDeleteAlert] = React.useState(false);
   const [copiedVendorId, setCopiedVendorId] = React.useState<string | null>(null);
   const [codeDialogVendorId, setCodeDialogVendorId] = React.useState<string | null>(null);
   const [selectedDuration, setSelectedDuration] = React.useState<AccessCodeDuration>("24h");
@@ -329,10 +340,15 @@ export function VendorsTableSection({
   const handleBulkDelete = async () => {
     if (selectedVendorIds.size === 0) return;
 
-    const confirmed = window.confirm(
-      t("confirmDeleteVendors", { count: selectedVendorIds.size })
-    );
-    if (!confirmed) return;
+    setShowDeleteAlert(true);
+    return;
+  };
+
+  const executeBulkDelete = async () => {
+    if (selectedVendorIds.size === 0) {
+      setShowDeleteAlert(false);
+      return;
+    }
 
     setIsBulkDeleting(true);
     try {
@@ -349,6 +365,7 @@ export function VendorsTableSection({
         return;
       }
 
+      setShowDeleteAlert(false);
       setSelectedVendorIds(new Set());
       router.refresh();
     } catch {
@@ -582,9 +599,28 @@ export function VendorsTableSection({
               <TableRow className="hover:bg-[var(--muted)]">
                 <TableCell
                   colSpan={10}
-                  className="h-24 px-4 py-2.5 text-center text-muted-foreground"
+                  className="h-24 px-4 py-6 text-center text-muted-foreground"
                 >
-                  {t("noVendorsFound")}
+                  {q.trim() ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <SearchX className="h-5 w-5 text-muted-foreground" aria-hidden />
+                      <p>{t("noVendorsSearch")}</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-3">
+                      <Building2 className="h-5 w-5 text-muted-foreground" aria-hidden />
+                      <p>{t("noVendorsFound")}</p>
+                      {canManageVendors ? (
+                        <AddVendorModal
+                          trigger={
+                            <Button type="button" size="sm">
+                              {t("addFirstVendor")}
+                            </Button>
+                          }
+                        />
+                      ) : null}
+                    </div>
+                  )}
                 </TableCell>
               </TableRow>
             ) : (
@@ -615,7 +651,7 @@ export function VendorsTableSection({
                             type="button"
                             aria-label={t("copyAccessCodeAria", { vendorName: v.name })}
                             onClick={() => handleCopyAccessCode(v.id, v.accessCode)}
-                            className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                            className="text-slate-500 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 dark:text-slate-400 dark:hover:text-slate-200"
                           >
                             <Copy className="h-3.5 w-3.5" />
                           </button>
@@ -719,7 +755,7 @@ export function VendorsTableSection({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:pointer-events-none disabled:opacity-40"
+              className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40"
               disabled={pagination.page <= 1}
               onClick={() => {
                 const params = new URLSearchParams(window.location.search);
@@ -734,7 +770,7 @@ export function VendorsTableSection({
             </span>
             <button
               type="button"
-              className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent disabled:pointer-events-none disabled:opacity-40"
+              className="rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40"
               disabled={pagination.page >= pagination.pageCount}
               onClick={() => {
                 const params = new URLSearchParams(window.location.search);
@@ -862,6 +898,23 @@ export function VendorsTableSection({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("deleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("confirmDeleteVendors", { count: selectedVendorIds.size })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={executeBulkDelete} disabled={isBulkDeleting}>
+              {t("delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

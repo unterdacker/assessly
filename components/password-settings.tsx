@@ -99,7 +99,7 @@ export function PasswordSettings() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <KeyRound className="h-5 w-5 text-indigo-600 dark:text-indigo-400" aria-hidden />
+          <KeyRound className="h-5 w-5 text-[var(--primary)]" aria-hidden />
           {t("sectionTitle")}
         </CardTitle>
         <CardDescription>{t("sectionDesc")}</CardDescription>

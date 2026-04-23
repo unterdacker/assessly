@@ -149,7 +149,7 @@ export function ServiceTypeCombobox({
           !value && "text-muted-foreground",
         )}
       >
-        <span className="truncate">{value || placeholder}</span>
+        <span title={value || placeholder} className="truncate">{value || placeholder}</span>
         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </Button>
 

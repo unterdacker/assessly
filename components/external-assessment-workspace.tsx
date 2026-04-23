@@ -233,6 +233,7 @@ export function ExternalAssessmentWorkspace({
   if (isSubmitted && sessionExpired) {
     return (
       <div className="relative flex min-h-[60vh] items-center justify-center">
+        {/* z-[130]: intentionally above sticky header (z-50) and overlay chrome */}
         <div className="fixed right-4 top-4 z-[130] flex items-center gap-2">
           <ThemeToggle />
           <LanguageToggle />
@@ -338,7 +339,7 @@ export function ExternalAssessmentWorkspace({
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">{t("header.portalTag")}</span>
                   <span className="text-slate-300 dark:text-slate-700">|</span>
-                  <h1 className="text-sm font-semibold text-slate-900 dark:text-white truncate max-w-[200px] sm:max-w-none">
+                  <h1 title={vendorAssessment.name} className="text-sm font-semibold text-slate-900 dark:text-white truncate max-w-[200px] sm:max-w-none">
                     {vendorAssessment.name}
                   </h1>
                 </div>
@@ -521,7 +522,7 @@ export function ExternalAssessmentWorkspace({
             {localDocumentUrl && (
               <div className="mt-4 flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950">
                 <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                <span className="text-xs text-slate-500 truncate flex-1">
+                <span title={localDocumentFilename ?? undefined} className="text-xs text-slate-500 truncate flex-1">
                   {t("evidence.label")} <span className="font-medium text-slate-700 dark:text-slate-300">{localDocumentFilename}</span>
                 </span>
                 <Button variant="outline" size="sm" asChild>

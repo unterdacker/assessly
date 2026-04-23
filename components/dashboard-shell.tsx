@@ -160,7 +160,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
           <div className="border-t border-[var(--border)] p-3">
-            <p className="px-3 text-[0.5625rem] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
+            <p className="px-3 text-[0.6875rem] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
               {NAV_LABELS[locale].nis2Label}
             </p>
             <button
@@ -175,9 +175,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--card)]/90 px-4 backdrop-blur-sm dark:bg-card/95 md:px-6">
+          <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--card)] px-4 dark:bg-card md:px-6">
             <div className="flex min-w-0 items-center gap-3 md:hidden">
-              <span className="truncate text-sm font-semibold">Venshield</span>
+              <span title="Venshield" className="truncate text-sm font-semibold">Venshield</span>
             </div>
             <div className="hidden md:block" />
             <div className="flex items-center gap-2">

@@ -55,7 +55,7 @@ export default async function MailSettingsPage({ params }: PageProps) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Mail className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+            <Mail className="h-6 w-6 text-[var(--primary)]" />
             {t("MailSettingsTitle")}
           </h1>
           <p className="text-muted-foreground mt-1">

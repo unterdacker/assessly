@@ -11,15 +11,18 @@ import {
   Edit3,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Copy,
   SendHorizonal,
   ShieldAlert,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EditVendorProfileModal } from "@/components/edit-vendor-profile-modal";
 import { InviteVendorModal } from "@/components/admin/invite-vendor-modal";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { cn } from "@/lib/utils";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
 import { calculateDossierCompletion } from "@/lib/vendor-assessment";
@@ -50,7 +53,7 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
     if (!Number.isFinite(expiresAt.getTime())) return t("noActiveCode");
     if (expiresAt.getTime() <= Date.now()) return t("expired");
 
-    const formatted = new Intl.DateTimeFormat("en-GB", {
+    const formatted = new Intl.DateTimeFormat(undefined, {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -69,7 +72,7 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
       setHasCopiedCode(true);
       window.setTimeout(() => setHasCopiedCode(false), 1200);
     } catch {
-      window.alert(t("copyFailed"));
+      toast.error(t("copyFailed"));
     }
   };
 
@@ -98,18 +101,24 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
 
     return (
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-slate-700 dark:text-slate-200">
-        <span>{name || <span className="text-amber-500/70 dark:text-amber-400/50">{t("missingName")} ⚠️</span>}</span>
+        <span>
+          {name || (
+            <span className="text-amber-500/70 dark:text-amber-400/50">
+              {t("missingName")} <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0 inline" aria-hidden />
+            </span>
+          )}
+        </span>
         {email ? (
           <a 
             href={`mailto:${email}`}
-            className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:underline dark:text-indigo-400"
+            className="inline-flex items-center gap-1 text-xs text-[var(--primary)] hover:underline"
           >
             <Mail className="h-3 w-3" />
             ({email})
           </a>
         ) : (
           <span className="text-xs text-amber-500/70 dark:text-amber-400/50 italic underline decoration-dotted">
-            {t("missingEmail")} ⚠️
+            {t("missingEmail")} <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0 inline" aria-hidden />
           </span>
         )}
       </div>
@@ -117,13 +126,13 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
   };
 
   return (
-    <Card className="relative overflow-hidden border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/50">
+    <Card className="relative overflow-hidden border-slate-200 bg-card shadow-sm dark:border-slate-800">
       {/* Dossier Progress Bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-800">
         <div 
           className={cn(
             "h-full transition-all duration-700 ease-out",
-            isComplete ? "bg-emerald-500" : "bg-indigo-500"
+            isComplete ? "bg-emerald-500" : "bg-[var(--primary)]"
           )}
           style={{ width: `${progressPercent}%` }}
         />
@@ -134,30 +143,26 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
           <div className="min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-3">
-              <h2 className="truncate text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+              <h2 title={v?.officialName || vendorAssessment.name} className="truncate text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                 {v?.officialName || vendorAssessment.name}
               </h2>
               <Badge variant="secondary" className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                 {vendorAssessment.serviceType}
               </Badge>
+              <InfoTooltip content={t("serviceTypeTooltip")} />
             </div>
             
             <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400">
+                <span>{t("dossierComplete", { progress: progressPercent })}</span>
+                <InfoTooltip content={t("dossierCompletionTooltip")} />
+              </div>
               {isComplete ? (
                 <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   {t("dossierVerified")}
                 </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                    {t("dossierComplete", { progress: progressPercent })}
-                  </span>
-                  <div className="h-1 w-24 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                    <div className="h-full bg-indigo-500" style={{ width: `${progressPercent}%` }} />
-                  </div>
-                </div>
-              )}
+              ) : null}
             </div>
           </div>
 
@@ -165,6 +170,10 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
             {/* Compact status tags */}
             <div className="flex flex-wrap items-start gap-2">
               <div className="inline-flex flex-col gap-0.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-900">
+                <div className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <span>{t("accessCode")}</span>
+                  <InfoTooltip content={t("accessCodeTooltip")} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300" />
+                </div>
                 {hasActiveCode ? (
                   <>
                     <div className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wider text-slate-900 dark:text-slate-100">
@@ -173,7 +182,7 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
                         type="button"
                         aria-label={t("copyAccessCodeAria", { vendorName: vendorAssessment.name })}
                         onClick={handleCopyCodeOnly}
-                        className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                        className="rounded-sm text-slate-500 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-1 dark:text-slate-400 dark:hover:text-slate-200"
                       >
                         <Copy className="h-3.5 w-3.5" />
                       </button>
@@ -196,7 +205,7 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
               {vendorAssessment.inviteSentAt ? (
                 <div className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
                   <Mail className="h-3 w-3 shrink-0" />
-                  {t("inviteSent")} {new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(vendorAssessment.inviteSentAt))}
+                  {t("inviteSent")} {new Intl.DateTimeFormat(undefined, { day: "2-digit", month: "short", year: "numeric" }).format(new Date(vendorAssessment.inviteSentAt))}
                 </div>
               ) : null}
 
@@ -240,7 +249,7 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
                 <Button 
                   variant={isComplete ? "outline" : "default"} 
                   size="sm" 
-                  className={cn("shrink-0 h-9 px-4", !isComplete && "bg-indigo-600 hover:bg-indigo-700")}
+                  className={cn("shrink-0 h-9 px-4", !isComplete && "bg-[var(--primary)] hover:bg-[var(--primary)]/90")}
                 >
                   <Edit3 className="mr-2 h-3.5 w-3.5" />
                   {isComplete ? t("editProfile") : t("completeProfile")}

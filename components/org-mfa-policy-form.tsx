@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { setOrgMfaRequired } from "@/app/actions/mfa";
 
 type OrgMfaPolicyFormProps = {
@@ -53,7 +54,7 @@ export function OrgMfaPolicyForm({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ShieldAlert
-            className="h-5 w-5 text-indigo-600 dark:text-indigo-400"
+            className="h-5 w-5 text-[var(--primary)]"
             aria-hidden
           />
           {t("sectionTitle")}
@@ -63,7 +64,10 @@ export function OrgMfaPolicyForm({
       <CardContent className="space-y-6">
         <div className="flex items-center justify-between rounded-lg border p-4 bg-slate-50/50 dark:bg-slate-900/30">
           <div className="space-y-0.5 max-w-[75%]">
-            <p className="text-sm font-medium">{t("mfaRequired.label")}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-sm font-medium">{t("mfaRequired.label")}</p>
+              <InfoTooltip content={t("mfaRequired.tooltip")} />
+            </div>
             <p className="text-xs text-muted-foreground">
               {t("mfaRequired.hint")}
             </p>

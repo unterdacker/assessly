@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
+import { Suspense } from "react";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { DashboardOverview } from "@/components/dashboard-overview";
+import { DashboardAnalyticsSection } from "@/components/dashboard-analytics-section";
+import { DashboardSkeleton } from "@/components/dashboard-skeleton";
 import { PortfolioComplianceWidget } from "@/components/portfolio-compliance-widget";
 import { ComplianceTimelineChartLazy } from "@/components/compliance-timeline-chart-lazy";
 import { DashboardCountsRow } from "@/modules/analytics/components/dashboard-counts-row";
@@ -31,20 +34,21 @@ type DashboardPageProps = {
   params: Promise<{ locale: string }>;
 };
 
-export default async function DashboardPage({ params }: DashboardPageProps) {
-  const { locale: routeLocale } = await params;
-  setRequestLocale(routeLocale);
-  const session = await requirePageRole(["ADMIN", "RISK_REVIEWER", "AUDITOR"], routeLocale);
+type DashboardContentProps = {
+  session: Awaited<ReturnType<typeof requirePageRole>>;
+  locale: "en" | "de";
+};
+
+async function DashboardContent({ session, locale }: DashboardContentProps) {
+  setRequestLocale(locale);
   const t = await getTranslations();
-  const locale = (await getLocale()) as "en" | "de";
-  
   const isPremium = await isPremiumFeatureEnabled(session.companyId ?? "");
-  
+
   // Fetch compliance data for Premium users
   let portfolioScore = 0;
   let portfolioTrend: "up" | "down" | "stable" = "stable";
   let complianceSnapshots: ComplianceSnapshotItem[] = [];
-  
+
   if (isPremium) {
     const result = await getComplianceTimeline(2);
     if (result.success && result.data.length > 0) {
@@ -56,7 +60,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
       }
     }
   }
-  
+
   const [vendorAssessments, riskPosture, openRemediationCount, overdueAssessments, slaComplianceRate, dashboardCounts] = await Promise.all([
     listVendorAssessments(),
     getDashboardRiskPostureOverview(locale),
@@ -88,13 +92,17 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     RiskColoring: t("RiskColoring"),
     AssessmentWorkspace: t("AssessmentWorkspace"),
     InviteNewVendors: t("InviteNewVendors"),
+    RiskPostureLabel: t("RiskPostureLabel"),
     RiskPostureOverview: t("RiskPostureOverview"),
     RiskPostureOverviewDesc: t("RiskPostureOverviewDesc"),
+    RiskPostureOverviewTooltip: t("RiskPostureOverviewTooltip"),
     CategoryComplianceRadarTitle: t("CategoryComplianceRadarTitle"),
     CategoryComplianceRadarDesc: t("CategoryComplianceRadarDesc"),
+    CategoryComplianceRadarTooltip: t("CategoryComplianceRadarTooltip"),
     CategoryComplianceRadarHoverHint: t("CategoryComplianceRadarHoverHint"),
     VendorsByRiskLevelTitle: t("VendorsByRiskLevelTitle"),
     VendorsByRiskLevelDesc: t("VendorsByRiskLevelDesc"),
+    VendorsByRiskLevelTooltip: t("VendorsByRiskLevelTooltip"),
     AIExecutiveSummary: t("AIExecutiveSummary"),
     AIExecutiveSummaryDesc: t("AIExecutiveSummaryDesc"),
     BiggestSystemicRisk: t("BiggestSystemicRisk"),
@@ -108,6 +116,8 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     AIAnalysisFallback: t("AIAnalysisFallback"),
     RefreshAISummary: t("RefreshAISummary"),
     RefreshAISummaryPending: t("RefreshAISummaryPending"),
+    HidePostureAnalytics: t("HidePostureAnalytics"),
+    ShowPostureAnalytics: t("ShowPostureAnalytics"),
     categoryLabels: {
       governanceRisk: t("DashboardCategoryGovernanceRisk"),
       accessIdentity: t("DashboardCategoryAccessIdentity"),
@@ -175,8 +185,17 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
       trendUp: t("ContinuousMonitoring.widget.trendUp"),
       trendDown: t("ContinuousMonitoring.widget.trendDown"),
       trendStable: t("ContinuousMonitoring.widget.trendStable"),
+      scoreLabel: t("ContinuousMonitoring.widget.scoreLabel"),
+      widgetTooltip: t("PortfolioComplianceWidgetTooltip"),
+      riskLabel:
+        portfolioScore > 70
+          ? t("DashboardRiskLow")
+          : portfolioScore >= 40
+            ? t("DashboardRiskMedium")
+            : t("DashboardRiskHigh"),
       vendors: t("ContinuousMonitoring.widget.vendors"),
       noData: t("ContinuousMonitoring.widget.noData"),
+      noDataExplanation: t("ContinuousMonitoring.widget.noDataExplanation"),
     },
     chart: {
       title: t("ContinuousMonitoring.timeline.title"),
@@ -200,35 +219,54 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
         translations={translations}
       />
 
-      {/* Analytics Overview */}
-      <div className="mt-8 space-y-6 pb-8">
-        <DashboardCountsRow
-          counts={dashboardCounts}
-          labels={analyticsCountsLabels}
-        />
-        <StatusBreakdownBar
-          byStatus={dashboardCounts.byStatus}
-          labels={analyticsStatusLabels}
-        />
-        {isPremium && cmTranslations && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-            <div className="lg:col-span-1">
-              <PortfolioComplianceWidget
-                score={portfolioScore}
-                trend={portfolioTrend}
-                vendorCount={vendorAssessments.length}
-                translations={cmTranslations.widget}
-              />
+      <DashboardAnalyticsSection
+        label={t("AnalyticsSectionTitle")}
+        toggleOpenLabel={t("AnalyticsSectionShow")}
+        toggleCloseLabel={t("AnalyticsSectionHide")}
+      >
+        {/* Analytics Overview */}
+        <div className="space-y-6 pb-8">
+          <DashboardCountsRow
+            counts={dashboardCounts}
+            labels={analyticsCountsLabels}
+          />
+          <StatusBreakdownBar
+            byStatus={dashboardCounts.byStatus}
+            labels={analyticsStatusLabels}
+          />
+          {isPremium && cmTranslations && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+              <div className="lg:col-span-1">
+                <PortfolioComplianceWidget
+                  score={portfolioScore}
+                  trend={portfolioTrend}
+                  vendorCount={vendorAssessments.length}
+                  translations={cmTranslations.widget}
+                />
+              </div>
+              <div className="lg:col-span-2">
+                <ComplianceTimelineChartLazy
+                  snapshots={complianceSnapshots}
+                  translations={cmTranslations.chart}
+                />
+              </div>
             </div>
-            <div className="lg:col-span-2">
-              <ComplianceTimelineChartLazy
-                snapshots={complianceSnapshots}
-                translations={cmTranslations.chart}
-              />
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </DashboardAnalyticsSection>
     </>
+  );
+}
+
+export default async function DashboardPage({ params }: DashboardPageProps) {
+  const { locale: routeLocale } = await params;
+  setRequestLocale(routeLocale);
+  const session = await requirePageRole(["ADMIN", "RISK_REVIEWER", "AUDITOR"], routeLocale);
+  const locale = routeLocale as "en" | "de";
+
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent session={session} locale={locale} />
+    </Suspense>
   );
 }

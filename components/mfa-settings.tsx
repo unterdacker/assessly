@@ -58,7 +58,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
       type="button"
       onClick={handleCopy}
       aria-label={label}
-      className="ml-1.5 inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
+      className="ml-1.5 inline-flex items-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2"
     >
       {copied ? (
         <Check className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
@@ -173,7 +173,7 @@ export function MfaSettings({ mfaEnabled, hasRecoveryCodes }: MfaSettingsProps) 
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ShieldCheck
-            className="h-5 w-5 text-indigo-600 dark:text-indigo-400"
+            className="h-5 w-5 text-[var(--primary)]"
             aria-hidden
           />
           {t("sectionTitle")}
@@ -236,13 +236,15 @@ export function MfaSettings({ mfaEnabled, hasRecoveryCodes }: MfaSettingsProps) 
             <div className="space-y-2">
               <p className="text-sm font-medium">{t("scanTitle")}</p>
               <p className="text-xs text-muted-foreground">{t("scanHint")}</p>
-              <div className="inline-block rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-3">
-                <QRCodeSVG
-                  value={enrollUri}
-                  size={192}
-                  level="M"
-                  aria-label={t("qrAlt")}
-                />
+              <div className="inline-block rounded-[calc(var(--radius-card)+4px)] bg-transparent dark:bg-slate-800 dark:p-1.5">
+                <div className="inline-block rounded-xl border border-slate-200 dark:border-slate-700 bg-white p-3">
+                  <QRCodeSVG
+                    value={enrollUri}
+                    size={192}
+                    level="M"
+                    aria-label={t("qrAlt")}
+                  />
+                </div>
               </div>
             </div>
 

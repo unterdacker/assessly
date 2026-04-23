@@ -128,7 +128,7 @@ function EvidenceForm({ targetStatus, onSave, onCancel, isSaving, t }: EvidenceF
           aria-label={t("manualOverride.attachPdfAria")}
         >
           <Upload className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
-          <span className="truncate text-xs text-muted-foreground">
+          <span title={file?.name ?? t("manualOverride.attachPdfPlaceholder")} className="truncate text-xs text-muted-foreground">
             {file ? file.name : t("manualOverride.attachPdfPlaceholder")}
           </span>
           <input

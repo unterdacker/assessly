@@ -469,7 +469,7 @@ export function CustomQuestionsManager({
                         onClick={() => handleMoveUp(index)}
                         disabled={index === 0 || saving}
                         aria-label={translations.moveUp}
-                        className="h-7 w-7"
+                        className="h-8 w-8"
                       >
                         <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
                       </Button>
@@ -479,7 +479,7 @@ export function CustomQuestionsManager({
                         onClick={() => handleMoveDown(index)}
                         disabled={index === questions.length - 1 || saving}
                         aria-label={translations.moveDown}
-                        className="h-7 w-7"
+                        className="h-8 w-8"
                       >
                         <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
                       </Button>

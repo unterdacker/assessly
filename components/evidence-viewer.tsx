@@ -59,7 +59,7 @@ export function EvidenceViewer({
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
             <FileText className="h-3.5 w-3.5 text-indigo-500" aria-hidden />
-            <p className="truncate text-xs font-medium text-foreground">{filename}</p>
+            <p title={filename} className="truncate text-xs font-medium text-foreground">{filename}</p>
           </div>
           <div className="mt-1 space-y-0.5 text-[11px] text-muted-foreground">
             <p>{sizeLabel}: {formatFileSize(fileSize, unknownLabel)}</p>

@@ -442,7 +442,7 @@ export function VendorQuestionnaireWizard({
                       }
                       placeholder={tw("justificationPlaceholder", "Explain why this status applies. You can edit AI-generated reasoning before saving.")}
                       rows={4}
-                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-indigo-900/40"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm outline-none transition focus-visible:border-indigo-400 focus-visible:ring-2 focus-visible:ring-indigo-200 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:focus-visible:ring-indigo-900/40"
                       disabled={isCurrentQuestionSaving}
                     />
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">

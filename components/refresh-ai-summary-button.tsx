@@ -37,7 +37,7 @@ export function RefreshAiSummaryButton({ labels }: RefreshAiSummaryButtonProps) 
           await refreshAiSummary();
         })
       }
-      className="inline-flex items-center gap-1.5 rounded-full border border-slate-300/80 bg-white/80 px-3 py-1 text-xs text-slate-600 shadow-sm transition-opacity hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800"
+      className="inline-flex items-center gap-1.5 rounded-full border border-slate-300/80 bg-white/80 px-3 py-1 text-xs text-slate-600 shadow-sm transition-opacity hover:bg-slate-50 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300 dark:hover:bg-slate-800"
     >
       <RefreshCw className={cn("h-3 w-3", isPending && "animate-spin")} aria-hidden />
       {isPending ? labels.pending : labels.idle}
