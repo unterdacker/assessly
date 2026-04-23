@@ -53,6 +53,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     RiskColoring: t("RiskColoring"),
     AssessmentWorkspace: t("AssessmentWorkspace"),
     InviteNewVendors: t("InviteNewVendors"),
+    RiskPostureLabel: t("RiskPostureLabel"),
     RiskPostureOverview: t("RiskPostureOverview"),
     RiskPostureOverviewDesc: t("RiskPostureOverviewDesc"),
     CategoryComplianceRadarTitle: t("CategoryComplianceRadarTitle"),
@@ -73,6 +74,8 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     AIAnalysisFallback: t("AIAnalysisFallback"),
     RefreshAISummary: t("RefreshAISummary"),
     RefreshAISummaryPending: t("RefreshAISummaryPending"),
+    HidePostureAnalytics: t("HidePostureAnalytics"),
+    ShowPostureAnalytics: t("ShowPostureAnalytics"),
     categoryLabels: {
       governanceRisk: t("DashboardCategoryGovernanceRisk"),
       accessIdentity: t("DashboardCategoryAccessIdentity"),
