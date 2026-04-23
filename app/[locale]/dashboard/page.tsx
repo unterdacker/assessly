@@ -87,6 +87,7 @@ async function DashboardContent({ session, locale }: DashboardContentProps) {
     ElevatedAttentionRecommended: t("ElevatedAttentionRecommended"),
     MonitorAndRemediateGaps: t("MonitorAndRemediateGaps"),
     WithinAcceptableBand: t("WithinAcceptableBand"),
+    PostureAcceptable: t("PostureAcceptable"),
     TrustAndCompliance: t("TrustAndCompliance"),
     TrustComplianceDesc: t("TrustComplianceDesc"),
     RiskColoring: t("RiskColoring"),
@@ -195,6 +196,7 @@ async function DashboardContent({ session, locale }: DashboardContentProps) {
             : t("DashboardRiskHigh"),
       vendors: t("ContinuousMonitoring.widget.vendors"),
       noData: t("ContinuousMonitoring.widget.noData"),
+      noDataCta: t("ContinuousMonitoring.widget.noDataCta"),
       noDataExplanation: t("ContinuousMonitoring.widget.noDataExplanation"),
     },
     chart: {

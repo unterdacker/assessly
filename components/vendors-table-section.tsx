@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import type { UserRole } from "@prisma/client";
-import { Search, ChevronUp, ChevronDown, Copy, SendHorizonal, ShieldAlert, ShieldCheck, RefreshCw, Building2, SearchX } from "lucide-react";
+import { Search, ChevronUp, ChevronDown, ChevronsUpDown, Copy, SendHorizonal, ShieldAlert, ShieldCheck, RefreshCw, Building2, SearchX } from "lucide-react";
+import { toast } from "sonner";
 import { AddVendorModal } from "@/components/add-vendor-modal";
 import { VendorCsvImportModal } from "@/components/vendor-csv-import-modal";
 import { InviteVendorModal } from "@/components/admin/invite-vendor-modal";
@@ -38,7 +39,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RiskBadge } from "@/components/risk-badge";
 import type { VendorAssessment } from "@/lib/vendor-assessment";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +55,7 @@ export type VendorsTableSectionProps = {
   pagination?: VendorsPagination;
 };
 
-type SortKey = 'name' | 'serviceType' | 'status' | 'lastAssessmentDate' | 'complianceScore' | 'riskLevel' | 'questionnaireProgress';
+type SortKey = 'name' | 'serviceType' | 'status' | 'lastAssessmentDate' | 'complianceScore' | 'questionnaireProgress';
 
 function formatDate(value: string | null) {
   if (!value) return "—";
@@ -99,23 +99,25 @@ function getStatusDotClass(status: VendorAssessment["status"]) {
   return "bg-[var(--risk-medium)]";
 }
 
-/** Colour-coded compliance score pill. */
-function ScorePill({ score }: { score: number }) {
-  const displayScore = score;
+function RiskScore({ score, level }: { score: number; level: string }) {
+  if (!level || level === "not_calculated") {
+    return <span className="text-muted-foreground text-sm">—</span>;
+  }
 
-  const colorCls =
-    displayScore >= 70
-      ? "text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-900/20 dark:border-emerald-800"
-      : displayScore >= 40
-      ? "text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-900/20 dark:border-amber-800"
-      : "text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/20 dark:border-red-800";
+  const colorMap: Record<string, string> = {
+    low: "bg-[var(--risk-low)] text-[var(--risk-low-fg)]",
+    medium: "bg-[var(--risk-medium)] text-[var(--risk-medium-fg)]",
+    high: "bg-[var(--risk-high)] text-[var(--risk-high-fg)]",
+  };
+  const normalizedLevel = level.toLowerCase();
+  const colors = colorMap[normalizedLevel] ?? "bg-muted text-muted-foreground";
 
   return (
     <span
-      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold font-mono tabular-nums ${colorCls}`}
-      title={`NIS2 compliance score: ${displayScore}/100`}
+      className={`inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs font-medium tabular-nums ${colors}`}
+      aria-label={`${normalizedLevel} risk, ${score}% compliance score`}
     >
-      {displayScore}%
+      {normalizedLevel.toUpperCase()} · {score}%
     </span>
   );
 }
@@ -221,6 +223,7 @@ export function VendorsTableSection({
   const [codeDialogVendorId, setCodeDialogVendorId] = React.useState<string | null>(null);
   const [selectedDuration, setSelectedDuration] = React.useState<AccessCodeDuration>("24h");
   const [codeActionVendorId, setCodeActionVendorId] = React.useState<string | null>(null);
+  const [voidConfirmVendor, setVoidConfirmVendor] = React.useState<VendorAssessment | null>(null);
   const [generatedCredentials, setGeneratedCredentials] = React.useState<{
     accessCode: string;
     tempPassword: string;
@@ -262,11 +265,6 @@ export function VendorsTableSection({
         case 'complianceScore':
           aVal = a.complianceScore;
           bVal = b.complianceScore;
-          break;
-        case 'riskLevel':
-          const riskOrder = { HIGH: 3, MEDIUM: 2, LOW: 1 };
-          aVal = riskOrder[a.riskLevel as keyof typeof riskOrder] || 0;
-          bVal = riskOrder[b.riskLevel as keyof typeof riskOrder] || 0;
           break;
         case 'questionnaireProgress':
           aVal = a.questionnaireProgress;
@@ -360,7 +358,7 @@ export function VendorsTableSection({
       const result = (await res.json()) as { ok: boolean; error?: string };
 
       if (!result.ok) {
-        window.alert(result.error ?? t("genCodeUnexpectedError"));
+        toast.error(result.error ?? t("genCodeUnexpectedError"));
         setIsBulkDeleting(false);
         return;
       }
@@ -369,7 +367,7 @@ export function VendorsTableSection({
       setSelectedVendorIds(new Set());
       router.refresh();
     } catch {
-      window.alert(t("genCodeUnexpectedError"));
+      toast.error(t("genCodeUnexpectedError"));
     } finally {
       setIsBulkDeleting(false);
     }
@@ -381,9 +379,9 @@ export function VendorsTableSection({
     try {
       await navigator.clipboard.writeText(accessCode);
       setCopiedVendorId(vendorId);
-      window.setTimeout(() => setCopiedVendorId((prev) => (prev === vendorId ? null : prev)), 1200);
+      setTimeout(() => setCopiedVendorId((prev) => (prev === vendorId ? null : prev)), 1200);
     } catch {
-      window.alert(t("copyFailed"));
+      toast.error(t("copyFailed"));
     }
   };
 
@@ -391,9 +389,9 @@ export function VendorsTableSection({
     try {
       await navigator.clipboard.writeText(value);
       setCopiedCredField(field);
-      window.setTimeout(() => setCopiedCredField((prev) => (prev === field ? null : prev)), 1500);
+      setTimeout(() => setCopiedCredField((prev) => (prev === field ? null : prev)), 1500);
     } catch {
-      window.alert(t("copyCredFailed"));
+      toast.error(t("copyCredFailed"));
     }
   };
 
@@ -421,13 +419,13 @@ export function VendorsTableSection({
       };
 
       if (!result.ok) {
-        window.alert(result.error ?? t("genCodeUnexpectedError"));
+        toast.error(result.error ?? t("genCodeUnexpectedError"));
         setCodeActionVendorId(null);
         return;
       }
 
       if (!result.accessCode || !result.tempPassword || !result.codeExpiresAt) {
-        window.alert(t("genCodeUnexpectedError"));
+        toast.error(t("genCodeUnexpectedError"));
         setCodeActionVendorId(null);
         return;
       }
@@ -440,14 +438,20 @@ export function VendorsTableSection({
         codeExpiresAt: result.codeExpiresAt,
       });
     } catch {
-      window.alert(t("genCodeUnexpectedError"));
+      toast.error(t("genCodeUnexpectedError"));
       setCodeActionVendorId(null);
     }
   };
 
   const handleVoidCode = async (vendor: VendorAssessment) => {
-    const confirmed = window.confirm(t("confirmVoidCode", { vendorName: vendor.name }));
-    if (!confirmed) return;
+    setVoidConfirmVendor(vendor);
+    return;
+  };
+
+  const executeVoidCode = async () => {
+    if (!voidConfirmVendor) return;
+    const vendor = voidConfirmVendor;
+    setVoidConfirmVendor(null);
 
     setCodeActionVendorId(vendor.id);
     try {
@@ -459,7 +463,7 @@ export function VendorsTableSection({
       const result = (await res.json()) as { ok: boolean; error?: string };
 
       if (!result.ok) {
-        window.alert(result.error ?? t("genCodeUnexpectedError"));
+        toast.error(result.error ?? t("genCodeUnexpectedError"));
         setCodeActionVendorId(null);
         return;
       }
@@ -467,7 +471,7 @@ export function VendorsTableSection({
       setCodeActionVendorId(null);
       router.refresh();
     } catch {
-      window.alert(t("genCodeUnexpectedError"));
+      toast.error(t("genCodeUnexpectedError"));
       setCodeActionVendorId(null);
     }
   };
@@ -549,46 +553,70 @@ export function VendorsTableSection({
                 ) : null}
               </TableHead>
               <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
-                <Button variant="ghost" onClick={() => handleSort('name')} className="h-auto p-0 font-semibold">
+                <Button variant="ghost" onClick={() => handleSort('name')} className="group h-auto p-0 font-semibold">
                   {t("columnName")}
-                  {sortKey === 'name' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
+                  {sortKey === 'name'
+                    ? (sortDirection === 'asc'
+                      ? <ChevronUp className="ml-1 h-3.5 w-3.5" />
+                      : <ChevronDown className="ml-1 h-3.5 w-3.5" />)
+                    : <ChevronsUpDown className="ml-1 h-3.5 w-3.5 opacity-40 group-hover:opacity-70" />
+                  }
                 </Button>
               </TableHead>
               <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">{t("columnAccessCode")}</TableHead>
               <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
-                <Button variant="ghost" onClick={() => handleSort('serviceType')} className="h-auto p-0 font-semibold">
+                <Button variant="ghost" onClick={() => handleSort('serviceType')} className="group h-auto p-0 font-semibold">
                   {t("columnServiceType")}
-                  {sortKey === 'serviceType' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
+                  {sortKey === 'serviceType'
+                    ? (sortDirection === 'asc'
+                      ? <ChevronUp className="ml-1 h-3.5 w-3.5" />
+                      : <ChevronDown className="ml-1 h-3.5 w-3.5" />)
+                    : <ChevronsUpDown className="ml-1 h-3.5 w-3.5 opacity-40 group-hover:opacity-70" />
+                  }
                 </Button>
               </TableHead>
               <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
-                <Button variant="ghost" onClick={() => handleSort('status')} className="h-auto p-0 font-semibold">
+                <Button variant="ghost" onClick={() => handleSort('status')} className="group h-auto p-0 font-semibold">
                   {t("columnStatus")}
-                  {sortKey === 'status' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
+                  {sortKey === 'status'
+                    ? (sortDirection === 'asc'
+                      ? <ChevronUp className="ml-1 h-3.5 w-3.5" />
+                      : <ChevronDown className="ml-1 h-3.5 w-3.5" />)
+                    : <ChevronsUpDown className="ml-1 h-3.5 w-3.5 opacity-40 group-hover:opacity-70" />
+                  }
                 </Button>
               </TableHead>
               <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
-                <Button variant="ghost" onClick={() => handleSort('lastAssessmentDate')} className="h-auto p-0 font-semibold">
+                <Button variant="ghost" onClick={() => handleSort('lastAssessmentDate')} className="group h-auto p-0 font-semibold">
                   {t("columnLastAssessment")}
-                  {sortKey === 'lastAssessmentDate' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
+                  {sortKey === 'lastAssessmentDate'
+                    ? (sortDirection === 'asc'
+                      ? <ChevronUp className="ml-1 h-3.5 w-3.5" />
+                      : <ChevronDown className="ml-1 h-3.5 w-3.5" />)
+                    : <ChevronsUpDown className="ml-1 h-3.5 w-3.5 opacity-40 group-hover:opacity-70" />
+                  }
                 </Button>
               </TableHead>
               <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
-                <Button variant="ghost" onClick={() => handleSort('questionnaireProgress')} className="h-auto p-0 font-semibold">
+                <Button variant="ghost" onClick={() => handleSort('questionnaireProgress')} className="group h-auto p-0 font-semibold">
                   {t("columnQuestionsFilled")}
-                  {sortKey === 'questionnaireProgress' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
+                  {sortKey === 'questionnaireProgress'
+                    ? (sortDirection === 'asc'
+                      ? <ChevronUp className="ml-1 h-3.5 w-3.5" />
+                      : <ChevronDown className="ml-1 h-3.5 w-3.5" />)
+                    : <ChevronsUpDown className="ml-1 h-3.5 w-3.5 opacity-40 group-hover:opacity-70" />
+                  }
                 </Button>
               </TableHead>
               <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
-                <Button variant="ghost" onClick={() => handleSort('complianceScore')} className="h-auto p-0 font-semibold">
+                <Button variant="ghost" onClick={() => handleSort('complianceScore')} className="group h-auto p-0 font-semibold">
                   {t("columnComplianceScore")}
-                  {sortKey === 'complianceScore' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
-                </Button>
-              </TableHead>
-              <TableHead className="px-4 py-2.5 text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">
-                <Button variant="ghost" onClick={() => handleSort('riskLevel')} className="h-auto p-0 font-semibold">
-                  {t("columnRiskLevel")}
-                  {sortKey === 'riskLevel' && (sortDirection === 'asc' ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />)}
+                  {sortKey === 'complianceScore'
+                    ? (sortDirection === 'asc'
+                      ? <ChevronUp className="ml-1 h-3.5 w-3.5" />
+                      : <ChevronDown className="ml-1 h-3.5 w-3.5" />)
+                    : <ChevronsUpDown className="ml-1 h-3.5 w-3.5 opacity-40 group-hover:opacity-70" />
+                  }
                 </Button>
               </TableHead>
               <TableHead className="px-4 py-2.5 text-right text-[0.625rem] font-semibold uppercase tracking-widest text-[var(--muted-foreground)]">{t("columnActions")}</TableHead>
@@ -598,7 +626,7 @@ export function VendorsTableSection({
             {filtered.length === 0 ? (
               <TableRow className="hover:bg-[var(--muted)]">
                 <TableCell
-                  colSpan={10}
+                  colSpan={9}
                   className="h-24 px-4 py-6 text-center text-muted-foreground"
                 >
                   {q.trim() ? (
@@ -727,10 +755,7 @@ export function VendorsTableSection({
                     <ProgressPill progress={v.questionnaireProgress} filled={v.questionsFilled} />
                   </TableCell>
                   <TableCell className="px-4 py-2.5">
-                    <ScorePill score={v.complianceScore} />
-                  </TableCell>
-                  <TableCell className="px-4 py-2.5">
-                    <RiskBadge level={v.riskLevel} />
+                    <RiskScore score={v.complianceScore} level={v.riskLevel} />
                   </TableCell>
                   <TableCell className="px-4 py-2.5 text-right">
                     <VendorActions vendorAssessment={v} role={role} />
@@ -911,6 +936,31 @@ export function VendorsTableSection({
             <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={executeBulkDelete} disabled={isBulkDeleting}>
               {t("delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={voidConfirmVendor !== null}
+        onOpenChange={(open) => {
+          if (!open) setVoidConfirmVendor(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("confirmVoidCodeTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("confirmVoidCode", { vendorName: voidConfirmVendor?.name ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={executeVoidCode}
+            >
+              {t("voidCode")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

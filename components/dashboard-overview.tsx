@@ -65,6 +65,7 @@ export type DashboardOverviewProps = {
     ElevatedAttentionRecommended: string;
     MonitorAndRemediateGaps: string;
     WithinAcceptableBand: string;
+    PostureAcceptable?: string;
     /** @deprecated The Trust & Compliance explanatory card was removed. These keys remain for API compatibility. */
     TrustAndCompliance: string;
     TrustComplianceDesc: string;
@@ -208,6 +209,7 @@ export function DashboardOverview({
       : score >= 40
         ? translations.riskLevelLabels.medium
         : translations.riskLevelLabels.high;
+  const isAllClear = score >= 80 && openRemediationCount === 0;
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
@@ -242,12 +244,13 @@ export function DashboardOverview({
             <p
               className={cn(
                 "mt-2 text-center text-xs font-medium",
-                scoreGaugeColor(score),
+                isAllClear ? "text-[var(--risk-low-fg)]" : scoreGaugeColor(score),
               )}
             >
-              {score < 40 && translations.ElevatedAttentionRecommended}
-              {score >= 40 && score <= 70 && translations.MonitorAndRemediateGaps}
-              {score > 70 && translations.WithinAcceptableBand}
+              {!isAllClear && score < 40 && translations.ElevatedAttentionRecommended}
+              {!isAllClear && score >= 40 && score <= 70 && translations.MonitorAndRemediateGaps}
+              {!isAllClear && score > 70 && translations.WithinAcceptableBand}
+              {isAllClear && (translations.PostureAcceptable ?? translations.WithinAcceptableBand)}
             </p>
           </CardContent>
           </Card>

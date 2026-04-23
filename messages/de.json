@@ -66,6 +66,7 @@
   "ElevatedAttentionRecommended": "Erhöhte Aufmerksamkeit empfohlen",
   "MonitorAndRemediateGaps": "Überwachen und Mängel beheben",
   "WithinAcceptableBand": "Im akzeptablen Bereich — regelmäßige Überprüfung erforderlich",
+  "PostureAcceptable": "Risikoprofil akzeptabel — keine offenen Maßnahmen",
   "TrustAndCompliance": "Vertrauen & Compliance",
   "TrustComplianceDesc": "Venshield unterstützt Sicherheitsbeamte bei der Gewährleistung der Bewertung digitaler Lieferketten. Die Zahlen auf dieser Seite werden aus der Venshield-Datenbank gelesen.",
   "RiskColoring": "Risikofärbung: rot unter 40, gelb 40–70, grün über 70.",
@@ -891,6 +892,7 @@
     "deleteTitle": "Anbieter löschen",
     "delete": "Löschen",
     "cancel": "Abbrechen",
+    "confirmVoidCodeTitle": "Zugangscode ungültig machen",
     "confirmVoidCode": "Aktiven Zugangscode für {vendorName} ungültig machen?",
     "copyAccessCodeAria": "Zugangscode für {vendorName} kopieren",
     "viewEvidencePdfAria": "Nachweis-PDF für {vendorName} anzeigen",
@@ -1472,6 +1474,7 @@
       "trendStable": "Stabil",
       "vendors": "Anbieter überwacht",
       "noData": "Keine Daten verfügbar",
+      "noDataCta": "Ersten Anbieter hinzufügen",
       "noDataExplanation": "Der Portfolio-Score wird angezeigt, sobald Anbieter-Assessments abgeschlossen sind.",
       "scoreLabel": "Compliance-Score"
     }
@@ -1647,6 +1650,7 @@
       "last90d": "90T",
       "last365d": "12M",
       "vsPreviousPeriod": "vs. Vorperiode",
+      "assessmentsLabel": "Bewertungen",
       "premiumRequired": "Premium-Upgrade erforderlich für Abschlussraten-Analysen.",
       "noData": "Keine Daten für diesen Zeitraum.",
       "loading": "Laden..."

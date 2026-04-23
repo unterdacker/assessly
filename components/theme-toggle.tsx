@@ -22,8 +22,9 @@ export function ThemeToggle() {
         onClick={toggle}
         aria-label="Toggle theme"
         className="border-border"
+        suppressHydrationWarning
       >
-        <Moon className="h-4 w-4" aria-hidden />
+        <span className="h-4 w-4" aria-hidden="true" />
       </Button>
     );
   }

@@ -17,6 +17,7 @@ type PortfolioComplianceWidgetProps = {
     riskLabel: string;
     vendors: string;
     noData: string;
+    noDataCta?: string;
     noDataExplanation?: string;
     widgetTooltip?: string;
   };
@@ -89,6 +90,14 @@ export function PortfolioComplianceWidget({
             <p>{translations.noData}</p>
             {translations.noDataExplanation && (
               <p className="mt-1 text-xs text-[var(--muted-foreground)]">{translations.noDataExplanation}</p>
+            )}
+            {translations.noDataCta && (
+              <a
+                href="/vendors"
+                className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)] underline-offset-2 hover:underline"
+              >
+                {translations.noDataCta}
+              </a>
             )}
           </div>
         </CardContent>

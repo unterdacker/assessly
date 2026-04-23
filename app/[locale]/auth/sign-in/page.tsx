@@ -29,7 +29,7 @@ export default async function SignInPage({ params, searchParams }: SignInPagePro
         <LanguageToggle />
       </div>
       <main className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-5xl items-center px-8 py-12">
-        <div className="grid w-full gap-16 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+        <div className="grid w-full gap-4 md:gap-16 md:grid-cols-[1.1fr_0.9fr] md:items-center">
           <div className="space-y-4">
             <p className="font-display text-[0.6875rem] uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
               {t("badge")}
@@ -41,6 +41,10 @@ export default async function SignInPage({ params, searchParams }: SignInPagePro
               {t("isolationNotice")}
             </p>
           </div>
+          {/* Mobile brand — shown only below md */}
+          <p className="text-center font-display text-[0.6875rem] uppercase tracking-[0.2em] text-muted-foreground md:hidden">
+            {t("badge")}
+          </p>
           <InternalSignInForm
             locale={locale}
             nextPath={nextPath}

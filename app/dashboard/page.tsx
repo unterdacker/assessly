@@ -48,6 +48,7 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     ElevatedAttentionRecommended: t("ElevatedAttentionRecommended"),
     MonitorAndRemediateGaps: t("MonitorAndRemediateGaps"),
     WithinAcceptableBand: t("WithinAcceptableBand"),
+    PostureAcceptable: t("PostureAcceptable"),
     TrustAndCompliance: t("TrustAndCompliance"),
     TrustComplianceDesc: t("TrustComplianceDesc"),
     RiskColoring: t("RiskColoring"),

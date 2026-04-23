@@ -38,6 +38,22 @@
     --risk-high: oklch(0.88 0.07 25);
     --risk-high-fg: oklch(0.22 0.08 25);
 
+    /* Audit log category badge tokens */
+    --badge-ai-act-bg: oklch(0.93 0.04 220);
+    --badge-ai-act-fg: oklch(0.18 0.08 220);
+    --badge-auth-bg: oklch(0.92 0.05 20);
+    --badge-auth-fg: oklch(0.20 0.08 20);
+    --badge-config-bg: oklch(0.93 0.06 75);
+    --badge-config-fg: oklch(0.18 0.07 75);
+    --badge-compliance-bg: oklch(0.92 0.06 264);
+    --badge-compliance-fg: oklch(0.20 0.08 264);
+    --badge-governance-bg: oklch(0.92 0.05 290);
+    --badge-governance-fg: oklch(0.18 0.07 290);
+    --badge-health-bg: oklch(0.90 0.07 147);
+    --badge-health-fg: oklch(0.18 0.07 147);
+    --badge-other-bg: oklch(0.95 0.008 264);
+    --badge-other-fg: oklch(0.43 0.025 264);
+
     --space-1: 0.25rem;
     --space-2: 0.5rem;
     --space-3: 0.75rem;
@@ -77,6 +93,22 @@
     --risk-high: oklch(0.22 0.07 25);
     --risk-high-fg: oklch(0.78 0.10 25);
     --shadow-card-featured: 0 18px 50px -28px oklch(0.08 0.02 264 / 0.5);
+
+    /* Audit log category badge tokens — dark mode */
+    --badge-ai-act-bg: oklch(0.22 0.06 220);
+    --badge-ai-act-fg: oklch(0.80 0.08 220);
+    --badge-auth-bg: oklch(0.22 0.06 20);
+    --badge-auth-fg: oklch(0.80 0.08 20);
+    --badge-config-bg: oklch(0.22 0.06 75);
+    --badge-config-fg: oklch(0.80 0.07 75);
+    --badge-compliance-bg: oklch(0.22 0.07 264);
+    --badge-compliance-fg: oklch(0.80 0.09 264);
+    --badge-governance-bg: oklch(0.22 0.06 290);
+    --badge-governance-fg: oklch(0.80 0.07 290);
+    --badge-health-bg: oklch(0.20 0.07 147);
+    --badge-health-fg: oklch(0.80 0.08 147);
+    --badge-other-bg: oklch(0.20 0.01 264);
+    --badge-other-fg: oklch(0.70 0.025 264);
   }
 
   * {

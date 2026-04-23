@@ -239,9 +239,7 @@ export function ExternalAssessmentWorkspace({
           <LanguageToggle />
         </div>
         <div className="max-w-md space-y-6 rounded-xl border border-emerald-100 bg-white p-8 text-center shadow-sm dark:border-emerald-900/30 dark:bg-slate-900">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-900/20">
-            <FileCheck className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
-          </div>
+          <FileCheck className="mx-auto h-6 w-6 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t("submitted.title")}</h1>
             <p className="text-slate-600 dark:text-slate-400">
@@ -267,9 +265,7 @@ export function ExternalAssessmentWorkspace({
           <LanguageToggle />
         </div>
         <div className="flex flex-col items-center text-center space-y-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-xl">
-            <ShieldCheck className="h-10 w-10" />
-          </div>
+          <ShieldCheck className="h-7 w-7 text-indigo-600 dark:text-indigo-400" aria-hidden="true" />
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
               {t("welcome.title")}
@@ -328,7 +324,7 @@ export function ExternalAssessmentWorkspace({
         <LanguageToggle />
       </div>
       {/* Header & Progress Bar */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-950 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">

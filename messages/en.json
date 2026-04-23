@@ -66,6 +66,7 @@
   "ElevatedAttentionRecommended": "Elevated attention recommended",
   "MonitorAndRemediateGaps": "Monitor and remediate gaps",
   "WithinAcceptableBand": "Within acceptable band — maintain reviews",
+  "PostureAcceptable": "Posture acceptable — no open remediations",
   "TrustAndCompliance": "Trust & compliance",
   "TrustComplianceDesc": "Venshield helps security officers evidence due diligence across the digital supply chain. Figures on this page are read from your Venshield database.",
   "RiskColoring": "Risk coloring: red below 40, amber 40–70, green above 70.",
@@ -853,6 +854,7 @@
     "deleteTitle": "Delete Vendors",
     "delete": "Delete",
     "cancel": "Cancel",
+    "confirmVoidCodeTitle": "Void Access Code",
     "confirmVoidCode": "Void active access code for {vendorName}?",
     "copyAccessCodeAria": "Copy access code for {vendorName}",
     "viewEvidencePdfAria": "View evidence PDF for {vendorName}",
@@ -1434,6 +1436,7 @@
       "trendStable": "Stable",
       "vendors": "vendors monitored",
       "noData": "No data available",
+      "noDataCta": "Add your first vendor",
       "noDataExplanation": "Portfolio score will appear once vendor assessments are complete.",
       "scoreLabel": "compliance score"
     }
@@ -1609,6 +1612,7 @@
       "last90d": "90d",
       "last365d": "12m",
       "vsPreviousPeriod": "vs previous period",
+      "assessmentsLabel": "assessments",
       "premiumRequired": "Upgrade to Premium to view completion rate analytics.",
       "noData": "No data for this period.",
       "loading": "Loading..."
