@@ -76,9 +76,9 @@ export function CategoryComplianceRadarChart({
     const lx = cx + (outerRadius + labelPadding) * Math.cos(angles[i]);
     const ly = cy + (outerRadius + labelPadding) * Math.sin(angles[i]);
     const textAnchor =
-      lx < cx - 5 ? "end" : lx > cx + 5 ? "start" : "middle";
+      (lx < cx - 5 ? "end" : lx > cx + 5 ? "start" : "middle") as "end" | "start" | "middle";
     const dominantBaseline =
-      ly < cy - 5 ? "auto" : ly > cy + 5 ? "hanging" : "middle";
+      (ly < cy - 5 ? "auto" : ly > cy + 5 ? "hanging" : "middle") as "auto" | "hanging" | "middle";
     return { lx, ly, textAnchor, dominantBaseline, label: d.shortLabel };
   });
 
