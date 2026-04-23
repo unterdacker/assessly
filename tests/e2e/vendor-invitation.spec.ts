@@ -127,7 +127,7 @@ test.describe("Vendor Invitation — External portal login", () => {
 
   test("language toggle is accessible on the portal page", async ({ page }) => {
     await page.goto(portalUrl);
-    const langToggle = page.getByRole("button", { name: /language|en|de/i });
+    const langToggle = page.getByRole("button", { name: /switch to (english|german)/i }).first();
     await expect(langToggle).toBeVisible();
   });
 });
