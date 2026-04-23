@@ -65,6 +65,7 @@ export type DashboardOverviewProps = {
     ElevatedAttentionRecommended: string;
     MonitorAndRemediateGaps: string;
     WithinAcceptableBand: string;
+    /** @deprecated The Trust & Compliance explanatory card was removed. These keys remain for API compatibility. */
     TrustAndCompliance: string;
     TrustComplianceDesc: string;
     RiskColoring: string;
@@ -225,7 +226,7 @@ export function DashboardOverview({
       </div>
 
       <div>
-        <p className="mb-3 text-[0.6875rem] uppercase tracking-[0.15em] text-foreground/50">
+        <p className="mb-3 text-[0.6875rem] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
           {translations.RiskPostureLabel}
         </p>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6 lg:items-start">
@@ -255,16 +256,16 @@ export function DashboardOverview({
             {tiles.map(({ label, value, icon: Icon, hint, isRisk }) => (
               <Card key={label}>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
+                  <p className="text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
                     {label}
-                  </CardTitle>
+                  </p>
                   <Icon className="h-4 w-4 text-[var(--primary)]" aria-hidden />
                 </CardHeader>
                 <CardContent>
                   <p
                     className={cn(
                       "text-xl font-semibold tabular-nums",
-                      isRisk && value > 0 ? "text-[var(--risk-high)]" : undefined,
+                        isRisk && value > 0 ? "text-[var(--risk-high)]" : undefined,
                     )}
                   >
                     {value}
@@ -283,7 +284,7 @@ export function DashboardOverview({
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight text-slate-950 dark:text-slate-50">
+              <h2 className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight text-[var(--foreground)]">
                 <Radar className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" aria-hidden />
                 {translations.RiskPostureOverview}
               </h2>
@@ -328,7 +329,7 @@ export function DashboardOverview({
                 </>
               )}
             </button>
-            <div className="rounded-full border border-slate-300/80 bg-white/80 px-3 py-1 text-xs text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300">
+            <div className="rounded-[var(--radius-badge)] border border-[var(--border)] bg-[var(--secondary)] px-2 py-0.5 text-xs text-[var(--muted-foreground)]">
               {summarySourceLabel}
             </div>
             <RefreshAiSummaryButton
@@ -340,10 +341,11 @@ export function DashboardOverview({
         <div
           id="risk-posture-charts"
           className={showCharts ? undefined : "hidden"}
+          aria-hidden={!showCharts}
         >
             <div className="grid gap-4 xl:grid-cols-[1.25fr_1fr]">
-              <Card className="overflow-hidden border-slate-200/80 bg-card shadow-[0_18px_50px_-28px_rgba(15,23,42,0.38)] dark:border-slate-800 dark:bg-card">
-                <CardHeader className="border-b border-slate-200/80 pb-4 dark:border-slate-800">
+              <Card className="overflow-hidden border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-card-featured)]">
+                <CardHeader className="border-b border-[var(--border)] pb-4">
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-base">{translations.CategoryComplianceRadarTitle}</CardTitle>
                     {translations.CategoryComplianceRadarTooltip ? (
@@ -380,8 +382,8 @@ export function DashboardOverview({
               </Card>
 
               <div className="grid gap-4">
-                <Card className="overflow-hidden border-slate-200/80 bg-card shadow-[0_18px_50px_-28px_rgba(15,23,42,0.38)] dark:border-slate-800 dark:bg-card">
-                  <CardHeader className="border-b border-slate-200/80 pb-4 dark:border-slate-800">
+                <Card className="overflow-hidden border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-card-featured)]">
+                  <CardHeader className="border-b border-[var(--border)] pb-4">
                     <div className="flex items-center gap-2">
                       <CardTitle className="text-base">{translations.VendorsByRiskLevelTitle}</CardTitle>
                       {translations.VendorsByRiskLevelTooltip ? (
@@ -415,74 +417,59 @@ export function DashboardOverview({
                     </div>
                   </CardContent>
                 </Card>
-
-                <Card className="overflow-hidden border-border bg-card text-card-foreground shadow-[0_18px_50px_-28px_rgba(15,23,42,0.38)]">
-                  <CardHeader className="border-b border-border pb-4">
-                    <div className="flex items-center gap-2 text-[var(--primary)]">
-                      <BrainCircuit className="h-4 w-4" aria-hidden />
-                      <CardTitle className="text-base text-card-foreground">
-                        {translations.AIExecutiveSummary}
-                      </CardTitle>
-                    </div>
-                    <p className="text-sm text-[var(--muted-foreground)]">
-                      {translations.AIExecutiveSummaryDesc}
-                    </p>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <ul className="divide-y divide-border text-sm leading-6 text-foreground">
-                      <li className="flex gap-3 py-3">
-                        <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                        <span>
-                          <span className="font-semibold">{translations.BiggestSystemicRisk}</span>{" "}
-                          <span className="prose prose-sm dark:prose-invert max-w-none [&_p]:inline [&_p]:m-0">
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                              {riskPosture.executiveSummary.systemicRisk}
-                            </ReactMarkdown>
-                          </span>
-                        </span>
-                      </li>
-                      <li className="flex gap-3 py-3">
-                        <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                        <span>
-                          <span className="font-semibold">{translations.AverageRemediationTime}</span>{" "}
-                          {riskPosture.executiveSummary.averageRemediationTimeDays} {translations.Days}
-                        </span>
-                      </li>
-                      <li className="flex gap-3 py-3">
-                        <Radar className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                        <span>
-                          <span className="font-semibold">{translations.RecommendedNextStep}</span>{" "}
-                          {recommendedCategory}
-                        </span>
-                      </li>
-                    </ul>
-                  </CardContent>
-                </Card>
               </div>
             </div>
           </div>
+
+        <Card className="overflow-hidden border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)] shadow-[var(--shadow-card-featured)]">
+          <CardHeader className="border-b border-[var(--border)] pb-4">
+            <div className="flex items-center gap-2 text-[var(--primary)]">
+              <BrainCircuit className="h-4 w-4" aria-hidden />
+              <CardTitle className="text-base text-card-foreground">
+                {translations.AIExecutiveSummary}
+              </CardTitle>
+            </div>
+            <p className="text-sm text-[var(--muted-foreground)]">
+              {translations.AIExecutiveSummaryDesc}
+            </p>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <ul className="divide-y divide-border text-sm leading-6 text-foreground">
+              <li className="flex gap-3 py-3">
+                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+                <span>
+                  <span className="font-semibold">{translations.BiggestSystemicRisk}</span>{" "}
+                  <span className="prose prose-sm dark:prose-invert max-w-none [&_p]:inline [&_p]:m-0">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {riskPosture.executiveSummary.systemicRisk}
+                    </ReactMarkdown>
+                  </span>
+                </span>
+              </li>
+              <li className="flex gap-3 py-3">
+                <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+                <span>
+                  <span className="font-semibold">{translations.AverageRemediationTime}</span>{" "}
+                  {riskPosture.executiveSummary.averageRemediationTimeDays} {translations.Days}
+                </span>
+              </li>
+              <li className="flex gap-3 py-3">
+                <Radar className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+                <span>
+                  <span className="font-semibold">{translations.RecommendedNextStep}</span>{" "}
+                  {recommendedCategory}
+                </span>
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
       </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{translations.TrustAndCompliance}</CardTitle>
-          <p className="text-sm font-normal text-[var(--muted-foreground)]">
-            {translations.TrustComplianceDesc}
-          </p>
-        </CardHeader>
-        <CardContent className="text-sm text-[var(--muted-foreground)]">
-          <ul className="list-inside list-disc space-y-1">
-            <li>{translations.RiskColoring}</li>
-            <li>{translations.AssessmentWorkspace}</li>
-            {role === "ADMIN" ? <li>{translations.InviteNewVendors}</li> : null}
-          </ul>
-        </CardContent>
-      </Card>
-
+      {/* TODO: i18n - SLA strings not yet in translations system */}
       {isPremium && (overdueAssessments.length > 0 || slaComplianceRate > 0) && (
         <section className="space-y-4">
           <div>
-            <h2 className="font-display text-lg font-semibold tracking-tight text-slate-950 dark:text-slate-50">
+            <h2 className="font-display text-lg font-semibold tracking-tight text-[var(--foreground)]">
               SLA Tracking
             </h2>
             <p className="text-sm text-[var(--muted-foreground)]">
@@ -520,10 +507,16 @@ export function DashboardOverview({
                   {overdueAssessments.length}
                 </p>
                 {overdueAssessments.length > 0 && (
-                  <ul className="mt-3 space-y-1.5 text-xs">
+                  <ul className="mt-3 space-y-1.5 text-xs list-none">
                     {overdueAssessments.slice(0, 3).map((a) => (
                       <li key={a.id} className="text-[var(--muted-foreground)]">
-                        • {a.vendor?.name ?? "Unknown vendor"} ({a.daysOverdue} days overdue)
+                        <Link
+                          href={`/${locale}/vendors`}
+                          className="font-medium underline-offset-2 hover:underline hover:text-[var(--foreground)] transition-colors"
+                        >
+                          {a.vendor?.name ?? "Unknown vendor"}
+                        </Link>
+                        {" "}({a.daysOverdue} days overdue)
                       </li>
                     ))}
                     {overdueAssessments.length > 3 && (

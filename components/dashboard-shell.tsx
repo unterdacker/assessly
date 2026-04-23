@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, LayoutDashboard, Users, Activity, LogOut, LineChart } from "lucide-react";
+import { Settings, LayoutDashboard, Users, Activity, LogOut, LineChart, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -56,12 +56,13 @@ function stripLocale(pathname: string): string {
 function getNav(locale: "de" | "en", role: string | null) {
   const base = [
     { href: "/dashboard", label: NAV_LABELS[locale].overview, icon: LayoutDashboard },
+    { href: "/vendors", label: NAV_LABELS[locale].vendors, icon: Building2 },
     { href: "/analytics", label: NAV_LABELS[locale].analytics, icon: LineChart },
     { href: "/admin/audit-logs", label: NAV_LABELS[locale].auditLogs, icon: Activity },
   ];
 
-  if (role === "ADMIN" || role === "AUDITOR") {
-    base.splice(2, 0, {
+  if (role === "ADMIN") {
+    base.splice(3, 0, {
       href: "/settings",
       label: NAV_LABELS[locale].settings,
       icon: Settings,
@@ -69,7 +70,7 @@ function getNav(locale: "de" | "en", role: string | null) {
   }
 
   if (role === "ADMIN") {
-    base.splice(4, 0, {
+    base.splice(5, 0, {
       href: "/dashboard/users",
       label: NAV_LABELS[locale].users,
       icon: Users,
@@ -127,7 +128,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         >
           <div className="flex h-14 items-center gap-2 border-b border-[var(--border)] px-4">
             <div className="leading-tight">
-              <p className="font-display text-[0.8125rem] font-medium tracking-tight">Venshield</p>
+              <p className="font-display text-[1rem] font-medium tracking-tight">Venshield</p>
               <p className="text-[10px] text-muted-foreground">
                 {session?.role === "ADMIN" ? "Admin workspace" : session?.role === "AUDITOR" ? "Auditor workspace" : "Vendor risk"}
               </p>
@@ -160,13 +161,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
           <div className="border-t border-[var(--border)] p-3">
-            <p className="px-3 text-[0.6875rem] uppercase tracking-[0.15em] text-[var(--muted-foreground)]">
-              {NAV_LABELS[locale].nis2Label}
-            </p>
             <button
               type="button"
               onClick={handleSignOut}
-              className="mt-2 flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[0.8125rem] font-medium text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+              className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[0.8125rem] font-medium text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
             >
               <LogOut className="h-[15px] w-[15px] shrink-0 opacity-80" aria-hidden />
               {NAV_LABELS[locale].signOut}

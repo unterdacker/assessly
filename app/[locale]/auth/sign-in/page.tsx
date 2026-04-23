@@ -31,7 +31,7 @@ export default async function SignInPage({ params, searchParams }: SignInPagePro
       <main className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-5xl items-center px-8 py-12">
         <div className="grid w-full gap-16 md:grid-cols-[1.1fr_0.9fr] md:items-center">
           <div className="space-y-4">
-            <p className="font-display text-[0.625rem] uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
+            <p className="font-display text-[0.6875rem] uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
               {t("badge")}
             </p>
             <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
