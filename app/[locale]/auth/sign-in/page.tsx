@@ -5,7 +5,6 @@ import { getOptionalAuthSession } from "@/lib/auth/server";
 import { getRoleLandingPath } from "@/lib/auth/permissions";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
-import Image from "next/image";
 
 type SignInPageProps = {
   params: Promise<{ locale: string }>;
@@ -32,14 +31,6 @@ export default async function SignInPage({ params, searchParams }: SignInPagePro
       <main className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-5xl items-center px-8 py-12">
         <div className="grid w-full gap-16 md:grid-cols-[1.1fr_0.9fr] md:items-center">
           <div className="space-y-4">
-            <Image
-              src="/logo.png"
-              alt="Venshield"
-              width={56}
-              height={56}
-              className="rounded-xl"
-              priority
-            />
             <p className="font-display text-[0.625rem] uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
               {t("badge")}
             </p>
