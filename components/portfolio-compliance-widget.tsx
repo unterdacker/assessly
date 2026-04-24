@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { TrendingUp, TrendingDown, Minus, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -92,12 +93,12 @@ export function PortfolioComplianceWidget({
               <p className="mt-1 text-xs text-[var(--muted-foreground)]">{translations.noDataExplanation}</p>
             )}
             {translations.noDataCta && (
-              <a
+              <Link
                 href="/vendors"
                 className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)] underline-offset-2 hover:underline"
               >
                 {translations.noDataCta}
-              </a>
+              </Link>
             )}
           </div>
         </CardContent>

@@ -75,7 +75,7 @@ export function RecurrenceScheduleForm({
   const isEditMode = Boolean(schedule);
 
   // Server action state
-  const [_state, formAction, isPending] = useActionState(
+  const [, formAction, isPending] = useActionState(
     async (_prevState: unknown, formData: FormData) => {
       const data = {
         interval: formData.get("interval") as ScheduleListItem["interval"],

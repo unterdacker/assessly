@@ -138,7 +138,6 @@ export type DashboardOverviewProps = {
 export function DashboardOverview({
   vendorAssessments,
   riskPosture,
-  role,
   locale,
   openRemediationCount,
   isPremium = false,
