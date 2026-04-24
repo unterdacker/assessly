@@ -13,7 +13,7 @@ export async function signInAsAdmin(page: Page): Promise<void> {
     process.env.VENSHIELD_ADMIN_EMAIL ?? "admin@venshield.local",
   );
   await page.getByLabel(/password/i).fill(
-    process.env.VENSHIELD_ADMIN_PASSWORD ?? "change-me-strong-password",
+    process.env.VENSHIELD_ADMIN_PASSWORD ?? "admin123",
   );
   await page.getByRole("button", { name: /sign in/i }).click();
   await page.waitForURL(/\/en\/dashboard/, { timeout: 30_000 });
