@@ -14,6 +14,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type TemplateOption = {
+  id: string;
+  name: string;
+  description: string | null;
+  frameworkCategory: string | null;
+  systemTemplateKey: string | null;
+};
 
 type AddVendorModalProps = {
   trigger?: React.ReactNode;
@@ -27,6 +42,10 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
   const [nameError, setNameError] = React.useState<string | null>(null);
   const [emailError, setEmailError] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState(false);
+
+  const [templates, setTemplates] = React.useState<TemplateOption[]>([]);
+  const [templateId, setTemplateId] = React.useState("");
+  const [templatesLoading, setTemplatesLoading] = React.useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -57,6 +76,7 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
       const formData = new FormData();
       formData.set("name", name.trim());
       formData.set("email", email.trim());
+      formData.set("templateId", templateId);
       const res = await fetch("/api/vendors/create", {
         method: "POST",
         body: formData,
@@ -77,13 +97,30 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
-    if (!isOpen) {
+    if (isOpen) {
+      setTemplatesLoading(true);
+      fetch("/api/vendors/templates")
+        .then((res) => res.json())
+        .then((data: { ok: boolean; templates?: TemplateOption[] }) => {
+          if (data.ok && data.templates) {
+            setTemplates(data.templates);
+          }
+        })
+        .catch(() => {
+          // Silently ignore errors
+        })
+        .finally(() => {
+          setTemplatesLoading(false);
+        });
+    } else {
       // Clear states on close
       setTimeout(() => {
         setName("");
         setEmail("");
         setNameError(null);
         setEmailError(null);
+        setTemplateId("");
+        setTemplates([]);
       }, 300);
     }
   };
@@ -98,8 +135,7 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
           <DialogHeader>
             <DialogTitle>Invite vendor</DialogTitle>
             <DialogDescription>
-              Send an assessment invitation. The vendor will receive NIS2-aligned
-              security questions via Venshield. Data is stored in your Venshield database.
+              Send an assessment invitation with a questionnaire framework of your choice. Data is stored in your Venshield database.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-2">
@@ -144,6 +180,38 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
                 </p>
               ) : null}
             </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="vendor-template">Questionnaire template</Label>
+              <Select
+                value={templatesLoading ? "loading" : templateId}
+                onValueChange={(val) => setTemplateId(val)}
+                disabled={pending || templatesLoading}
+              >
+                <SelectTrigger id="vendor-template" aria-busy={templatesLoading}>
+                  <SelectValue placeholder="Select a template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templatesLoading ? (
+                    <SelectItem value="loading">Loading templates...</SelectItem>
+                  ) : (
+                    <>
+                      <SelectItem value="">NIS2 (default)</SelectItem>
+                      {templates.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.frameworkCategory
+                            ? `${t.name} - ${t.frameworkCategory}`
+                            : t.name}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Optional. Defaults to NIS2 if not selected.
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -154,8 +222,8 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Saving…" : "Add Vendor"}
+            <Button type="submit" disabled={pending || templatesLoading}>
+              {pending ? "Saving..." : "Add Vendor"}
             </Button>
           </DialogFooter>
         </form>

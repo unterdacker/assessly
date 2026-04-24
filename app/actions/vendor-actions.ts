@@ -102,6 +102,21 @@ export async function createVendorAction(
   if (typeof email !== "string" || !email.trim()) {
     return { ok: false, error: "Security contact email is required." };
   }
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!EMAIL_REGEX.test(email.trim())) {
+    return { ok: false, error: "A valid security contact email is required." };
+  }
+
+  // Normalize and validate optional templateId
+  const rawTemplateId = formData.get("templateId");
+  const templateId =
+    typeof rawTemplateId === "string" && rawTemplateId.trim().length > 0
+      ? rawTemplateId.trim()
+      : null;
+
+  if (templateId !== null && !/^c[a-z0-9]{20,29}$/.test(templateId)) {
+    return { ok: false, error: "Invalid template selection." };
+  }
 
   const complianceScore = 0;
   const riskLevel = calculateRiskLevel(complianceScore);
@@ -109,6 +124,17 @@ export async function createVendorAction(
 
   try {
     await prisma.$transaction(async (tx) => {
+      // Validate template inside transaction (prevents TOCTOU)
+      if (templateId) {
+        const tpl = await tx.questionnaireTemplate.findFirst({
+          where: { id: templateId, companyId, isActive: true },
+          select: { id: true },
+        });
+        if (!tpl) {
+          throw new Error("INVALID_TEMPLATE");
+        }
+      }
+
       let vendor;
       try {
         vendor = await tx.vendor.create({
@@ -154,6 +180,7 @@ export async function createVendorAction(
           riskLevel,
           complianceScore,
           lastAssessmentDate: null,
+          templateId: templateId ?? null,
           createdBy: session.userId,
         },
       });
@@ -165,7 +192,7 @@ export async function createVendorAction(
           action: "VENDOR_CREATED",
           entityType: "Vendor",
           entityId: vendor.id,
-          newValue: { name: name.trim(), serviceType: "Pending classification" },
+          newValue: { name: name.trim(), serviceType: "Pending classification", templateId: templateId ?? null },
         },
         { tx, captureHeaders: true },
       );
@@ -194,6 +221,9 @@ export async function createVendorAction(
 
     return { ok: true };
   } catch (err) {
+    if (err instanceof Error && err.message === "INVALID_TEMPLATE") {
+      return { ok: false, error: "Invalid template selection." };
+    }
     if (isAccessControlError(err)) {
       return { ok: false, error: "Unauthorized." };
     }

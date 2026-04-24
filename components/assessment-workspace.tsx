@@ -29,6 +29,7 @@ type AssessmentWorkspaceProps = {
   companyId: string;
   initialAnswers: AssessmentAnswer[];
   customQuestions?: Question[];
+  templateId?: string | null;
   documentUrl: string | null;
   documentFilename: string | null;
   documentFileSize: number | null;
@@ -44,6 +45,7 @@ export function AssessmentWorkspace({
   companyId,
   initialAnswers,
   customQuestions,
+  templateId,
   documentUrl,
   documentFilename,
   documentFileSize,
@@ -60,7 +62,7 @@ export function AssessmentWorkspace({
   const isReadOnly = role !== "ADMIN";
   const canEditRemediation = INTERNAL_WRITE_ROLES.includes(role);
   const canDeleteRemediation = ADMIN_ONLY_ROLES.includes(role);
-  
+
   // Track selected question for side-by-side view
   const [selectedQuestionId, setSelectedQuestionId] = React.useState<string | null>(null);
   const [remediationTasks, setRemediationTasks] = React.useState<RemediationTask[]>(
@@ -112,7 +114,6 @@ export function AssessmentWorkspace({
 
   // PDF upload and AI audit are handled inside PdfUploadZone.
 
-
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -127,7 +128,7 @@ export function AssessmentWorkspace({
             {vendorAssessment.name}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {t("title")} Â· {vendorAssessment.serviceType}
+            {t("title")} · {vendorAssessment.serviceType}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -166,9 +167,9 @@ export function AssessmentWorkspace({
       </header>
 
       {/* Persistent Vendor Dossier: Heading and detailed info grid */}
-      <VendorDetailsCard 
-        vendorAssessment={vendorAssessment} 
-        companyId={companyId} 
+      <VendorDetailsCard
+        vendorAssessment={vendorAssessment}
+        companyId={companyId}
       />
 
       <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
@@ -178,6 +179,7 @@ export function AssessmentWorkspace({
             selectedQuestionId={selectedQuestionId}
             onSelectQuestion={setSelectedQuestionId}
             customQuestions={customQuestions}
+            templateId={templateId}
             remediationTasks={remediationTasks}
             canEdit={canEditRemediation}
             canDelete={canDeleteRemediation}

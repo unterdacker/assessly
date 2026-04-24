@@ -283,6 +283,8 @@ model Assessment {
   reminders        AssessmentReminder[]
   reviewerUserId   String?
   reviewerUser     User?                    @relation("AssessmentReviewer", fields: [reviewerUserId], references: [id], onDelete: SetNull)
+  templateId       String?
+  template         QuestionnaireTemplate?   @relation(fields: [templateId], references: [id], onDelete: SetNull)
   recurrenceSchedules RecurrenceSchedule[]  @relation("RecurrenceLastAssessment")
   remediationTasks RemediationTask[]
 
@@ -291,6 +293,7 @@ model Assessment {
   @@index([slaPolicyId])
   @@index([dueDate])
   @@index([companyId, createdAt])
+  @@index([templateId])
 }
 
 /// Approval workflow audit trail — each row records one state transition.
@@ -605,6 +608,7 @@ model QuestionnaireTemplate {
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
   sections             TemplateSection[]
+  assessments          Assessment[]
   recurrenceSchedules  RecurrenceSchedule[]
 
   @@unique([companyId, systemTemplateKey])

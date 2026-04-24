@@ -40,6 +40,9 @@ export default async function AssessmentPage({ params }: PageProps) {
     getVendorAssessmentDetail(vendorId),
     session.companyId ? getCustomQuestions(session.companyId) : Promise.resolve([]),
   ]);
+
+  const assessmentTemplateId = detail?.templateId ?? null;
+
   const t = await getTranslations();
 
   if (!detail) {
@@ -229,6 +232,7 @@ export default async function AssessmentPage({ params }: PageProps) {
         companyId={detail.companyId}
         role={session.role}
         customQuestions={customQuestions}
+        templateId={assessmentTemplateId}
         initialRemediationTasks={initialRemediationTasks}
         internalUsers={internalUsers}
       />

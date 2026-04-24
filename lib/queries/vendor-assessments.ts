@@ -171,6 +171,7 @@ export type VendorAssessmentDetail = {
   vendorAssessment: VendorAssessment;
   assessmentId: string;
   companyId: string;
+  templateId: string | null;
   answers: AssessmentAnswer[];
   documentUrl: string | null;
   documentFilename: string | null;
@@ -193,7 +194,24 @@ export async function getVendorAssessmentDetail(
 
   const row = await prisma.assessment.findFirst({
     where: { vendorId, companyId: session.companyId },
-    include: {
+    select: {
+      id: true,
+      companyId: true,
+      vendorId: true,
+      status: true,
+      riskLevel: true,
+      complianceScore: true,
+      lastAssessmentDate: true,
+      documentFilename: true,
+      documentUrl: true,
+      createdAt: true,
+      updatedAt: true,
+      createdBy: true,
+      reviewerUserId: true,
+      dueDate: true,
+      slaPolicyId: true,
+      slaBreached: true,
+      templateId: true,
       vendor: { select: VENDOR_SELECT },
       answers: {
         include: {
@@ -254,6 +272,7 @@ export async function getVendorAssessmentDetail(
     vendorAssessment,
     assessmentId: row.id,
     companyId: row.companyId,
+    templateId: row.templateId ?? null,
     answers: decryptedAnswers,
     documentUrl: row.documentUrl ?? null,
     documentFilename: row.documentFilename ?? null,
