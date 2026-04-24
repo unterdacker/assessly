@@ -70,7 +70,7 @@ export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", for
           /* ── Success state ─────────────────────────────────────────────── */
           <>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <DialogTitle className="flex items-center gap-2 text-success">
                 <CheckCircle2 className="h-5 w-5" />
                 {tr("success.title", "Invite delivered")}
               </DialogTitle>
@@ -85,9 +85,9 @@ export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", for
             </DialogHeader>
 
             <div className="space-y-3 py-2">
-              <div className="flex items-start gap-3 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800/40 dark:bg-emerald-900/20">
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                <p className="text-sm text-emerald-800 dark:text-emerald-300">
+              <div className="flex items-start gap-3 rounded-md border border-success-border bg-success-muted px-4 py-3">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                <p className="text-sm text-success-muted-fg">
                   {t.has("inviteVendorModal.success.emailStatus")
                     ? t.rich("inviteVendorModal.success.emailStatus", {
                         strong: (chunks) => <span className="font-semibold">{chunks}</span>,
@@ -96,9 +96,9 @@ export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", for
                 </p>
               </div>
 
-              <div className="flex items-start gap-3 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 dark:border-emerald-800/40 dark:bg-emerald-900/20">
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                <p className="text-sm text-emerald-800 dark:text-emerald-300">
+              <div className="flex items-start gap-3 rounded-md border border-success-border bg-success-muted px-4 py-3">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                <p className="text-sm text-success-muted-fg">
                   {t.has("inviteVendorModal.success.setupStatus")
                     ? t.rich("inviteVendorModal.success.setupStatus", {
                         strong: (chunks) => <span className="font-semibold">{chunks}</span>,

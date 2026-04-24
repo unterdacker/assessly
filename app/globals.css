@@ -38,6 +38,23 @@
     --risk-high: oklch(0.88 0.07 25);
     --risk-high-fg: oklch(0.22 0.08 25);
 
+    /* Semantic success — green, coordinating with risk-low */
+    --semantic-success: oklch(0.52 0.17 147);
+    --semantic-success-fg: oklch(0.98 0.01 147);
+    --semantic-success-muted: oklch(0.96 0.03 147);
+    --semantic-success-muted-fg: oklch(0.38 0.12 147);
+    --semantic-success-border: oklch(0.82 0.08 147);
+
+    /* Semantic warning — amber */
+    --semantic-warning: oklch(0.55 0.16 80);
+    --semantic-warning-fg: oklch(0.98 0.01 80);
+    --semantic-warning-muted: oklch(0.97 0.03 80);
+    --semantic-warning-muted-fg: oklch(0.40 0.12 80);
+    --semantic-warning-border: oklch(0.84 0.08 80);
+
+    /* Shadow for the compliance-trust-widget featured card */
+    --shadow-success-card: 0 14px 44px -28px oklch(0.52 0.17 147 / 0.45);
+
     /* Audit log category badge tokens */
     --badge-ai-act-bg: oklch(0.93 0.04 220);
     --badge-ai-act-fg: oklch(0.18 0.08 220);
@@ -94,6 +111,23 @@
     --risk-high-fg: oklch(0.78 0.10 25);
     --shadow-card-featured: 0 18px 50px -28px oklch(0.08 0.02 264 / 0.5);
 
+    /* Semantic success dark */
+    --semantic-success: oklch(0.72 0.18 147);
+    --semantic-success-fg: oklch(0.10 0.02 147);
+    --semantic-success-muted: oklch(0.18 0.04 147);
+    --semantic-success-muted-fg: oklch(0.82 0.14 147);
+    --semantic-success-border: oklch(0.30 0.08 147);
+
+    /* Semantic warning dark */
+    --semantic-warning: oklch(0.75 0.17 80);
+    --semantic-warning-fg: oklch(0.10 0.02 80);
+    --semantic-warning-muted: oklch(0.18 0.04 80);
+    --semantic-warning-muted-fg: oklch(0.82 0.14 80);
+    --semantic-warning-border: oklch(0.30 0.08 80);
+
+    /* Shadow for compliance-trust-widget */
+    --shadow-success-card: 0 14px 44px -28px oklch(0.72 0.18 147 / 0.40);
+
     /* Audit log category badge tokens — dark mode */
     --badge-ai-act-bg: oklch(0.22 0.06 220);
     --badge-ai-act-fg: oklch(0.80 0.08 220);
@@ -116,7 +150,7 @@
   }
 
   body {
-    font-family: var(--font-libre-franklin);
+    font-family: var(--font-be-vietnam-pro);
     @apply bg-background text-foreground antialiased;
   }
 }

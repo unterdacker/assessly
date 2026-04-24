@@ -91,6 +91,8 @@
   "AverageComplianceLegend": "Average compliance",
   "VendorCountLegend": "Vendors",
   "NoVendorData": "No vendor data available yet.",
+  "CategoryRadarEmptyDesc": "Complete vendor assessments to see coverage by NIS2 control category.",
+  "VendorsByRiskEmptyDesc": "Assess vendors to see risk distribution across your supply chain.",
   "AIAnalysisLive": "AI-backed analysis",
   "AIAnalysisFallback": "Deterministic fallback analysis",
   "RefreshAISummary": "Refresh AI analysis",
@@ -260,7 +262,8 @@
     "evidenceReadyBadge": "Ready",
     "sizeUnavailable": "Size unavailable",
     "pdfOnly": "Invalid file: not a valid PDF. Only PDF files are accepted.",
-    "fileTooLarge": "File exceeds the maximum size limit of 5 MB.",
+    "fileTooLarge": "File exceeds the 5 MB limit. Compress the PDF or split it into sections.",
+    "formatGuidance": "PDF only · Max 5 MB · Compress large files before uploading",
     "removeDocument": "Remove document",
     "removeConfirmTitle": "Remove evidence document?",
     "removeConfirmDescription": "This will permanently delete the stored PDF and clear the evidence record. The assessment results will remain, but the source document cannot be recovered.",
@@ -716,7 +719,10 @@
     "errors": {
       "fetchFailed": "Could not load remediation gaps.",
       "generateFailed": "Could not generate remediation plan.",
-      "copyFailed": "Clipboard access failed."
+      "copyFailed": "Clipboard access failed.",
+      "retryButton": "Retry",
+      "retryFetchAriaLabel": "Retry loading remediation gaps",
+      "retryGenerateAriaLabel": "Retry generating remediation plan"
     }
   },
   "inviteVendorModal": {
@@ -764,6 +770,7 @@
     "noVendorsSearch": "No vendors match your search",
     "deleteSelected": "Delete selected",
     "addFirstVendor": "Add your first vendor",
+    "emptyStateDescription": "Add your first vendor to begin tracking NIS2 compliance across your supply chain.",
     "addVendor": "Add vendor",
     "csvImport": {
       "buttonLabel": "Import CSV",
@@ -859,9 +866,27 @@
     "copyAccessCodeAria": "Copy access code for {vendorName}",
     "viewEvidencePdfAria": "View evidence PDF for {vendorName}",
     "selectVendorAria": "Select vendor {vendorName}",
+    "inviteAllSelected": "Invite {count} selected",
+    "inviteAllSuccess": "Invites sent to {count} vendor(s)",
+    "inviteAllPartialSuccess": "Sent to {sent} vendor(s) - {skipped} skipped (no email)",
+    "inviteAllError": "Some invites failed. Check vendor email addresses.",
+    "csvExport": "Export CSV (this page)",
     "paginationInfo": "{from}\u2013{to} of {total} vendors",
     "paginationPrev": "Previous",
     "paginationNext": "Next"
+  },
+  "commandPalette": {
+    "placeholder": "Search vendors, navigate...",
+    "noResults": "No results found",
+    "loadingVendors": "Loading...",
+    "groupNavigation": "Navigation",
+    "groupVendors": "Vendors",
+    "navigation": {
+      "dashboard": "Dashboard",
+      "vendors": "Vendors",
+      "settings": "Settings",
+      "auditLogs": "Audit Logs"
+    }
   },
   "SignIn": {
     "badge": "Venshield",
@@ -1088,6 +1113,7 @@
     "newPassword": "New Password",
     "confirmPassword": "Confirm New Password",
     "passwordHint": "Minimum 12 characters with uppercase, lowercase, number, and special character.",
+    "passwordRequirementsHint": "Minimum 12 characters including uppercase, lowercase, number, and special character.",
     "passwordMismatch": "Passwords do not match.",
     "passwordSave": "Update Password",
     "passwordSaving": "Updating…",

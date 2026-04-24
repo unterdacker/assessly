@@ -76,6 +76,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
   const [aiGenerationEventId, setAiGenerationEventId] = React.useState<string | null>(null);
   const [originalAiOutput, setOriginalAiOutput] = React.useState<string>("");
   const [error, setError] = React.useState<string | null>(null);
+  const [lastFailedOp, setLastFailedOp] = React.useState<"fetch" | "generate" | null>(null);
   const [copied, setCopied] = React.useState(false);
   const [sentMessage, setSentMessage] = React.useState<string | null>(null);
 
@@ -140,6 +141,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
 
       if (!res.ok || !data.ok) {
         setError(data.error || t("errors.fetchFailed"));
+        setLastFailedOp("fetch");
         return;
       }
 
@@ -151,8 +153,10 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
       setRecipientEmail((prev) => prev.trim() || nextSecurityContactEmail);
       setAiGenerationEventId(null);
       setOriginalAiOutput("");
+      setLastFailedOp(null);
     } catch {
       setError(t("errors.fetchFailed"));
+      setLastFailedOp("fetch");
     } finally {
       setLoadingGaps(false);
     }
@@ -202,6 +206,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
 
       if (!res.ok || !data.ok || !data.draft) {
         setError(data.error || t("errors.generateFailed"));
+        setLastFailedOp("generate");
         return;
       }
 
@@ -217,8 +222,10 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
       setAiGenerationEventId(data.aiGenerationEventId || null);
       setOriginalAiOutput(data.originalAiOutput || data.draft);
       runTypewriter(data.draft);
+      setLastFailedOp(null);
     } catch {
       setError(t("errors.generateFailed"));
+      setLastFailedOp("generate");
     } finally {
       setGenerating(false);
     }
@@ -293,6 +300,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
     setRecipientEmail(securityContactEmail?.trim() || "");
     setAiGenerationEventId(null);
     setOriginalAiOutput("");
+    setLastFailedOp(null);
   }
 
   return (
@@ -325,7 +333,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
 
           {aiDisabled ? (
             <div
-              className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-900 dark:text-amber-200"
+              className="flex items-start gap-2 rounded-md border border-warning-border bg-warning-muted p-3 text-sm text-warning-muted-fg"
               role="status"
             >
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
@@ -391,10 +399,10 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
                           className={cn(
                             "rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
                             gap.status.toUpperCase() === "COMPLIANT"
-                              ? "bg-emerald-500/15 text-emerald-700"
+                              ? "bg-success-muted text-success-muted-fg"
                               : gap.status.toUpperCase() === "FLAGGED"
                                 ? "bg-destructive/15 text-destructive"
-                                : "bg-amber-500/15 text-amber-700",
+                                : "bg-warning-muted text-warning-muted-fg",
                           )}
                         >
                           {localizeStatus(gap.status)}
@@ -417,7 +425,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
                 type="button"
                 onClick={handleGeneratePlan}
                 disabled={generating || loadingGaps}
-                className="gap-2 bg-cyan-600 text-white hover:bg-cyan-500"
+                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 {generating ? (
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
@@ -445,7 +453,21 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
                 role="alert"
               >
                 <AlertTriangle className="mt-0.5 h-4 w-4" aria-hidden />
-                <span>{error}</span>
+                <div className="flex-1">
+                  <p>{error}</p>
+                  {lastFailedOp !== null && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mt-2 h-7 text-xs"
+                      aria-label={lastFailedOp === "fetch" ? t("errors.retryFetchAriaLabel") : t("errors.retryGenerateAriaLabel")}
+                      onClick={lastFailedOp === "fetch" ? fetchGaps : handleGeneratePlan}
+                      disabled={loadingGaps || generating}
+                    >
+                      {t("errors.retryButton")}
+                    </Button>
+                  )}
+                </div>
               </motion.div>
             ) : null}
           </AnimatePresence>
@@ -488,7 +510,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
                 exit={{ opacity: 0, y: -6 }}
                 className="space-y-2"
               >
-                <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+                <div className="rounded-md border border-warning-border bg-warning-muted p-3 text-sm text-warning-muted-fg">
                   {t("missingEmailWarning")}
                 </div>
                 <div className="space-y-1.5">
@@ -521,7 +543,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
               type="button"
               onClick={handleSendMock}
               disabled={!draftText.trim() || sending || !isRecipientEmailValid}
-              className="gap-2 bg-emerald-600 text-white hover:bg-emerald-500"
+              className="gap-2 bg-success hover:bg-success/90 text-success-foreground"
             >
               {sending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}
               {sending ? t("sending") : t("sendButton")}
@@ -533,7 +555,7 @@ export function RemediationModal({ vendorId, trigger }: RemediationModalProps) {
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
-                  className="text-sm text-emerald-700"
+                  className="text-sm text-success-muted-fg"
                 >
                   {sentMessage}
                 </motion.span>

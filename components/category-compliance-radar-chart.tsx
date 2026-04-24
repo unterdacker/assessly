@@ -7,12 +7,14 @@ type CategoryComplianceRadarChartProps = {
   data: Array<{ label: string; shortLabel: string; value: number }>;
   legendLabel?: string;
   emptyLabel: string;
+  emptyDescription?: string;
   hoverHint?: string;
 };
 
 export function CategoryComplianceRadarChart({
   data,
   emptyLabel,
+  emptyDescription,
 }: CategoryComplianceRadarChartProps) {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -23,8 +25,11 @@ export function CategoryComplianceRadarChart({
 
   if (data.length === 0) {
     return (
-      <div className="flex h-[320px] items-center justify-center rounded-xl border border-dashed border-slate-300/80 bg-slate-50/70 text-sm text-muted-foreground dark:border-slate-700 dark:bg-slate-900/30">
-        {emptyLabel}
+      <div className="flex h-[320px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300/80 bg-slate-50/70 px-4 text-sm text-muted-foreground dark:border-slate-700 dark:bg-slate-900/30">
+        <p className="text-center">{emptyLabel}</p>
+        {emptyDescription && (
+          <p className="text-xs text-muted-foreground text-center mt-1 max-w-[200px]">{emptyDescription}</p>
+        )}
       </div>
     );
   }
@@ -159,10 +164,10 @@ export function CategoryComplianceRadarChart({
           const score = Math.round(item.value);
           const scoreColor =
             score >= 70
-              ? "text-emerald-600 dark:text-emerald-400"
+              ? "text-success"
               : score >= 40
-                ? "text-amber-600 dark:text-amber-400"
-                : "text-red-600 dark:text-red-400";
+                ? "text-warning"
+                : "text-destructive";
           return (
             <div key={item.label} className="min-w-0">
               <div className="text-xs leading-tight text-muted-foreground">

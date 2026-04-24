@@ -91,6 +91,8 @@
   "AverageComplianceLegend": "Durchschnittliche Compliance",
   "VendorCountLegend": "Anbieter",
   "NoVendorData": "Es sind noch keine Anbieterdaten verfügbar.",
+  "CategoryRadarEmptyDesc": "Schließen Sie Anbieterprüfungen ab, um die Abdeckung nach NIS2-Kontrollkategorie zu sehen.",
+  "VendorsByRiskEmptyDesc": "Bewerten Sie Anbieter, um die Risikoverteilung in Ihrer Lieferkette zu sehen.",
   "AIAnalysisLive": "KI-gestützte Analyse",
   "AIAnalysisFallback": "Deterministische Fallback-Analyse",
   "RefreshAISummary": "KI-Analyse aktualisieren",
@@ -260,7 +262,8 @@
     "evidenceReadyBadge": "Bereit",
     "sizeUnavailable": "Dateigroesse nicht verfügbar",
     "pdfOnly": "Ungültige Datei: Keine gültige PDF. Nur PDF-Dateien sind erlaubt.",
-    "fileTooLarge": "Die Datei überschreitet das maximale Größenlimit von 5 MB.",
+    "fileTooLarge": "Datei überschreitet das Limit von 5 MB. Komprimieren Sie die PDF oder teilen Sie sie in Abschnitte auf.",
+    "formatGuidance": "Nur PDF · Max. 5 MB · Große Dateien vor dem Hochladen komprimieren",
     "removeDocument": "Dokument entfernen",
     "removeConfirmTitle": "Nachweisdokument entfernen?",
     "removeConfirmDescription": "Dadurch wird die gespeicherte PDF dauerhaft gelöscht und der Nachweiseintrag geleert. Die Bewertungsergebnisse bleiben erhalten, das Quelldokument kann jedoch nicht wiederhergestellt werden.",
@@ -754,7 +757,10 @@
     "errors": {
       "fetchFailed": "Remediation-Lücken konnten nicht geladen werden.",
       "generateFailed": "Remediation-Plan konnte nicht generiert werden.",
-      "copyFailed": "Zugriff auf Zwischenablage fehlgeschlagen."
+      "copyFailed": "Zugriff auf Zwischenablage fehlgeschlagen.",
+      "retryButton": "Wiederholen",
+      "retryFetchAriaLabel": "Lücken erneut laden",
+      "retryGenerateAriaLabel": "Sanierungsplan erneut erstellen"
     }
   },
   "inviteVendorModal": {
@@ -802,6 +808,7 @@
     "noVendorsSearch": "Keine Anbieter entsprechen Ihrer Suche",
     "deleteSelected": "Ausgewählte löschen",
     "addFirstVendor": "Ersten Anbieter hinzufügen",
+    "emptyStateDescription": "Fügen Sie Ihren ersten Anbieter hinzu, um die NIS2-Compliance in Ihrer Lieferkette zu verfolgen.",
     "addVendor": "Anbieter hinzufügen",
     "csvImport": {
       "buttonLabel": "CSV importieren",
@@ -897,9 +904,27 @@
     "copyAccessCodeAria": "Zugangscode für {vendorName} kopieren",
     "viewEvidencePdfAria": "Nachweis-PDF für {vendorName} anzeigen",
     "selectVendorAria": "Anbieter {vendorName} auswählen",
+    "inviteAllSelected": "{count} ausgewählte einladen",
+    "inviteAllSuccess": "Einladungen an {count} Anbieter gesendet",
+    "inviteAllPartialSuccess": "An {sent} gesendet - {skipped} übersprungen (keine E-Mail)",
+    "inviteAllError": "Einige Einladungen sind fehlgeschlagen. Überprüfen Sie die E-Mail-Adressen.",
+    "csvExport": "CSV exportieren (diese Seite)",
     "paginationInfo": "{from}–{to} von {total} Anbietern",
     "paginationPrev": "Zurück",
     "paginationNext": "Weiter"
+  },
+  "commandPalette": {
+    "placeholder": "Anbieter suchen, navigieren...",
+    "noResults": "Keine Ergebnisse",
+    "loadingVendors": "Wird geladen...",
+    "groupNavigation": "Navigation",
+    "groupVendors": "Anbieter",
+    "navigation": {
+      "dashboard": "Dashboard",
+      "vendors": "Anbieter",
+      "settings": "Einstellungen",
+      "auditLogs": "Prüfprotokolle"
+    }
   },
   "SignIn": {
     "badge": "Venshield",
@@ -1126,6 +1151,7 @@
     "newPassword": "Neues Passwort",
     "confirmPassword": "Neues Passwort bestätigen",
     "passwordHint": "Mindestens 12 Zeichen mit Groß- und Kleinbuchstaben, Ziffer und Sonderzeichen.",
+    "passwordRequirementsHint": "Mindestens 12 Zeichen mit Groß-, Kleinbuchstaben, Zahl und Sonderzeichen.",
     "passwordMismatch": "Passwörter stimmen nicht überein.",
     "passwordSave": "Passwort aktualisieren",
     "passwordSaving": "Wird aktualisiert…",

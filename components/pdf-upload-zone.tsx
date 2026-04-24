@@ -373,6 +373,10 @@ export function PdfUploadZone({
             </div>
           )}
 
+          <p className="text-xs text-muted-foreground mt-2">
+            {t("formatGuidance")}
+          </p>
+
           {/* Hidden file input */}
           <input
             ref={fileInputRef}

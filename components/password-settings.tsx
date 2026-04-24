@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { KeyRound, Eye, EyeOff } from "lucide-react";
@@ -70,6 +70,7 @@ export function PasswordSettings() {
   const [current, setCurrent] = React.useState("");
   const [next, setNext] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
+  const [fieldError, setFieldError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const mismatch = confirm.length > 0 && next !== confirm;
@@ -86,10 +87,23 @@ export function PasswordSettings() {
         setCurrent("");
         setNext("");
         setConfirm("");
+        setFieldError(null);
       } catch (err) {
         const code =
           err instanceof Error ? err.message : "UNKNOWN";
         const i18nKey = ERROR_I18N_MAP[code] ?? "passwordError";
+        if (
+          code === "PASSWORD_TOO_SHORT" ||
+          code === "PASSWORD_NO_UPPERCASE" ||
+          code === "PASSWORD_NO_LOWERCASE" ||
+          code === "PASSWORD_NO_NUMBER" ||
+          code === "PASSWORD_NO_SPECIAL"
+        ) {
+          setFieldError(t(i18nKey as Parameters<typeof t>[0]));
+          return;
+        }
+
+        setFieldError(null);
         toast.error(t(i18nKey as Parameters<typeof t>[0]));
       }
     });
@@ -121,10 +135,14 @@ export function PasswordSettings() {
             <PasswordInput
               id="new-password"
               value={next}
-              onChange={setNext}
+              onChange={(value) => {
+                setNext(value);
+                setFieldError(null);
+              }}
               disabled={isPending}
             />
-            <p className="text-xs text-muted-foreground">{t("passwordHint")}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("passwordRequirementsHint")}</p>
+            {fieldError && <p role="alert" className="text-xs text-destructive mt-1">{fieldError}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -136,7 +154,7 @@ export function PasswordSettings() {
               disabled={isPending}
             />
             {mismatch && (
-              <p className="text-xs text-red-600 dark:text-red-400">{t("passwordMismatch")}</p>
+              <p className="text-xs text-destructive">{t("passwordMismatch")}</p>
             )}
           </div>
 

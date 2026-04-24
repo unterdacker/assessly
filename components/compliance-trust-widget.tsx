@@ -57,18 +57,18 @@ export function ComplianceTrustWidget({ metrics, translations }: ComplianceTrust
   }
 
   return (
-    <Card className="overflow-hidden border-emerald-200/70 bg-card text-foreground shadow-[0_14px_44px_-28px_rgba(22,163,74,0.45)] dark:border-emerald-900/60">
-      <CardHeader className="border-b border-emerald-200/70 bg-emerald-50/60 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+    <Card className="overflow-hidden border-success-border bg-card text-foreground shadow-[var(--shadow-success-card)]">
+      <CardHeader className="border-b border-success-border bg-success-muted">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-emerald-300/80 bg-emerald-100/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-success-border bg-success-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-success-muted-fg">
               <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
               {translations.verifiedBadge}
             </div>
             <CardTitle className="text-base">{translations.title}</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">{translations.description}</p>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/80 bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
+          <span className="inline-flex items-center gap-1 rounded-full border border-success-border bg-success-muted px-2.5 py-1 text-xs font-semibold text-success-muted-fg">
             <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
             {metrics.systemIntegrityPercent}% {translations.systemIntegrity}
           </span>
@@ -115,7 +115,7 @@ export function ComplianceTrustWidget({ metrics, translations }: ComplianceTrust
             variant="outline"
             onClick={handleDownloadSummary}
             disabled={isDownloading}
-            className="border-emerald-300 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950"
+            className="border-success-border text-success hover:bg-success-muted"
           >
             {isDownloading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />

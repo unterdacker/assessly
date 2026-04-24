@@ -113,6 +113,8 @@ async function DashboardContent({ session, locale }: DashboardContentProps) {
     AverageComplianceLegend: t("AverageComplianceLegend"),
     VendorCountLegend: t("VendorCountLegend"),
     NoVendorData: t("NoVendorData"),
+    CategoryRadarEmptyDesc: t("CategoryRadarEmptyDesc"),
+    VendorsByRiskEmptyDesc: t("VendorsByRiskEmptyDesc"),
     AIAnalysisLive: t("AIAnalysisLive"),
     AIAnalysisFallback: t("AIAnalysisFallback"),
     RefreshAISummary: t("RefreshAISummary"),

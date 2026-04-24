@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
 import { cookies, headers } from "next/headers";
-import { Barlow_Semi_Condensed, Libre_Franklin, JetBrains_Mono } from "next/font/google";
+import { Epilogue, Be_Vietnam_Pro, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const barlowSC = Barlow_Semi_Condensed({
-  subsets: ["latin", "latin-ext"],
-  weight: ["500", "600"],
-  variable: "--font-barlow-sc",
+const epilogue = Epilogue({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-epilogue",
   display: "swap",
 });
 
-const libreFranklin = Libre_Franklin({
-  subsets: ["latin", "latin-ext"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-libre-franklin",
+const beVietnamPro = Be_Vietnam_Pro({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-be-vietnam-pro",
   display: "swap",
 });
 
@@ -70,7 +70,7 @@ export default async function RootLayout({
   return (
     <html lang={htmlLang} suppressHydrationWarning>
       <body
-        className={`${barlowSC.variable} ${libreFranklin.variable} ${jetbrainsMono.variable} min-h-screen bg-background font-sans antialiased`}
+        className={`${epilogue.variable} ${beVietnamPro.variable} ${jetbrainsMono.variable} min-h-screen bg-background font-sans antialiased`}
         suppressHydrationWarning
       >
         <a

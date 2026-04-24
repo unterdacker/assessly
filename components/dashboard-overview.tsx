@@ -92,6 +92,8 @@ export type DashboardOverviewProps = {
     AverageComplianceLegend: string;
     VendorCountLegend: string;
     NoVendorData: string;
+    CategoryRadarEmptyDesc: string;
+    VendorsByRiskEmptyDesc: string;
     AIAnalysisLive: string;
     AIAnalysisFallback: string;
     RefreshAISummary: string;
@@ -377,6 +379,7 @@ export function DashboardOverview({
                       data={radarData}
                       legendLabel={translations.AverageComplianceLegend}
                       emptyLabel={translations.NoVendorData}
+                      emptyDescription={translations.CategoryRadarEmptyDesc}
                       hoverHint={translations.CategoryComplianceRadarHoverHint}
                     />
                   </div>
@@ -415,6 +418,7 @@ export function DashboardOverview({
                         data={barData}
                         legendLabel={translations.VendorCountLegend}
                         emptyLabel={translations.NoVendorData}
+                        emptyDescription={translations.VendorsByRiskEmptyDesc}
                       />
                     </div>
                   </CardContent>

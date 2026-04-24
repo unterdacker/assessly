@@ -49,20 +49,20 @@ export function AuthAcceptInviteForm({ token }: AuthAcceptInviteFormProps) {
   if (state?.status === "success") {
     return (
       <div 
-        className="flex flex-col items-center justify-center space-y-6 rounded-md border border-emerald-500/50 bg-emerald-500/10 p-8 text-center"
+        className="flex flex-col items-center justify-center space-y-6 rounded-md border border-success-border bg-success-muted p-8 text-center"
         role="status"
         aria-live="polite"
       >
-        <CheckCircle2 className="h-12 w-12 text-emerald-600" aria-hidden="true" />
+        <CheckCircle2 className="h-12 w-12 text-success" aria-hidden="true" />
         <div className="space-y-2">
-          <p className="text-base font-semibold text-emerald-800 dark:text-emerald-400">
+          <p className="text-base font-semibold text-success-muted-fg">
             {t("successTitle", { defaultMessage: "Account Activated" })}
           </p>
-          <p className="text-sm text-emerald-700/80 dark:text-emerald-400/80">
+          <p className="text-sm text-success-muted-fg/80">
             {t("successMessage", { defaultMessage: "Your password has been set. You can now log in." })}
           </p>
         </div>
-        <Button asChild className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
+        <Button asChild className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
           <Link href={`/${locale}/auth/sign-in`}>
             {t("loginLink", { defaultMessage: "Go to Login" })}
           </Link>
@@ -123,7 +123,7 @@ export function AuthAcceptInviteForm({ token }: AuthAcceptInviteFormProps) {
       <Button
         type="submit"
         disabled={isPending}
-        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
         aria-disabled={isPending}
       >
         {isPending

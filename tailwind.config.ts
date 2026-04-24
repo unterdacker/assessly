@@ -11,8 +11,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-libre-franklin)", "system-ui", "sans-serif"],
-        display: ["var(--font-barlow-sc)", "system-ui", "sans-serif"],
+        sans: ["var(--font-be-vietnam-pro)", "system-ui", "sans-serif"],
+        display: ["var(--font-epilogue)", "system-ui", "sans-serif"],
         mono: ["var(--font-jetbrains-mono)", "ui-monospace", "monospace"],
       },
       colors: {
@@ -57,6 +57,20 @@ const config: Config = {
           "medium-fg": "var(--risk-medium-fg)",
           high: "var(--risk-high)",
           "high-fg": "var(--risk-high-fg)",
+        },
+        success: {
+          DEFAULT: "var(--semantic-success)",
+          foreground: "var(--semantic-success-fg)",
+          muted: "var(--semantic-success-muted)",
+          "muted-fg": "var(--semantic-success-muted-fg)",
+          border: "var(--semantic-success-border)",
+        },
+        warning: {
+          DEFAULT: "var(--semantic-warning)",
+          foreground: "var(--semantic-warning-fg)",
+          muted: "var(--semantic-warning-muted)",
+          "muted-fg": "var(--semantic-warning-muted-fg)",
+          border: "var(--semantic-warning-border)",
         }
       },
       borderRadius: {

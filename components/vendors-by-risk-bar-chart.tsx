@@ -15,18 +15,23 @@ type VendorsByRiskBarChartProps = {
   }>;
   legendLabel: string;
   emptyLabel: string;
+  emptyDescription?: string;
 };
 
 export function VendorsByRiskBarChart({
   data,
   emptyLabel,
+  emptyDescription,
 }: VendorsByRiskBarChartProps) {
   const { theme } = useTheme();
 
   if (data.length === 0) {
     return (
-      <div className="flex h-[320px] items-center justify-center rounded-xl border border-dashed border-slate-300/80 bg-slate-50/70 text-sm text-muted-foreground dark:border-slate-700 dark:bg-slate-900/30">
-        {emptyLabel}
+      <div className="flex h-[320px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300/80 bg-slate-50/70 px-4 text-sm text-muted-foreground dark:border-slate-700 dark:bg-slate-900/30">
+        <p className="text-center">{emptyLabel}</p>
+        {emptyDescription && (
+          <p className="text-xs text-muted-foreground text-center mt-1 max-w-[200px]">{emptyDescription}</p>
+        )}
       </div>
     );
   }

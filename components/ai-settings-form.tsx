@@ -94,10 +94,10 @@ export function AiSettingsForm({ company, companyId, translations }: { company: 
           <input type="hidden" name="aiProvider" value={aiProvider} />
 
           {aiProvider === "no-ai" && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
+            <div className="rounded-lg border border-warning-border bg-warning-muted px-3 py-2 text-warning-muted-fg">
               <p className="text-xs font-semibold uppercase tracking-wide">{translations.aiDisabledBadge}</p>
               <p className="text-sm font-medium">{translations.aiFeaturesDisabled}</p>
-              <p className="text-xs text-amber-800 dark:text-amber-300">{translations.aiFeaturesDisabledDesc}</p>
+              <p className="text-xs text-warning-muted-fg">{translations.aiFeaturesDisabledDesc}</p>
             </div>
           )}
 
@@ -185,7 +185,7 @@ export function AiSettingsForm({ company, companyId, translations }: { company: 
             </div>
           )}
           {state?.success && (
-            <div role="status" className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
+            <div role="status" className="flex items-center gap-2 rounded-md border border-success-border bg-success-muted px-3 py-2 text-sm text-success-muted-fg">
               <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
               <span>{translations.SettingsUpdatedSuccess}</span>
             </div>

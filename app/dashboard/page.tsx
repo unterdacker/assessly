@@ -71,6 +71,8 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     AverageComplianceLegend: t("AverageComplianceLegend"),
     VendorCountLegend: t("VendorCountLegend"),
     NoVendorData: t("NoVendorData"),
+    CategoryRadarEmptyDesc: t("CategoryRadarEmptyDesc"),
+    VendorsByRiskEmptyDesc: t("VendorsByRiskEmptyDesc"),
     AIAnalysisLive: t("AIAnalysisLive"),
     AIAnalysisFallback: t("AIAnalysisFallback"),
     RefreshAISummary: t("RefreshAISummary"),

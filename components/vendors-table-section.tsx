@@ -99,6 +99,16 @@ function getStatusDotClass(status: VendorAssessment["status"]) {
   return "bg-[var(--risk-medium)]";
 }
 
+function sanitizeCsvCell(value: string): string {
+  const startsWithFormula = /^[=+\-@]/.test(value);
+  return startsWithFormula ? `\t${value}` : value;
+}
+
+function toCsvCell(value: string): string {
+  const sanitized = sanitizeCsvCell(value).replaceAll('"', '""');
+  return `"${sanitized}"`;
+}
+
 function RiskScore({ score, level }: { score: number; level: string }) {
   if (!level || level === "not_calculated") {
     return <span className="text-muted-foreground text-sm">—</span>;
@@ -127,7 +137,7 @@ function ProgressPill({ progress, filled }: { progress: number; filled: number }
   const t = useTranslations("vendors");
   if (progress === 100) {
     return (
-      <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-mono text-xs font-bold tabular-nums text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+      <span className="inline-flex items-center gap-1 rounded-md border border-success-border bg-success-muted px-2 py-0.5 font-mono text-xs font-bold tabular-nums text-success-muted-fg">
         <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
         </svg>
@@ -186,7 +196,7 @@ function VendorActions({
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 gap-1 text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
+              className="h-8 gap-1 text-warning hover:opacity-80"
               title={t("resendInviteTooltip")}
             >
               <RefreshCw className="h-3.5 w-3.5" aria-hidden />
@@ -218,6 +228,7 @@ export function VendorsTableSection({
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc'>('asc');
   const [selectedVendorIds, setSelectedVendorIds] = React.useState<Set<string>>(new Set());
   const [isBulkDeleting, setIsBulkDeleting] = React.useState(false);
+  const [isBulkInviting, setIsBulkInviting] = React.useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = React.useState(false);
   const [copiedVendorId, setCopiedVendorId] = React.useState<string | null>(null);
   const [codeDialogVendorId, setCodeDialogVendorId] = React.useState<string | null>(null);
@@ -373,6 +384,89 @@ export function VendorsTableSection({
     }
   };
 
+  const handleBulkInvite = async () => {
+    if (selectedVendorIds.size === 0 || !canManageVendors) {
+      return;
+    }
+
+    setIsBulkInviting(true);
+    try {
+      const res = await fetch("/api/vendors/bulk-invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vendorIds: Array.from(selectedVendorIds) }),
+      });
+
+      const result = (await res.json()) as {
+        sent?: number;
+        skipped?: number;
+        failed?: number;
+      };
+
+      if (!res.ok) {
+        toast.error(t("inviteAllError"));
+        return;
+      }
+
+      const sent = result.sent ?? 0;
+      const skipped = result.skipped ?? 0;
+      const failed = result.failed ?? 0;
+
+      if (sent === 0 && failed > 0) {
+        toast.error(t("inviteAllError"));
+      } else if (skipped > 0) {
+        toast.success(t("inviteAllPartialSuccess", { sent, skipped }));
+      } else {
+        toast.success(t("inviteAllSuccess", { count: sent }));
+      }
+    } catch {
+      toast.error(t("inviteAllError"));
+    } finally {
+      router.refresh();
+      setSelectedVendorIds(new Set());
+      setIsBulkInviting(false);
+    }
+  };
+
+  const handleCsvExport = () => {
+    const headers = [
+      "Name",
+      "Email",
+      "Service Type",
+      "Status",
+      "Compliance Score",
+      "Risk Level",
+      "Questionnaire Progress",
+      "Last Assessment Date",
+    ];
+
+    const rows = vendorAssessments.map((vendor) => [
+      vendor.name,
+      vendor.email,
+      vendor.serviceType,
+      vendor.status,
+      String(vendor.complianceScore),
+      vendor.riskLevel,
+      `${vendor.questionnaireProgress}%`,
+      vendor.lastAssessmentDate ?? "",
+    ]);
+
+    const csv = [
+      headers.map((header) => toCsvCell(header)).join(","),
+      ...rows.map((row) => row.map((cell) => toCsvCell(cell)).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = `vendors-page-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(objectUrl);
+  };
+
   const handleCopyAccessCode = async (vendorId: string, accessCode: string | null) => {
     if (!accessCode) return;
 
@@ -494,13 +588,36 @@ export function VendorsTableSection({
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          {role === "ADMIN" ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleCsvExport}
+              disabled={vendorAssessments.length === 0 || isBulkDeleting || isBulkInviting}
+            >
+              {t("csvExport")}
+            </Button>
+          ) : null}
+          {canManageVendors && selectedVendorIds.size > 0 ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleBulkInvite}
+              disabled={isBulkDeleting || isBulkInviting}
+            >
+              {isBulkInviting
+                ? `${t("inviteAllSelected", { count: selectedVendorIds.size })}...`
+                : t("inviteAllSelected", { count: selectedVendorIds.size })}
+            </Button>
+          ) : null}
           {canManageVendors && selectedVendorIds.size > 0 && (
             <Button
               type="button"
               variant="outline"
-              className="w-full border-red-200 text-red-700 hover:bg-red-50 sm:w-auto dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+              className="w-full border-destructive/30 text-destructive hover:bg-destructive/5 sm:w-auto"
               onClick={handleBulkDelete}
-              disabled={isBulkDeleting}
+              disabled={isBulkDeleting || isBulkInviting}
             >
               {isBulkDeleting ? `${t("deleteSelected")}...` : `${t("deleteSelected")} (${selectedVendorIds.size})`}
             </Button>
@@ -635,14 +752,17 @@ export function VendorsTableSection({
                       <p>{t("noVendorsSearch")}</p>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center gap-3">
-                      <Building2 className="h-5 w-5 text-muted-foreground" aria-hidden />
-                      <p>{t("noVendorsFound")}</p>
+                    <div className="flex flex-col items-center gap-3 py-12 text-center">
+                      <Building2 className="h-10 w-10 text-muted-foreground/40" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-foreground">{t("addFirstVendor")}</p>
+                        <p className="text-sm text-muted-foreground">{t("emptyStateDescription")}</p>
+                      </div>
                       {canManageVendors ? (
                         <AddVendorModal
                           trigger={
                             <Button type="button" size="sm">
-                              {t("addFirstVendor")}
+                              {t("addVendor")}
                             </Button>
                           }
                         />
@@ -684,7 +804,7 @@ export function VendorsTableSection({
                             <Copy className="h-3.5 w-3.5" />
                           </button>
                           {copiedVendorId === v.id && (
-                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400">{t("copied")}</span>
+                            <span className="text-[10px] text-success">{t("copied")}</span>
                           )}
                         </div>
                       ) : (
@@ -694,13 +814,13 @@ export function VendorsTableSection({
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">{formatAccessCodeExpiry(v.codeExpiresAt, t("noActiveCode"), t("expired"), t("expires"))}</p>
                       )}
                       {hasAccessCode && v.isCodeActive && v.isFirstLogin && (
-                        <p className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400">
+                        <p className="flex items-center gap-1 text-[11px] text-warning">
                           <ShieldAlert className="h-3 w-3" aria-hidden />
                           {t("passwordPendingChange")}
                         </p>
                       )}
                       {hasAccessCode && v.isCodeActive && !v.isFirstLogin && (
-                        <p className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400">
+                        <p className="flex items-center gap-1 text-[11px] text-success">
                           <ShieldCheck className="h-3 w-3" aria-hidden />
                           {t("passwordSecured")}
                         </p>
@@ -722,7 +842,7 @@ export function VendorsTableSection({
                               type="button"
                               size="sm"
                               variant="outline"
-                              className="h-7 border-red-200 px-2 text-[10px] text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+                              className="h-7 border-destructive/30 px-2 text-[10px] text-destructive hover:bg-destructive/5"
                               onClick={() => handleVoidCode(v)}
                               disabled={Boolean(codeActionVendorId)}
                             >
@@ -739,9 +859,9 @@ export function VendorsTableSection({
                   <TableCell className="px-4 py-2.5">
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
                       ${ v.status === "completed"
-                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                          ? "bg-success-muted text-success-muted-fg"
                           : v.status === "incomplete"
-                          ? "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400"
+                          ? "bg-warning-muted text-warning-muted-fg"
                           : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                       }`}>
                       <span aria-hidden="true" className={cn("mr-1.5 inline-block h-2 w-2 rounded-full", getStatusDotClass(v.status))} />
@@ -818,7 +938,7 @@ export function VendorsTableSection({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              <span className="text-amber-500 mr-1" aria-hidden>&#9888;</span>
+              <span className="text-warning mr-1" aria-hidden>&#9888;</span>
               {t("credDialogTitle")}
             </DialogTitle>
             <DialogDescription>
@@ -827,7 +947,7 @@ export function VendorsTableSection({
           </DialogHeader>
 
           <div className="space-y-3">
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-800 dark:border-amber-800/40 dark:bg-amber-900/20 dark:text-amber-300">
+            <div className="rounded-md border border-warning-border bg-warning-muted px-4 py-3 text-xs leading-relaxed text-warning-muted-fg">
               {t("credDialogWarning")}
             </div>
 
