@@ -40,6 +40,7 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
   const apiKeysT = await getTranslations("ApiKeys");
   const questionnairesT = await getTranslations("QuestionnaireBuilder");
   const complianceLibT = await getTranslations("ComplianceLibrary");
+  const qt = await getTranslations("QuestionTranslation");
   const isAdmin = session.role === "ADMIN";
   const [company, currentUser, customQuestions] = await Promise.all([
     isAdmin
@@ -107,6 +108,30 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
     LocalAIModelPlaceholder: t("LocalAIModelPlaceholder"),
     SaveConfiguration: t("SaveConfiguration"),
     SettingsUpdatedSuccess: t("SettingsUpdatedSuccess"),
+  };
+  const translationTranslations = {
+    panelHeading: qt("panelHeading"),
+    panelHeadingExisting: qt("panelHeadingExisting"),
+    targetLabelDe: qt("targetLabelDe"),
+    targetLabelEn: qt("targetLabelEn"),
+    translateWithAi: qt("translateWithAi"),
+    enterManually: qt("enterManually"),
+    aiDisabledTooltip: qt("aiDisabledTooltip"),
+    dismiss: qt("dismiss"),
+    translatedText: qt("translatedText"),
+    translatedGuidance: qt("translatedGuidance"),
+    save: qt("save"),
+    saving: qt("saving"),
+    translating: qt("translating"),
+    cancel: qt("cancel"),
+    accept: qt("accept"),
+    retranslate: qt("retranslate"),
+    editManually: qt("editManually"),
+    translationSaved: qt("translationSaved"),
+    errorAi: qt("errorAi"),
+    errorSave: qt("errorSave"),
+    sourceText: qt("sourceText"),
+    sourceGuidance: qt("sourceGuidance"),
   };
   const generalContent = (
     <>
@@ -321,6 +346,9 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
         <CardContent>
           <CustomQuestionsManager
             initialQuestions={customQuestions}
+            aiDisabled={company?.aiDisabled ?? true}
+            targetLang={locale === "de" ? "de" : "en"}
+            translationTranslations={translationTranslations}
             translations={{
               title: t("CustomQuestions.title"),
               description: t("CustomQuestions.description"),

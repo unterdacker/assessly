@@ -13,6 +13,8 @@ import {
   deleteCustomQuestion,
   reorderCustomQuestions,
 } from "@/app/actions/custom-questions";
+import { QuestionTranslationPanel } from "./question-translation-panel";
+import type { QuestionTranslationPanelTranslations } from "./question-translation-panel";
 
 const MAX_QUESTIONS = 50;
 const MAX_TEXT_LENGTH = 1000;
@@ -22,6 +24,10 @@ type Question = {
   id: string;
   text: string;
   guidance: string | null;
+  textDe: string | null;
+  guidanceDe: string | null;
+  textEn: string | null;
+  guidanceEn: string | null;
   category: string;
   sortOrder: number;
 };
@@ -34,6 +40,9 @@ type QuestionFormData = {
 
 export type CustomQuestionsManagerProps = {
   initialQuestions: Array<Question>;
+  aiDisabled: boolean;
+  targetLang: "de" | "en";
+  translationTranslations: QuestionTranslationPanelTranslations;
   translations: {
     title: string;
     description: string;
@@ -233,13 +242,25 @@ function QuestionForm({
 
 export function CustomQuestionsManager({
   initialQuestions,
+  aiDisabled,
+  targetLang,
+  translationTranslations,
   translations,
 }: CustomQuestionsManagerProps) {
   const [questions, setQuestions] = React.useState<Question[]>(
-    [...initialQuestions].sort((a, b) => a.sortOrder - b.sortOrder),
+    [...initialQuestions]
+      .map((q) => ({
+        ...q,
+        textDe: q.textDe ?? null,
+        guidanceDe: q.guidanceDe ?? null,
+        textEn: q.textEn ?? null,
+        guidanceEn: q.guidanceEn ?? null,
+      }))
+      .sort((a, b) => a.sortOrder - b.sortOrder),
   );
   const [isAdding, setIsAdding] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
+  const [translatingId, setTranslatingId] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -258,17 +279,24 @@ export function CustomQuestionsManager({
         setError(result.error ?? translations.errorSave);
         return;
       }
-      if (result.data?.question) {
+      const createdQuestion = result.data?.question;
+      if (createdQuestion) {
+        const createdQuestionId = createdQuestion.id;
         setQuestions((prev) => [
           ...prev,
           {
-            id: result.data!.question.id,
-            text: result.data!.question.text,
-            guidance: result.data!.question.guidance,
-            category: result.data!.question.category,
-            sortOrder: result.data!.question.sortOrder,
+            id: createdQuestionId,
+            text: createdQuestion.text,
+            guidance: createdQuestion.guidance,
+            textDe: createdQuestion.textDe ?? null,
+            guidanceDe: createdQuestion.guidanceDe ?? null,
+            textEn: createdQuestion.textEn ?? null,
+            guidanceEn: createdQuestion.guidanceEn ?? null,
+            category: createdQuestion.category,
+            sortOrder: createdQuestion.sortOrder,
           },
         ]);
+        setTranslatingId(createdQuestionId);
       }
       setIsAdding(false);
     } finally {
@@ -289,21 +317,27 @@ export function CustomQuestionsManager({
         setError(result.error ?? translations.errorSave);
         return;
       }
-      if (result.data?.question) {
+      const updatedQuestion = result.data?.question;
+      if (updatedQuestion) {
         setQuestions((prev) =>
           prev.map((q) =>
             q.id === id
               ? {
                   ...q,
-                  text: result.data!.question!.text,
-                  guidance: result.data!.question!.guidance,
-                  category: result.data!.question!.category,
+                  text: updatedQuestion.text,
+                  guidance: updatedQuestion.guidance,
+                  textDe: updatedQuestion.textDe ?? q.textDe,
+                  guidanceDe: updatedQuestion.guidanceDe ?? q.guidanceDe,
+                  textEn: updatedQuestion.textEn ?? q.textEn,
+                  guidanceEn: updatedQuestion.guidanceEn ?? q.guidanceEn,
+                  category: updatedQuestion.category,
                 }
               : q,
           ),
         );
       }
       setEditingId(null);
+      setTranslatingId(id);
     } finally {
       setSaving(false);
     }
@@ -379,6 +413,7 @@ export function CustomQuestionsManager({
           size="sm"
           onClick={() => {
             setEditingId(null);
+            setTranslatingId(null);
             setIsAdding(true);
           }}
           disabled={atLimit || isAdding}
@@ -488,6 +523,7 @@ export function CustomQuestionsManager({
                         size="sm"
                         onClick={() => {
                           setIsAdding(false);
+                          setTranslatingId(null);
                           setEditingId(q.id);
                         }}
                         disabled={saving}
@@ -510,6 +546,38 @@ export function CustomQuestionsManager({
                       </Button>
                     </div>
                   </div>
+
+                  {translatingId === q.id && (
+                    <div className="mt-3 border-t border-slate-200 pt-3 dark:border-slate-800">
+                      <QuestionTranslationPanel
+                        questionId={q.id}
+                        questionType="custom"
+                        sourceText={q.text}
+                        sourceGuidance={q.guidance ?? null}
+                        targetLang={targetLang}
+                        existingText={targetLang === "de" ? q.textDe : q.textEn}
+                        existingGuidance={targetLang === "de" ? q.guidanceDe : q.guidanceEn}
+                        aiDisabled={aiDisabled}
+                        translations={translationTranslations}
+                        onSaved={(text, guidance) => {
+                          setQuestions((prev) =>
+                            prev.map((qq) =>
+                              qq.id === q.id
+                                ? {
+                                    ...qq,
+                                    ...(targetLang === "de"
+                                      ? { textDe: text, guidanceDe: guidance }
+                                      : { textEn: text, guidanceEn: guidance }),
+                                  }
+                                : qq,
+                            ),
+                          );
+                          setTranslatingId(null);
+                        }}
+                        onDismiss={() => setTranslatingId(null)}
+                      />
+                    </div>
+                  )}
                 </div>
               </li>
             ),

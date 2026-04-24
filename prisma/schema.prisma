@@ -353,6 +353,10 @@ model Question {
   category  String
   text      String
   guidance  String?
+  textDe     String?
+  guidanceDe String?
+  textEn     String?
+  guidanceEn String?
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -637,6 +641,10 @@ model TemplateQuestion {
   section    TemplateSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   text       String
   helpText   String?
+  textDe     String?
+  helpTextDe String?
+  textEn     String?
+  helpTextEn String?
   type       QuestionType
   isRequired Boolean         @default(false)
   orderIndex Int

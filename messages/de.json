@@ -550,6 +550,7 @@
       "title": "NIS2-Sicherheitsfragebogen",
       "questionsAcross": "Fragen in",
       "categories": "Kategorien",
+      "sections": "Abschnitte",
       "catalogue": "Katalog",
       "compliant": "Konform",
       "nonCompliant": "Nicht konform",
@@ -1308,6 +1309,30 @@
     "moveUp": "Nach oben",
     "moveDown": "Nach unten"
   },
+  "QuestionTranslation": {
+    "panelHeading": "Übersetzung hinzufügen",
+    "panelHeadingExisting": "Übersetzung bearbeiten",
+    "targetLabelDe": "Deutsch",
+    "targetLabelEn": "Englisch",
+    "translateWithAi": "Mit KI übersetzen",
+    "enterManually": "Manuell eingeben",
+    "aiDisabledTooltip": "KI ist für diesen Arbeitsbereich deaktiviert. Aktivieren Sie einen KI-Anbieter unter Einstellungen → Allgemein.",
+    "dismiss": "Verwerfen",
+    "translatedText": "Übersetzte Frage",
+    "translatedGuidance": "Übersetzte Leitlinie (optional)",
+    "save": "Übersetzung speichern",
+    "saving": "Wird gespeichert…",
+    "translating": "Wird übersetzt…",
+    "cancel": "Abbrechen",
+    "accept": "Übernehmen",
+    "retranslate": "Erneut übersetzen",
+    "editManually": "Manuell bearbeiten",
+    "translationSaved": "Übersetzung gespeichert.",
+    "errorAi": "KI-Übersetzung fehlgeschlagen. Bitte erneut versuchen oder manuell eingeben.",
+    "errorSave": "Übersetzung konnte nicht gespeichert werden.",
+    "sourceText": "Originaltext",
+    "sourceGuidance": "Ursprüngliche Leitlinie"
+  },
   "vendorAcceptInvite": {
     "pageTitle": "Passwort festlegen",
     "pageSubtitle": "Erstellen Sie ein sicheres Passwort für den Zugang zu Ihrem Bewertungsportal",
@@ -1532,6 +1557,247 @@
       "hipaa": { "name": "HIPAA", "description": "Health Insurance Portability and Accountability Act — Schutz von PHI und Meldepflichten bei Datenschutzverletzungen." },
       "nist_csf": { "name": "NIST CSF", "description": "Cybersicherheits-Framework — Identifizieren, Schützen, Erkennen, Reagieren, Wiederherstellen." },
       "cis_controls_v8": { "name": "CIS Controls v8", "description": "18 priorisierte Sicherheitsmaßnahmen für die Unternehmens-Cyberabwehr." }
+    },
+    "templateSections": {
+      "nis2": {
+        "0": "Governance & Risikomanagement",
+        "1": "Incident-Response",
+        "2": "Lieferkettensicherheit",
+        "3": "Technische Kontrollen"
+      },
+      "dora": {
+        "0": "IKT-Risikomanagement",
+        "1": "Tests zur digitalen Resilienz",
+        "2": "IKT-Risiko durch Dritte",
+        "3": "Klassifizierung von Vorfällen"
+      },
+      "iso27001": {
+        "0": "Informationssicherheitsrichtlinien",
+        "1": "Zugriffskontrolle",
+        "2": "Kryptographie & Schlüsselverwaltung",
+        "3": "Lieferantenbeziehungen"
+      },
+      "soc2_type2": {
+        "0": "Sicherheit (CC6)",
+        "1": "Verfügbarkeit (A1)",
+        "2": "Vertraulichkeit (C1)",
+        "3": "Verarbeitungsintegrität (PI1)"
+      },
+      "hipaa": {
+        "0": "Administrative Schutzmaßnahmen",
+        "1": "Physische Schutzmaßnahmen",
+        "2": "Technische Schutzmaßnahmen",
+        "3": "Meldepflichten bei Datenpannen"
+      },
+      "nist_csf": {
+        "0": "Identifizieren",
+        "1": "Schützen",
+        "2": "Erkennen",
+        "3": "Reagieren",
+        "4": "Wiederherstellen"
+      },
+      "cis_controls_v8": {
+        "0": "Grundlegende Cyber-Hygiene (IG1)",
+        "1": "Grundlegende Kontrollen (IG2)",
+        "2": "Organisatorische Kontrollen (IG3)"
+      }
+    },
+    "templateQuestions": {
+      "nis2": {
+        "0": {
+          "0": "Hat die Organisation ein Leitungsgremium benannt, das für die Aufsicht über Cybersicherheitsrisiken verantwortlich ist?",
+          "1": "Werden Cybersicherheitsrisiken mindestens jährlich formal bewertet und dokumentiert?",
+          "2": "Beschreiben Sie den Cybersicherheits-Governance-Rahmen und die Berichtslinien der Organisation.",
+          "3": "Wie häufig überprüft das Senior Management Cybersicherheits-Risikoberichte?"
+        },
+        "1": {
+          "0": "Gibt es einen dokumentierten Incident-Response-Plan, der Erkennung, Eindämmung und Wiederherstellung abdeckt?",
+          "1": "Werden schwerwiegende Vorfälle innerhalb von 24 Stunden dem zuständigen nationalen CSIRT gemeldet?",
+          "2": "Beschreiben Sie die Klassifizierungskriterien für Vorfälle, anhand derer meldepflichtige Ereignisse bestimmt werden.",
+          "3": "Wie lange dauert es in Ihrer Umgebung durchschnittlich, einen Sicherheitsvorfall zu erkennen?",
+          "4": "Werden die Incident-Response-Verfahren mindestens jährlich getestet?"
+        },
+        "2": {
+          "0": "Sind Cybersicherheitsanforderungen in Verträgen mit kritischen Lieferanten enthalten?",
+          "1": "Gibt es einen Prozess zur Bewertung der Cybersicherheitslage von Drittanbietern vor der Aufnahme in die Lieferkette?",
+          "2": "Beschreiben Sie die Methodik zur Lieferantenrisikobewertung, die auf kritische Dienstleister angewendet wird.",
+          "3": "Wie häufig werden kritische Lieferanten hinsichtlich ihrer Cybersicherheits-Compliance neu bewertet?"
+        },
+        "3": {
+          "0": "Werden Mehrfaktor-Authentifizierungsmechanismen für privilegierte Konten eingesetzt?",
+          "1": "Wird Verschlüsselung auf sensible Daten sowohl im Ruhezustand als auch bei der Übertragung angewendet?",
+          "2": "Beschreiben Sie den Patch-Management-Prozess der Organisation und die durchschnittliche Bereitstellungsdauer.",
+          "3": "Sind Netzwerksegmentierungsmaßnahmen vorhanden, um kritische Systeme zu isolieren?",
+          "4": "Welcher Prozentsatz der Endgeräte verfügt über einen aktuellen Anti-Malware-Schutz?"
+        }
+      },
+      "dora": {
+        "0": {
+          "0": "Hat die Organisation einen umfassenden IKT-Risikomanagementrahmen eingerichtet, der vom Leitungsorgan genehmigt wurde?",
+          "1": "Werden IKT-Risiken identifiziert, bewertet und in einem Risikoregister dokumentiert?",
+          "2": "Beschreiben Sie den Prozess zur kontinuierlichen Überwachung und Aktualisierung von IKT-Risikobewertungen.",
+          "3": "Wie häufig wird der IKT-Risikomanagementrahmen überprüft und aktualisiert?"
+        },
+        "1": {
+          "0": "Werden bedrohungsgeführte Penetrationstests (TLPT) mindestens alle drei Jahre für kritische Systeme durchgeführt?",
+          "1": "Gibt es ein strukturiertes Testprogramm, das Schwachstellenbewertungen, szenariobasierte Tests und Recovery-Übungen umfasst?",
+          "2": "Beschreiben Sie Umfang und Methodik der zuletzt durchgeführten Resilienztest-Übung.",
+          "3": "Werden Testergebnisse dem Senior Management gemeldet und in Maßnahmenpläne eingearbeitet?",
+          "4": "Wie lange dauert die durchschnittliche Behebung kritischer Schwachstellen, die bei Tests identifiziert wurden?"
+        },
+        "2": {
+          "0": "Wird ein formales Register aller IKT-Drittanbieter geführt und regelmäßig aktualisiert?",
+          "1": "Sind vertragliche Vereinbarungen mit kritischen IKT-Anbietern auf die DORA-Anforderungen abgestimmt (Exit-Strategien, Datenzugang, Prüfungsrechte)?",
+          "2": "Beschreiben Sie den Due-Diligence-Prozess, der vor der Beauftragung eines kritischen IKT-Drittanbieters angewendet wird.",
+          "3": "Werden Konzentrationsrisiken im Zusammenhang mit IKT-Dienstleistern aktiv überwacht und gemindert?"
+        },
+        "3": {
+          "0": "Gibt es einen dokumentierten Vorfallsklassifizierungsrahmen, der den DORA-Kriterien (Wesentlichkeitsschwellen) entspricht?",
+          "1": "Werden wesentliche IKT-bezogene Vorfälle den zuständigen Behörden innerhalb der vorgeschriebenen Fristen gemeldet?",
+          "2": "Beschreiben Sie den Eskalationsprozess zur Klassifizierung und Meldung wesentlicher IKT-Vorfälle.",
+          "3": "Wie viele wesentliche IKT-bezogene Vorfälle wurden in den letzten 12 Monaten gemeldet?",
+          "4": "Werden Incident-Response-Playbooks regelmäßig getestet und aktualisiert?"
+        }
+      },
+      "iso27001": {
+        "0": {
+          "0": "Hat die Organisation eine von der Geschäftsführung genehmigte Informationssicherheitsrichtlinie eingeführt, dokumentiert und kommuniziert?",
+          "1": "Sind Informationssicherheitsrollen und -verantwortlichkeiten klar definiert und zugewiesen?",
+          "2": "Beschreiben Sie, wie die Informationssicherheitsrichtlinie überprüft und aktualisiert wird.",
+          "3": "Wie häufig wird die Informationssicherheitsrichtlinie überprüft?"
+        },
+        "1": {
+          "0": "Gibt es eine formale Zugriffskontrollrichtlinie, die Benutzerzugriffsrechte basierend auf Geschäftsanforderungen definiert?",
+          "1": "Werden Benutzerzugriffsrechte regelmäßig überprüft, um deren Angemessenheit sicherzustellen?",
+          "2": "Beschreiben Sie den Prozess zur Bereitstellung, Änderung und zum Entzug von Benutzerzugriffen.",
+          "3": "Wie häufig werden Zugriffsrechte für privilegierte Konten rezertifiziert?",
+          "4": "Werden alle Authentifizierungsereignisse protokolliert und überwacht?"
+        },
+        "2": {
+          "0": "Gibt es eine Kryptografieschlüssel-Verwaltungsrichtlinie, die Schlüsselerzeugung, -speicherung, -verteilung und -vernichtung abdeckt?",
+          "1": "Werden kryptografische Maßnahmen gemäß den gesetzlichen und regulatorischen Anforderungen zum Schutz sensibler Informationen eingesetzt?",
+          "2": "Beschreiben Sie die Verschlüsselungsstandards und -algorithmen für Daten im Ruhezustand und bei der Übertragung.",
+          "3": "Werden kryptografische Schlüssel gemäß einem definierten Zeitplan rotiert?"
+        },
+        "3": {
+          "0": "Sind Informationssicherheitsanforderungen in Lieferantenverträgen festgelegt und vereinbart?",
+          "1": "Gibt es einen Prozess zur Überwachung und Überprüfung der Einhaltung von Informationssicherheitspflichten durch Lieferanten?",
+          "2": "Beschreiben Sie die Lieferantenrisikobewertungsmethodik für kritische Dienstleister.",
+          "3": "Wie häufig werden kritische Lieferanten hinsichtlich ihrer Sicherheits-Compliance geprüft oder neu bewertet?",
+          "4": "Werden lieferantenbezogene Sicherheitsvorfälle verfolgt und überprüft?"
+        }
+      },
+      "soc2_type2": {
+        "0": {
+          "0": "Sind logische und physische Zugriffskontrollen implementiert, um unbefugten Zugriff auf Systemressourcen zu verhindern?",
+          "1": "Gibt es einen Risikobewertungsprozess zur Identifizierung und Reaktion auf Sicherheitsbedrohungen?",
+          "2": "Beschreiben Sie die vorhandenen Sicherheitsüberwachungs- und Warnsysteme.",
+          "3": "Werden Sicherheitsvorfälle protokolliert, untersucht und zeitnah behoben?"
+        },
+        "1": {
+          "0": "Wird die Systemverfügbarkeit gemessen und gegen definierte Service-Level-Ziele überwacht?",
+          "1": "Sind Sicherungs- und Wiederherstellungsverfahren dokumentiert und werden regelmäßig getestet?",
+          "2": "Beschreiben Sie den Ansatz der Organisation zur Kapazitätsplanung und Ressourcenskalierung.",
+          "3": "Wie lautet die angestrebte Recovery Time Objective (RTO) für kritische Systeme?",
+          "4": "Wurden Notfallwiederherstellungsverfahren in den letzten 12 Monaten getestet?"
+        },
+        "2": {
+          "0": "Werden vertrauliche Informationen gemäß ihrer Sensitivität klassifiziert und gekennzeichnet?",
+          "1": "Werden Verschlüsselung und Zugriffskontrollen zum Schutz vertraulicher Daten über den gesamten Lebenszyklus angewendet?",
+          "2": "Beschreiben Sie die Verfahren zur Datenspeicherung und -vernichtung für vertrauliche Informationen.",
+          "3": "Sind Mitarbeitende verpflichtet, Vertraulichkeitsvereinbarungen zu unterzeichnen?"
+        },
+        "3": {
+          "0": "Sind automatisierte Kontrollen vorhanden, um sicherzustellen, dass die Datenverarbeitung vollständig, korrekt und zeitgerecht erfolgt?",
+          "1": "Gibt es einen Prozess zur Erkennung und Korrektur von Verarbeitungsfehlern?",
+          "2": "Beschreiben Sie die Validierungs- und Abstimmungsverfahren zur Überprüfung der Datenintegrität.",
+          "3": "Werden Verarbeitungsergebnisse vor der Fertigstellung geprüft und genehmigt?",
+          "4": "Wie hoch ist die durchschnittliche Fehlerrate in kritischen Datenverarbeitungsabläufen?"
+        }
+      },
+      "hipaa": {
+        "0": {
+          "0": "Hat die Organisation einen Sicherheitsverantwortlichen benannt, der für die Entwicklung und Umsetzung von Sicherheitsrichtlinien zuständig ist?",
+          "1": "Gibt es einen dokumentierten Risikoanalyseprozess zur Bewertung potenzieller Risiken für elektronisch geschützte Gesundheitsinformationen (ePHI)?",
+          "2": "Beschreiben Sie das Sicherheitsbewusstseins- und Schulungsprogramm für Mitarbeitende.",
+          "3": "Sind Mitarbeitende verpflichtet, jährlich eine HIPAA-Sicherheitsschulung zu absolvieren?"
+        },
+        "1": {
+          "0": "Sind physische Zugangskontrollen implementiert, um den Zugang zu Einrichtungen einzuschränken, in denen ePHI gespeichert oder verarbeitet wird?",
+          "1": "Gibt es eine Workstation-Sicherheitsrichtlinie, die akzeptable Nutzung und physische Schutzmaßnahmen definiert?",
+          "2": "Beschreiben Sie die Verfahren zur Geräte- und Medienentsorgung, um die sichere Vernichtung von ePHI sicherzustellen.",
+          "3": "Werden Besucherzugangsprotokoll geführt und überprüft?"
+        },
+        "2": {
+          "0": "Werden eindeutige Benutzer-IDs vergeben, um den individuellen Zugriff auf ePHI zu verfolgen?",
+          "1": "Wird Verschlüsselung auf ePHI sowohl im Ruhezustand als auch bei der Übertragung angewendet?",
+          "2": "Beschreiben Sie die Audit-Protokollierungs- und Überwachungsmechanismen für den Zugriff auf ePHI.",
+          "3": "Sind automatische Abmeldekontrollen nach einer definierten Inaktivitätsdauer aktiviert?",
+          "4": "Wie lautet die Passwort-Komplexitätsrichtlinie für Konten, die auf ePHI zugreifen?"
+        },
+        "3": {
+          "0": "Gibt es einen dokumentierten Meldeprozess für Datenpannen, der den HIPAA-Anforderungen (60-Tage-Meldepflicht) entspricht?",
+          "1": "Werden Mitarbeitende geschult, potenzielle Verstöße gegen ePHI zu erkennen und zu melden?",
+          "2": "Beschreiben Sie die Risikobewertungsmethodik, anhand derer bestimmt wird, ob eine Meldung einer Datenpanne erforderlich ist.",
+          "3": "Wie viele Datenpannen wurden in den letzten 12 Monaten gemeldet?"
+        }
+      },
+      "nist_csf": {
+        "0": {
+          "0": "Werden alle physischen und Software-Assets inventarisiert und in einem Asset-Register geführt?",
+          "1": "Gibt es eine Business-Impact-Analyse (BIA), die kritische Funktionen und Abhängigkeiten identifiziert?",
+          "2": "Beschreiben Sie den Risikobewertungsprozess zur Identifizierung und Priorisierung von Cybersicherheitsrisiken.",
+          "3": "Werden Abhängigkeiten von Drittanbietern und Lieferkettenrisiken dokumentiert und überwacht?"
+        },
+        "1": {
+          "0": "Sind Identitäts- und Zugriffsmanagement-Kontrollen implementiert, einschließlich des Prinzips der geringsten Privilegien und rollenbasiertem Zugriff?",
+          "1": "Gibt es eine Datenschutzstrategie, die Verschlüsselung, Klassifizierung und sichere Entsorgung abdeckt?",
+          "2": "Beschreiben Sie das Sicherheitsbewusstseins- und Schulungsprogramm für alle Mitarbeitenden.",
+          "3": "Sind sichere Entwicklungspraktiken in den Software-Entwicklungslebenszyklus integriert?",
+          "4": "Welcher Prozentsatz der Systeme ist durch Endpoint Detection and Response (EDR)-Lösungen geschützt?"
+        },
+        "2": {
+          "0": "Werden Sicherheitsereignisse kontinuierlich überwacht und analysiert, um Anomalien zu erkennen?",
+          "1": "Gibt es ein Security Operations Center (SOC) oder eine gleichwertige Funktion, die für Erkennung und Analyse zuständig ist?",
+          "2": "Beschreiben Sie die verwendeten Threat-Intelligence-Quellen und Integrationsmechanismen.",
+          "3": "Werden Erkennungsprozesse regelmäßig getestet und validiert?"
+        },
+        "3": {
+          "0": "Gibt es einen dokumentierten Incident-Response-Plan, der Rollen, Verfahren und Kommunikationsprotokolle umfasst?",
+          "1": "Werden Incident-Response-Fähigkeiten mindestens jährlich durch Tabletop-Übungen oder Simulationen getestet?",
+          "2": "Beschreiben Sie den Prozess zur Vorfallskategorisierung und -eskalation.",
+          "3": "Wie häufig werden Erkenntnisse aus Vorfällen in die Response-Pläne eingearbeitet?"
+        },
+        "4": {
+          "0": "Gibt es einen dokumentierten Wiederherstellungsplan, der Wiederherstellungsziele und -verfahren definiert?",
+          "1": "Werden Wiederherstellungspläne mindestens jährlich auf ihre Wirksamkeit getestet?",
+          "2": "Beschreiben Sie die Backup-Strategie und die Validierungsverfahren.",
+          "3": "Werden Verbesserungen, die bei Wiederherstellungsübungen identifiziert wurden, verfolgt und umgesetzt?"
+        }
+      },
+      "cis_controls_v8": {
+        "0": {
+          "0": "Wird ein Inventar aller autorisierten und nicht autorisierten Hardware-Assets in Echtzeit gepflegt?",
+          "1": "Wird ein Inventar aller autorisierten und nicht autorisierten Software-Assets in Echtzeit gepflegt?",
+          "2": "Beschreiben Sie den Schwachstellen-Scan- und Patch-Management-Prozess.",
+          "3": "Wie lange dauert die durchschnittliche Bereitstellung kritischer Patches?",
+          "4": "Werden Administratorprivilegien eingeschränkt und überwacht?"
+        },
+        "1": {
+          "0": "Wird Mehrfaktor-Authentifizierung (MFA) für alle Fernzugriffe und privilegierten Konten erzwungen?",
+          "1": "Sind Netzwerkgeräte gemäß Sicherheits-Benchmarks konfiguriert (z. B. CIS-Benchmarks)?",
+          "2": "Beschreiben Sie das Sicherheitsbewusstseinsschulungsprogramm und seine Häufigkeit.",
+          "3": "Sind zentralisierte Log-Management- und Analyse-Tools im Einsatz?",
+          "4": "Welcher Prozentsatz der Endgeräte verfügt über eine bereitgestellte Endpoint Detection and Response (EDR)-Lösung?"
+        },
+        "2": {
+          "0": "Gibt es ein formales Penetrationstestprogramm, das mindestens jährlich von Dritten durchgeführt wird?",
+          "1": "Sind Security Operations Center (SOC)- oder Managed Detection and Response (MDR)-Kapazitäten vorhanden?",
+          "2": "Beschreiben Sie das Threat-Intelligence-Programm und wie es Sicherheitsentscheidungen beeinflusst.",
+          "3": "Werden Red-Team/Blue-Team-Übungen durchgeführt, um Erkennungs- und Reaktionsfähigkeiten zu testen?",
+          "4": "Gibt es einen formalen sicheren Software-Entwicklungslebenszyklus (SDLC) mit integriertem Sicherheitstesting?"
+        }
+      }
     }
   },
   "ApprovalWorkflow": {

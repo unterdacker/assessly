@@ -22,6 +22,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       where: { id: templateId, companyId, isActive: true },
       select: {
         name: true,
+        systemTemplateKey: true,
         sections: {
           orderBy: { orderIndex: "asc" },
           select: {

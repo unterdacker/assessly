@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import {
   NIS2_QUESTIONNAIRE_VERSION,
   groupQuestionsByCategory,
@@ -17,6 +17,10 @@ import {
   type RemediationTaskInlineListTranslations,
 } from "@/components/remediation-task-inline-list";
 import { cn } from "@/lib/utils";
+
+const KNOWN_SYSTEM_TEMPLATE_KEYS = new Set([
+  "nis2", "dora", "iso27001", "soc2_type2", "hipaa", "nist_csf", "cis_controls_v8",
+]);
 
 const groupedByCategory = groupQuestionsByCategory(nis2Questions);
 
@@ -36,6 +40,7 @@ type LoadedSection = {
 
 type LoadedTemplate = {
   name: string;
+  systemTemplateKey?: string | null;
   sections: LoadedSection[];
 };
 
@@ -71,8 +76,10 @@ export function VendorAssessmentQuestionnairePanel({
   templateId,
 }: VendorAssessmentQuestionnairePanelProps) {
   const t = useTranslations("assessment.questionnaire");
+  const tLib = useTranslations("ComplianceLibrary");
   const tRoot = useTranslations();
   const tQuestions = useTranslations("externalAssessment.questions");
+  const locale = useLocale();
   const [templateData, setTemplateData] = React.useState<LoadedTemplate | null>(null);
   const [templateLoading, setTemplateLoading] = React.useState(false);
   const [templateError, setTemplateError] = React.useState<string | null>(null);
@@ -180,6 +187,24 @@ export function VendorAssessmentQuestionnairePanel({
     return map;
   }, [remediationTasks]);
 
+  const translatedQuestions = React.useMemo(() => {
+    const map = new Map<string, string>();
+    if (!templateData?.systemTemplateKey) return map;
+    const sysKey = templateData.systemTemplateKey;
+    if (!KNOWN_SYSTEM_TEMPLATE_KEYS.has(sysKey)) return map;
+    for (const section of templateData.sections) {
+      for (const q of section.questions) {
+        const tKey = `templateQuestions.${sysKey}.${section.orderIndex}.${q.orderIndex}` as Parameters<typeof tLib>[0];
+        try {
+          map.set(q.id, tLib(tKey));
+        } catch {
+          // Missing key — will fall back to q.text in render
+        }
+      }
+    }
+    return map;
+  }, [templateData, tLib, locale]);
+
   const templateQuestionCount = React.useMemo(() => {
     if (!templateData) return 0;
     return templateData.sections.reduce((total, section) => total + section.questions.length, 0);
@@ -188,10 +213,19 @@ export function VendorAssessmentQuestionnairePanel({
   return (
     <Card>
       <CardHeader className="border-b border-slate-100 dark:border-slate-800">
-        <CardTitle className="text-base">{t("title")}</CardTitle>
+        <CardTitle className="text-base">
+          {templateData
+            ? templateData.systemTemplateKey != null && KNOWN_SYSTEM_TEMPLATE_KEYS.has(templateData.systemTemplateKey)
+              ? tLib(`frameworks.${templateData.systemTemplateKey}.name` as Parameters<typeof tLib>[0])
+              : templateData.name
+            : t("title")}
+        </CardTitle>
         {templateData ? (
           <p className="text-sm font-normal text-muted-foreground">
-            {templateQuestionCount} questions across {templateData.sections.length} sections - {templateData.name}
+            {templateQuestionCount} {t("questionsAcross")} {templateData.sections.length} {t("sections")} –{" "}
+            {templateData.systemTemplateKey != null && KNOWN_SYSTEM_TEMPLATE_KEYS.has(templateData.systemTemplateKey)
+              ? tLib(`frameworks.${templateData.systemTemplateKey}.name` as Parameters<typeof tLib>[0])
+              : templateData.name}
           </p>
         ) : (
           <p className="text-sm font-normal text-muted-foreground">
@@ -223,7 +257,15 @@ export function VendorAssessmentQuestionnairePanel({
                   id={`questionnaire-template-section-${section.id}`}
                   className="mb-3 text-xs font-semibold uppercase tracking-wider text-indigo-700 dark:text-indigo-300"
                 >
-                  {section.title}
+                  {templateData?.systemTemplateKey != null && KNOWN_SYSTEM_TEMPLATE_KEYS.has(templateData.systemTemplateKey)
+                    ? (() => {
+                        try {
+                          return tLib(`templateSections.${templateData.systemTemplateKey}.${section.orderIndex}` as Parameters<typeof tLib>[0]);
+                        } catch {
+                          return section.title;
+                        }
+                      })()
+                    : section.title}
                 </h2>
                 <ol className="space-y-3">
                   {section.questions.map((q) => {
@@ -248,7 +290,7 @@ export function VendorAssessmentQuestionnairePanel({
                             <span className="font-medium text-muted-foreground pr-1">
                               {numberById[q.id]}.
                             </span>
-                            {q.text}
+                            {translatedQuestions.get(q.id) ?? q.text}
                           </div>
                           <div className="shrink-0 pt-0.5">
                             <Badge

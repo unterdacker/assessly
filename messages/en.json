@@ -512,6 +512,7 @@
       "title": "NIS2 security questionnaire",
       "questionsAcross": "questions across",
       "categories": "categories",
+      "sections": "sections",
       "catalogue": "catalogue",
       "compliant": "Compliant",
       "nonCompliant": "Non-compliant",
@@ -1270,6 +1271,30 @@
     "moveUp": "Move up",
     "moveDown": "Move down"
   },
+  "QuestionTranslation": {
+    "panelHeading": "Add translation",
+    "panelHeadingExisting": "Edit translation",
+    "targetLabelDe": "German",
+    "targetLabelEn": "English",
+    "translateWithAi": "Translate with AI",
+    "enterManually": "Enter manually",
+    "aiDisabledTooltip": "AI is disabled for this workspace. Enable an AI provider in Settings → General to use this feature.",
+    "dismiss": "Dismiss",
+    "translatedText": "Translated question",
+    "translatedGuidance": "Translated guidance (optional)",
+    "save": "Save translation",
+    "saving": "Saving…",
+    "translating": "Translating…",
+    "cancel": "Cancel",
+    "accept": "Accept",
+    "retranslate": "Re-translate",
+    "editManually": "Edit manually",
+    "translationSaved": "Translation saved.",
+    "errorAi": "AI translation failed. Please try again or enter manually.",
+    "errorSave": "Failed to save translation.",
+    "sourceText": "Original text",
+    "sourceGuidance": "Original guidance"
+  },
   "vendorAcceptInvite": {
     "pageTitle": "Set Your Password",
     "pageSubtitle": "Create a secure password to access your assessment portal",
@@ -1494,6 +1519,247 @@
       "hipaa": { "name": "HIPAA", "description": "Health Insurance Portability and Accountability Act — PHI protection and breach notification." },
       "nist_csf": { "name": "NIST CSF", "description": "Cybersecurity Framework — Identify, Protect, Detect, Respond, Recover functions." },
       "cis_controls_v8": { "name": "CIS Controls v8", "description": "18 prioritized safeguard groups for enterprise cyber defense." }
+    },
+    "templateSections": {
+      "nis2": {
+        "0": "Governance & Risk Management",
+        "1": "Incident Response",
+        "2": "Supply Chain Security",
+        "3": "Technical Controls"
+      },
+      "dora": {
+        "0": "ICT Risk Management",
+        "1": "Digital Resilience Testing",
+        "2": "Third-Party ICT Risk",
+        "3": "Incident Classification"
+      },
+      "iso27001": {
+        "0": "Information Security Policies",
+        "1": "Access Control",
+        "2": "Cryptography & Key Management",
+        "3": "Supplier Relationships"
+      },
+      "soc2_type2": {
+        "0": "Security (CC6)",
+        "1": "Availability (A1)",
+        "2": "Confidentiality (C1)",
+        "3": "Processing Integrity (PI1)"
+      },
+      "hipaa": {
+        "0": "Administrative Safeguards",
+        "1": "Physical Safeguards",
+        "2": "Technical Safeguards",
+        "3": "Breach Notification"
+      },
+      "nist_csf": {
+        "0": "Identify",
+        "1": "Protect",
+        "2": "Detect",
+        "3": "Respond",
+        "4": "Recover"
+      },
+      "cis_controls_v8": {
+        "0": "Basic Cyber Hygiene (IG1)",
+        "1": "Foundational Controls (IG2)",
+        "2": "Organizational Controls (IG3)"
+      }
+    },
+    "templateQuestions": {
+      "nis2": {
+        "0": {
+          "0": "Has the organization designated a management body responsible for cybersecurity risk oversight?",
+          "1": "Are cybersecurity risks formally assessed and documented at least annually?",
+          "2": "Describe the organization's cybersecurity governance framework and reporting lines.",
+          "3": "How frequently does senior management review cybersecurity risk reports?"
+        },
+        "1": {
+          "0": "Is there a documented incident response plan that covers detection, containment, and recovery?",
+          "1": "Are significant incidents reported to the relevant national CSIRT within 24 hours?",
+          "2": "Describe the incident classification criteria used to determine reportable incidents.",
+          "3": "What is the average time to detect a security incident in your environment?",
+          "4": "Are incident response procedures tested at least annually?"
+        },
+        "2": {
+          "0": "Are cybersecurity requirements included in contracts with critical suppliers?",
+          "1": "Is there a process to assess the cybersecurity posture of third-party vendors before onboarding?",
+          "2": "Describe the vendor risk assessment methodology applied to critical service providers.",
+          "3": "How often are critical suppliers reassessed for cybersecurity compliance?"
+        },
+        "3": {
+          "0": "Are multi-factor authentication mechanisms deployed for privileged accounts?",
+          "1": "Is encryption applied to sensitive data both at rest and in transit?",
+          "2": "Describe the organization's patch management process and average deployment timeline.",
+          "3": "Are network segmentation controls in place to isolate critical systems?",
+          "4": "What percentage of endpoints have up-to-date anti-malware protection?"
+        }
+      },
+      "dora": {
+        "0": {
+          "0": "Has the organization established a comprehensive ICT risk management framework approved by the management body?",
+          "1": "Are ICT risks identified, assessed, and documented in a risk register?",
+          "2": "Describe the process for continuously monitoring and updating ICT risk assessments.",
+          "3": "How frequently is the ICT risk management framework reviewed and updated?"
+        },
+        "1": {
+          "0": "Are threat-led penetration tests (TLPT) conducted at least every three years for critical systems?",
+          "1": "Is there a structured testing program covering vulnerability assessments, scenario-based tests, and recovery drills?",
+          "2": "Describe the scope and methodology of the most recent resilience testing exercise.",
+          "3": "Are test results reported to senior management and incorporated into remediation plans?",
+          "4": "What is the average remediation time for critical vulnerabilities identified during testing?"
+        },
+        "2": {
+          "0": "Is there a formal register of all ICT third-party service providers maintained and regularly updated?",
+          "1": "Are contractual arrangements with critical ICT providers aligned with DORA requirements (exit strategies, data access, audit rights)?",
+          "2": "Describe the due diligence process applied before engaging a critical ICT third-party provider.",
+          "3": "Are concentration risks related to ICT service providers actively monitored and mitigated?"
+        },
+        "3": {
+          "0": "Is there a documented incident classification framework aligned with DORA's criteria (materiality thresholds)?",
+          "1": "Are major ICT-related incidents reported to competent authorities within required timeframes?",
+          "2": "Describe the escalation process for classifying and reporting material ICT incidents.",
+          "3": "How many major ICT-related incidents were reported in the past 12 months?",
+          "4": "Are incident response playbooks regularly tested and updated?"
+        }
+      },
+      "iso27001": {
+        "0": {
+          "0": "Has the organization established, documented, and communicated an information security policy approved by management?",
+          "1": "Are information security roles and responsibilities clearly defined and assigned?",
+          "2": "Describe how the information security policy is reviewed and updated.",
+          "3": "How frequently is the information security policy reviewed?"
+        },
+        "1": {
+          "0": "Is there a formal access control policy that defines user access rights based on business requirements?",
+          "1": "Are user access rights reviewed periodically to ensure they remain appropriate?",
+          "2": "Describe the process for provisioning, modifying, and revoking user access.",
+          "3": "What is the frequency of access rights recertification for privileged accounts?",
+          "4": "Are all authentication events logged and monitored?"
+        },
+        "2": {
+          "0": "Is there a cryptographic key management policy covering key generation, storage, distribution, and destruction?",
+          "1": "Are cryptographic controls applied to protect sensitive information in accordance with legal and regulatory requirements?",
+          "2": "Describe the encryption standards and algorithms used for data at rest and in transit.",
+          "3": "Are cryptographic keys rotated according to a defined schedule?"
+        },
+        "3": {
+          "0": "Are information security requirements defined and agreed upon in supplier contracts?",
+          "1": "Is there a process to monitor and review supplier compliance with information security obligations?",
+          "2": "Describe the supplier risk assessment methodology applied to critical service providers.",
+          "3": "How often are critical suppliers audited or reassessed for security compliance?",
+          "4": "Are supplier-related security incidents tracked and reviewed?"
+        }
+      },
+      "soc2_type2": {
+        "0": {
+          "0": "Are logical and physical access controls implemented to prevent unauthorized access to system resources?",
+          "1": "Is there a risk assessment process to identify and respond to security threats?",
+          "2": "Describe the security monitoring and alerting mechanisms in place.",
+          "3": "Are security incidents logged, investigated, and resolved in a timely manner?"
+        },
+        "1": {
+          "0": "Is system availability monitored and measured against defined service level objectives?",
+          "1": "Are backup and recovery procedures documented and tested regularly?",
+          "2": "Describe the organization's approach to capacity planning and resource scaling.",
+          "3": "What is the target recovery time objective (RTO) for critical systems?",
+          "4": "Have disaster recovery procedures been tested in the past 12 months?"
+        },
+        "2": {
+          "0": "Is confidential information classified and labeled according to its sensitivity?",
+          "1": "Are encryption and access controls applied to protect confidential data throughout its lifecycle?",
+          "2": "Describe the data retention and disposal procedures for confidential information.",
+          "3": "Are employees required to sign confidentiality agreements?"
+        },
+        "3": {
+          "0": "Are automated controls in place to ensure data processing is complete, accurate, and timely?",
+          "1": "Is there a process to detect and correct processing errors?",
+          "2": "Describe the validation and reconciliation procedures used to verify data integrity.",
+          "3": "Are processing outputs reviewed and approved before finalization?",
+          "4": "What is the average error rate in critical data processing workflows?"
+        }
+      },
+      "hipaa": {
+        "0": {
+          "0": "Has the organization designated a Security Official responsible for developing and implementing security policies?",
+          "1": "Is there a documented risk analysis process to assess potential risks to ePHI?",
+          "2": "Describe the security awareness and training program for workforce members.",
+          "3": "Are workforce members required to complete HIPAA security training annually?"
+        },
+        "1": {
+          "0": "Are physical access controls implemented to limit access to facilities where ePHI is stored or processed?",
+          "1": "Is there a workstation security policy that defines acceptable use and physical safeguards?",
+          "2": "Describe the device and media disposal procedures to ensure ePHI is securely destroyed.",
+          "3": "Are visitor access logs maintained and reviewed?"
+        },
+        "2": {
+          "0": "Are unique user IDs assigned to track individual access to ePHI?",
+          "1": "Is encryption applied to ePHI both at rest and in transit?",
+          "2": "Describe the audit logging and monitoring mechanisms for ePHI access.",
+          "3": "Are automatic logoff controls enabled after a defined period of inactivity?",
+          "4": "What is the password complexity policy for accounts accessing ePHI?"
+        },
+        "3": {
+          "0": "Is there a documented breach notification process aligned with HIPAA requirements (60-day notification rule)?",
+          "1": "Are workforce members trained to identify and report potential breaches of ePHI?",
+          "2": "Describe the risk assessment methodology used to determine if a breach notification is required.",
+          "3": "How many breach incidents were reported in the past 12 months?"
+        }
+      },
+      "nist_csf": {
+        "0": {
+          "0": "Are all physical and software assets inventoried and maintained in an asset register?",
+          "1": "Is there a business impact analysis (BIA) that identifies critical functions and dependencies?",
+          "2": "Describe the risk assessment process used to identify and prioritize cybersecurity risks.",
+          "3": "Are third-party dependencies and supply chain risks documented and monitored?"
+        },
+        "1": {
+          "0": "Are identity and access management controls implemented, including least privilege and role-based access?",
+          "1": "Is there a data protection strategy covering encryption, classification, and secure disposal?",
+          "2": "Describe the security awareness and training program for all personnel.",
+          "3": "Are secure development practices integrated into the software development lifecycle?",
+          "4": "What percentage of systems are protected by endpoint detection and response (EDR) solutions?"
+        },
+        "2": {
+          "0": "Are security events continuously monitored and analyzed to detect anomalies?",
+          "1": "Is there a Security Operations Center (SOC) or equivalent function responsible for detection and analysis?",
+          "2": "Describe the threat intelligence sources and integration mechanisms used.",
+          "3": "Are detection processes tested and validated periodically?"
+        },
+        "3": {
+          "0": "Is there a documented incident response plan that includes roles, procedures, and communication protocols?",
+          "1": "Are incident response capabilities tested through tabletop exercises or simulations at least annually?",
+          "2": "Describe the incident categorization and escalation process.",
+          "3": "How often are lessons learned from incidents incorporated into response plans?"
+        },
+        "4": {
+          "0": "Is there a documented recovery plan that defines recovery objectives and procedures?",
+          "1": "Are recovery plans tested at least annually to ensure effectiveness?",
+          "2": "Describe the backup strategy and validation procedures.",
+          "3": "Are improvements identified during recovery exercises tracked and implemented?"
+        }
+      },
+      "cis_controls_v8": {
+        "0": {
+          "0": "Is there an inventory of all authorized and unauthorized hardware assets maintained in real-time?",
+          "1": "Is there an inventory of all authorized and unauthorized software assets maintained in real-time?",
+          "2": "Describe the vulnerability scanning and patch management process.",
+          "3": "What is the average time to deploy critical patches?",
+          "4": "Are administrative privileges restricted and monitored?"
+        },
+        "1": {
+          "0": "Is multi-factor authentication (MFA) enforced for all remote access and privileged accounts?",
+          "1": "Are network devices configured according to security benchmarks (e.g., CIS Benchmarks)?",
+          "2": "Describe the security awareness training program and its frequency.",
+          "3": "Are centralized log management and analysis tools deployed?",
+          "4": "What percentage of endpoints have endpoint detection and response (EDR) deployed?"
+        },
+        "2": {
+          "0": "Is there a formal penetration testing program conducted by third parties at least annually?",
+          "1": "Are security operations center (SOC) or managed detection and response (MDR) capabilities in place?",
+          "2": "Describe the threat intelligence program and how it informs security decisions.",
+          "3": "Are red team/blue team exercises conducted to test detection and response capabilities?",
+          "4": "Is there a formal secure software development lifecycle (SDLC) with integrated security testing?"
+        }
+      }
     }
   },
   "ApprovalWorkflow": {
