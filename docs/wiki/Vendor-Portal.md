@@ -46,7 +46,9 @@ URL: `/en/external/portal` (or `/de/external/portal`)
 |-------|-------------|
 | `/[locale]/external/portal` | Login page |
 | `/[locale]/external/force-password-change` | First-login password setup |
+| `/[locale]/external/mfa-verify` | MFA verification step during vendor login (TOTP code or recovery code) |
 | `/[locale]/external/assessment` | Questionnaire workspace |
+| `/[locale]/external/settings/mfa` | Vendor MFA self-enrollment, QR code setup, and recovery code management |
 | `/[locale]/external/exit` | Logout / session end |
 
 ---
@@ -95,6 +97,41 @@ Vendor sessions are strictly isolated:
 - All server actions verify that `session.vendorId === vendor.id`
 - A vendor cannot access another vendor's assessment even if they guess the URL
 - The middleware blocks all `VENDOR` role access to `/dashboard`, `/vendors`, `/admin`, `/settings`
+
+---
+
+## Multi-Factor Authentication
+
+Venshield's TOTP-based MFA is available to vendor portal users independently of internal user MFA. All vendor MFA features are self-service — no admin action is required for enrollment beyond optionally enforcing MFA at the organisation level.
+
+### Self-Enrollment
+
+Vendors can enable MFA at any time by navigating to **Settings → MFA** (`/external/settings/mfa`):
+
+1. A TOTP secret is generated server-side and encrypted at rest using `MFA_ENCRYPTION_KEY` (AES-256-GCM).
+2. A QR code URI is shown once — the vendor scans it with any TOTP Authenticator app (Google Authenticator, Aegis, 1Password, etc.).
+3. The vendor confirms enrollment with a one-time code.
+4. Ten single-use recovery codes are generated (128-bit, bcrypt-10 hashed). Store them securely — they are displayed only once.
+
+### Login Flow (MFA Enabled)
+
+1. Vendor enters access code and password.
+2. `vendor-auth.ts` detects `mfaEnabled = true`.
+3. A short-lived `venshield-vendor-mfa-pending` cookie is set (5-minute TTL, HMAC-SHA256 signed).
+4. The vendor is redirected to `/external/mfa-verify`.
+5. The vendor enters their TOTP code (or a recovery code to consume one of their ten single-use codes).
+6. On success: the pending cookie is cleared, a full `VENDOR`-role `AuthSession` is created, and the vendor is redirected to the portal.
+7. On failure: a `MFA_FAILED_ATTEMPT` audit event is written.
+
+### Recovery Codes
+
+- 10 codes generated at enrollment, regeneratable at any time from the MFA settings page (requires a valid TOTP confirmation).
+- Each code is single-use — consumed codes are removed atomically.
+- Rate-limited: 3 recovery-code attempts per 15 minutes per vendor account.
+
+### Org-Wide MFA Policy
+
+If an organisation administrator has enabled the **Require MFA for all users** policy (`Company.mfaRequired = true`), vendors without MFA enabled are blocked at the login step and directed to enroll before accessing the portal.
 
 ---
 

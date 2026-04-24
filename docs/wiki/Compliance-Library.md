@@ -61,7 +61,6 @@ Every template deployment is recorded in the audit trail under the `DATA_OPERATI
 
 | Role | Can view library | Can deploy |
 |---|---|---|
-| SUPER_ADMIN | Yes | Yes |
 | ADMIN | Yes | Yes |
 | RISK_REVIEWER | Yes | Yes |
 | AUDITOR | No | No |

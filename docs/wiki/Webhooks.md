@@ -26,7 +26,7 @@ Venshield can send real-time HTTP POST notifications to external endpoints when 
 ## Prerequisites
 
 - Your organization must be on the **Premium plan**
-- You must have the **Admin** role (SUPER_ADMIN or ADMIN)
+- You must have the **Admin** role (**ADMIN**)
 - The endpoint must be reachable over **public HTTPS** (private/internal IPs are blocked)
 
 ---

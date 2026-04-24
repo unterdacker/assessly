@@ -42,6 +42,15 @@ Uploaded PDF evidence files stored in `.venshield-storage/` are encrypted at res
 - **Format:** Same `<iv_hex>:<tag_hex>:<ciphertext_hex>` structure as OIDC client secrets
 - **Key rotation:** Requires re-encrypting stored files; no automated rotation is built in — incorporate into your key management policy
 
+### Webhook Signing Secret Encryption
+
+Webhook HMAC-SHA256 signing secrets are encrypted at rest using the same AES-256-GCM scheme:
+
+- **Key:** `WEBHOOK_ENCRYPTION_KEY` (64 hex chars / 32 bytes), validated at startup by `lib/env.ts`
+- **Scope:** Every webhook signing secret written to the `WebhookEndpoint` table is encrypted on write and decrypted only at webhook delivery time; plaintext secrets never persist in the database
+- **Format:** Same `<iv_hex>:<tag_hex>:<ciphertext_hex>` structure as other encrypted fields
+- **⚠️ Deployment note:** The Dockerfile contains a non-production default for this variable. Replace it with a freshly generated value before any deployment — see key generation commands below.
+
 ### Session Token Integrity (`lib/auth/token.ts`)
 
 - Session tokens are signed with **HMAC-SHA256** using `AUTH_SESSION_SECRET`
@@ -143,6 +152,8 @@ Run `npm audit` to check for known CVEs in the dependency tree.
 | `AUTH_SESSION_SECRET` | `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` | 64 bytes  128 hex chars |
 | `SETTINGS_ENCRYPTION_KEY` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes  64 hex chars |
 | `MFA_ENCRYPTION_KEY` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes  64 hex chars |
+| `STORAGE_ENCRYPTION_KEY` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | AES-256-GCM key for evidence file encryption at rest |
+| `WEBHOOK_ENCRYPTION_KEY` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | AES-256-GCM key for webhook signing secret encryption at rest |
 | `AUDIT_BUNDLE_SECRET` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes  64 hex chars |
 | `AUDIT_EXPORT_KEY` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes  64 hex chars |
 | `AUDIT_PSEUDONYMIZATION_KEY` | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | 32 bytes  64 hex chars |

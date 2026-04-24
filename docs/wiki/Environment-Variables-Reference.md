@@ -23,6 +23,7 @@ All secrets must be generated with `crypto.randomBytes()`. Never use placeholder
 | `SETTINGS_ENCRYPTION_KEY` | 64 hex chars | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | AES-256-GCM key for encrypting SMTP passwords and API keys at rest |
 | `MFA_ENCRYPTION_KEY` | 64 hex chars | Same as above | AES-256-GCM key for encrypting TOTP secrets at rest |
 | `STORAGE_ENCRYPTION_KEY` | 64 hex chars | Same as above | AES-256-GCM key for encrypting uploaded evidence files at rest in `.venshield-storage/` |
+| `WEBHOOK_ENCRYPTION_KEY` | 64 hex chars | `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` | Required (Premium). AES-256-GCM key for encrypting webhook signing secrets at rest. ⚠️ The Dockerfile contains a non-production default — replace before deployment. |
 | `AUDIT_BUNDLE_SECRET` | 64 hex chars | Same as above | HMAC-SHA256 key for signing forensic audit bundle exports |
 | `AUDIT_EXPORT_KEY` | 64 hex chars | Same as above | Key for audit export operations |
 | `AUDIT_PSEUDONYMIZATION_KEY` | 64 hex chars | Same as above | HMAC key for deterministic GDPR pseudonymisation |

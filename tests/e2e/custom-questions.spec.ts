@@ -115,7 +115,7 @@ test.describe("Custom Questions - Settings UI", () => {
     await row.getByRole("button", { name: /^delete$/i }).click();
 
     // Question should be removed from the list
-    await expect(page.getByText(questionText)).not.toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText(questionText, { exact: true })).not.toBeVisible({ timeout: 8_000 });
   });
 });
 

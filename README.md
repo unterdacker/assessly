@@ -111,6 +111,7 @@ Open `http://localhost:3000`.
 
 ```bash
 npm run dev                # development server
+npm run dev:turbo          # development server with Turbopack (faster HMR)
 npm run build              # production build
 npm run test               # unit tests (Vitest)
 npm run test:e2e           # E2E tests (Playwright)
@@ -118,11 +119,15 @@ npm run test:coverage      # unit tests with coverage report
 npm run lint               # linter
 npm run audit:verify-chain # audit trail integrity
 npm run audit:tamper-test  # forensic tamper simulation
+npm run audit:simulate-trace # generate synthetic audit chain for compliance demo
 npm run env:validate       # environment validation
 npm run db:migrate         # create and apply a named migration
 npm run db:push            # push schema without a migration file (dev only)
 npm run db:seed            # re-seed demo data
 npm run db:studio          # open Prisma Studio
+npm run clean              # remove all generated artefacts (.next, node_modules/.cache)
+npm run clean:dev          # remove development cache only
+npm run clean:build        # remove build output only
 ```
 
 ## Integrations
