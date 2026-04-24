@@ -377,12 +377,11 @@ jobs:
         env:
           CI: "true"
           PLAYWRIGHT_BASE_URL: http://localhost:3000
+          VENSHIELD_ADMIN_EMAIL: admin@demo.venshield.dev
+          VENSHIELD_ADMIN_PASSWORD: Admin1234!
+          VENSHIELD_AUDITOR_EMAIL: auditor@venshield.local
+          VENSHIELD_AUDITOR_PASSWORD: auditor123
           E2E_MFA_USER_EMAIL: mfa-user@venshield.local
-          E2E_MFA_USER_PASSWORD: MfaUser1234!
-          E2E_MFA_TOTP_SECRET: JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP
-          E2E_MFA_RECOVERY_CODE: AABBCCDD-11223344-55667788-99AABBCC
-          E2E_MFA_ENFORCED_EMAIL: mfa-enforced@venshield.local
-          E2E_MFA_ENFORCED_PASSWORD: Enforced1234!
       - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
         if: always()
         with:
