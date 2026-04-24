@@ -323,7 +323,7 @@ export function QuestionTranslationPanel({
           <div className="flex flex-wrap gap-2">
             <button 
               type="button" 
-              onClick={handleSave} 
+              onClick={() => handleSave()} 
               disabled={!draftText.trim()} 
               className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -370,7 +370,7 @@ export function QuestionTranslationPanel({
               <>
                 <button 
                   type="button" 
-                  onClick={handleSave}
+                  onClick={() => handleSave()}
                   className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                 >
                   {translations.save}
