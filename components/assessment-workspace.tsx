@@ -128,7 +128,7 @@ export function AssessmentWorkspace({
             {vendorAssessment.name}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {t("title")} · {vendorAssessment.serviceType}
+            {t("title")} - {vendorAssessment.serviceType}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
