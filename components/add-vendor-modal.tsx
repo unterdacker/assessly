@@ -44,7 +44,7 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
   const [pending, setPending] = React.useState(false);
 
   const [templates, setTemplates] = React.useState<TemplateOption[]>([]);
-  const [templateId, setTemplateId] = React.useState("");
+  const [templateId, setTemplateId] = React.useState("__default__");
   const [templatesLoading, setTemplatesLoading] = React.useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -76,7 +76,7 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
       const formData = new FormData();
       formData.set("name", name.trim());
       formData.set("email", email.trim());
-      formData.set("templateId", templateId);
+      formData.set("templateId", templateId === "__default__" ? "" : templateId);
       const res = await fetch("/api/vendors/create", {
         method: "POST",
         body: formData,
@@ -119,7 +119,7 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
         setEmail("");
         setNameError(null);
         setEmailError(null);
-        setTemplateId("");
+        setTemplateId("__default__");
         setTemplates([]);
       }, 300);
     }
@@ -196,7 +196,7 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
                     <SelectItem value="loading">Loading templates...</SelectItem>
                   ) : (
                     <>
-                      <SelectItem value="">NIS2 (default)</SelectItem>
+                      <SelectItem value="__default__">NIS2 (default)</SelectItem>
                       {templates.map((t) => (
                         <SelectItem key={t.id} value={t.id}>
                           {t.frameworkCategory

@@ -37,14 +37,16 @@ test.describe("Vendor Invitation — Admin side", () => {
 
   test("admin can open the Add Vendor modal", async ({ page }) => {
     await page.goto("/en/vendors");
+    await page.waitForLoadState("networkidle");
     await page.getByRole("button", { name: /add vendor/i }).click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10_000 });
     await expect(page.getByRole("dialog").getByLabel(/name/i)).toBeVisible();
     await expect(page.getByRole("dialog").getByLabel(/email/i)).toBeVisible();
   });
 
   test("add-vendor form validates required fields", async ({ page }) => {
     await page.goto("/en/vendors");
+    await page.waitForLoadState("networkidle");
     await page.getByRole("button", { name: /add vendor/i }).click();
     // Submit without filling anything
     await page.getByRole("dialog").getByRole("button", { name: /add|create|save/i }).click();
@@ -56,6 +58,7 @@ test.describe("Vendor Invitation — Admin side", () => {
 
   test("successfully adds a vendor and invite button appears", async ({ page }) => {
     await page.goto("/en/vendors");
+    await page.waitForLoadState("networkidle");
     await page.getByRole("button", { name: /add vendor/i }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel(/name/i).fill("E2E Test Vendor GmbH");
@@ -63,7 +66,9 @@ test.describe("Vendor Invitation — Admin side", () => {
     // Service type may be a select — try to fill generically
     const serviceSelect = dialog.locator("select, [role='combobox']").first();
     if (await serviceSelect.isVisible()) {
-      await serviceSelect.selectOption({ index: 1 }).catch(() => serviceSelect.click());
+      await serviceSelect.click();
+      await page.getByRole("listbox").waitFor({ state: "visible", timeout: 5_000 });
+      await page.getByRole("listbox").getByRole("option").first().click();
     }
     await dialog.getByRole("button", { name: /add|create|save/i }).click();
     // Modal should close and new vendor row should appear
