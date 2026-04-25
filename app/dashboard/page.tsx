@@ -68,6 +68,8 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     AverageRemediationTime: t("AverageRemediationTime"),
     RecommendedNextStep: t("RecommendedNextStep"),
     Days: t("Days"),
+    AIReportCTA: t("AIReportCTA"),
+    LastUpdated: t("LastUpdated"),
     AverageComplianceLegend: t("AverageComplianceLegend"),
     VendorCountLegend: t("VendorCountLegend"),
     NoVendorData: t("NoVendorData"),
