@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { UserRole } from "@prisma/client";
 import {
   ChevronDown,
@@ -150,6 +150,9 @@ export function DashboardOverview({
   const inProgress = countByStatus(vendorAssessments, "incomplete");
   const completed = countByStatus(vendorAssessments, "completed");
   const [showCharts, setShowCharts] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  const effectiveShowCharts = mounted ? showCharts : false;
 
   const radarData = riskPosture.categoryMetrics
     .filter((metric) => metric.questionCount > 0)
@@ -302,11 +305,11 @@ export function DashboardOverview({
             <button
               type="button"
               onClick={() => setShowCharts((prev) => !prev)}
-              aria-expanded={showCharts}
+              aria-expanded={effectiveShowCharts}
               aria-controls="risk-posture-charts"
               className="inline-flex items-center gap-1.5 rounded-md border border-transparent px-3 py-1.5 text-xs text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)]/50 hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2"
             >
-              {showCharts ? (
+              {effectiveShowCharts ? (
                 <>
                   <ChevronUp className="h-3.5 w-3.5" aria-hidden />
                   {translations.HidePostureAnalytics}
@@ -329,8 +332,8 @@ export function DashboardOverview({
 
         <div
           id="risk-posture-charts"
-          className={showCharts ? undefined : "hidden"}
-          aria-hidden={!showCharts}
+          className={effectiveShowCharts ? undefined : "hidden"}
+          aria-hidden={!effectiveShowCharts}
         >
             <div className="grid gap-4 xl:grid-cols-[1.25fr_1fr]">
               <Card className="overflow-hidden border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-card-featured)]">
