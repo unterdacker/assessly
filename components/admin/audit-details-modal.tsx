@@ -103,7 +103,7 @@ function HashDisplay({ label, value }: { label: string; value: string | null | u
   if (!value) return null;
   return (
     <div>
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-xs uppercase tracking-normal text-muted-foreground">{label}</p>
       <code className="block break-all font-mono text-[11px] text-foreground/80">{value}</code>
     </div>
   );
@@ -296,19 +296,19 @@ export function AuditDetailsModal({ log }: AuditDetailsModalProps) {
 
           <div className="grid gap-3 rounded-md border border-[var(--border)] bg-[var(--secondary)] p-3 text-sm sm:grid-cols-2">
             <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Timestamp</p>
+              <p className="text-xs uppercase tracking-normal text-muted-foreground">Timestamp</p>
               <p className="font-mono">{formatTimestamp(selected.timestamp, locale)}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">User ID</p>
+              <p className="text-xs uppercase tracking-normal text-muted-foreground">User ID</p>
               <p className="break-all font-mono text-xs">{selected.userId}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Action</p>
+              <p className="text-xs uppercase tracking-normal text-muted-foreground">Action</p>
               <p className="font-semibold">{selected.action}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Entity</p>
+              <p className="text-xs uppercase tracking-normal text-muted-foreground">Entity</p>
               <p className="font-mono text-xs">
                 {selected.entityType}/{selected.entityId}
               </p>
@@ -462,7 +462,7 @@ export function AuditDetailsModal({ log }: AuditDetailsModalProps) {
               <div className="grid gap-2 text-sm sm:grid-cols-2">
                 {selected.aiModelId && (
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
+                    <p className="text-xs uppercase tracking-normal text-cyan-700 dark:text-cyan-300">
                       Model Identity
                     </p>
                     <code className="font-mono text-xs text-cyan-900 dark:text-cyan-100">
@@ -473,7 +473,7 @@ export function AuditDetailsModal({ log }: AuditDetailsModalProps) {
                 )}
                 {selected.inputContextHash && (
                   <div className="col-span-full">
-                    <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
+                    <p className="text-xs uppercase tracking-normal text-cyan-700 dark:text-cyan-300">
                       Input Context Hash (SHA-256)
                     </p>
                     <code className="block break-all font-mono text-xs text-cyan-900 dark:text-cyan-100">
@@ -483,7 +483,7 @@ export function AuditDetailsModal({ log }: AuditDetailsModalProps) {
                 )}
                 {selected.hitlVerifiedBy && (
                   <div className="col-span-full">
-                    <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
+                    <p className="text-xs uppercase tracking-normal text-cyan-700 dark:text-cyan-300">
                       Human-in-the-Loop Reviewer
                     </p>
                     <div className="flex items-center gap-1.5">
@@ -496,7 +496,7 @@ export function AuditDetailsModal({ log }: AuditDetailsModalProps) {
                 )}
                 {aiProvenance?.linkedGenerationId && (
                   <div>
-                    <p className="text-xs uppercase tracking-wide text-cyan-700 dark:text-cyan-300">
+                    <p className="text-xs uppercase tracking-normal text-cyan-700 dark:text-cyan-300">
                       Linked Generation Event
                     </p>
                     <code className="font-mono text-xs text-cyan-900 dark:text-cyan-100">

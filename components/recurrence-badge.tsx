@@ -39,9 +39,9 @@ export function RecurrenceBadge({ interval, nextDueAt, translations }: Recurrenc
     : `Recurrence: ${intervalLabel}, due in ${daysAbsolute} days`;
 
   const colorClasses = isOverdue
-    ? "border-red-300 bg-red-100 text-red-800 dark:border-red-800 dark:bg-red-950/50 dark:text-red-300"
+    ? "border-[var(--risk-high)] bg-[var(--risk-high)]/15 text-[var(--risk-high-fg)]"
     : isApproachingDue
-      ? "border-amber-300 bg-amber-100 text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
+      ? "border-[var(--risk-medium)] bg-[var(--risk-medium)]/15 text-[var(--risk-medium-fg)]"
       : "border-slate-300 bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
 
   return (

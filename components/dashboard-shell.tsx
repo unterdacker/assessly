@@ -6,6 +6,7 @@ import { Settings, LayoutDashboard, Activity, LogOut, LineChart, Building2 } fro
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
+import { GlossaryPanel } from "@/components/glossary-panel";
 import { useAuthSession } from "@/lib/auth/client";
 
 const SUPPORTED_LOCALES = ["de", "en"] as const;
@@ -155,6 +156,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
           <div className="border-t border-[var(--border)] p-3">
+            <div className="mb-2 flex items-center gap-1">
+              <LanguageToggle />
+              <ThemeToggle />
+              <GlossaryPanel />
+            </div>
             <button
               type="button"
               onClick={handleSignOut}

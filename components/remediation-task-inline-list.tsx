@@ -1,9 +1,20 @@
 "use client";
 
+import * as React from "react";
 import type { RemediationTask, RemediationTaskStatus } from "@prisma/client";
 import { Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const statusVariant: Record<RemediationTaskStatus, "high" | "medium" | "low" | "outline"> = {
   OPEN: "high",
@@ -18,6 +29,10 @@ export type RemediationTaskInlineListTranslations = {
   noDueDate: string;
   editLabel: string;
   deleteLabel: string;
+  deleteConfirmTitle: string;
+  deleteConfirmBody: string;
+  deleteConfirmAction: string;
+  deleteCancelAction: string;
   statusOpen: string;
   statusInProgress: string;
   statusResolved: string;
@@ -48,6 +63,8 @@ export function RemediationTaskInlineList({
   onDelete,
   translations,
 }: RemediationTaskInlineListProps) {
+  const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(null);
+
   if (tasks.length === 0) return null;
 
   return (
@@ -90,7 +107,7 @@ export function RemediationTaskInlineList({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onDelete(task.id)}
+                    onClick={() => setPendingDeleteId(task.id)}
                     className="text-destructive hover:text-destructive"
                     aria-label={`${translations.deleteLabel}: ${task.title}`}
                   >
@@ -102,6 +119,45 @@ export function RemediationTaskInlineList({
           );
         })}
       </ul>
+
+      <AlertDialog
+        open={pendingDeleteId !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingDeleteId(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{translations.deleteConfirmTitle}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDeleteId && tasks.find((task) => task.id === pendingDeleteId)?.title && (
+                <span className="mb-1 block font-medium text-foreground">
+                  &ldquo;{tasks.find((task) => task.id === pendingDeleteId)?.title}&rdquo;
+                </span>
+              )}
+              {translations.deleteConfirmBody}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingDeleteId(null)}>
+              {translations.deleteCancelAction}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingDeleteId) {
+                  onDelete(pendingDeleteId);
+                  setPendingDeleteId(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {translations.deleteConfirmAction}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

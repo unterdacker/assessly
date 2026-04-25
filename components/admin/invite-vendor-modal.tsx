@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useTranslations } from "next-intl";
 import { Mail, SendHorizonal, CheckCircle2, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -54,6 +55,9 @@ export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", for
       });
       const result = (await res.json()) as SendInviteState;
       setState(result);
+      if (result.status === "sent") {
+        toast.success("Vendor invitation sent");
+      }
     } catch {
       setState({ status: "error", error: "Could not send invite. Try again." });
     } finally {
@@ -107,7 +111,7 @@ export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", for
                 </p>
               </div>
 
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-slate-600 dark:text-slate-500">
                 {tr("success.securityHint", "The invite link is one-time and expires after 48 hours. Passwords are set by the vendor and never emailed in plain text.")}
               </p>
             </div>
@@ -142,7 +146,7 @@ export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", for
               <div className="space-y-2">
                 <label
                   htmlFor="inv-email"
-                  className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                  className="text-xs font-semibold uppercase tracking-wider text-slate-600"
                 >
                   {tr("form.emailLabel", "Email Address")}
                 </label>
@@ -164,7 +168,7 @@ export function InviteVendorModal({ vendorId, vendorName, prefillEmail = "", for
               <div className="space-y-2">
                 <label
                   htmlFor="inv-duration"
-                  className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                  className="text-xs font-semibold uppercase tracking-wider text-slate-600"
                 >
                   {tr("form.codeValidityLabel", "Code Validity")}
                 </label>

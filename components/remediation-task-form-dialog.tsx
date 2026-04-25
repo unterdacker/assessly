@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -52,6 +53,10 @@ type RemediationTaskFormDialogProps = {
     labelAssignee: string;
     labelDueDate: string;
     labelStatus: string;
+    labelOptional?: string;
+    titlePlaceholder?: string;
+    descriptionPlaceholder?: string;
+    assigneeTooltip?: string;
     submit: string;
     cancel: string;
     errorRequired: string;
@@ -181,11 +186,15 @@ export function RemediationTaskFormDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="rt-title">{translations.labelTitle}</Label>
+            <Label htmlFor="rt-title">
+              {translations.labelTitle}
+              <span aria-hidden="true" className="ml-0.5 text-destructive">*</span>
+            </Label>
             <Input
               id="rt-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              placeholder={translations.titlePlaceholder ?? "Short, actionable description of the gap to close"}
               aria-invalid={!!formError}
               aria-describedby={formError ? "rt-error" : undefined}
               maxLength={255}
@@ -194,18 +203,25 @@ export function RemediationTaskFormDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="rt-description">{translations.labelDescription}</Label>
+            <Label htmlFor="rt-description">
+              {translations.labelDescription}
+              <span className="ml-1 text-xs text-muted-foreground font-normal">{translations.labelOptional ?? "(Optional)"}</span>
+            </Label>
             <textarea
               id="rt-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              placeholder={translations.descriptionPlaceholder ?? "Steps to close this gap, evidence needed, or links to relevant policies..."}
               className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               maxLength={2000}
             />
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="rt-assignee">{translations.labelAssignee}</Label>
+            <Label htmlFor="rt-assignee" className="flex items-center gap-1.5">
+              <span>{translations.labelAssignee}</span>
+              <InfoTooltip content={translations.assigneeTooltip ?? "Assign to an internal reviewer. The assignee is responsible for verifying remediation."} />
+            </Label>
             <Select
               value={assigneeSelectValue}
               onValueChange={(value) => setAssigneeUserId(value === NO_ASSIGNEE_VALUE ? "" : value)}
@@ -225,7 +241,10 @@ export function RemediationTaskFormDialog({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="rt-duedate">{translations.labelDueDate}</Label>
+            <Label htmlFor="rt-duedate">
+              {translations.labelDueDate}
+              <span className="ml-1 text-xs text-muted-foreground font-normal">{translations.labelOptional ?? "(Optional)"}</span>
+            </Label>
             <Input
               id="rt-duedate"
               type="date"

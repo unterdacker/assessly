@@ -242,15 +242,15 @@ export function ExternalAssessmentWorkspace({
           <FileCheck className="mx-auto h-6 w-6 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t("submitted.title")}</h1>
-            <p className="text-slate-600 dark:text-slate-400">
+            <p className="text-slate-600 dark:text-slate-500">
               {t.rich("submitted.description", {
                 vendorName: vendorAssessment.name,
-                strong: (chunks) => <span className="font-semibold text-indigo-600 dark:text-indigo-400">{chunks}</span>,
+                strong: (chunks) => <span className="font-semibold text-slate-700 dark:text-slate-500">{chunks}</span>,
               })}
             </p>
           </div>
           <div className="pt-4">
-            <p className="text-xs text-slate-400">{t("submitted.closeHint")}</p>
+            <p className="text-xs text-slate-600">{t("submitted.closeHint")}</p>
           </div>
         </div>
       </div>
@@ -270,7 +270,7 @@ export function ExternalAssessmentWorkspace({
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
               {t("welcome.title")}
             </h1>
-            <p className="text-lg text-slate-600 dark:text-slate-400">
+            <p className="text-lg text-slate-600 dark:text-slate-500">
               {t.rich("welcome.subtitle", {
                 strong: (chunks) => <strong>{chunks}</strong>,
               })}
@@ -281,24 +281,24 @@ export function ExternalAssessmentWorkspace({
         <div className="rounded-[var(--radius-card)] border border-slate-200 bg-white p-8 shadow-md dark:border-slate-800 dark:bg-slate-900 space-y-6">
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t("welcome.purposeTitle")}</h2>
-            <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+            <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-500">
               {t.rich("welcome.purposeBody1", {
                 strong: (chunks) => <strong>{chunks}</strong>,
               })}
             </p>
-            <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+            <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-500">
               {t("welcome.purposeBody2")}
             </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-[var(--radius-card)] border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900/20 dark:bg-indigo-900/10">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 mb-2">{t("welcome.fastPathTitle")}</h3>
-              <p className="text-xs text-slate-600 dark:text-slate-400">{t("welcome.fastPathBody")}</p>
+            <div className="rounded-[var(--radius-card)] border border-slate-100 bg-slate-50/50 p-4 dark:border-indigo-900/20 dark:bg-indigo-900/10">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-indigo-400 mb-2">{t("welcome.fastPathTitle")}</h3>
+              <p className="text-xs text-slate-600 dark:text-slate-500">{t("welcome.fastPathBody")}</p>
             </div>
             <div className="rounded-[var(--radius-card)] border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-400 mb-2">{t("welcome.directPathTitle")}</h3>
-              <p className="text-xs text-slate-600 dark:text-slate-400">{t("welcome.directPathBody")}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-500">{t("welcome.directPathBody")}</p>
             </div>
           </div>
 
@@ -310,7 +310,7 @@ export function ExternalAssessmentWorkspace({
           </div>
         </div>
 
-        <p className="text-center text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-widest">
+        <p className="text-center text-xs text-slate-600 dark:text-slate-500 uppercase tracking-widest">
           {t("welcome.footer")}
         </p>
       </div>
@@ -339,7 +339,7 @@ export function ExternalAssessmentWorkspace({
                     {vendorAssessment.name}
                   </h1>
                 </div>
-                <p className="text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-tighter">
+                <p className="text-xs text-slate-600 dark:text-slate-500 uppercase tracking-tighter">
                   {t("header.title")}
                 </p>
               </div>
@@ -350,7 +350,7 @@ export function ExternalAssessmentWorkspace({
                 <span className="text-xs font-bold text-slate-900 dark:text-white">
                   {t("header.progressComplete", { progress: progressPercent })}
                 </span>
-                <span className="text-[10px] text-slate-600 dark:text-slate-400">{t("header.progressVerified", { filled: filledCount, total: questions.length })}</span>
+                <span className="text-xs text-slate-600 dark:text-slate-500">{t("header.progressVerified", { filled: filledCount, total: questions.length })}</span>
               </div>
               
               <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
@@ -358,7 +358,7 @@ export function ExternalAssessmentWorkspace({
               <div className="flex items-center gap-2">
                 {sessionExpiryLabel && (
                   <span className={cn(
-                    "hidden rounded-md px-2 py-1 text-[10px] font-semibold uppercase tracking-wider lg:inline-flex",
+                    "hidden rounded-md px-2 py-1 text-xs font-semibold uppercase tracking-wider lg:inline-flex",
                     sessionExpired
                       ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
                       : expiryWithinTenMinutes
@@ -434,10 +434,10 @@ export function ExternalAssessmentWorkspace({
         
         {/* Path A: Fast Path (Left Side) */}
         <aside className="space-y-6 lg:col-span-4 lg:sticky lg:top-32">
-          <div className="rounded-[var(--radius-card)] border border-indigo-100 bg-white p-6 shadow-sm dark:border-indigo-900/30 dark:bg-slate-900">
+          <div className="rounded-[var(--radius-card)] border border-slate-100 bg-white p-6 shadow-sm dark:border-indigo-900/30 dark:bg-slate-900">
             <div className="mb-4 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-indigo-500 animate-ai-breathe origin-center shrink-0" />
+                <Sparkles className="h-5 w-5 text-indigo-500 origin-center shrink-0" />
                 <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                   {t("fastPath.title")}
                 </h2>
@@ -445,7 +445,7 @@ export function ExternalAssessmentWorkspace({
               
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-7 gap-1.5 px-2 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
+                  <Button variant="ghost" size="sm" className="h-7 gap-1.5 px-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-900/20">
                     <ShieldCheck className="h-3.5 w-3.5" />
                     {t("privacy.badge")}
                   </Button>
@@ -464,7 +464,7 @@ export function ExternalAssessmentWorkspace({
                           </div>
                           <div>
                             <p className="text-sm font-semibold text-slate-900 dark:text-white">{t("privacy.items.noAiTraining.title")}</p>
-                            <p className="text-xs text-slate-500">{t("privacy.items.noAiTraining.body")}</p>
+                            <p className="text-xs text-slate-600">{t("privacy.items.noAiTraining.body")}</p>
                           </div>
                         </div>
                         <div className="flex gap-3">
@@ -473,7 +473,7 @@ export function ExternalAssessmentWorkspace({
                           </div>
                           <div>
                             <p className="text-sm font-semibold text-slate-900 dark:text-white">{t("privacy.items.euHosted.title")}</p>
-                            <p className="text-xs text-slate-500">{t("privacy.items.euHosted.body")}</p>
+                            <p className="text-xs text-slate-600">{t("privacy.items.euHosted.body")}</p>
                           </div>
                         </div>
                         <div className="flex gap-3">
@@ -482,7 +482,7 @@ export function ExternalAssessmentWorkspace({
                           </div>
                           <div>
                             <p className="text-sm font-semibold text-slate-900 dark:text-white">{t("privacy.items.stateless.title")}</p>
-                            <p className="text-xs text-slate-500">{t("privacy.items.stateless.body")}</p>
+                            <p className="text-xs text-slate-600">{t("privacy.items.stateless.body")}</p>
                           </div>
                         </div>
                         <div className="flex gap-3">
@@ -491,7 +491,7 @@ export function ExternalAssessmentWorkspace({
                           </div>
                           <div>
                             <p className="text-sm font-semibold text-slate-900 dark:text-white">{t("privacy.items.tls.title")}</p>
-                            <p className="text-xs text-slate-500">{t("privacy.items.tls.body")}</p>
+                            <p className="text-xs text-slate-600">{t("privacy.items.tls.body")}</p>
                           </div>
                         </div>
                       </div>
@@ -500,7 +500,7 @@ export function ExternalAssessmentWorkspace({
                 </DialogContent>
               </Dialog>
             </div>
-            <p className="mb-6 text-sm text-slate-600 dark:text-slate-400">
+            <p className="mb-6 text-sm text-slate-600 dark:text-slate-500">
               {t.rich("fastPath.description", {
                 strong: (chunks) => <strong>{chunks}</strong>,
               })}
@@ -518,7 +518,7 @@ export function ExternalAssessmentWorkspace({
             {localDocumentUrl && (
               <div className="mt-4 flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950">
                 <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                <span title={localDocumentFilename ?? undefined} className="text-xs text-slate-500 truncate flex-1">
+                <span title={localDocumentFilename ?? undefined} className="text-xs text-slate-600 truncate flex-1">
                   {t("evidence.label")} <span className="font-medium text-slate-700 dark:text-slate-300">{localDocumentFilename}</span>
                 </span>
                 <Button variant="outline" size="sm" asChild>
@@ -616,7 +616,7 @@ export function ExternalAssessmentWorkspace({
               </div>
 
               {profileMessage && (
-                <p className="text-xs text-slate-500 dark:text-slate-400">{profileMessage}</p>
+                <p className="text-xs text-slate-600 dark:text-slate-500">{profileMessage}</p>
               )}
 
               <Button type="submit" className="w-full" disabled={profileSaving}>
@@ -674,7 +674,7 @@ export function ExternalAssessmentWorkspace({
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/70 p-4">
           <div className="w-full max-w-md space-y-4 rounded-[var(--radius-card)] border border-red-200 bg-white p-6 text-center shadow-xl dark:border-red-900/40 dark:bg-slate-900">
             <h2 className="text-xl font-semibold text-red-700 dark:text-red-300">{t("sessionExpired.title")}</h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-sm text-slate-600 dark:text-slate-500">
               {t("sessionExpired.description")}
             </p>
             <Button asChild className="w-full">

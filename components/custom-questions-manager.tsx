@@ -125,7 +125,7 @@ function QuestionForm({
     <form
       id={formId}
       onSubmit={handleSubmit}
-      className="space-y-3 rounded-lg border border-indigo-200 bg-indigo-50/30 p-4 dark:border-indigo-900/60 dark:bg-indigo-950/20"
+      className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-700 dark:bg-slate-900/20"
       noValidate
     >
       {localError && (
@@ -473,7 +473,7 @@ export function CustomQuestionsManager({
                   <div className="flex items-start gap-3">
                     {/* Number badge */}
                     <span
-                      className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+                      className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                       aria-hidden="true"
                     >
                       {index + 1}

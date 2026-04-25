@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -87,6 +88,7 @@ export function AddVendorModal({ trigger }: AddVendorModalProps) {
         return;
       }
       router.refresh();
+      toast.success("Vendor invitation sent");
       handleOpenChange(false);
     } catch {
       setEmailError("Could not save vendor. Try again.");
