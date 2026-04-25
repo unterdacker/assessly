@@ -229,6 +229,7 @@ async function DashboardContent({ session, locale }: DashboardContentProps) {
         label={t("AnalyticsSectionTitle")}
         toggleOpenLabel={t("AnalyticsSectionShow")}
         toggleCloseLabel={t("AnalyticsSectionHide")}
+        defaultOpen={false}
       >
         {/* Analytics Overview */}
         <div className="space-y-6 pb-8">

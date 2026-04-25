@@ -149,7 +149,7 @@ export function DashboardOverview({
   const pending = countByStatus(vendorAssessments, "pending");
   const inProgress = countByStatus(vendorAssessments, "incomplete");
   const completed = countByStatus(vendorAssessments, "completed");
-  const [showCharts, setShowCharts] = useState(true);
+  const [showCharts, setShowCharts] = useState(false);
 
   const radarData = riskPosture.categoryMetrics
     .filter((metric) => metric.questionCount > 0)

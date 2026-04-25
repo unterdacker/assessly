@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useLocale } from "next-intl";
 import { TrendingUp, TrendingDown, Minus, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 
 type PortfolioComplianceWidgetProps = {
   score: number;
@@ -30,6 +32,8 @@ export function PortfolioComplianceWidget({
   vendorCount,
   translations,
 }: PortfolioComplianceWidgetProps) {
+  const locale = useLocale();
+
   const scoreColor =
     score >= 80
       ? "text-emerald-600 dark:text-emerald-400"
@@ -93,12 +97,11 @@ export function PortfolioComplianceWidget({
               <p className="mt-1 text-xs text-[var(--muted-foreground)]">{translations.noDataExplanation}</p>
             )}
             {translations.noDataCta && (
-              <Link
-                href="/vendors"
-                className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[var(--primary)] underline-offset-2 hover:underline"
-              >
-                {translations.noDataCta}
-              </Link>
+              <Button asChild variant="outline" size="sm" className="mt-3">
+                <Link href={`/${locale}/vendors`}>
+                  {translations.noDataCta}
+                </Link>
+              </Button>
             )}
           </div>
         </CardContent>

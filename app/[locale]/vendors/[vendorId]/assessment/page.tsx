@@ -5,6 +5,7 @@ import { RecurrenceBadge } from "@/components/recurrence-badge";
 import { RecurrenceScheduleForm } from "@/components/recurrence-schedule-form";
 import { ManualReassessmentButton } from "@/components/manual-reassessment-button";
 import { RegressionAlertBanner } from "@/components/regression-alert-banner";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { getVendorAssessmentDetail } from "@/lib/queries/vendor-assessments";
 import { requirePageRole } from "@/lib/auth/server";
@@ -58,6 +59,8 @@ export default async function AssessmentPage({ params }: PageProps) {
       </div>
     );
   }
+
+  const vendorName = detail.vendorAssessment.name;
 
   const isPremium = await isPremiumFeatureEnabled(session.companyId ?? "");
 
@@ -164,6 +167,15 @@ export default async function AssessmentPage({ params }: PageProps) {
 
   return (
     <>
+      <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 mb-2">
+        <Breadcrumb
+          items={[
+            { label: t("commandPalette.navigation.vendors"), href: `/${locale}/vendors` },
+            { label: vendorName },
+          ]}
+        />
+      </div>
+
       <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8 mb-4 flex items-center gap-3 flex-wrap">
         <OverdueBadge dueDate={detail.vendorAssessment.dueDate} />
         {schedule && (

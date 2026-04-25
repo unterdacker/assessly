@@ -88,25 +88,55 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
     headquartersLocation: v?.headquartersLocation,
   };
 
+  const renderMissingField = (
+    message: string,
+    severity: "critical" | "warning",
+    tooltip?: string,
+  ) => {
+    if (!message) return null;
+    const Icon = severity === "critical" ? AlertCircle : AlertTriangle;
+    const badge = (
+      <div
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-[var(--radius-badge)] px-2 py-1 text-xs font-medium",
+          severity === "critical"
+            ? "bg-[var(--risk-high)]/15 text-[var(--risk-high-fg)] border border-[var(--risk-high)]/30"
+            : "bg-[var(--semantic-warning)]/10 text-[var(--muted-foreground)] border border-[var(--semantic-warning)]/30"
+        )}
+        role="status"
+        aria-label={message}
+      >
+        <Icon className="h-3 w-3 shrink-0" aria-hidden />
+        {message}
+      </div>
+    );
+    if (tooltip) {
+      return (
+        <div className="flex items-center gap-1.5">
+          {badge}
+          <InfoTooltip content={tooltip} />
+        </div>
+      );
+    }
+    return badge;
+  };
+
   /** Helper for combined Contact Name (Email) logic with individual missing warnings. */
   const renderContact = (name: string | undefined, email: string | undefined, label: string) => {
     if (!name && !email) {
       return (
-        <div className="flex items-center gap-2 text-sm italic text-red-500/70 dark:text-red-400/50">
-          <AlertCircle className="h-3 w-3 fill-red-500/20" />
-          {t("missingContact", { label: label.toLowerCase() })}
-        </div>
+        renderMissingField(
+          t("missingContact", { label: label.toLowerCase() }),
+          "critical",
+          "Both name and email are required for the NIS2 Art. 21 contact register. Complete the vendor profile.",
+        )
       );
     }
 
     return (
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-slate-700 dark:text-slate-200">
         <span>
-          {name || (
-            <span className="text-amber-500/70 dark:text-amber-400/50">
-              {t("missingName")} <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0 inline" aria-hidden />
-            </span>
-          )}
+          {name || renderMissingField(t("missingName"), "warning")}
         </span>
         {email ? (
           <a 
@@ -117,9 +147,7 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
             ({email})
           </a>
         ) : (
-          <span className="text-xs text-amber-500/70 dark:text-amber-400/50 italic underline decoration-dotted">
-            {t("missingEmail")} <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0 inline" aria-hidden />
-          </span>
+          renderMissingField(t("missingEmail"), "warning")
         )}
       </div>
     );
@@ -271,10 +299,11 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
               {v?.headquartersLocation ? (
                 <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{v.headquartersLocation}</p>
               ) : (
-                <div className="flex items-center gap-2 text-sm italic text-amber-500/70 dark:text-amber-400/50">
-                  <AlertCircle className="h-3 w-3 fill-amber-500/20" />
-                  {t("missingLocation")}
-                </div>
+                renderMissingField(
+                  t("missingLocation"),
+                  "warning",
+                  "Headquarters location is needed for data residency classification under GDPR Art. 44.",
+                )
               )}
             </div>
           </div>
@@ -290,10 +319,11 @@ export function VendorDetailsCard({ vendorAssessment, companyId }: VendorDetails
                   {v.registrationId}
                 </Badge>
               ) : (
-                <div className="flex items-center gap-2 text-sm italic text-red-500/70 dark:text-red-400/50">
-                  <AlertCircle className="h-3 w-3 fill-red-500/20" />
-                  {t("missingId")}
-                </div>
+                renderMissingField(
+                  t("missingId"),
+                  "critical",
+                  "Registration ID is required to verify legal entity in the audit dossier.",
+                )
               )}
             </div>
           </div>
