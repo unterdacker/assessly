@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, LayoutDashboard, Users, Activity, LogOut, LineChart, Building2 } from "lucide-react";
+import { Settings, LayoutDashboard, Activity, LogOut, LineChart, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -19,6 +19,7 @@ const NAV_LABELS = {
     analytics: "Analysen",
     settings: "Einstellungen",
     users: "Benutzerverwaltung",
+    administration: "Administration",
     auditLogs: "Audit-Trail",
     nis2Label: "NIS2-konforme Bewertungen",
     signOut: "Abmelden",
@@ -30,6 +31,7 @@ const NAV_LABELS = {
     analytics: "Analytics",
     settings: "Settings",
     users: "User Management",
+    administration: "Administration",
     auditLogs: "Audit Trail",
     nis2Label: "NIS2-aligned assessments",
     signOut: "Sign out",
@@ -64,16 +66,8 @@ function getNav(locale: "de" | "en", role: string | null) {
   if (role === "ADMIN") {
     base.splice(3, 0, {
       href: "/settings",
-      label: NAV_LABELS[locale].settings,
+      label: NAV_LABELS[locale].administration,
       icon: Settings,
-    });
-  }
-
-  if (role === "ADMIN") {
-    base.splice(5, 0, {
-      href: "/dashboard/users",
-      label: NAV_LABELS[locale].users,
-      icon: Users,
     });
   }
 
@@ -164,7 +158,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={handleSignOut}
-              className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[0.8125rem] font-medium text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+              className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-[0.8125rem] font-medium text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2"
             >
               <LogOut className="h-[15px] w-[15px] shrink-0 opacity-80" aria-hidden />
               {NAV_LABELS[locale].signOut}
@@ -207,7 +201,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 type="button"
                 onClick={handleSignOut}
                 title={NAV_LABELS[locale].signOut}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2"
                 aria-label={NAV_LABELS[locale].signOut}
               >
                 <LogOut className="h-4 w-4" aria-hidden />

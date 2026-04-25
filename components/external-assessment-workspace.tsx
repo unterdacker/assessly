@@ -238,7 +238,7 @@ export function ExternalAssessmentWorkspace({
           <ThemeToggle />
           <LanguageToggle />
         </div>
-        <div className="max-w-md space-y-6 rounded-xl border border-emerald-100 bg-white p-8 text-center shadow-sm dark:border-emerald-900/30 dark:bg-slate-900">
+        <div className="max-w-md space-y-6 rounded-[var(--radius-card)] border border-emerald-100 bg-white p-8 text-center shadow-sm dark:border-emerald-900/30 dark:bg-slate-900">
           <FileCheck className="mx-auto h-6 w-6 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t("submitted.title")}</h1>
@@ -278,7 +278,7 @@ export function ExternalAssessmentWorkspace({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-md dark:border-slate-800 dark:bg-slate-900 space-y-6">
+        <div className="rounded-[var(--radius-card)] border border-slate-200 bg-white p-8 shadow-md dark:border-slate-800 dark:bg-slate-900 space-y-6">
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{t("welcome.purposeTitle")}</h2>
             <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
@@ -292,11 +292,11 @@ export function ExternalAssessmentWorkspace({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900/20 dark:bg-indigo-900/10">
+            <div className="rounded-[var(--radius-card)] border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900/20 dark:bg-indigo-900/10">
               <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-400 mb-2">{t("welcome.fastPathTitle")}</h3>
               <p className="text-xs text-slate-600 dark:text-slate-400">{t("welcome.fastPathBody")}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+            <div className="rounded-[var(--radius-card)] border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-400 mb-2">{t("welcome.directPathTitle")}</h3>
               <p className="text-xs text-slate-600 dark:text-slate-400">{t("welcome.directPathBody")}</p>
             </div>
@@ -310,7 +310,7 @@ export function ExternalAssessmentWorkspace({
           </div>
         </div>
 
-        <p className="text-center text-[10px] text-slate-400 uppercase tracking-widest">
+        <p className="text-center text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-widest">
           {t("welcome.footer")}
         </p>
       </div>
@@ -334,12 +334,12 @@ export function ExternalAssessmentWorkspace({
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">{t("header.portalTag")}</span>
-                  <span className="text-slate-300 dark:text-slate-700">|</span>
+                  <span className="text-slate-400 dark:text-slate-600" aria-hidden>|</span>
                   <h1 title={vendorAssessment.name} className="text-sm font-semibold text-slate-900 dark:text-white truncate max-w-[200px] sm:max-w-none">
                     {vendorAssessment.name}
                   </h1>
                 </div>
-                <p className="text-[10px] text-slate-500 uppercase tracking-tighter">
+                <p className="text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-tighter">
                   {t("header.title")}
                 </p>
               </div>
@@ -350,7 +350,7 @@ export function ExternalAssessmentWorkspace({
                 <span className="text-xs font-bold text-slate-900 dark:text-white">
                   {t("header.progressComplete", { progress: progressPercent })}
                 </span>
-                <span className="text-[10px] text-slate-400">{t("header.progressVerified", { filled: filledCount, total: questions.length })}</span>
+                <span className="text-[10px] text-slate-600 dark:text-slate-400">{t("header.progressVerified", { filled: filledCount, total: questions.length })}</span>
               </div>
               
               <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
@@ -389,7 +389,7 @@ export function ExternalAssessmentWorkspace({
                   size="sm"
                   className={cn(
                     "h-9 px-4 shadow-sm transition-all",
-                    isComplete ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
+                    isComplete ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
                   )}
                 >
                   {isSubmitting ? t("header.submitting") : isSubmitted ? t("header.resubmit") : t("header.submit")}
@@ -434,7 +434,7 @@ export function ExternalAssessmentWorkspace({
         
         {/* Path A: Fast Path (Left Side) */}
         <aside className="space-y-6 lg:col-span-4 lg:sticky lg:top-32">
-          <div className="rounded-xl border border-indigo-100 bg-white p-6 shadow-sm dark:border-indigo-900/30 dark:bg-slate-900">
+          <div className="rounded-[var(--radius-card)] border border-indigo-100 bg-white p-6 shadow-sm dark:border-indigo-900/30 dark:bg-slate-900">
             <div className="mb-4 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-indigo-500 animate-pulse" />
@@ -539,7 +539,7 @@ export function ExternalAssessmentWorkspace({
             )}
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="rounded-[var(--radius-card)] border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="mb-4 flex items-center gap-2">
               <Building2 className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
@@ -625,7 +625,7 @@ export function ExternalAssessmentWorkspace({
             </form>
           </div>
 
-          <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4 dark:border-amber-900/20 dark:bg-amber-900/10">
+          <div className="rounded-[var(--radius-card)] border border-amber-100 bg-amber-50/50 p-4 dark:border-amber-900/20 dark:bg-amber-900/10">
             <div className="flex gap-3">
               <AlertCircle className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
               <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-400">
@@ -672,7 +672,7 @@ export function ExternalAssessmentWorkspace({
 
       {sessionExpired && !isSubmitted && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/70 p-4">
-          <div className="w-full max-w-md space-y-4 rounded-xl border border-red-200 bg-white p-6 text-center shadow-xl dark:border-red-900/40 dark:bg-slate-900">
+          <div className="w-full max-w-md space-y-4 rounded-[var(--radius-card)] border border-red-200 bg-white p-6 text-center shadow-xl dark:border-red-900/40 dark:bg-slate-900">
             <h2 className="text-xl font-semibold text-red-700 dark:text-red-300">{t("sessionExpired.title")}</h2>
             <p className="text-sm text-slate-600 dark:text-slate-400">
               {t("sessionExpired.description")}

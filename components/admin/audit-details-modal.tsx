@@ -294,7 +294,7 @@ export function AuditDetailsModal({ log }: AuditDetailsModalProps) {
             </p>
           )}
 
-          <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm dark:border-slate-800 dark:bg-slate-900/40 sm:grid-cols-2">
+          <div className="grid gap-3 rounded-md border border-[var(--border)] bg-[var(--secondary)] p-3 text-sm sm:grid-cols-2">
             <div>
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Timestamp</p>
               <p className="font-mono">{formatTimestamp(selected.timestamp, locale)}</p>
@@ -316,19 +316,19 @@ export function AuditDetailsModal({ log }: AuditDetailsModalProps) {
           </div>
 
           {(details?.forensic.ipAddress || parsedUserAgent || details?.traceId || selected.requestId) && (
-            <div className="rounded-md border border-indigo-200 bg-indigo-50/40 p-4 dark:border-indigo-900 dark:bg-indigo-950/20">
-              <h3 className="mb-3 text-sm font-semibold text-indigo-800 dark:text-indigo-300">
+            <div className="rounded-md border border-[var(--border)] bg-[var(--accent)] p-4">
+              <h3 className="mb-3 text-sm font-semibold text-[var(--accent-foreground)]">
                 Forensic Metadata (BSI Grundschutz / ISO 27001 A.12.4)
               </h3>
               <div className="space-y-2 text-sm">
                 {(details?.traceId || selected.requestId) && (
                   <div className="flex items-start gap-2">
-                    <Link2 className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
+                    <Link2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" aria-hidden />
                     <div>
-                      <p className="text-xs font-semibold text-indigo-900 dark:text-indigo-100">
+                      <p className="text-xs font-semibold text-[var(--foreground)]">
                         Trace ID / Correlation
                       </p>
-                      <code className="block break-all text-xs text-indigo-800 dark:text-indigo-200">
+                      <code className="block break-all text-xs text-[var(--foreground)] opacity-80">
                         {details?.traceId ?? selected.requestId}
                       </code>
                     </div>
@@ -336,12 +336,12 @@ export function AuditDetailsModal({ log }: AuditDetailsModalProps) {
                 )}
                 {details?.forensic.ipAddress && (
                   <div className="flex items-start gap-2">
-                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" aria-hidden />
                     <div>
-                      <p className="text-xs font-semibold text-indigo-900 dark:text-indigo-100">
+                      <p className="text-xs font-semibold text-[var(--foreground)]">
                         IP Address
                       </p>
-                      <code className="block text-xs text-indigo-800 dark:text-indigo-200">
+                      <code className="block text-xs text-[var(--foreground)] opacity-80">
                         {details.forensic.ipAddress}
                       </code>
                     </div>
@@ -349,15 +349,15 @@ export function AuditDetailsModal({ log }: AuditDetailsModalProps) {
                 )}
                 {parsedUserAgent && (
                   <div className="flex items-start gap-2">
-                    <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden />
+                    <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-[var(--primary)]" aria-hidden />
                     <div>
-                      <p className="text-xs font-semibold text-indigo-900 dark:text-indigo-100">{t("userAgent.normalized")}</p>
-                      <p className="text-xs text-indigo-800 dark:text-indigo-200">{parsedUserAgent}</p>
+                      <p className="text-xs font-semibold text-[var(--foreground)]">{t("userAgent.normalized")}</p>
+                      <p className="text-xs text-[var(--foreground)] opacity-80">{parsedUserAgent}</p>
                       {(details?.forensic.userAgent ?? selected.userAgent)?.startsWith("[REDACTED") && (
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <button type="button" className="mt-1 inline-flex items-center gap-1 text-xs text-indigo-700 underline dark:text-indigo-300">
+                              <button type="button" className="mt-1 inline-flex items-center gap-1 text-xs text-[var(--primary)] underline">
                                 <Info className="h-3.5 w-3.5" aria-hidden />
                                 {t("gdprWhyRedacted")}
                               </button>
@@ -422,20 +422,20 @@ export function AuditDetailsModal({ log }: AuditDetailsModalProps) {
           )}
 
           {details?.traceId && details.relatedEvents.length > 0 && (
-            <div className="rounded-md border border-violet-200 bg-violet-50/40 p-4 dark:border-violet-900 dark:bg-violet-950/20">
-              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-violet-900 dark:text-violet-200">
+            <div className="rounded-md border border-[var(--border)] bg-[var(--secondary)] p-4">
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-[var(--foreground)]">
                 <Link2 className="h-4 w-4" aria-hidden />
                 Related Events (shared Trace ID)
               </h3>
               <ul className="space-y-2 text-xs">
                 {details.relatedEvents.map((event) => (
-                  <li key={event.id} className="rounded border border-violet-200/80 bg-white/70 p-2 dark:border-violet-800 dark:bg-slate-950/30">
+                  <li key={event.id} className="rounded border border-[var(--border)] bg-[var(--background)] p-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-violet-900 dark:text-violet-100">{formatTimestamp(event.timestamp, locale)}</span>
-                      <span className="rounded bg-violet-100 px-1.5 py-0.5 font-semibold text-violet-800 dark:bg-violet-900/60 dark:text-violet-200">
+                      <span className="font-mono text-[var(--foreground)]">{formatTimestamp(event.timestamp, locale)}</span>
+                      <span className="rounded bg-[var(--accent)] px-1.5 py-0.5 font-semibold text-[var(--accent-foreground)]">
                         {event.action}
                       </span>
-                      <span className="text-violet-800 dark:text-violet-300">{event.entity}</span>
+                      <span className="text-[var(--muted-foreground)]">{event.entity}</span>
                     </div>
                   </li>
                 ))}
@@ -444,7 +444,7 @@ export function AuditDetailsModal({ log }: AuditDetailsModalProps) {
           )}
 
           {details?.traceId && details.relatedEvents.length === 0 && (
-            <div className="rounded-md border border-violet-200 bg-violet-50/40 p-4 text-xs text-violet-800 dark:border-violet-900 dark:bg-violet-950/20 dark:text-violet-200">
+            <div className="rounded-md border border-[var(--border)] bg-[var(--secondary)] p-4 text-xs text-[var(--muted-foreground)]">
               No related events found for this trace ID.
             </div>
           )}

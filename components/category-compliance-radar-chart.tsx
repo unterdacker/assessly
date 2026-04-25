@@ -9,12 +9,14 @@ type CategoryComplianceRadarChartProps = {
   emptyLabel: string;
   emptyDescription?: string;
   hoverHint?: string;
+  titleSuffix?: string;
 };
 
 export function CategoryComplianceRadarChart({
   data,
   emptyLabel,
   emptyDescription,
+  titleSuffix = "% compliance score",
 }: CategoryComplianceRadarChartProps) {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -36,10 +38,16 @@ export function CategoryComplianceRadarChart({
 
   const fillOpacity = theme === "dark" ? 0.45 : 0.2;
   const strokeWidth = theme === "dark" ? 2.5 : 2;
-  const gridStroke =
-    theme === "dark" ? "rgba(148,163,184,0.45)" : "rgba(100,116,139,0.4)";
-  const tickFill = theme === "dark" ? "#cbd5e1" : "#475569";
-  const primaryColor = theme === "dark" ? "#818cf8" : "#4338ca";
+  const root = typeof document !== "undefined" ? document.documentElement : null;
+  const primaryColor = root
+    ? (getComputedStyle(root).getPropertyValue("--primary").trim() || (theme === "dark" ? "#818cf8" : "#4338ca"))
+    : (theme === "dark" ? "#818cf8" : "#4338ca");
+  const tickFill = root
+    ? (getComputedStyle(root).getPropertyValue("--muted-foreground").trim() || (theme === "dark" ? "#cbd5e1" : "#475569"))
+    : (theme === "dark" ? "#cbd5e1" : "#475569");
+  const gridStroke = root
+    ? (getComputedStyle(root).getPropertyValue("--border").trim() || (theme === "dark" ? "rgba(148,163,184,0.45)" : "rgba(100,116,139,0.4)"))
+    : (theme === "dark" ? "rgba(148,163,184,0.45)" : "rgba(100,116,139,0.4)");
 
   // SVG geometry
   const cx = 240;
@@ -142,18 +150,22 @@ export function CategoryComplianceRadarChart({
 
           {/* Axis labels */}
           {labelPositions.map((lp, i) => (
-            <text
-              key={i}
-              x={lp.lx}
-              y={lp.ly}
-              textAnchor={lp.textAnchor}
-              dominantBaseline={lp.dominantBaseline}
-              fontSize={15}
-              fontWeight="600"
-              fill={tickFill}
-            >
-              {lp.label}
-            </text>
+            <g key={i}>
+              <text
+                x={lp.lx}
+                y={lp.ly}
+                textAnchor={lp.textAnchor}
+                dominantBaseline={lp.dominantBaseline}
+                fontSize={15}
+                fontWeight="600"
+                fill={tickFill}
+              >
+                {data[i] && (
+                  <title>{data[i].label}: {Math.round(data[i].value)}{titleSuffix}</title>
+                )}
+                {lp.label}
+              </text>
+            </g>
           ))}
         </svg>
       )}

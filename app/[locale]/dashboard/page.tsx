@@ -157,6 +157,8 @@ async function DashboardContent({ session, locale }: DashboardContentProps) {
     DownloadForensicAuditSummary: t("DownloadForensicAuditSummary"),
     DownloadForensicAuditHint: t("DownloadForensicAuditHint"),
     DownloadForensicAuditFailed: t("DownloadForensicAuditFailed"),
+    AIReportCTA: t("AIReportCTA"),
+    LastUpdated: t("LastUpdated"),
   };
 
   const analyticsCountsLabels = {

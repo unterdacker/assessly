@@ -24,7 +24,7 @@ export default function ExternalPortalPage() {
         <ThemeToggle />
         <LanguageToggle />
       </div>
-      <div className="w-full max-w-md space-y-6 rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="w-full max-w-md space-y-6 rounded-[var(--radius-card)] border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white">
           <ShieldCheck className="h-7 w-7" />
         </div>
@@ -42,7 +42,7 @@ export default function ExternalPortalPage() {
         <form action={formAction} className="space-y-4">
           <input type="hidden" name="locale" value={locale} />
           <div className="space-y-2">
-            <label htmlFor="accessCode" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <label htmlFor="accessCode" className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
               {t("EnterAccessCode")}
             </label>
             <div className="relative">
@@ -62,7 +62,7 @@ export default function ExternalPortalPage() {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">
               {t("Password")}
             </label>
             <div className="relative">
@@ -88,6 +88,11 @@ export default function ExternalPortalPage() {
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? t("Checking") : t("SecureAccess")}
           </Button>
+
+          <p className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+            <Lock className="h-3 w-3 shrink-0" aria-hidden />
+            {t("PortalIsolationNotice")}
+          </p>
         </form>
       </div>
     </main>

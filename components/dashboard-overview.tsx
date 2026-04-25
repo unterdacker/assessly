@@ -2,11 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import type { UserRole } from "@prisma/client";
 import {
-  BrainCircuit,
   ChevronDown,
   ChevronUp,
   ClipboardList,
@@ -26,7 +23,6 @@ import { scoreGaugeColor } from "@/lib/score-colors";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { RiskGauge } from "@/components/risk-gauge";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CategoryComplianceRadarChartLazy } from "@/components/category-compliance-radar-chart-lazy";
 import { VendorsByRiskBarChartLazy } from "@/components/vendors-by-risk-bar-chart-lazy";
@@ -89,6 +85,8 @@ export type DashboardOverviewProps = {
     AverageRemediationTime: string;
     RecommendedNextStep: string;
     Days: string;
+    AIReportCTA: string;
+    LastUpdated: string;
     AverageComplianceLegend: string;
     VendorCountLegend: string;
     NoVendorData: string;
@@ -153,34 +151,6 @@ export function DashboardOverview({
   const completed = countByStatus(vendorAssessments, "completed");
   const [showCharts, setShowCharts] = useState(true);
 
-  const tiles = [
-    {
-      label: translations.Pending,
-      value: pending,
-      icon: Mail,
-      hint: translations.AwaitingVendorResponse,
-    },
-    {
-      label: translations.Incomplete,
-      value: inProgress,
-      icon: ClipboardList,
-      hint: translations.QuestionnaireUnderway,
-    },
-    {
-      label: translations.Completed,
-      value: completed,
-      icon: UserCheck,
-      hint: translations.AssessmentsClosed,
-    },
-    {
-      label: translations.OpenRemediations,
-      value: openRemediationCount,
-      icon: ShieldAlert,
-      hint: translations.OpenRemediationsHint,
-      isRisk: true,
-    },
-  ];
-
   const radarData = riskPosture.categoryMetrics
     .filter((metric) => metric.questionCount > 0)
     .map((metric) => ({
@@ -200,10 +170,6 @@ export function DashboardOverview({
       ? translations.AIAnalysisLive
       : translations.AIAnalysisFallback;
 
-  const recommendedCategory = riskPosture.executiveSummary.recommendedCategoryKey
-    ? translations.categoryLabels[riskPosture.executiveSummary.recommendedCategoryKey]
-    : translations.NoVendorData;
-
   const riskLabel =
     score > 70
       ? translations.riskLevelLabels.low
@@ -211,10 +177,14 @@ export function DashboardOverview({
         ? translations.riskLevelLabels.medium
         : translations.riskLevelLabels.high;
   const isAllClear = score >= 80 && openRemediationCount === 0;
+  const lastUpdated =
+    vendorAssessments.length > 0
+      ? new Date(Math.max(...vendorAssessments.map((a) => new Date(a.updatedAt ?? Date.now()).getTime())))
+      : null;
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-1">
         <div>
           <h1 className="font-display text-xl font-semibold tracking-tight md:text-2xl">
             {translations.Dashboard}
@@ -223,9 +193,6 @@ export function DashboardOverview({
             {translations.DashboardDesc}
           </p>
         </div>
-        <Button variant="secondary" asChild className="w-full sm:w-auto">
-          <Link href={`/${locale}/vendors`}>{translations.ManageVendors}</Link>
-        </Button>
       </div>
 
       <div>
@@ -256,28 +223,41 @@ export function DashboardOverview({
           </CardContent>
           </Card>
 
-          <div className="col-span-1 grid grid-cols-2 gap-4 lg:col-span-5">
-            {tiles.map(({ label, value, icon: Icon, hint, isRisk }) => (
-              <Card key={label}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <p className="text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
-                    {label}
-                  </p>
-                  <Icon className="h-4 w-4 text-[var(--primary)]" aria-hidden />
-                </CardHeader>
-                <CardContent>
-                  <p
-                    className={cn(
-                      "text-xl font-semibold tabular-nums",
-                        isRisk && value > 0 ? "text-[var(--risk-high)]" : undefined,
-                    )}
-                  >
-                    {value}
-                  </p>
-                  <p className="mt-1 text-xs text-[var(--muted-foreground)]">{hint}</p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="col-span-1 lg:col-span-5 flex flex-col justify-center">
+            <div className="flex items-start gap-3 pb-4">
+              <div className={cn(
+                "mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-md",
+                openRemediationCount > 0 ? "bg-[var(--risk-high)]/10" : "bg-[var(--muted)]"
+              )}>
+                <ShieldAlert className={cn(
+                  "h-5 w-5",
+                  openRemediationCount > 0 ? "text-[var(--risk-high-fg)]" : "text-[var(--muted-foreground)]"
+                )} aria-hidden />
+              </div>
+              <div>
+                <p className={cn(
+                  "font-display text-3xl font-semibold tabular-nums leading-none",
+                  openRemediationCount > 0 ? "text-[var(--risk-high-fg)]" : "text-[var(--foreground)]"
+                )}>
+                  {openRemediationCount}
+                </p>
+                <p className="mt-1 text-sm font-medium text-[var(--foreground)]">{translations.OpenRemediations}</p>
+                <p className="mt-0.5 text-xs text-[var(--muted-foreground)]">{translations.OpenRemediationsHint}</p>
+              </div>
+            </div>
+            <div className="flex gap-6 border-t border-[var(--border)] pt-4">
+              {[
+                { label: translations.Pending, value: pending, icon: Mail },
+                { label: translations.Incomplete, value: inProgress, icon: ClipboardList },
+                { label: translations.Completed, value: completed, icon: UserCheck },
+              ].map(({ label, value, icon: Icon }) => (
+                <div key={label} className="flex items-center gap-2">
+                  <Icon className="h-3.5 w-3.5 shrink-0 text-[var(--muted-foreground)]" aria-hidden />
+                  <span className="text-sm font-semibold tabular-nums text-[var(--foreground)]">{value}</span>
+                  <span className="text-xs text-[var(--muted-foreground)]">{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -312,6 +292,11 @@ export function DashboardOverview({
             <p className="text-sm text-[var(--muted-foreground)]">
               {translations.RiskPostureOverviewDesc}
             </p>
+            {lastUpdated && (
+              <p className="text-xs text-[var(--muted-foreground)] mt-1">
+                {translations.LastUpdated} {Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", year: "numeric" }).format(lastUpdated)}
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -425,50 +410,18 @@ export function DashboardOverview({
                 </Card>
               </div>
             </div>
-          </div>
 
-        <Card className="overflow-hidden border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)] shadow-[var(--shadow-card-featured)]">
-          <CardHeader className="border-b border-[var(--border)] pb-4">
-            <div className="flex items-center gap-2 text-[var(--primary)]">
-              <BrainCircuit className="h-4 w-4" aria-hidden />
-              <CardTitle className="text-base text-card-foreground">
-                {translations.AIExecutiveSummary}
-              </CardTitle>
-            </div>
-            <p className="text-sm text-[var(--muted-foreground)]">
-              {translations.AIExecutiveSummaryDesc}
-            </p>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <ul className="divide-y divide-border text-sm leading-6 text-foreground">
-              <li className="flex gap-3 py-3">
-                <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                <span>
-                  <span className="font-semibold">{translations.BiggestSystemicRisk}</span>{" "}
-                  <span className="prose prose-sm dark:prose-invert max-w-none [&_p]:inline [&_p]:m-0">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {riskPosture.executiveSummary.systemicRisk}
-                    </ReactMarkdown>
-                  </span>
-                </span>
-              </li>
-              <li className="flex gap-3 py-3">
-                <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                <span>
-                  <span className="font-semibold">{translations.AverageRemediationTime}</span>{" "}
-                  {riskPosture.executiveSummary.averageRemediationTimeDays} {translations.Days}
-                </span>
-              </li>
-              <li className="flex gap-3 py-3">
-                <Radar className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                <span>
-                  <span className="font-semibold">{translations.RecommendedNextStep}</span>{" "}
-                  {recommendedCategory}
-                </span>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
+            {isPremium && (
+              <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+                <Link
+                  href={`/${locale}/reporting`}
+                  className="text-[var(--foreground)] underline-offset-2 hover:underline transition-colors"
+                >
+                  {translations.AIReportCTA}
+                </Link>
+              </p>
+            )}
+          </div>
       </section>
 
       {/* TODO: i18n - SLA strings not yet in translations system */}
