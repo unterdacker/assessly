@@ -1,9 +1,5 @@
 import { checkLicense } from "@/lib/license/gate";
 
-interface LicenseStatusBannerProps {
-  companyId: string | null;
-}
-
 export async function LicenseStatusBanner() {
   const check = await checkLicense();
 
