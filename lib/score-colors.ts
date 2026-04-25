@@ -16,7 +16,7 @@ export function scoreGaugeColor(score: number): string {
 
 export function scoreGaugeStroke(score: number): string {
   const band = scoreBand(score);
-  if (band === "high") return "#dc2626";
-  if (band === "medium") return "#d97706";
-  return "#059669";
+  if (band === "high") return "var(--destructive)";
+  if (band === "medium") return "var(--semantic-warning)";
+  return "var(--semantic-success)";
 }

@@ -437,7 +437,7 @@ export function ExternalAssessmentWorkspace({
           <div className="rounded-[var(--radius-card)] border border-indigo-100 bg-white p-6 shadow-sm dark:border-indigo-900/30 dark:bg-slate-900">
             <div className="mb-4 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-indigo-500 animate-pulse" />
+                <Sparkles className="h-5 w-5 text-indigo-500 animate-ai-breathe origin-center shrink-0" />
                 <h2 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                   {t("fastPath.title")}
                 </h2>

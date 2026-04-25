@@ -40,11 +40,11 @@ export function CategoryComplianceRadarChart({
   const strokeWidth = theme === "dark" ? 2.5 : 2;
   const root = typeof document !== "undefined" ? document.documentElement : null;
   const primaryColor = root
-    ? (getComputedStyle(root).getPropertyValue("--primary").trim() || (theme === "dark" ? "#818cf8" : "#4338ca"))
-    : (theme === "dark" ? "#818cf8" : "#4338ca");
+    ? (getComputedStyle(root).getPropertyValue("--primary").trim() || "")
+    : "";
   const tickFill = root
-    ? (getComputedStyle(root).getPropertyValue("--muted-foreground").trim() || (theme === "dark" ? "#cbd5e1" : "#475569"))
-    : (theme === "dark" ? "#cbd5e1" : "#475569");
+    ? (getComputedStyle(root).getPropertyValue("--muted-foreground").trim() || "")
+    : "";
   const gridStroke = root
     ? (getComputedStyle(root).getPropertyValue("--border").trim() || (theme === "dark" ? "rgba(148,163,184,0.45)" : "rgba(100,116,139,0.4)"))
     : (theme === "dark" ? "rgba(148,163,184,0.45)" : "rgba(100,116,139,0.4)");

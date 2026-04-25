@@ -122,8 +122,11 @@ export type DashboardOverviewProps = {
     ComplianceTrustWidgetTitle: string;
     ComplianceTrustWidgetDesc: string;
     AITransparencyMetric: string;
+    AITransparencyTooltip: string;
     HumanOversightMetric: string;
+    HumanOversightTooltip: string;
     SystemIntegrityMetric: string;
+    SystemIntegrityTooltip: string;
     AIGenerationLabel: string;
     VerifiedBadge: string;
     VerifiedValue: string;
@@ -500,8 +503,11 @@ export function DashboardOverview({
           title: translations.ComplianceTrustWidgetTitle,
           description: translations.ComplianceTrustWidgetDesc,
           aiDecisionTransparency: translations.AITransparencyMetric,
+          aiDecisionTransparencyTooltip: translations.AITransparencyTooltip,
           humanOversightRate: translations.HumanOversightMetric,
+          humanOversightRateTooltip: translations.HumanOversightTooltip,
           systemIntegrity: translations.SystemIntegrityMetric,
+          systemIntegrityTooltip: translations.SystemIntegrityTooltip,
           aiGenerationLabel: translations.AIGenerationLabel,
           verifiedBadge: translations.VerifiedBadge,
           verifiedValue: translations.VerifiedValue,

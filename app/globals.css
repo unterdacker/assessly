@@ -165,3 +165,21 @@
     scroll-behavior: auto !important;
   }
 }
+
+@keyframes ai-breathe {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ai-breathe {
+    animation: none !important;
+    opacity: 0.8;
+  }
+}

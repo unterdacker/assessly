@@ -27,6 +27,12 @@
     "verifyIntegrity": "Verify Integrity",
     "verifyIntegrityRunning": "Verifying…",
     "noEvents": "No audit events found.",
+    "tableHeaderTimestamp": "Timestamp",
+    "tableHeaderUser": "User",
+    "tableHeaderAction": "Action",
+    "tableHeaderFramework": "Framework",
+    "tableHeaderEntity": "Entity",
+    "tableHeaderDetails": "Details",
     "paginationOf": "of",
     "paginationEntries": "entries",
     "paginationPrevious": "Previous",
@@ -108,8 +114,11 @@
   "ComplianceTrustWidgetTitle": "Compliance trust widget",
   "ComplianceTrustWidgetDesc": "Safety-certificate snapshot proving Venshield AI governance, human oversight, and immutable audit traceability.",
   "AITransparencyMetric": "AI decision transparency",
+  "AITransparencyTooltip": "Counts every AI-generated assessment output, supporting EU AI Act Article 13 transparency and traceability obligations.",
   "HumanOversightMetric": "Human oversight rate",
+  "HumanOversightTooltip": "Percentage of AI suggestions reviewed and accepted or modified by a human operator, satisfying EU AI Act Article 14 human oversight requirements.",
   "SystemIntegrityMetric": "System integrity",
+  "SystemIntegrityTooltip": "Percentage of audit log entries verified via cryptographic hash chain. A value below 100% indicates potential tampering and must be investigated under NIS2 Article 21 audit requirements.",
   "AIGenerationLabel": "AI generation events",
   "VerifiedBadge": "Verified audit coverage",
   "VerifiedValue": "Verified",
@@ -902,6 +911,8 @@
     "passwordLabel": "Password",
     "submitButton": "Sign In",
     "ssoButton": "Sign in with SSO",
+    "forgotPasswordLink": "Forgot your password?",
+    "trySsoInstead": "Or try SSO →",
     "signingIn": "Signing in\u2026",
     "errorRequired": "Email and password are required.",
     "errorInvalidCredentials": "Invalid credentials.",
@@ -913,6 +924,11 @@
     "errorSsoForbidden": "Access denied.",
     "errorSsoNotConfigured": "SSO is not configured for your organization.",
     "errorSsoInternalError": "Something went wrong. Please try again."
+  },
+  "ForgotPassword": {
+    "title": "Reset your password",
+    "description": "Password resets are managed by your administrator. Contact your IT admin or use SSO to sign in.",
+    "backToSignIn": "← Back to sign in"
   },
   "SsoSignIn": {
     "heading": "Sign in with your company account",
@@ -1426,7 +1442,10 @@
     },
     "sectionAccordion": {
       "required": "Required",
-      "optional": "Optional"
+      "optional": "Optional",
+      "question": "question",
+      "questions": "questions",
+      "noQuestions": "No questions yet. Click the button below to add one."
     }
   },
   "Premium": "Premium",

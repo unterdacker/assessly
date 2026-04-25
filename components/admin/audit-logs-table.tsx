@@ -18,6 +18,7 @@ import {
   UserCheck,
   AlertCircle,
   ShieldCheck,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -417,7 +418,6 @@ export function AuditLogsTable({ logs, isAdmin, isAuditor, activeCategory, total
                   size="sm"
                   onClick={handleDownloadBundle}
                   disabled={downloading}
-                  aria-label="Download Forensic Bundle"
                   className="gap-1.5 border-indigo-300 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-950/40"
                 >
                   <Download className="h-4 w-4" aria-hidden />
@@ -439,6 +439,25 @@ export function AuditLogsTable({ logs, isAdmin, isAuditor, activeCategory, total
         )}
       </div>
 
+      {activeCategory && activeCategory !== "all" && (
+        <div role="status" aria-live="polite" className="mt-2 flex flex-wrap items-center gap-2">
+          <div className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+            <span>{activeCategory.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}</span>
+            <button
+              type="button"
+              onClick={() => handleCategoryChange("all")}
+              className="ml-0.5 inline-flex items-center rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              aria-label="Clear filter"
+            >
+              <X className="h-3 w-3" aria-hidden="true" />
+            </button>
+          </div>
+          <span className="text-xs text-muted-foreground">
+            Showing {logs.length} of {total ?? logs.length} entries
+          </span>
+        </div>
+      )}
+
       {/* ── Legend bar ── */}
       <div className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-800 dark:bg-slate-950/40">
         <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
@@ -459,19 +478,19 @@ export function AuditLogsTable({ logs, isAdmin, isAuditor, activeCategory, total
             <TableHead className="w-[200px]">
               <span className="inline-flex items-center gap-1.5">
                 <Clock3 className="h-3.5 w-3.5" aria-hidden />
-                Timestamp
+                {t("tableHeaderTimestamp")}
               </span>
             </TableHead>
             <TableHead className="w-[140px]">
               <span className="inline-flex items-center gap-1.5">
                 <UserRound className="h-3.5 w-3.5" aria-hidden />
-                User
+                {t("tableHeaderUser")}
               </span>
             </TableHead>
-            <TableHead className="w-[200px]">Action</TableHead>
-            <TableHead className="w-[140px]">Framework</TableHead>
-            <TableHead>Entity</TableHead>
-            <TableHead className="w-[100px] text-right">Details</TableHead>
+            <TableHead className="w-[200px]">{t("tableHeaderAction")}</TableHead>
+            <TableHead className="w-[140px]">{t("tableHeaderFramework")}</TableHead>
+            <TableHead>{t("tableHeaderEntity")}</TableHead>
+            <TableHead className="w-[100px] text-right">{t("tableHeaderDetails")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

@@ -1,11 +1,6 @@
 ﻿"use client";
 
-import { useTheme } from "@/components/theme-provider";
-
-const RISK_COLORS = {
-  light: { low: "#2f9e44", medium: "#d97706", high: "#dc2626" },
-  dark: { low: "#40a05a", medium: "#f59e0b", high: "#ef4444" },
-} as const;
+import { useEffect, useState } from "react";
 
 type VendorsByRiskBarChartProps = {
   data: Array<{
@@ -23,7 +18,11 @@ export function VendorsByRiskBarChart({
   emptyLabel,
   emptyDescription,
 }: VendorsByRiskBarChartProps) {
-  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (data.length === 0) {
     return (
@@ -36,7 +35,22 @@ export function VendorsByRiskBarChart({
     );
   }
 
-  const colorMap = RISK_COLORS[theme];
+  if (!mounted) {
+    return (
+      <div
+        className="w-full animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800"
+        style={{ height: 220 }}
+      />
+    );
+  }
+
+  const root = document.documentElement;
+  const computedStyle = getComputedStyle(root);
+  const lowColor = computedStyle.getPropertyValue("--semantic-success").trim() || "oklch(0.67 0.17 147)";
+  const medColor = computedStyle.getPropertyValue("--semantic-warning").trim() || "oklch(0.55 0.16 80)";
+  const highColor = computedStyle.getPropertyValue("--destructive").trim() || "oklch(0.57 0.22 25)";
+
+  const colorMap = { low: lowColor, medium: medColor, high: highColor };
   const maxCount = Math.max(...data.map((d) => d.count), 1);
 
   return (

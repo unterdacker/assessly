@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CheckCircle2, Download, Loader2, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { InfoTooltip } from "@/components/info-tooltip";
 import type { ComplianceTrustMetrics } from "@/lib/queries/dashboard-risk-posture";
 
 type ComplianceTrustWidgetProps = {
@@ -12,8 +13,11 @@ type ComplianceTrustWidgetProps = {
     title: string;
     description: string;
     aiDecisionTransparency: string;
+    aiDecisionTransparencyTooltip: string;
     humanOversightRate: string;
+    humanOversightRateTooltip: string;
     systemIntegrity: string;
+    systemIntegrityTooltip: string;
     aiGenerationLabel: string;
     verifiedBadge: string;
     verifiedValue: string;
@@ -78,25 +82,34 @@ export function ComplianceTrustWidget({ metrics, translations }: ComplianceTrust
       <CardContent className="space-y-4 pt-5">
         <div className="grid gap-3 md:grid-cols-3">
           <div className="rounded-lg border border-border bg-muted p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {translations.aiDecisionTransparency}
-            </p>
+            <div className="flex items-center gap-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {translations.aiDecisionTransparency}
+              </p>
+              <InfoTooltip content={translations.aiDecisionTransparencyTooltip} />
+            </div>
             <p className="mt-1 text-2xl font-semibold tabular-nums">{metrics.aiGenerationCount}</p>
             <p className="text-xs text-muted-foreground">{translations.aiGenerationLabel}</p>
           </div>
           <div className="rounded-lg border border-border bg-muted p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {translations.humanOversightRate}
-            </p>
+            <div className="flex items-center gap-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {translations.humanOversightRate}
+              </p>
+              <InfoTooltip content={translations.humanOversightRateTooltip} />
+            </div>
             <p className="mt-1 text-2xl font-semibold tabular-nums">{metrics.humanOversightRate}%</p>
             <p className="text-xs text-muted-foreground">
               {metrics.editedByHumanCount}/{metrics.finalizedSuggestionCount}
             </p>
           </div>
           <div className="rounded-lg border border-border bg-muted p-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {translations.systemIntegrity}
-            </p>
+            <div className="flex items-center gap-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {translations.systemIntegrity}
+              </p>
+              <InfoTooltip content={translations.systemIntegrityTooltip} />
+            </div>
             <p className="mt-1 text-2xl font-semibold tabular-nums">
               {metrics.systemIntegrityVerified
                 ? translations.verifiedValue

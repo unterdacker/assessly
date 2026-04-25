@@ -257,7 +257,7 @@ export function VendorQuestionnaireWizard({
               "group overflow-hidden rounded-xl border transition-all duration-200",
               isOpen ? "border-indigo-400 bg-white ring-1 ring-indigo-400/20 dark:border-indigo-500/50 dark:bg-slate-900 dark:ring-indigo-500/10" : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900",
               isFilled && !isOpen && "border-emerald-100 bg-emerald-50/10 dark:border-emerald-900/10 dark:bg-emerald-950/2",
-              isAiPending && !isOpen && "border-amber-200 bg-amber-50/5 dark:border-amber-900/10 shadow-[0_0_15px_-5px_rgba(245,158,11,0.2)]"
+              isAiPending && !isOpen && "border-warning-border bg-warning-muted shadow-sm"
             )}
           >
             {/* Question Header */}
@@ -284,8 +284,8 @@ export function VendorQuestionnaireWizard({
                         {tw("status.verified", "Verified")}
                       </span>
                     ) : isAiPending ? (
-                      <span className="flex items-center gap-1.5 animate-pulse text-[10px] font-bold uppercase tracking-wider text-indigo-500">
-                        <Sparkles className="h-3 w-3" />
+                      <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-indigo-500">
+                        <Sparkles className="h-3 w-3 animate-ai-breathe origin-center shrink-0" />
                         {tw("status.aiPreviewAvailable", "AI preview available")}
                       </span>
                     ) : (
@@ -321,56 +321,50 @@ export function VendorQuestionnaireWizard({
                   {isAiPending && (
                     <div className={cn(
                       "space-y-4 rounded-xl border p-4 transition-all",
-                      isAiPending 
-                        ? "border-amber-200 bg-amber-50/30 dark:border-amber-900/30 dark:bg-amber-950/20 ring-1 ring-amber-100 dark:ring-amber-900/10" 
-                        : "border-indigo-100 bg-indigo-50/30 dark:border-indigo-900/30 dark:bg-indigo-950/20"
+                      "border-warning-border bg-warning-muted ring-1 ring-warning-border"
                     )}>
-                      {isAiPending && (
-                        <div className="flex items-center gap-2 rounded-lg bg-amber-100/50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
-                          <AlertCircle className="h-3 w-3" />
-                          {tw("aiBanner", "AI suggestion - please review")}
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2 rounded-lg bg-warning-muted px-3 py-1.5 text-[10px] font-bold uppercase tracking-tight text-warning-foreground">
+                        <AlertCircle className="h-3 w-3" />
+                        {tw("aiBanner", "AI suggestion - please review")}
+                      </div>
                       
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <Sparkles className="h-4 w-4 text-indigo-500" />
                           <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{tw("aiInsightTitle", "AI audit insight")}</span>
                         </div>
-                        {isAiPending && (
-                          <Button 
-                            size="sm" 
-                            className="h-8 gap-1.5 bg-amber-600 px-4 text-[10px] font-bold text-white shadow-md hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600"
-                            onClick={() => {
-                              const aiReasoning = (answer?.findings || answer?.aiReasoning || "").trim();
-                              const aiEvidence = (answer?.evidenceSnippet || "").trim();
-                              const suggestedJustification = [
-                                aiReasoning,
-                                aiEvidence ? `Evidence: "${aiEvidence}"` : "",
-                              ]
-                                .filter(Boolean)
-                                .join("\n\n");
+                        <Button 
+                          size="sm" 
+                          className="h-8 gap-1.5 bg-warning px-4 text-[10px] font-bold text-warning-foreground shadow-md hover:opacity-90"
+                          onClick={() => {
+                            const aiReasoning = (answer?.findings || answer?.aiReasoning || "").trim();
+                            const aiEvidence = (answer?.evidenceSnippet || "").trim();
+                            const suggestedJustification = [
+                              aiReasoning,
+                              aiEvidence ? `Evidence: "${aiEvidence}"` : "",
+                            ]
+                              .filter(Boolean)
+                              .join("\n\n");
 
-                              if (answer?.aiSuggestedStatus) {
-                                setDraftStatusByQuestion((prev) => ({
-                                  ...prev,
-                                  [q.id]: answer.aiSuggestedStatus as string,
-                                }));
-                              }
+                            if (answer?.aiSuggestedStatus) {
+                              setDraftStatusByQuestion((prev) => ({
+                                ...prev,
+                                [q.id]: answer.aiSuggestedStatus as string,
+                              }));
+                            }
 
-                              if (suggestedJustification) {
-                                setDraftJustificationByQuestion((prev) => ({
-                                  ...prev,
-                                  [q.id]: suggestedJustification,
-                                }));
-                              }
-                            }}
-                            disabled={isCurrentQuestionSaving}
-                          >
-                            <ShieldCheck className="h-3.5 w-3.5" />
-                            {tw("useAiSuggestion", "Use AI suggestion")}
-                          </Button>
-                        )}
+                            if (suggestedJustification) {
+                              setDraftJustificationByQuestion((prev) => ({
+                                ...prev,
+                                [q.id]: suggestedJustification,
+                              }));
+                            }
+                          }}
+                          disabled={isCurrentQuestionSaving}
+                        >
+                          <ShieldCheck className="h-3.5 w-3.5" />
+                          {tw("useAiSuggestion", "Use AI suggestion")}
+                        </Button>
                       </div>
                       <div className="space-y-3">
                         <p className="text-xs italic leading-relaxed text-slate-600 dark:text-slate-400">
@@ -413,12 +407,12 @@ export function VendorQuestionnaireWizard({
                               opt.color,
                               draftStatus === opt.id ? opt.active : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950",
                               isCurrentQuestionSaving && "opacity-60 pointer-events-none",
-                              isSuggested && "ring-2 ring-amber-500 ring-offset-2 dark:ring-offset-slate-900 border-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.1)]"
+                              isSuggested && "ring-2 ring-warning ring-offset-2 border-warning-border shadow-sm"
                             )}
                           >
                             <div className="flex items-center gap-1.5">
                               <opt.icon className="h-5 w-5" />
-                              {isSuggested && <Sparkles className="h-3 w-3 animate-pulse text-indigo-500" />}
+                              {isSuggested && <Sparkles className="h-3 w-3 animate-ai-breathe origin-center shrink-0 text-indigo-500" />}
                             </div>
                             <span className="text-xs font-bold">{opt.label}</span>
                           </Label>

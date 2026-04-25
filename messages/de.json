@@ -27,6 +27,12 @@
     "verifyIntegrity": "Integrität prüfen",
     "verifyIntegrityRunning": "Wird geprüft…",
     "noEvents": "Keine Audit-Ereignisse gefunden.",
+    "tableHeaderTimestamp": "Zeitstempel",
+    "tableHeaderUser": "Benutzer",
+    "tableHeaderAction": "Aktion",
+    "tableHeaderFramework": "Rahmenwerk",
+    "tableHeaderEntity": "Entität",
+    "tableHeaderDetails": "Details",
     "paginationOf": "von",
     "paginationEntries": "Einträgen",
     "paginationPrevious": "Zurück",
@@ -108,8 +114,11 @@
   "ComplianceTrustWidgetTitle": "Compliance Trust Widget",
   "ComplianceTrustWidgetDesc": "Safety-Certificate Snapshot für nachvollziehbare KI-Governance, Human Oversight und unveränderbare Audit-Traceability.",
   "AITransparencyMetric": "KI-Entscheidungstransparenz",
+  "AITransparencyTooltip": "Zählt alle KI-generierten Bewertungsausgaben und unterstützt die Transparenz- und Nachverfolgbarkeitspflichten gemäß EU-KI-Gesetz Artikel 13.",
   "HumanOversightMetric": "Human-Oversight-Rate",
+  "HumanOversightTooltip": "Prozentsatz der KI-Vorschläge, die von einem menschlichen Operator geprüft und akzeptiert oder geändert wurden, entsprechend den Anforderungen zur menschlichen Aufsicht gemäß EU-KI-Gesetz Artikel 14.",
   "SystemIntegrityMetric": "Systemintegrität",
+  "SystemIntegrityTooltip": "Prozentsatz der Audit-Log-Einträge, die über eine kryptografische Hash-Kette verifiziert wurden. Ein Wert unter 100 % weist auf mögliche Manipulationen hin und muss gemäß NIS2-Artikel 21 untersucht werden.",
   "AIGenerationLabel": "KI-Generierungsereignisse",
   "VerifiedBadge": "Verifizierte Audit-Abdeckung",
   "VerifiedValue": "Verifiziert",
@@ -940,6 +949,8 @@
     "passwordLabel": "Passwort",
     "submitButton": "Anmelden",
     "ssoButton": "Mit SSO anmelden",
+    "forgotPasswordLink": "Passwort vergessen?",
+    "trySsoInstead": "Oder mit SSO anmelden →",
     "signingIn": "Anmeldung läuft…",
     "errorRequired": "E-Mail und Passwort sind erforderlich.",
     "errorInvalidCredentials": "Ungültige Anmeldedaten.",
@@ -951,6 +962,11 @@
     "errorSsoForbidden": "Zugriff verweigert.",
     "errorSsoNotConfigured": "SSO ist für Ihre Organisation nicht konfiguriert.",
     "errorSsoInternalError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+  },
+  "ForgotPassword": {
+    "title": "Passwort zurücksetzen",
+    "description": "Passwort-Rücksetzungen werden von Ihrem Administrator verwaltet. Wenden Sie sich an Ihren IT-Administrator oder melden Sie sich mit SSO an.",
+    "backToSignIn": "← Zurück zur Anmeldung"
   },
   "SsoSignIn": {
     "heading": "Mit Ihrem Unternehmenskonto anmelden",
@@ -1464,7 +1480,10 @@
     },
     "sectionAccordion": {
       "required": "Pflichtfeld",
-      "optional": "Optional"
+      "optional": "Optional",
+      "question": "Frage",
+      "questions": "Fragen",
+      "noQuestions": "Noch keine Fragen. Klicken Sie unten auf die Schaltfläche, um eine hinzuzufügen."
     }
   },
   "Premium": "Premium",

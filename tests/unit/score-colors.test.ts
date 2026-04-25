@@ -28,14 +28,14 @@ describe("scoreGaugeColor", () => {
 
 describe("scoreGaugeStroke", () => {
   it("returns red stroke for high-risk band", () => {
-    expect(scoreGaugeStroke(10)).toBe("#dc2626");
+    expect(scoreGaugeStroke(10)).toBe("var(--destructive)");
   });
 
   it("returns amber stroke for medium-risk band", () => {
-    expect(scoreGaugeStroke(50)).toBe("#d97706");
+    expect(scoreGaugeStroke(50)).toBe("var(--semantic-warning)");
   });
 
   it("returns green stroke for low-risk band", () => {
-    expect(scoreGaugeStroke(90)).toBe("#059669");
+    expect(scoreGaugeStroke(90)).toBe("var(--semantic-success)");
   });
 });

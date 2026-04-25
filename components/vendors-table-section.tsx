@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import type { UserRole } from "@prisma/client";
-import { Search, ChevronUp, ChevronDown, ChevronsUpDown, Copy, SendHorizonal, ShieldAlert, ShieldCheck, RefreshCw, Building2, SearchX } from "lucide-react";
+import { Search, ChevronUp, ChevronDown, ChevronsUpDown, Copy, SendHorizonal, ShieldAlert, ShieldCheck, RefreshCw, Building2, SearchX, X } from "lucide-react";
 import { toast } from "sonner";
 import { AddVendorModal } from "@/components/add-vendor-modal";
 import { VendorCsvImportModal } from "@/components/vendor-csv-import-modal";
@@ -648,6 +648,25 @@ export function VendorsTableSection({
           aria-label={t("search")}
         />
       </div>
+
+      {q.trim() !== "" && (
+        <div role="status" aria-live="polite" className="mt-2 flex flex-wrap items-center gap-2">
+          <div className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+            <span>Search: "{q.length > 30 ? `${q.slice(0, 30)}…` : q}"</span>
+            <button
+              type="button"
+              onClick={() => setQ("")}
+              className="ml-0.5 inline-flex items-center rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              aria-label="Clear search"
+            >
+              <X className="h-3 w-3" aria-hidden="true" />
+            </button>
+          </div>
+          <span className="text-xs text-muted-foreground">
+            Showing {filtered.length} of {vendorAssessments.length} vendors
+          </span>
+        </div>
+      )}
 
       <div className="overflow-x-auto rounded-[var(--radius-card)] border border-[var(--border)]">
         <Table>

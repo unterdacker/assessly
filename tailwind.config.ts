@@ -78,6 +78,15 @@ const config: Config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      animation: {
+        "ai-breathe": "ai-breathe 3s ease-in-out infinite",
+      },
+      keyframes: {
+        "ai-breathe": {
+          "0%, 100%": { opacity: "1", transform: "scale(1)" },
+          "50%": { opacity: "0.65", transform: "scale(1.08)" },
+        },
+      },
     },
   },
   plugins: [typography],

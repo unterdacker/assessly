@@ -93,6 +93,23 @@ export function InternalSignInForm({
             </p>
           ) : null}
 
+          {(state.error === "INVALID_CREDENTIALS" || state.error === "ACCOUNT_NOT_ACTIVATED") && (
+            <div className="mt-2 flex items-center gap-x-4">
+              <Link
+                href={`/${locale}/auth/forgot-password`}
+                className="text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
+              >
+                {t("forgotPasswordLink")}
+              </Link>
+              <Link
+                href={`/${locale}/auth/sso`}
+                className="text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
+              >
+                {t("trySsoInstead")}
+              </Link>
+            </div>
+          )}
+
           <Button type="submit" className="w-full" disabled={isPending || isRedirecting}>
             {isPending ? t("signingIn") : t("submitButton")}
           </Button>
