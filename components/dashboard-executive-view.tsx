@@ -49,8 +49,8 @@ export function DashboardExecutiveView({
     openRemediationCount,
     completedAssessments,
     overdueAssessmentsCount: overdueAssessments.length,
-    isPremium,
-    slaComplianceRate,
+    isPremium: isPremium ?? false,
+    slaComplianceRate: slaComplianceRate ?? 0,
     labels: {
       openRemediations: translations.openRemediations,
       completedAssessments: translations.completedAssessments,

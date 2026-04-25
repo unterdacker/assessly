@@ -120,6 +120,13 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
     DownloadForensicAuditSummary: t("DownloadForensicAuditSummary"),
     DownloadForensicAuditHint: t("DownloadForensicAuditHint"),
     DownloadForensicAuditFailed: t("DownloadForensicAuditFailed"),
+    ExecutiveSummaryLabel: t("ExecutiveSummaryLabel"),
+    SwitchToFullDashboard: t("SwitchToFullDashboard"),
+    SwitchToExecutiveSummary: t("SwitchToExecutiveSummary"),
+    CompletedAssessments: t("CompletedAssessments"),
+    OverdueAssessments: t("OverdueAssessments"),
+    SlaComplianceRate: t("SlaComplianceRate"),
+    AiSummaryNotAvailable: t("AiSummaryNotAvailable"),
   };
 
   return (
