@@ -4,7 +4,7 @@ interface LicenseStatusBannerProps {
   companyId: string | null;
 }
 
-export async function LicenseStatusBanner(_props: LicenseStatusBannerProps) {
+export async function LicenseStatusBanner() {
   const check = await checkLicense();
 
   if (check.status === "missing" || check.allowed) return null;

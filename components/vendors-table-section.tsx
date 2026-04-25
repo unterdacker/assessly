@@ -652,7 +652,7 @@ export function VendorsTableSection({
       {q.trim() !== "" && (
         <div role="status" aria-live="polite" className="mt-2 flex flex-wrap items-center gap-2">
           <div className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-            <span>Search: "{q.length > 30 ? `${q.slice(0, 30)}…` : q}"</span>
+            <span>Search: {'"'}{q.length > 30 ? `${q.slice(0, 30)}…` : q}{'"'}</span>
             <button
               type="button"
               onClick={() => setQ("")}

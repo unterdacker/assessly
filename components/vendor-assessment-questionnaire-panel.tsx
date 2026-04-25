@@ -203,7 +203,7 @@ export function VendorAssessmentQuestionnairePanel({
       }
     }
     return map;
-  }, [templateData, tLib, locale]);
+  }, [templateData, tLib]);
 
   const templateQuestionCount = React.useMemo(() => {
     if (!templateData) return 0;
