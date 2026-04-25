@@ -15,6 +15,16 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { setOrgMfaRequired } from "@/app/actions/mfa";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type OrgMfaPolicyFormProps = {
   mfaRequired: boolean;
@@ -28,6 +38,7 @@ export function OrgMfaPolicyForm({
   const t = useTranslations("OrgSecurityPolicy");
   const [isRequired, setIsRequired] = useState(mfaRequired);
   const [isPending, startTransition] = useTransition();
+  const [pendingMfaToggle, setPendingMfaToggle] = useState<boolean | null>(null);
 
   function handleToggle(checked: boolean) {
     // Optimistic update
@@ -90,7 +101,7 @@ export function OrgMfaPolicyForm({
             )}
             <Switch
               checked={isRequired}
-              onCheckedChange={handleToggle}
+              onCheckedChange={(newValue) => setPendingMfaToggle(newValue)}
               disabled={isPending || !adminHasMfa}
               aria-label={t("mfaRequired.label")}
             />
@@ -108,6 +119,48 @@ export function OrgMfaPolicyForm({
             </p>
           </div>
         )}
+
+        <AlertDialog
+          open={pendingMfaToggle !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setPendingMfaToggle(null);
+            }
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {pendingMfaToggle
+                  ? t("mfaConfirmEnableTitle")
+                  : t("mfaConfirmDisableTitle")}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {pendingMfaToggle
+                  ? t("mfaConfirmEnableDesc")
+                  : t("mfaConfirmDisableDesc")}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setPendingMfaToggle(null)}>
+                {t("mfaConfirmCancel")}
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (pendingMfaToggle !== null) {
+                    handleToggle(pendingMfaToggle);
+                  }
+                  setPendingMfaToggle(null);
+                }}
+              >
+                {pendingMfaToggle
+                  ? t("mfaConfirmEnableAction")
+                  : t("mfaConfirmDisableAction")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );

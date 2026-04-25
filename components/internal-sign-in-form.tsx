@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState, type FocusEvent } from "react";
 import { useTranslations } from "next-intl";
 import { LockKeyhole } from "lucide-react";
 import { authenticateInternalUser } from "@/app/actions/internal-auth";
@@ -46,9 +46,19 @@ export function InternalSignInForm({
     authenticateInternalUser,
     initialState,
   );
+  const [emailError, setEmailError] = useState<string | null>(null);
   const errorMessageKey = state.error
     ? (errorKeyMap[state.error] ?? state.error)
     : (initialError ? ssoErrorKeyMap[initialError] : null);
+
+  const handleEmailBlur = (e: FocusEvent<HTMLInputElement>) => {
+    const val = e.target.value.trim();
+    if (val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+      setEmailError(t("errorEmailFormat"));
+    } else {
+      setEmailError(null);
+    }
+  };
 
   // Fix: perform a hard navigation on success to bust the Next.js RSC router
   // cache. A soft redirect() from the server action leaves the root layout
@@ -76,7 +86,20 @@ export function InternalSignInForm({
 
           <div className="space-y-2">
             <Label htmlFor="email" className="text-[0.8125rem] font-medium">{t("emailLabel")}</Label>
-            <Input id="email" name="email" type="email" autoComplete="email" required />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              onBlur={handleEmailBlur}
+              aria-invalid={Boolean(emailError)}
+              required
+            />
+            {emailError && (
+              <p role="alert" aria-live="polite" className="mt-1 text-[0.8125rem] text-destructive">
+                {emailError}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">

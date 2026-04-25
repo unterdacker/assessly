@@ -14,13 +14,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { AccessCodeDuration } from "@/app/actions/vendor-actions";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetClose,
+} from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -948,22 +949,22 @@ export function VendorsTableSection({
         </div>
       )}
 
-      <Dialog open={canManageVendors && Boolean(generatedCredentials)} onOpenChange={(open) => {
+      <Sheet open={canManageVendors && Boolean(generatedCredentials)} onOpenChange={(open) => {
         if (!open) {
           setGeneratedCredentials(null);
           router.refresh();
         }
       }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
+        <SheetContent onInteractOutside={(e) => e.preventDefault()} className="sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>
               <span className="text-warning mr-1" aria-hidden>&#9888;</span>
               {t("credDialogTitle")}
-            </DialogTitle>
-            <DialogDescription>
+            </SheetTitle>
+            <SheetDescription>
               {t("credDialogDesc")}
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
 
           <div className="space-y-3">
             <div className="rounded-md border border-warning-border bg-warning-muted px-4 py-3 text-xs leading-relaxed text-warning-muted-fg">
@@ -1013,7 +1014,7 @@ export function VendorsTableSection({
             )}
           </div>
 
-          <DialogFooter>
+          <SheetFooter>
             <Button
               onClick={() => {
                 setGeneratedCredentials(null);
@@ -1022,20 +1023,20 @@ export function VendorsTableSection({
             >
               {t("credDialogSaveButton")}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
-      <Dialog open={canManageVendors && Boolean(codeDialogVendorId)} onOpenChange={(open) => !open && setCodeDialogVendorId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("genCodeDialogTitle")}</DialogTitle>
-            <DialogDescription>
+      <Sheet open={canManageVendors && Boolean(codeDialogVendorId)} onOpenChange={(open) => !open && setCodeDialogVendorId(null)}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>{t("genCodeDialogTitle")}</SheetTitle>
+            <SheetDescription>
               {t("genCodeDialogDesc")}
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
 
-          <div className="space-y-2">
+          <div className="space-y-2 px-6">
             <label htmlFor="code-duration" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               {t("genCodeValidityLabel")}
             </label>
@@ -1052,16 +1053,16 @@ export function VendorsTableSection({
             </select>
           </div>
 
-          <DialogFooter>
+          <SheetFooter>
             <Button variant="outline" onClick={() => setCodeDialogVendorId(null)}>
               {t("genCodeCancel")}
             </Button>
             <Button onClick={handleGenerateCode} disabled={Boolean(codeActionVendorId)}>
               {codeActionVendorId ? t("genCodeGenerating") : t("genCodeGenerate")}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
         <AlertDialogContent>

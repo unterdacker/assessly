@@ -28,6 +28,7 @@ import { CategoryComplianceRadarChartLazy } from "@/components/category-complian
 import { VendorsByRiskBarChartLazy } from "@/components/vendors-by-risk-bar-chart-lazy";
 import { ComplianceTrustWidgetLazy } from "@/components/compliance-trust-widget-lazy";
 import { RefreshAiSummaryButton } from "@/components/refresh-ai-summary-button";
+import { DashboardExecutiveView } from "@/components/dashboard-executive-view";
 
 type OverdueAssessment = {
   id: string;
@@ -40,6 +41,7 @@ export type DashboardOverviewProps = {
   riskPosture: DashboardRiskPostureOverview;
   role: UserRole;
   locale: string;
+  defaultViewMode?: "executive" | "full";
   openRemediationCount: number;
   isPremium?: boolean;
   overdueAssessments?: OverdueAssessment[];
@@ -98,6 +100,13 @@ export type DashboardOverviewProps = {
     RefreshAISummaryPending: string;
     HidePostureAnalytics: string;
     ShowPostureAnalytics: string;
+    ExecutiveSummaryLabel: string;
+    SwitchToFullDashboard: string;
+    SwitchToExecutiveSummary: string;
+    CompletedAssessments: string;
+    OverdueAssessments: string;
+    SlaComplianceRate: string;
+    AiSummaryNotAvailable: string;
     categoryLabels: Record<
       | "governanceRisk"
       | "accessIdentity"
@@ -142,12 +151,16 @@ export function DashboardOverview({
   vendorAssessments,
   riskPosture,
   locale,
+  defaultViewMode,
   openRemediationCount,
   isPremium = false,
   overdueAssessments = [],
   slaComplianceRate = 0,
   translations,
 }: DashboardOverviewProps) {
+  const [viewMode, setViewMode] = useState<"executive" | "full">(
+    defaultViewMode ?? "full",
+  );
   const score = supplyChainRiskScore(vendorAssessments);
   const pending = countByStatus(vendorAssessments, "pending");
   const inProgress = countByStatus(vendorAssessments, "incomplete");
@@ -187,6 +200,29 @@ export function DashboardOverview({
     vendorAssessments.length > 0
       ? new Date(Math.max(...vendorAssessments.map((a) => new Date(a.updatedAt ?? Date.now()).getTime())))
       : null;
+
+  if (viewMode === "executive") {
+    return (
+      <DashboardExecutiveView
+        riskPosture={riskPosture}
+        vendorAssessments={vendorAssessments}
+        openRemediationCount={openRemediationCount}
+        isPremium={isPremium}
+        overdueAssessments={overdueAssessments}
+        slaComplianceRate={slaComplianceRate}
+        translations={{
+          executiveSummaryLabel: translations.ExecutiveSummaryLabel,
+          switchToFullDashboard: translations.SwitchToFullDashboard,
+          openRemediations: translations.OpenRemediations,
+          completedAssessments: translations.CompletedAssessments,
+          overdueAssessments: translations.OverdueAssessments,
+          slaComplianceRate: translations.SlaComplianceRate,
+          aiSummaryNotAvailable: translations.AiSummaryNotAvailable,
+        }}
+        onViewModeChange={(mode) => setViewMode(mode)}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
@@ -305,6 +341,13 @@ export function DashboardOverview({
             )}
           </div>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setViewMode("executive")}
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-transparent px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              {translations.SwitchToExecutiveSummary}
+            </button>
             <button
               type="button"
               onClick={() => setShowCharts((prev) => !prev)}

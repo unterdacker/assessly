@@ -69,6 +69,7 @@ async function DashboardContent({ session, locale }: DashboardContentProps) {
     isPremium ? getSlaComplianceRate(session.companyId ?? "").catch(() => 0) : Promise.resolve(0),
     queryDashboardCounts(session.companyId ?? ""),
   ]);
+  const defaultViewMode = session.role === "ADMIN" ? "executive" : "full";
 
   const translations = {
     Dashboard: t("Dashboard"),
@@ -121,6 +122,13 @@ async function DashboardContent({ session, locale }: DashboardContentProps) {
     RefreshAISummaryPending: t("RefreshAISummaryPending"),
     HidePostureAnalytics: t("HidePostureAnalytics"),
     ShowPostureAnalytics: t("ShowPostureAnalytics"),
+    ExecutiveSummaryLabel: t("ExecutiveSummaryLabel"),
+    SwitchToFullDashboard: t("SwitchToFullDashboard"),
+    SwitchToExecutiveSummary: t("SwitchToExecutiveSummary"),
+    CompletedAssessments: t("CompletedAssessments"),
+    OverdueAssessments: t("OverdueAssessments"),
+    SlaComplianceRate: t("SlaComplianceRate"),
+    AiSummaryNotAvailable: t("AiSummaryNotAvailable"),
     categoryLabels: {
       governanceRisk: t("DashboardCategoryGovernanceRisk"),
       accessIdentity: t("DashboardCategoryAccessIdentity"),
@@ -217,6 +225,7 @@ async function DashboardContent({ session, locale }: DashboardContentProps) {
   return (
     <>
       <DashboardOverview
+        defaultViewMode={defaultViewMode}
         isPremium={isPremium}
         overdueAssessments={overdueAssessments}
         slaComplianceRate={slaComplianceRate}

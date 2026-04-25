@@ -143,7 +143,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   href={localizedHref}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-2 rounded-md px-3 py-1.5 text-[0.8125rem] transition-colors",
+                    "flex items-center gap-2 rounded-md px-3 py-1.5 text-[0.8125rem] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2",
                     active
                       ? "bg-[var(--accent)] text-[var(--accent-foreground)] font-medium"
                       : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]",
@@ -190,7 +190,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                       href={localizedHref}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "rounded-md px-2 py-1 text-xs font-medium",
+                        "rounded-md px-2 py-1 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2",
                         active
                               ? "bg-[var(--accent)] text-[var(--accent-foreground)]"
                           : "text-muted-foreground",

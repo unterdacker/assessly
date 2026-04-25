@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,16 @@ import { Sparkles, Globe, Server, Ban, AlertCircle, CheckCircle2 } from "lucide-
 import { updateAiSettings } from "@/app/actions/update-settings";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Company {
   id: string;
@@ -37,6 +47,9 @@ interface Translations {
   SettingsUpdatedSuccess: string;
   noAiMode: string;
   noAiModeDesc: string;
+  noAiConfirmTitle: string;
+  noAiConfirmCancel: string;
+  noAiConfirmAction: string;
   noAiConfirmMessage: string;
   aiFeaturesDisabled: string;
   aiFeaturesDisabledDesc: string;
@@ -47,6 +60,8 @@ export function AiSettingsForm({ company, companyId, translations }: { company: 
   const router = useRouter();
   const [aiProvider, setAiProvider] = useState(company.aiDisabled ? "no-ai" : company.aiProvider);
   const [isDirty, setIsDirty] = useState(false);
+  const [showNoAiConfirm, setShowNoAiConfirm] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const [state, formAction] = useActionState(updateAiSettings, null);
 
@@ -81,13 +96,15 @@ export function AiSettingsForm({ company, companyId, translations }: { company: 
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={formAction} className="space-y-6" onSubmit={(e) => {
+        <form ref={formRef} action={formAction} className="space-y-6" onSubmit={(e) => {
           if (
             !company.aiDisabled &&
             aiProvider === "no-ai" &&
-            !window.confirm(translations.noAiConfirmMessage)
+            !showNoAiConfirm
           ) {
             e.preventDefault();
+            setShowNoAiConfirm(true);
+            return;
           }
         }}>
           <input type="hidden" name="companyId" value={companyId} />
@@ -195,6 +212,27 @@ export function AiSettingsForm({ company, companyId, translations }: { company: 
             {translations.SaveConfiguration}
           </Button>
         </form>
+
+        <AlertDialog open={showNoAiConfirm} onOpenChange={setShowNoAiConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{translations.noAiConfirmTitle}</AlertDialogTitle>
+              <AlertDialogDescription>{translations.noAiConfirmMessage}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowNoAiConfirm(false)}>{translations.noAiConfirmCancel}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  formRef.current?.requestSubmit();
+                  setShowNoAiConfirm(false);
+                }}
+              >
+                {translations.noAiConfirmAction}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );

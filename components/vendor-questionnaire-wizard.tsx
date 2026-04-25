@@ -285,7 +285,7 @@ export function VendorQuestionnaireWizard({
                       </span>
                     ) : isAiPending ? (
                       <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-indigo-500">
-                        <Sparkles className="h-3 w-3 animate-ai-breathe origin-center shrink-0" />
+                        <Sparkles className="h-3 w-3 motion-safe:animate-ai-breathe origin-center shrink-0" />
                         {tw("status.aiPreviewAvailable", "AI preview available")}
                       </span>
                     ) : (
@@ -412,7 +412,7 @@ export function VendorQuestionnaireWizard({
                           >
                             <div className="flex items-center gap-1.5">
                               <opt.icon className="h-5 w-5" />
-                              {isSuggested && <Sparkles className="h-3 w-3 animate-ai-breathe origin-center shrink-0 text-indigo-500" />}
+                              {isSuggested && <Sparkles className="h-3 w-3 motion-safe:animate-ai-breathe origin-center shrink-0 text-indigo-500" />}
                             </div>
                             <span className="text-xs font-bold">{opt.label}</span>
                           </Label>
