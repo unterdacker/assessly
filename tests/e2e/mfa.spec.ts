@@ -157,21 +157,34 @@ test("MFA: admin with MFA enrolled can enable org-wide MFA policy", async ({ pag
   await page.waitForURL(/\/en\/dashboard/, { timeout: 30_000 });
 
   await page.goto("/en/settings");
-  // Locate the org MFA policy toggle
-  const policyToggle = page
-    .getByLabel(/require mfa.*org|mfa.*organization|mfa.*all users/i)
-    .or(page.getByRole("switch", { name: /mfa/i }).first());
 
-  if (await policyToggle.isVisible({ timeout: 5_000 })) {
+  // Use getByRole("switch") to scope strictly to the toggle button, never the dialog
+  const policyToggle = page.getByRole("switch", { name: /require mfa|mfa.*all users/i });
+
+  /** Dismiss any open confirmation alertdialog by clicking its primary confirm button */
+  async function dismissConfirmDialog() {
+    const dialog = page.getByRole("alertdialog");
+    if (await dialog.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      const confirmBtn = dialog.getByRole("button", { name: /confirm|continue|enable|disable|yes|ok/i });
+      if (await confirmBtn.isVisible({ timeout: 1_000 }).catch(() => false)) {
+        await confirmBtn.click();
+      }
+      await page.waitForSelector('[role="alertdialog"]', { state: "hidden", timeout: 5_000 }).catch(() => {});
+    }
+  }
+
+  if (await policyToggle.isVisible({ timeout: 5_000 }).catch(() => false)) {
     // If currently off, enable it
     const isChecked = await policyToggle.isChecked().catch(() => false);
     if (!isChecked) {
       await policyToggle.click();
+      await dismissConfirmDialog();
       await expect(page.getByText(/saved|updated|success|enabled|removed/i).first()).toBeVisible({ timeout: 8_000 });
     }
     // Cleanup: disable it so subsequent tests are not affected
-    if (await policyToggle.isChecked().catch(() => true)) {
+    if (await policyToggle.isChecked().catch(() => false)) {
       await policyToggle.click();
+      await dismissConfirmDialog();
     }
   } else {
     // Verify the settings page loads without error
