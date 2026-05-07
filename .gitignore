@@ -53,3 +53,5 @@ yarn-error.log*
 
 # copilot instructions (local dev only — do not expose to public repo)
 .github/copilot-instructions.md
+
+.opencode
