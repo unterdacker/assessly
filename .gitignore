@@ -12,6 +12,7 @@
 /coverage
 /playwright-report/
 /test-results/
+test-output.txt
 
 # next.js
 /.next/
@@ -46,6 +47,9 @@ yarn-error.log*
 
 # enterprise modules (private — clone venshield-enterprise into /modules manually)
 /modules
+
+# git mirror directory (local use only — contains git objects)
+/venshield-mirror/
 
 # copilot instructions (local dev only — do not expose to public repo)
 .github/copilot-instructions.md

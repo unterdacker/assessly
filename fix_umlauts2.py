@@ -1,4 +1,8 @@
-with open(r'c:\Users\phams\Documents\Test\assessly\modules\README.md', 'r', encoding='utf-8') as f:
+from pathlib import Path
+repo_root = Path(__file__).resolve().parent
+modules_readme = repo_root / "modules" / "README.md"
+
+with open(modules_readme, 'r', encoding='utf-8') as f:
     content = f.read()
 
 replacements = [
@@ -67,7 +71,7 @@ replacements = [
 for old, new in replacements:
     content = content.replace(old, new)
 
-with open(r'c:\Users\phams\Documents\Test\assessly\modules\README.md', 'w', encoding='utf-8') as f:
+with open(modules_readme, 'w', encoding='utf-8') as f:
     f.write(content)
 
 print("Second pass done.")

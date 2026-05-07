@@ -1,6 +1,7 @@
 const fs = require('fs');
+const path = require('path');
 
-const filePath = 'c:/Users/phams/Documents/Test/assessly/components/assessment-workspace.tsx';
+const filePath = path.join(__dirname, '..', 'components', 'assessment-workspace.tsx');
 const bytes = fs.readFileSync(filePath);
 const text = bytes.toString('utf8');
 

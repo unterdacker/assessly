@@ -129,7 +129,7 @@ Open **http://localhost:3000** in your browser.
 | `APP_URL must not point to localhost in production` | `NODE_ENV=production` + localhost URL | Add `ALLOW_INSECURE_LOCALHOST=true` |
 | `SMS_PROVIDER='log' is not permitted in production` | `NODE_ENV=production` + log provider | Add `ALLOW_INSECURE_LOCALHOST=true` |
 | `P1001: Can't reach database server at localhost:…` | `localhost` resolves to the container, not the Mac | Use `host.docker.internal` instead of `localhost` |
-| `Invalid credentials` on login | Using wrong email domain | Use `admin@venshield.local` (not `assessly.local`) |
+| `Invalid credentials` on login | Using wrong email domain | Use `admin@venshield.local` (legacy domain `assessly.local` is no longer valid) |
 
 ---
 

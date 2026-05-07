@@ -69,7 +69,7 @@ vi.mock("@/lib/auth/server", () => ({
   setAuthSessionCookie: mockSetAuthSessionCookie,
 }));
 vi.mock("@/lib/auth/token", () => ({
-  AUTH_SESSION_COOKIE_NAME: "assessly-session",
+  AUTH_SESSION_COOKIE_NAME: "venshield-session",
   hashSessionToken: mockHashSessionToken,
   verifySessionToken: mockVerifySessionToken,
 }));

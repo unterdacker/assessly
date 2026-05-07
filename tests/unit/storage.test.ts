@@ -25,7 +25,7 @@ vi.mock("@/lib/env", () => ({
     S3_ACCESS_KEY_ID: "key",
     S3_SECRET_ACCESS_KEY: "secret",
     S3_FORCE_PATH_STYLE: "true",
-    S3_BUCKET: "assessly-test",
+    S3_BUCKET: "venshield-test",
   },
 }));
 
@@ -89,7 +89,7 @@ describe("storage", () => {
     expect(mockSend).toHaveBeenCalledTimes(1);
     const command = mockSend.mock.calls[0][0] as { input?: Record<string, unknown> };
     expect(command.input).toMatchObject({
-      Bucket: "assessly-test",
+      Bucket: "venshield-test",
       Key: "tenant-1/reports/file.txt",
       ContentType: "text/plain",
       ServerSideEncryption: "AES256",

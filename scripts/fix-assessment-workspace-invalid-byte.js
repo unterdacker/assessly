@@ -1,6 +1,7 @@
 const fs = require('fs');
+const path = require('path');
 
-const filePath = 'c:/Users/phams/Documents/Test/assessly/components/assessment-workspace.tsx';
+const filePath = path.join(__dirname, '..', 'components', 'assessment-workspace.tsx');
 const targetByte = 0x96;
 const fallbackByte = 0xb7;
 const replacementCharBytes = Buffer.from([0xef, 0xbf, 0xbd]);
